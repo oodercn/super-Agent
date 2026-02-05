@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0,width=device-width, height=device-height"/>
+    <title>ooderAI Architecture Diagram - A2UI Enhanced</title>
+    <link rel="stylesheet" type="text/css" href="dist/release/traditional/ood/css/default.css"/>
+    <link rel="stylesheet" type="text/css" href="dist/release/traditional/ood/appearance/dark/theme.css" id="theme-style"/>
+    <link rel="stylesheet" type="text/css" href="dist/release/traditional/ood/css/remixicon/remixicon.css"/>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/ood.js"></script>
+    <script type="text/javascript" src="conf.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/Event.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/CSS.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/Dom.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/Template.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/Module.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/UI.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/ThirdParty/raphael.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/svg.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/UI/SVGPaper.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+        }
+        #architecture-diagram {
+            width: 100%;
+            height: 800px;
+            border: 1px solid #333;
+            background-color: #222;
+        }
+        .title {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .control-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .control-btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">ooderAI Architecture Diagram - A2UI Enhanced</div>
+    <div class="controls">
+        <button class="control-btn" onclick="zoomIn()">放大</button>
+        <button class="control-btn" onclick="zoomOut()">缩小</button>
+        <button class="control-btn" onclick="resetZoom()">重置</button>
+        <button class="control-btn" onclick="toggleAnimation()">切换动画</button>
+    </div>
+    <div id="architecture-diagram"></div>
+
+    <script type="text/javascript">
+        // 全局变量
+        var svgPaper;
+        var zoom = 1;
+        var isAnimating = false;
+        var animationInterval;
+        var components = [];
+        var connections = [];
+        
+        // 初始化a2ui应用
+        var args = ood.getUrlParams(),
+            onEnd = function () {
+                SPA = this;
+                this.initDiagram();
+            };
+        
+        ood.launch('ooder.Index', onEnd, 'en', args && args.theme || 'default');
+        
+        // 扩展ooder.Index模块
+        ood.module('ooder.Index', function (m) {
+            m.initDiagram = function () {
+                // 创建SVGPaper组件
+                svgPaper = ood.create('SVGPaper', {
+                    id: 'architecture-paper',
+                    renderTo: 'architecture-diagram',
+                    width: '100%',
+                    height: '100%',
+                    viewBox: '0 0 1000 600'
+                });
+                
+                // 绘制背景网格
+                drawGrid();
+                
+                // 绘制标题
+                svgPaper.addElement('text', {
+                    x: 500,
+                    y: 50,
+                    fontSize: 24,
+                    fill: '#4CAF50',
+                    textAnchor: 'middle',
+                    fontWeight: 'bold',
+                    text: 'ooderAI Architecture'
+                });
+                
+                // 绘制组件
+                drawComponents();
+                
+                // 绘制连接线
+                drawConnections();
+                
+                // 绘制说明
+                svgPaper.addElement('text', {
+                    x: 900,
+                    y: 550,
+                    fontSize: 12,
+                    fill: '#999999',
+                    textAnchor: 'end',
+                    text: 'Created with A2UI SVGPaper'
+                });
+            };
+        });
+        
+        // 绘制背景网格
+        function drawGrid() {
+            var gridSize = 20;
+            var width = 1000;
+            var height = 600;
+            
+            for (var x = 0; x <= width; x += gridSize) {
+                svgPaper.addElement('line', {
+                    x1: x,
+                    y1: 0,
+                    x2: x,
+                    y2: height,
+                    stroke: '#333',
+                    strokeWidth: 0.5,
+                    strokeDasharray: '2,2'
+                });
+            }
+            
+            for (var y = 0; y <= height; y += gridSize) {
+                svgPaper.addElement('line', {
+                    x1: 0,
+                    y1: y,
+                    x2: width,
+                    y2: y,
+                    stroke: '#333',
+                    strokeWidth: 0.5,
+                    strokeDasharray: '2,2'
+                });
+            }
+        }
+        
+        // 绘制组件
+        function drawComponents() {
+            // 前端
+            var frontend = svgPaper.addElement('rect', {
+                x: 100,
+                y: 100,
+                width: 200,
+                height: 100,
+                rx: 8,
+                ry: 8,
+                fill: '#3498db',
+                stroke: '#ffffff',
+                strokeWidth: 2,
+                opacity: 0.9
+            });
+            components.push(frontend);
+            
+            svgPaper.addElement('text', {
+                x: 200,
+                y: 145,
+                fontSize: 16,
+                fill: '#ffffff',
+                textAnchor: 'middle',
+                fontWeight: 'bold',
+                text: 'ooderUI'
+            });
+            
+            svgPaper.addElement('text', {
+                x: 200,
+                y: 165,
+                fontSize: 14,
+                fill: '#ffffff',
+                textAnchor: 'middle',
+                text: '(前端)'
+            });
+            
+            // skills-a2ui
+            var skillsA2UI = svgPaper.addElement('rect', {
+                x: 400,
+                y: 100,
+                width: 200,
+                height: 100,
+                rx: 8,
+                ry: 8,
+                fill: '#9b59b6',
+                stroke: '#ffffff',
+                strokeWidth: 2,
+                opacity: 0.9
+            });
+            components.push(skillsA2UI);
+            
+            svgPaper.addElement('text', {
+                x: 500,
+                y: 155,
+                fontSize: 16,
+                fill: '#ffffff',
+                textAnchor: 'middle',
+                fontWeight: 'bold',
+                text: 'skills-a2ui'
+            });
+            
+            // Agent SDK
+            var agentSDK = svgPaper.addElement('rect', {
+                x: 700,
+                y: 100,
+                width: 200,
+                height: 100,
+                rx: 8,
+                ry: 8,
+                fill: '#f39c12',
+                stroke: '#ffffff',
+                strokeWidth: 2,
+                opacity: 0.9
+            });
+            components.push(agentSDK);
+            
+            svgPaper.addElement('text', {
+                x: 800,
+                y: 155,
+                fontSize: 16,
+                fill: '#ffffff',
+                textAnchor: 'middle',
+                fontWeight: 'bold',
+                text: 'Agent SDK'
+            });
+            
+            // Skill A
+            var skillA = svgPaper.addElement('rect', {
+                x: 400,
+                y: 250,
+                width: 150,
+                height: 80,
+                rx: 8,
+                ry: 8,
+                fill: '#e74c3c',
+                stroke: '#ffffff',
+                strokeWidth: 2,
+                opacity: 0.9
+            });
+            components.push(skillA);
+            
+            svgPaper.addElement('text', {
+                x: 475,
+                y: 295,
+                fontSize: 16,
+                fill: '#ffffff',
+                textAnchor: 'middle',
+                fontWeight: 'bold',
+                text: 'Skill A'
+            });
+            
+            // Skill B
+            var skillB = svgPaper.addElement('rect', {
+                x: 600,
+                y: 250,
+                width: 150,
+                height: 80,
+                rx: 8,
+                ry: 8,
+                fill: '#e74c3c',
+                stroke: '#ffffff',
+                strokeWidth: 2,
+                opacity: 0.9
+            });
+            components.push(skillB);
+            
+            svgPaper.addElement('text', {
+                x: 675,
+                y: 295,
+                fontSize: 16,
+                fill: '#ffffff',
+                textAnchor: 'middle',
+                fontWeight: 'bold',
+                text: 'Skill B'
+            });
+            
+            // Skill VFS
+            var skillVFS = svgPaper.addElement('rect', {
+                x: 500,
+                y: 380,
+                width: 150,
+                height: 80,
+                rx: 8,
+                ry: 8,
+                fill: '#e74c3c',
+                stroke: '#ffffff',
+                strokeWidth: 2,
+                opacity: 0.9
+            });
+            components.push(skillVFS);
+            
+            svgPaper.addElement('text', {
+                x: 575,
+                y: 425,
+                fontSize: 16,
+                fill: '#ffffff',
+                textAnchor: 'middle',
+                fontWeight: 'bold',
+                text: 'Skill VFS'
+            });
+            
+            // VFS
+            var vfs = svgPaper.addElement('rect', {
+                x: 700,
+                y: 380,
+                width: 200,
+                height: 100,
+                rx: 8,
+                ry: 8,
+                fill: '#1abc9c',
+                stroke: '#ffffff',
+                strokeWidth: 2,
+                opacity: 0.9
+            });
+            components.push(vfs);
+            
+            svgPaper.addElement('text', {
+                x: 800,
+                y: 430,
+                fontSize: 16,
+                fill: '#ffffff',
+                textAnchor: 'middle',
+                fontWeight: 'bold',
+                text: 'VFS'
+            });
+            
+            svgPaper.addElement('text', {
+                x: 800,
+                y: 450,
+                fontSize: 14,
+                fill: '#ffffff',
+                textAnchor: 'middle',
+                text: '(虚拟文件系统)'
+            });
+        }
+        
+        // 绘制连接线
+        function drawConnections() {
+            // 前端 -> skills-a2ui
+            var line1 = svgPaper.addElement('line', {
+                x1: 300,
+                y1: 150,
+                x2: 400,
+                y2: 150,
+                stroke: '#4CAF50',
+                strokeWidth: 3,
+                strokeDasharray: '5,5'
+            });
+            connections.push(line1);
+            
+            var arrow1 = svgPaper.addElement('polygon', {
+                points: '400,150 390,145 390,155',
+                fill: '#4CAF50'
+            });
+            connections.push(arrow1);
+            
+            // skills-a2ui -> Agent SDK
+            var line2 = svgPaper.addElement('line', {
+                x1: 600,
+                y1: 150,
+                x2: 700,
+                y2: 150,
+                stroke: '#4CAF50',
+                strokeWidth: 3,
+                strokeDasharray: '5,5'
+            });
+            connections.push(line2);
+            
+            var arrow2 = svgPaper.addElement('polygon', {
+                points: '700,150 690,145 690,155',
+                fill: '#4CAF50'
+            });
+            connections.push(arrow2);
+            
+            // skills-a2ui -> Skill A
+            var line3 = svgPaper.addElement('line', {
+                x1: 450,
+                y1: 200,
+                x2: 450,
+                y2: 250,
+                stroke: '#4CAF50',
+                strokeWidth: 3,
+                strokeDasharray: '5,5'
+            });
+            connections.push(line3);
+            
+            var arrow3 = svgPaper.addElement('polygon', {
+                points: '450,250 445,240 455,240',
+                fill: '#4CAF50'
+            });
+            connections.push(arrow3);
+            
+            // skills-a2ui -> Skill B
+            var line4 = svgPaper.addElement('line', {
+                x1: 550,
+                y1: 200,
+                x2: 550,
+                y2: 250,
+                stroke: '#4CAF50',
+                strokeWidth: 3,
+                strokeDasharray: '5,5'
+            });
+            connections.push(line4);
+            
+            var arrow4 = svgPaper.addElement('polygon', {
+                points: '550,250 545,240 555,240',
+                fill: '#4CAF50'
+            });
+            connections.push(arrow4);
+            
+            // skills-a2ui -> Skill VFS
+            var line5 = svgPaper.addElement('line', {
+                x1: 500,
+                y1: 200,
+                x2: 500,
+                y2: 380,
+                stroke: '#4CAF50',
+                strokeWidth: 3,
+                strokeDasharray: '5,5'
+            });
+            connections.push(line5);
+            
+            var arrow5 = svgPaper.addElement('polygon', {
+                points: '500,380 495,370 505,370',
+                fill: '#4CAF50'
+            });
+            connections.push(arrow5);
+            
+            // Agent SDK -> Skill A
+            var line6 = svgPaper.addElement('line', {
+                x1: 700,
+                y1: 150,
+                x2: 475,
+                y2: 250,
+                stroke: '#4CAF50',
+                strokeWidth: 3,
+                strokeDasharray: '5,5'
+            });
+            connections.push(line6);
+            
+            var arrow6 = svgPaper.addElement('polygon', {
+                points: '475,250 485,245 480,235',
+                fill: '#4CAF50'
+            });
+            connections.push(arrow6);
+            
+            // Agent SDK -> Skill B
+            var line7 = svgPaper.addElement('line', {
+                x1: 700,
+                y1: 170,
+                x2: 600,
+                y2: 250,
+                stroke: '#4CAF50',
+                strokeWidth: 3,
+                strokeDasharray: '5,5'
+            });
+            connections.push(line7);
+            
+            var arrow7 = svgPaper.addElement('polygon', {
+                points: '600,250 610,245 605,235',
+                fill: '#4CAF50'
+            });
+            connections.push(arrow7);
+            
+            // Skill VFS -> VFS
+            var line8 = svgPaper.addElement('line', {
+                x1: 650,
+                y1: 420,
+                x2: 700,
+                y2: 430,
+                stroke: '#4CAF50',
+                strokeWidth: 3,
+                strokeDasharray: '5,5'
+            });
+            connections.push(line8);
+            
+            var arrow8 = svgPaper.addElement('polygon', {
+                points: '700,430 690,425 690,435',
+                fill: '#4CAF50'
+            });
+            connections.push(arrow8);
+        }
+        
+        // 放大功能
+        function zoomIn() {
+            zoom += 0.1;
+            updateZoom();
+        }
+        
+        // 缩小功能
+        function zoomOut() {
+            if (zoom > 0.5) {
+                zoom -= 0.1;
+                updateZoom();
+            }
+        }
+        
+        // 重置缩放
+        function resetZoom() {
+            zoom = 1;
+            updateZoom();
+        }
+        
+        // 更新缩放
+        function updateZoom() {
+            var svgElement = document.getElementById('architecture-paper');
+            if (svgElement) {
+                svgElement.style.transform = 'scale(' + zoom + ')';
+                svgElement.style.transformOrigin = 'center center';
+            }
+        }
+        
+        // 切换动画
+        function toggleAnimation() {
+            isAnimating = !isAnimating;
+            
+            if (isAnimating) {
+                startAnimation();
+            } else {
+                stopAnimation();
+            }
+        }
+        
+        // 开始动画
+        function startAnimation() {
+            var index = 0;
+            var componentsCount = components.length;
+            
+            animationInterval = setInterval(function() {
+                // 重置所有组件的透明度
+                for (var i = 0; i < componentsCount; i++) {
+                    components[i].attr('opacity', 0.6);
+                }
+                
+                // 高亮当前组件
+                var currentComponent = components[index];
+                currentComponent.attr('opacity', 1);
+                currentComponent.attr('strokeWidth', 4);
+                
+                // 移动到下一个组件
+                index = (index + 1) % componentsCount;
+                
+                // 重置前一个组件的边框宽度
+                var prevIndex = (index - 1 + componentsCount) % componentsCount;
+                components[prevIndex].attr('strokeWidth', 2);
+            }, 1000);
+        }
+        
+        // 停止动画
+        function stopAnimation() {
+            clearInterval(animationInterval);
+            
+            // 重置所有组件的状态
+            for (var i = 0; i < components.length; i++) {
+                components[i].attr('opacity', 0.9);
+                components[i].attr('strokeWidth', 2);
+            }
+        }
+    </script>
+</body>
+</html>

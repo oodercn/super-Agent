@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: mcp-agent
+  datasource:
+    url: jdbc:h2:mem:mcpagentdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+ai-bridge:
+  protocol:
+    version: "0.6.0"
+    broadcast-port: 9010
+  security:
+    certificate-required: true
+    allowed-sn-pattern: "^[0-9A-Fa-f]{16}$"
+
+mcp-agent:
+  name: "McpAgent-001"
+  description: "Main Control Point Agent"
+  capabilities:
+    - "agent-management"
+    - "security-control"
+    - "scene-management"
+    - "llm-access-control"
+  max-route-agents: 10
+  max-end-agents: 100
+  llm-providers:
+    - name: "example-llm"
+      url: "https://api.example.com/llm"
+      api-key: "your-llm-api-key"

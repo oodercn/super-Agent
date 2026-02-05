@@ -1,0 +1,377 @@
+﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>命令队列管理 - MCP Agent Console</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> MCP Agent Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><i class="ri-list-check"></i> 命令队列管理</h1>
+                <div class="subtitle">
+                    <span class="badge" style="background-color: var(--ooder-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">命令体系</span>
+                    <span>Ooder Rad Style</span> | 
+                    <span id="timestamp"></span>
+                </div>
+            </div>
+            
+            <!-- 命令队列统计 -->
+            <div class="section">
+                <h2>队列统计</h2>
+                <div class="queue-stats">
+                    <div class="stat-card">
+                        <h3>总命令数</h3>
+                        <div class="value">128</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>等待执行</h3>
+                        <div class="value">12</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>执行中</h3>
+                        <div class="value">8</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>今日完成</h3>
+                        <div class="value">108</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 命令队列列表 -->
+            <div class="section">
+                <h2>命令队列</h2>
+                
+                <!-- 工具栏 -->
+                <div class="toolbar">
+                    <div class="toolbar-left">
+                        <button class="btn btn-primary">
+                            <i class="ri-refresh-line"></i>
+                            刷新队列
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="ri-filter-line"></i>
+                            筛选
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="ri-download-line"></i>
+                            导出
+                        </button>
+                    </div>
+                    <div class="toolbar-right">
+                        <div class="search-box">
+                            <i class="ri-search-line"></i>
+                            <input type="text" placeholder="搜索命令ID">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 命令队列表格 -->
+                <table class="command-queue-table" id="command-queue-table">
+                    <thead>
+                        <tr>
+                            <th>命令ID</th>
+                            <th>命令类型</th>
+                            <th>目标Agent</th>
+                            <th>优先级</th>
+                            <th>状态</th>
+                            <th>提交时间</th>
+                            <th>开始时间</th>
+                            <th>预计完成</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queue-items">
+                        <!-- 动态生成 -->
+                    </tbody>
+                </table>
+                
+                <!-- 分页控件 -->
+                <div class="pagination">
+                    <button>&laquo;</button>
+                    <button class="active">1</button>
+                    <button>2</button>
+                    <button>3</button>
+                    <button>&raquo;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 公共JS模块 -->
+    <script src="../../common/api-client.js"></script>
+    <script src="../../common/list-manager.js"></script>
+    <script src="../../common/form-manager.js"></script>
+    <script src="../../common/utils.js"></script>
+    
+    <script>
+        // 当前页面
+        let currentPage = 'command-queue';
+        
+        // 菜单配置
+        let menuConfig = null;
+        
+        // 初始化页面
+        function init() {
+            updateTimestamp();
+            loadMenuConfig();
+            loadCommandQueue();
+            setInterval(updateTimestamp, 60000); // 每分钟更新时间戳
+        }
+        
+        // 加载菜单配置
+        async function loadMenuConfig() {
+            try {
+                const response = await fetch('../../menu-config.json');
+                if (!response.ok) {
+                    throw new Error('菜单配置加载失败');
+                }
+                menuConfig = await response.json();
+                renderMenu();
+            } catch (error) {
+                console.error('加载菜单配置错误:', error);
+                renderDefaultMenu();
+            }
+        }
+        
+        // 渲染菜单
+        function renderMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            
+            menuConfig.menu.forEach(item => {
+                const menuItem = createMenuItem(item);
+                navMenu.appendChild(menuItem);
+                // 添加菜单分隔线
+                if (item.id !== 'dashboard') {
+                    const divider = document.createElement('div');
+                    divider.className = 'menu-divider';
+                    navMenu.appendChild(divider);
+                }
+            });
+            
+            setupNavigation();
+        }
+        
+        // 创建菜单项
+        function createMenuItem(menuItem) {
+            const li = document.createElement('li');
+            
+            if (menuItem.children && menuItem.children.length > 0) {
+                // 有子菜单的菜单项
+                const a = document.createElement('a');
+                a.href = `#${menuItem.id}`;
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                    <span class="toggle-icon">›</span>
+                `;
+                
+                // 处理点击事件
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const toggleIcon = this.querySelector('.toggle-icon');
+                    const submenu = this.nextElementSibling;
+                    
+                    if (submenu) {
+                        if (submenu.style.display === 'block') {
+                            submenu.style.display = 'none';
+                        } else {
+                            submenu.style.display = 'block';
+                        }
+                        toggleIcon.classList.toggle('collapsed');
+                    }
+                });
+                
+                li.appendChild(a);
+                
+                // 创建子菜单
+                const submenu = document.createElement('ul');
+                submenu.className = 'submenu';
+                
+                menuItem.children.forEach(childItem => {
+                    const childLi = createMenuItem(childItem);
+                    submenu.appendChild(childLi);
+                });
+                
+                li.appendChild(submenu);
+            } else {
+                // 无子菜单的菜单项
+                const a = document.createElement('a');
+                if (menuItem.url) {
+                    // 修复路径构建，确保从 command 目录正确访问其他页面
+                    if (menuItem.url.startsWith('pages/')) {
+                        if (menuItem.url.startsWith('pages/command/')) {
+                            // 同一目录下的命令页面，直接使用相对路径
+                            a.href = `../${menuItem.url.replace('pages/command/', '')}`;
+                        } else {
+                            // 其他目录的页面，使用 ../../ 前缀
+                            a.href = `../../${menuItem.url}`;
+                        }
+                    } else {
+                        a.href = menuItem.url;
+                    }
+                    if (menuItem.url.includes('command-queue.html')) {
+                        a.classList.add('active');
+                    }
+                } else {
+                    a.href = `#${menuItem.id}`;
+                    a.setAttribute('data-page', menuItem.page || menuItem.id);
+                }
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                `;
+                li.appendChild(a);
+            }
+            
+            return li;
+        }
+        
+        // 渲染默认菜单（加载失败时使用）
+        function renderDefaultMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = `
+                <li><a href="../../pages/dashboard.html"><i class="ri-dashboard-line"></i> 仪表盘</a></li>
+                <li><a href="../../pages/command/command-dashboard.html"><i class="ri-dashboard-2-line"></i> 命令仪表盘</a></li>
+                <li><a href="../../pages/command/command-send.html"><i class="ri-send-plane-line"></i> 命令发送</a></li>
+                <li><a href="../../pages/command/command-queue.html" class="active"><i class="ri-list-check"></i> 命令队列管理</a></li>
+            `;
+            setupNavigation();
+        }
+        
+        // 设置导航
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-menu a');
+            navLinks.forEach(link => {
+                if (link.hasAttribute('data-page') && !link.hasAttribute('href') && link.getAttribute('href') !== '#') {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // 更新活跃状态
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                }
+            });
+        }
+        
+        // 加载命令队列
+        async function loadCommandQueue() {
+            const queueItems = document.getElementById('queue-items');
+            queueItems.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px;">加载中...</td></tr>';
+            
+            try {
+                // 调用API获取命令队列
+                const response = await apiClient.get('/command/queue');
+                
+                if (response.status === 'success') {
+                    const commands = response.data || [];
+                    const stats = response.stats || {};
+                    
+                    // 更新统计信息
+                    document.querySelector('.stat-card:nth-child(1) .value').textContent = stats.totalCommands || 0;
+                    document.querySelector('.stat-card:nth-child(2) .value').textContent = stats.pendingCommands || 0;
+                    document.querySelector('.stat-card:nth-child(3) .value').textContent = stats.processingCommands || 0;
+                    document.querySelector('.stat-card:nth-child(4) .value').textContent = stats.completedCommands || 0;
+                    
+                    // 渲染命令队列
+                    queueItems.innerHTML = '';
+                    
+                    if (commands.length === 0) {
+                        queueItems.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px;">命令队列为空</td></tr>';
+                        return;
+                    }
+                    
+                    commands.forEach(cmd => {
+                        const row = document.createElement('tr');
+                        const submitTime = new Date(cmd.submitTime).toLocaleString('zh-CN');
+                        const startTime = cmd.startTime ? new Date(cmd.startTime).toLocaleString('zh-CN') : '-';
+                        
+                        row.innerHTML = `
+                            <td>${cmd.id}</td>
+                            <td>${cmd.type}</td>
+                            <td>${cmd.targetAgent}</td>
+                            <td>${cmd.priority}</td>
+                            <td><span class="status-badge status-${cmd.status.toLowerCase()}">${cmd.status}</span></td>
+                            <td>${submitTime}</td>
+                            <td>${startTime}</td>
+                            <td>${cmd.estimatedTime}</td>
+                            <td>
+                                <button class="btn btn-primary" onclick="viewCommand('${cmd.id}')">
+                                    <i class="ri-eye-line"></i>
+                                    查看
+                                </button>
+                                <button class="btn btn-danger" onclick="cancelCommand('${cmd.id}')">
+                                    <i class="ri-close-line"></i>
+                                    取消
+                                </button>
+                            </td>
+                        `;
+                        queueItems.appendChild(row);
+                    });
+                } else {
+                    queueItems.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--ooder-danger);">加载失败: ' + (response.message || '未知错误') + '</td></tr>';
+                }
+            } catch (error) {
+                console.error('加载命令队列错误:', error);
+                queueItems.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--ooder-danger);">网络错误: ' + (error.message || '无法连接到服务器') + '</td></tr>';
+            }
+        }
+        
+        // 查看命令详情
+        async function viewCommand(commandId) {
+            try {
+                const response = await apiClient.get(`/command/status/${commandId}`);
+                if (response.status === 'success') {
+                    alert(JSON.stringify(response.data, null, 2));
+                } else {
+                    alert('查看失败: ' + (response.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('查看命令错误:', error);
+                alert('网络错误: ' + (error.message || '无法连接到服务器'));
+            }
+        }
+        
+        // 取消命令
+        async function cancelCommand(commandId) {
+            if (!confirm('确定要取消这个命令吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await apiClient.post(`/command/cancel/${commandId}`);
+                if (response.status === 'success') {
+                    alert('取消成功');
+                    loadCommandQueue(); // 刷新队列
+                } else {
+                    alert('取消失败: ' + (response.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('取消命令错误:', error);
+                alert('网络错误: ' + (error.message || '无法连接到服务器'));
+            }
+        }
+        
+        // 更新时间戳
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = utils.formatTimestamp(now.getTime());
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理中心 - 仪表盘</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
+    <link href="../../assets/css/remixicon/remixicon.css" rel="stylesheet">
+    <script src="/skillcenter/console/js/menu.js"></script>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <!-- 菜单将通过menu.js动态加载 -->
+        </aside>
+        <main class="main-content">
+            <header class="header">
+                <h1>管理仪表盘</h1>
+                <div class="user-info">
+                    <span class="user-name">管理员</span>
+                    <i class="ri-user-line"></i>
+                </div>
+            </header>
+            
+            <!-- 统计卡片 -->
+            <div class="dashboard-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #4CAF50;">
+                            <i class="ri-skill-fill"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>总技能数</h3>
+                            <div class="stat-value">128</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #2196F3;">
+                            <i class="ri-market-fill"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>市场技能数</h3>
+                            <div class="stat-value">85</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #FF9800;">
+                            <i class="ri-user-group-fill"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>注册用户数</h3>
+                            <div class="stat-value">42</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #9C27B0;">
+                            <i class="ri-exchange-fill"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>总执行次数</h3>
+                            <div class="stat-value">2,543</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #F44336;">
+                            <i class="ri-share-fill"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>分享技能数</h3>
+                            <div class="stat-value">156</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #607D8B;">
+                            <i class="ri-server-fill"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>系统可用性</h3>
+                            <div class="stat-value">98%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 最近活动 -->
+                <div class="recent-activities">
+                    <h2>最近活动</h2>
+                    <ul class="activity-list">
+                        <li class="activity-item">
+                            <div class="activity-icon" style="color: #4CAF50;">
+                                <i class="ri-skill-line"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p>新技能发布: <span class="activity-skill">Code Generator</span></p>
+                                <div class="activity-time">2026-01-31 10:30:00</div>
+                            </div>
+                        </li>
+                        <li class="activity-item">
+                            <div class="activity-icon" style="color: #2196F3;">
+                                <i class="ri-verified-badge-line"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p>技能认证通过: <span class="activity-skill">Weather API</span></p>
+                                <div class="activity-time">2026-01-31 09:15:00</div>
+                            </div>
+                        </li>
+                        <li class="activity-item">
+                            <div class="activity-icon" style="color: #FF9800;">
+                                <i class="ri-user-add-line"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p>新用户注册: Alice Smith</p>
+                                <div class="activity-time">2026-01-31 08:45:00</div>
+                            </div>
+                        </li>
+                        <li class="activity-item">
+                            <div class="activity-icon" style="color: #9C27B0;">
+                                <i class="ri-group-add-line"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p>新群组创建: <span class="activity-group">Development Team</span></p>
+                                <div class="activity-time">2026-01-30 16:30:00</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 执行统计图表 -->
+                <div class="recent-activities">
+                    <h2>技能执行统计</h2>
+                    <canvas id="chartCanvas"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // 初始化菜单
+        initMenu('admin-dashboard');
+        
+        // API基础URL
+        const API_BASE_URL = '/skillcenter/api';
+        
+        // 页面加载时获取数据
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchDashboardStats();
+            fetchExecutionStats();
+        });
+        
+        // 从API获取仪表盘统计数据
+        async function fetchDashboardStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/dashboard/stats`);
+                const data = await response.json();
+                if (data.success && data.data) {
+                    // 更新统计数据
+                    document.querySelector('.stats-grid .stat-card:nth-child(1) .stat-value').textContent = data.data.totalSkills || 0;
+                    document.querySelector('.stats-grid .stat-card:nth-child(2) .stat-value').textContent = data.data.marketSkills || 0;
+                    document.querySelector('.stats-grid .stat-card:nth-child(3) .stat-value').textContent = data.data.registeredUsers || 0;
+                    document.querySelector('.stats-grid .stat-card:nth-child(4) .stat-value').textContent = data.data.totalExecutions || 0;
+                    document.querySelector('.stats-grid .stat-card:nth-child(5) .stat-value').textContent = data.data.sharedSkills || 0;
+                    document.querySelector('.stats-grid .stat-card:nth-child(6) .stat-value').textContent = data.data.systemAvailability || '98%';
+                    
+                    // 更新最近活动
+                    updateRecentActivities(data.data.recentActivities || []);
+                }
+            } catch (error) {
+                console.error('Error fetching dashboard stats:', error);
+            }
+        }
+        
+        // 更新最近活动
+        function updateRecentActivities(activities) {
+            const activityList = document.querySelector('.activity-list');
+            if (activityList && activities.length > 0) {
+                activityList.innerHTML = '';
+                activities.forEach(activity => {
+                    const li = document.createElement('li');
+                    li.className = 'activity-item';
+                    li.innerHTML = `
+                        <div class="activity-icon" style="color: ${getActivityColor(activity.type)}">
+                            <i class="${getActivityIcon(activity.type)}"></i>
+                        </div>
+                        <div class="activity-content">
+                            <p>${activity.description}</p>
+                            <div class="activity-time">${activity.timestamp ? new Date(activity.timestamp).toLocaleString() : ''}</div>
+                        </div>
+                    `;
+                    activityList.appendChild(li);
+                });
+            }
+        }
+        
+        // 获取活动图标
+        function getActivityIcon(type) {
+            switch (type) {
+                case 'skill_published': return 'ri-skill-line';
+                case 'skill_approved': return 'ri-verified-badge-line';
+                case 'user_registered': return 'ri-user-add-line';
+                case 'group_created': return 'ri-group-add-line';
+                default: return 'ri-notification-line';
+            }
+        }
+        
+        // 获取活动颜色
+        function getActivityColor(type) {
+            switch (type) {
+                case 'skill_published': return '#4CAF50';
+                case 'skill_approved': return '#2196F3';
+                case 'user_registered': return '#FF9800';
+                case 'group_created': return '#9C27B0';
+                default: return '#607D8B';
+            }
+        }
+        
+        // 从API获取执行统计数据并绘制图表
+        async function fetchExecutionStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/dashboard/execution-stats`);
+                const data = await response.json();
+                if (data.success && data.data) {
+                    drawExecutionChart(data.data);
+                } else {
+                    // 使用默认数据绘制图表
+                    drawExecutionChart({
+                        labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                        datasets: [
+                            {
+                                label: '成功执行',
+                                data: [120, 190, 300, 500, 400, 550],
+                                backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                                borderColor: 'rgba(76, 175, 80, 1)',
+                                borderWidth: 2
+                            },
+                            {
+                                label: '失败执行',
+                                data: [20, 30, 40, 50, 40, 50],
+                                backgroundColor: 'rgba(244, 67, 54, 0.2)',
+                                borderColor: 'rgba(244, 67, 54, 1)',
+                                borderWidth: 2
+                            }
+                        ]
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching execution stats:', error);
+                // 使用默认数据绘制图表
+                drawExecutionChart({
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                    datasets: [
+                        {
+                            label: '成功执行',
+                            data: [120, 190, 300, 500, 400, 550],
+                            backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                            borderColor: 'rgba(76, 175, 80, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: '失败执行',
+                            data: [20, 30, 40, 50, 40, 50],
+                            backgroundColor: 'rgba(244, 67, 54, 0.2)',
+                            borderColor: 'rgba(244, 67, 54, 1)',
+                            borderWidth: 2
+                        }
+                    ]
+                });
+            }
+        }
+        
+        // 绘制执行统计图表
+        function drawExecutionChart(data) {
+            const canvas = document.getElementById('chartCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 设置画布尺寸
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 300;
+            
+            // 绘制图表
+            const chartWidth = canvas.width;
+            const chartHeight = canvas.height - 40;
+            const padding = 40;
+            
+            // 计算数据范围
+            let maxValue = 0;
+            data.datasets.forEach(dataset => {
+                const datasetMax = Math.max(...dataset.data);
+                if (datasetMax > maxValue) maxValue = datasetMax;
+            });
+            maxValue = Math.ceil(maxValue * 1.1);
+            
+            // 绘制网格线
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            // Y轴网格线
+            for (let i = 0; i <= 5; i++) {
+                const y = padding + (i * chartHeight / 5);
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(chartWidth - padding, y);
+                ctx.stroke();
+                
+                // Y轴标签
+                ctx.fillStyle = '#b0b0b0';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'right';
+                ctx.fillText(Math.round(maxValue * (1 - i / 5)), padding - 10, y + 4);
+            }
+            
+            // X轴网格线和标签
+            const barWidth = (chartWidth - padding * 2) / data.labels.length;
+            data.labels.forEach((label, index) => {
+                const x = padding + (index + 0.5) * barWidth;
+                
+                // X轴标签
+                ctx.fillStyle = '#b0b0b0';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(label, x, canvas.height - 10);
+            });
+            
+            // 绘制数据集
+            data.datasets.forEach((dataset, datasetIndex) => {
+                ctx.fillStyle = dataset.backgroundColor;
+                ctx.strokeStyle = dataset.borderColor;
+                ctx.lineWidth = dataset.borderWidth;
+                
+                dataset.data.forEach((value, index) => {
+                    const x = padding + index * barWidth + (datasetIndex * barWidth / data.datasets.length);
+                    const barHeight = (value / maxValue) * chartHeight;
+                    const y = padding + chartHeight - barHeight;
+                    
+                    // 绘制柱子
+                    ctx.fillRect(x, y, barWidth / data.datasets.length - 4, barHeight);
+                    ctx.strokeRect(x, y, barWidth / data.datasets.length - 4, barHeight);
+                });
+            });
+            
+            // 绘制图例
+            const legendX = padding;
+            const legendY = 10;
+            const legendItemHeight = 20;
+            
+            data.datasets.forEach((dataset, index) => {
+                const y = legendY + index * legendItemHeight;
+                
+                // 绘制颜色块
+                ctx.fillStyle = dataset.backgroundColor;
+                ctx.fillRect(legendX, y, 16, 16);
+                ctx.strokeStyle = dataset.borderColor;
+                ctx.strokeRect(legendX, y, 16, 16);
+                
+                // 绘制标签
+                ctx.fillStyle = '#e0e0e0';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText(dataset.label, legendX + 24, y + 12);
+            });
+        }
+    </script>
+</body>
+</html>

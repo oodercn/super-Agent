@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>市场管理 - Nexus SkillCenter</title>
+    <link rel="stylesheet" href="/console/css/styles.css">
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <script src="/console/js/menu-loader.js"></script>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="main-content">
+            <header class="header">
+                <h1>市场管理</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showImportModal()">
+                        <i class="ri-upload-cloud-line"></i> API导入
+                    </button>
+                </div>
+            </header>
+            <div class="content">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('market')">市场技能</button>
+                    <button class="tab-btn" onclick="switchTab('enterprise')">企业级接口</button>
+                </div>
+                
+                <div class="tab-content" id="market-tab">
+                    <div class="skill-list" id="market-skills">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="enterprise-tab" style="display: none;">
+                    <div class="skill-list" id="enterprise-apis">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="import-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>API导入</h3>
+                <button class="modal-close" onclick="closeModal('import-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="import-form">
+                    <div class="form-group">
+                        <label>API名称</label>
+                        <input type="text" id="api-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>API描述</label>
+                        <textarea id="api-description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>API地址</label>
+                        <input type="url" id="api-url" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>API文档</label>
+                        <textarea id="api-doc" class="form-control" rows="5" placeholder="输入API文档内容"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="importAPI()">导入</button>
+                <button class="btn btn-secondary" onclick="closeModal('import-modal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            initMenu();
+            loadMarketSkills();
+            loadEnterpriseAPIs();
+        };
+
+        async function loadMarketSkills() {
+            try {
+                const marketSkills = document.getElementById('market-skills');
+                marketSkills.innerHTML = '<div class="loading">加载中...</div>';
+                
+                const response = await fetch('/api/admin/market/skills');
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.status === 'success') {
+                    renderMarketSkills(result.data || []);
+                } else {
+                    throw new Error('响应数据格式错误');
+                }
+            } catch (error) {
+                console.error('加载市场技能列表错误:', error);
+                document.getElementById('market-skills').innerHTML = '<div class="empty-state">加载失败</div>';
+                showError('加载市场技能列表失败');
+            }
+        }
+
+        function renderMarketSkills(skills) {
+            const skillList = document.getElementById('market-skills');
+            skillList.innerHTML = '';
+            
+            if (skills.length === 0) {
+                skillList.innerHTML = '<div class="empty-state">暂无市场技能</div>';
+                return;
+            }
+            
+            skills.forEach(skill => {
+                const skillItem = document.createElement('div');
+                skillItem.className = 'skill-item';
+                skillItem.innerHTML = `
+                    <div class="skill-info">
+                        <h3>${skill.name}</h3>
+                        <p>${skill.description || '暂无描述'}</p>
+                        <span class="skill-category">${getCategoryName(skill.category)}</span>
+                        <span class="skill-author">作者: ${skill.author}</span>
+                        <span class="skill-downloads">下载: ${skill.downloadCount || 0}</span>
+                    </div>
+                    <div class="skill-actions">
+                        <button class="btn btn-secondary" onclick="viewSkill('${skill.id}')">
+                            <i class="ri-eye-line"></i> 查看
+                        </button>
+                        <button class="btn btn-danger" onclick="removeSkill('${skill.id}')">
+                            <i class="ri-delete-line"></i> 移除
+                        </button>
+                    </div>
+                `;
+                skillList.appendChild(skillItem);
+            });
+        }
+
+        async function loadEnterpriseAPIs() {
+            try {
+                const enterpriseAPIs = document.getElementById('enterprise-apis');
+                enterpriseAPIs.innerHTML = '<div class="loading">加载中...</div>';
+                
+                const response = await fetch('/api/admin/market/enterprise');
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.status === 'success') {
+                    renderEnterpriseAPIs(result.data || []);
+                } else {
+                    throw new Error('响应数据格式错误');
+                }
+            } catch (error) {
+                console.error('加载企业级接口列表错误:', error);
+                document.getElementById('enterprise-apis').innerHTML = '<div class="empty-state">加载失败</div>';
+                showError('加载企业级接口列表失败');
+            }
+        }
+
+        function renderEnterpriseAPIs(apis) {
+            const apiList = document.getElementById('enterprise-apis');
+            apiList.innerHTML = '';
+            
+            if (apis.length === 0) {
+                apiList.innerHTML = '<div class="empty-state">暂无企业级接口</div>';
+                return;
+            }
+            
+            apis.forEach(api => {
+                const apiItem = document.createElement('div');
+                apiItem.className = 'skill-item';
+                apiItem.innerHTML = `
+                    <div class="skill-info">
+                        <h3>${api.name}</h3>
+                        <p>${api.description || '暂无描述'}</p>
+                        <span class="api-url">${api.url}</span>
+                        <span class="api-status ${api.status === 'active' ? 'success' : 'warning'}">${api.status === 'active' ? '活跃' : '停用'}</span>
+                    </div>
+                    <div class="skill-actions">
+                        <button class="btn btn-secondary" onclick="viewAPI('${api.id}')">
+                            <i class="ri-eye-line"></i> 查看
+                        </button>
+                        <button class="btn btn-primary" onclick="editAPI('${api.id}')">
+                            <i class="ri-edit-line"></i> 编辑
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteAPI('${api.id}')">
+                            <i class="ri-delete-line"></i> 删除
+                        </button>
+                    </div>
+                `;
+                apiList.appendChild(apiItem);
+            });
+        }
+
+        function getCategoryName(category) {
+            const categoryMap = {
+                'text-processing': '文本处理',
+                'development': '开发工具',
+                'deployment': '部署工具',
+                'media': '媒体处理',
+                'storage': '存储管理'
+            };
+            return categoryMap[category] || category;
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').style.display = 'block';
+        }
+
+        function showImportModal() {
+            document.getElementById('import-modal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function importAPI() {
+            const name = document.getElementById('api-name').value;
+            const description = document.getElementById('api-description').value;
+            const url = document.getElementById('api-url').value;
+            const doc = document.getElementById('api-doc').value;
+            
+            if (!name || !url) {
+                showError('请填写API名称和地址');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/admin/market/enterprise', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        description: description,
+                        url: url,
+                        doc: doc
+                    })
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.status === 'success') {
+                    closeModal('import-modal');
+                    showSuccess('API导入成功');
+                    loadEnterpriseAPIs();
+                } else {
+                    showError('API导入失败');
+                }
+            } catch (error) {
+                console.error('导入API错误:', error);
+                showError('API导入失败');
+            }
+        }
+
+        function viewSkill(skillId) {
+            showError('查看技能功能开发中...');
+        }
+
+        async function removeSkill(skillId) {
+            if (!confirm('确定要移除此技能吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/market/skills/${skillId}`, {
+                    method: 'DELETE'
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.status === 'success') {
+                    showSuccess('技能移除成功');
+                    loadMarketSkills();
+                } else {
+                    showError('技能移除失败');
+                }
+            } catch (error) {
+                console.error('移除技能错误:', error);
+                showError('技能移除失败');
+            }
+        }
+
+        function viewAPI(apiId) {
+            showError('查看API功能开发中...');
+        }
+
+        function editAPI(apiId) {
+            showError('编辑API功能开发中...');
+        }
+
+        async function deleteAPI(apiId) {
+            if (!confirm('确定要删除此API吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/market/enterprise/${apiId}`, {
+                    method: 'DELETE'
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.status === 'success') {
+                    showSuccess('API删除成功');
+                    loadEnterpriseAPIs();
+                } else {
+                    showError('API删除失败');
+                }
+            } catch (error) {
+                console.error('删除API错误:', error);
+                showError('API删除失败');
+            }
+        }
+
+        function showError(message) {
+            showNotification(message, 'error');
+        }
+
+        function showSuccess(message) {
+            showNotification(message, 'success');
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

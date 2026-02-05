@@ -1,0 +1,152 @@
+:root {
+  /* Light Theme */
+  --dialog-bg: #ffffff;
+  --dialog-text: #333333;
+  --dialog-border: #dddddd;
+  --dialog-caption-bg: #f5f5f5;
+  --dialog-caption-text: #333333;
+  --dialog-shadow: rgba(0, 0, 0, 0.2);
+  --dialog-primary: #0078d4;
+}
+
+/* 暗色主题 */
+[data-theme="dark"] .ood-dialog {
+  --dialog-bg: #292929;
+  --dialog-text: #f0f0f0;
+  --dialog-border: #444444;
+  --dialog-caption-bg: #383838;
+  --dialog-caption-text: #f0f0f0;
+  --dialog-shadow: rgba(0, 0, 0, 0.5);
+  --dialog-primary: #2d3e50;
+}
+
+/* 亮色主题 */
+[data-theme="light"] .ood-dialog {
+  --dialog-bg: #ffffff;
+  --dialog-text: #333333;
+  --dialog-border: #dddddd;
+  --dialog-caption-bg: #f5f5f5;
+  --dialog-caption-text: #333333;
+  --dialog-shadow: rgba(0, 0, 0, 0.2);
+  --dialog-primary: #0078d4;
+}
+
+/* 高对比度主题 */
+[data-theme="high-contrast"] .ood-dialog {
+  --dialog-bg: #000000;
+  --dialog-text: #ffffff;
+  --dialog-border: #ffff00;
+  --dialog-caption-bg: #000000;
+  --dialog-caption-text: #ffffff;
+  --dialog-shadow: 0 0 10px #ffff00;
+  --dialog-primary: #ffff00;
+}
+
+/* Border Styles */
+.dialog-border-dark {
+  background-color: var(--dialog-bg);
+  border-color: var(--dialog-border);
+  color: var(--dialog-text);
+  box-shadow: var(--dialog-shadow);
+}
+
+/* Panel Styles */
+.dialog-panel-dark {
+  background-color: var(--dialog-bg);
+  color: var(--dialog-text);
+  border-color: var(--dialog-border);
+}
+
+/* Toolbar Styles */
+.dialog-tbar-dark {
+  background: var(--dialog-caption-bg);
+  border-bottom: 1px solid var(--dialog-border);
+}
+
+/* Caption Styles */
+.dialog-caption-dark {
+  color: var(--dialog-caption-text);
+}
+
+/* Button Styles */
+.dialog-btn-dark {
+  color: var(--dialog-text) !important;
+  background-color: transparent !important;
+  transition: all 0.2s ease;
+}
+
+.dialog-btn-dark:hover {
+  color: var(--dialog-primary) !important;
+}
+
+.dialog-btn-dark:active {
+  opacity: 0.8;
+}
+
+/* High Contrast Theme */
+.dialog-hc {
+  --dialog-bg: #000000;
+  --dialog-text: #ffffff;
+  --dialog-border: #ffff00;
+  --dialog-caption-bg: #000000;
+  --dialog-caption-text: #ffffff;
+  --dialog-shadow: rgba(255, 255, 0, 0.5);
+  --dialog-primary: #003366;
+}
+
+/* Mobile Adaptations */
+.dialog-mobile {
+  font-size: var(--dialog-text-size);
+  padding: var(--dialog-padding);
+  width: var(--dialog-width);
+}
+
+@media (max-width: 768px) {
+  .dialog-mobile {
+    --dialog-text-size: 0.9em;
+    --dialog-padding: 0.5em;
+    --dialog-width: 90vw;
+  }
+}
+
+@media (max-width: 480px) {
+  .dialog-mobile {
+    --dialog-text-size: 0.8em;
+    --dialog-padding: 0.3em;
+  }
+  
+  .dialog-mobile .dialog-caption {
+    font-size: 1.1em;
+  }
+}
+
+/* Animations */
+.dialog-animate-open {
+  animation: dialogOpen 0.3s ease-out forwards;
+}
+
+.dialog-animate-close {
+  animation: dialogClose 0.3s ease-in forwards;
+}
+
+@keyframes dialogOpen {
+  from {
+    opacity: 0.1;
+    border: solid 1px var(--dialog-border);
+    background: var(--dialog-bg-secondary);
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialogClose {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.1;
+    border: solid 1px var(--dialog-border);
+    background: var(--dialog-bg-secondary);
+  }
+}

@@ -1,0 +1,197 @@
+/* FormLayout 主题样式 */
+/* 主题变量定义 */
+[data-theme] {
+  --ood-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  --ood-bg: #ffffff;
+  --ood-bg-secondary: #f8f9fa;
+  --ood-text: #212529;
+  --ood-border: rgba(0,0,0,0.1);
+  --ood-border-secondary: #dee2e6;
+}
+
+/* 暗黑模式 */
+[data-theme="dark"] {
+  --ood-gradient: linear-gradient(135deg, #2d2d30 0%, #1e1e1e 100%);
+  --ood-bg: #2d2d30;
+  --ood-bg-secondary: #404040;
+  --ood-text: #cccccc;
+  --ood-border: #3c3c3c;
+  --ood-border-secondary: #555555;
+}
+
+/* 高对比度模式 */
+[data-theme="highcontrast"] {
+  --ood-gradient: linear-gradient(135deg, #000000 0%, #333333 100%);
+  --ood-bg: #000000;
+  --ood-bg-secondary: #222222;
+  --ood-text: #ffffff;
+  --ood-border: #ffffff;
+  --ood-border-secondary: #666666;
+}
+
+/* 基础样式 */
+.formlayout {
+  --formlayout-box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  --formlayout-box-shadow-hover: 0 3px 6px rgba(0,0,0,0.15);
+}
+
+.formlayout .formlayout-box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  background: var(--ood-gradient);
+  border: 1px solid var(--ood-border);
+  border-radius: 6px;
+  box-shadow: var(--formlayout-box-shadow);
+  transition: all 0.3s ease;
+}
+
+.formlayout .formlayout-box:hover {
+  box-shadow: var(--formlayout-box-shadow-hover);
+}
+
+.formlayout .formlayout-holder {
+  overflow: auto;
+  position: relative;
+  background-color: var(--ood-bg);
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.formlayout .formlayout-table {
+  overflow: hidden;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+  border-width: 0;
+  table-layout: fixed;
+  width: 0;
+  outline-width: 0;
+  cursor: default;
+  max-width: none;
+  max-height: none;
+  background-color: var(--ood-bg);
+  transition: background-color 0.3s ease;
+}
+
+/* 单元格样式 */
+.formlayout .formlayout-item {
+  position: relative;
+  background: transparent;
+  height: 22px;
+  padding: 0 4px;
+  overflow: hidden;
+  outline-width: 0;
+  white-space: pre-line;
+  empty-cells: show;
+  line-height: 1.22;
+  text-align: left;
+  vertical-align: middle;
+  background-clip: padding-box;
+  transition: background-color 0.2s ease;
+}
+
+.formlayout .formlayout-item:hover {
+  background-color: rgba(0,123,255,0.1);
+}
+
+/* 暗黑主题特定样式 */
+.formlayout-dark .formlayout-box {
+  background: var(--ood-gradient) !important;
+  border-color: var(--ood-border) !important;
+}
+
+.formlayout-dark .formlayout-holder,
+.formlayout-dark .formlayout-table {
+  background-color: var(--ood-bg) !important;
+  color: var(--ood-text) !important;
+}
+
+.formlayout-dark .formlayout-table {
+  border-color: var(--ood-border) !important;
+}
+
+.formlayout-dark .formlayout-item {
+  background-color: var(--ood-bg-secondary) !important;
+  color: var(--ood-text) !important;
+  border-color: var(--ood-border-secondary) !important;
+}
+
+.formlayout-dark .formlayout-item:hover {
+  background-color: rgba(0,178,255,0.2) !important;
+}
+
+/* 高对比度主题特定样式 */
+.formlayout-hc .formlayout-box {
+  background: var(--ood-gradient) !important;
+  border: 2px solid var(--ood-border) !important;
+}
+
+.formlayout-hc .formlayout-holder,
+.formlayout-hc .formlayout-table {
+  background-color: var(--ood-bg) !important;
+  color: var(--ood-text) !important;
+  border: 2px solid var(--ood-border) !important;
+}
+
+.formlayout-hc .formlayout-item {
+  background-color: var(--ood-bg-secondary) !important;
+  color: var(--ood-text) !important;
+  border: 2px solid var(--ood-border) !important;
+  font-weight: bold;
+}
+
+/* 主题模式下的悬停效果 */
+[data-theme="dark"] .formlayout-item:hover {
+  background-color: #4a4a4a !important;
+}
+
+[data-theme="highcontrast"] .formlayout-item:hover {
+  background-color: #444444 !important;
+}
+
+/* 主题模式下的空项目提示 */
+[data-theme="dark"] .formlayout-item:empty:after {
+  color: #888888 !important;
+}
+
+[data-theme="highcontrast"] .formlayout-item:empty:after {
+  color: #dddddd !important;
+}
+
+/* 暗黑模式下的表格行样式 */
+[data-theme="dark"] .handsontable tr:first-child > td,
+[data-theme="dark"] .handsontable tr:first-child > th {
+  border-color: #555555 !important;
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+  .formlayout-mobile .formlayout-table {
+    font-size: 0.9em;
+  }
+  
+  .formlayout-mobile .formlayout-item {
+    padding: 4px 6px;
+    font-size: 0.9em;
+  }
+}
+
+@media (max-width: 480px) {
+  .formlayout-tiny .formlayout-item {
+    padding: 2px 4px;
+    font-size: 0.8em;
+  }
+}
+
+/* 可访问性增强 */
+.formlayout [role="grid"],
+.formlayout [role="table"],
+.formlayout [role="region"] {
+  outline: none;
+}
+
+.formlayout [role="gridcell"] {
+  tabindex: 0;
+}

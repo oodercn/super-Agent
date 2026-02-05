@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Agent 小局域网管理员使用手册</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        nav {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        nav h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        nav ul {
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-bottom: 10px;
+        }
+        
+        nav ul li a {
+            color: #3498db;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+        
+        main {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        section {
+            margin-bottom: 40px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        h3 {
+            color: #34495e;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        
+        h4 {
+            color: #7f8c8d;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .feature-box {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .feature-box h4 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        
+        .screenshot-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .screenshot-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        
+        .screenshot-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .screenshot-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .screenshot-caption {
+            padding: 15px;
+            text-align: center;
+            background-color: #f8f9fa;
+        }
+        
+        .screenshot-caption a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .screenshot-caption a:hover {
+            text-decoration: underline;
+        }
+        
+        .faq-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .faq-question {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .faq-answer {
+            color: #666;
+        }
+        
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            margin-top: 40px;
+            border-radius: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            header {
+                padding: 30px 0;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .screenshot-gallery {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>MCP Agent 小局域网管理员使用手册</h1>
+            <p class="subtitle">面向小型办公网络或企业分支机构的 MCP Agent 使用指南</p>
+        </header>
+        
+        <nav>
+            <h2>目录</h2>
+            <ul>
+                <li><a href="#role-overview">1. 角色概述</a></li>
+                <li><a href="#accessible-menus">2. 可访问菜单</a></li>
+                <li><a href="#page-features">3. 页面功能说明</a></li>
+                <li><a href="#operation-guide">4. 操作指南</a></li>
+                <li><a href="#screenshots">5. 截图说明</a></li>
+                <li><a href="#faq">6. 常见问题</a></li>
+                <li><a href="#support">7. 技术支持</a></li>
+            </ul>
+        </nav>
+        
+        <main>
+            <section id="role-overview">
+                <h2>1. 角色概述</h2>
+                <p>小局域网管理员是 MCP Agent 的中级使用角色，主要面向小型办公网络或企业分支机构，提供更全面的网络管理功能。</p>
+            </section>
+            
+            <section id="accessible-menus">
+                <h2>2. 可访问菜单</h2>
+                <h3>2.1 主要菜单</h3>
+                <ul>
+                    <li><strong>仪表盘</strong></li>
+                    <li><strong>家庭功能</strong>
+                        <ul>
+                            <li>家庭仪表盘</li>
+                            <li>设备管理
+                                <ul>
+                                    <li>设备列表</li>
+                                    <li>设备控制</li>
+                                </ul>
+                            </li>
+                            <li>家庭安全
+                                <ul>
+                                    <li>安全状态</li>
+                                    <li>访问控制</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li><strong>小局域网功能</strong>
+                        <ul>
+                            <li>局域网仪表盘</li>
+                            <li>网络设备
+                                <ul>
+                                    <li>设备列表</li>
+                                    <li>设备详情</li>
+                                </ul>
+                            </li>
+                            <li>网络配置
+                                <ul>
+                                    <li>网络设置</li>
+                                    <li>IP管理</li>
+                                </ul>
+                            </li>
+                            <li>网络监控
+                                <ul>
+                                    <li>网络状态</li>
+                                    <li>带宽监控</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </section>
+            
+            <section id="page-features">
+                <h2>3. 页面功能说明</h2>
+                
+                <div class="feature-box">
+                    <h4>3.1 仪表盘 (dashboard.html)</h4>
+                    <ul>
+                        <li><strong>功能</strong>：展示系统整体状态和关键指标</li>
+                        <li><strong>主要信息</strong>：系统运行状态、设备在线数量、安全状态概览</li>
+                        <li><strong>操作</strong>：快速访问各功能模块</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-box">
+                    <h4>3.2 家庭功能相关页面</h4>
+                    <ul>
+                        <li><strong>家庭仪表盘</strong> (home/home-dashboard.html)</li>
+                        <li><strong>设备列表</strong> (home/device-list.html)</li>
+                        <li><strong>设备控制</strong> (home/device-control.html)</li>
+                        <li><strong>安全状态</strong> (home/security-status.html)</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-box">
+                    <h4>3.3 局域网仪表盘 (lan/lan-dashboard.html)</h4>
+                    <ul>
+                        <li><strong>功能</strong>：专用于局域网环境的综合监控面板</li>
+                        <li><strong>主要信息</strong>：网络拓扑、设备分布、流量统计</li>
+                        <li><strong>操作</strong>：查看详细网络信息、快速故障定位</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-box">
+                    <h4>3.4 网络设备列表 (lan/network-devices.html)</h4>
+                    <ul>
+                        <li><strong>功能</strong>：管理局域网中的所有网络设备</li>
+                        <li><strong>主要信息</strong>：设备名称、类型、IP地址、MAC地址、状态、厂商信息</li>
+                        <li><strong>操作</strong>：添加设备、删除设备、查看设备详情、修改设备设置</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-box">
+                    <h4>3.5 设备详情 (lan/device-details.html)</h4>
+                    <ul>
+                        <li><strong>功能</strong>：查看网络设备的详细信息</li>
+                        <li><strong>主要信息</strong>：设备硬件信息、网络配置、接口状态、性能指标</li>
+                        <li><strong>操作</strong>：修改设备配置、诊断设备问题、更新设备固件</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-box">
+                    <h4>3.6 网络设置 (lan/network-settings.html)</h4>
+                    <ul>
+                        <li><strong>功能</strong>：配置局域网的基本网络参数</li>
+                        <li><strong>主要信息</strong>：IP地址范围、子网掩码、网关、DNS服务器</li>
+                        <li><strong>操作</strong>：修改网络参数、应用配置变更</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-box">
+                    <h4>3.7 IP管理 (lan/ip-management.html)</h4>
+                    <ul>
+                        <li><strong>功能</strong>：管理局域网内的IP地址分配</li>
+                        <li><strong>主要信息</strong>：IP地址池、已分配IP、IP地址状态</li>
+                        <li><strong>操作</strong>：分配静态IP、释放IP地址、设置IP保留</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-box">
+                    <h4>3.8 网络状态 (lan/network-status.html)</h4>
+                    <ul>
+                        <li><strong>功能</strong>：监控局域网的整体网络状态</li>
+                        <li><strong>主要信息</strong>：连接状态、丢包率、延迟、带宽使用率</li>
+                        <li><strong>操作</strong>：查看详细网络指标、诊断网络问题</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-box">
+                    <h4>3.9 带宽监控 (lan/bandwidth-monitor.html)</h4>
+                    <ul>
+                        <li><strong>功能</strong>：监控局域网的带宽使用情况</li>
+                        <li><strong>主要信息</strong>：实时带宽使用、历史流量统计、流量峰值</li>
+                        <li><strong>操作</strong>：设置带宽限制、查看流量趋势分析</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section id="operation-guide">
+                <h2>4. 操作指南</h2>
+                
+                <h3>4.1 网络设备管理操作</h3>
+                <ol>
+                    <li><strong>查看网络设备列表</strong>：点击「小局域网功能」→「网络设备」→「设备列表」</li>
+                    <li><strong>查看设备详情</strong>：在设备列表中选择设备，点击「详情」按钮</li>
+                    <li><strong>修改设备配置</strong>：在设备详情页面，点击「配置」选项卡进行修改</li>
+                </ol>
+                
+                <h3>4.2 网络配置操作</h3>
+                <ol>
+                    <li><strong>修改网络设置</strong>：点击「小局域网功能」→「网络配置」→「网络设置」</li>
+                    <li><strong>管理IP地址</strong>：点击「小局域网功能」→「网络配置」→「IP管理」</li>
+                    <li><strong>应用配置变更</strong>：修改配置后点击「应用」按钮，等待配置生效</li>
+                </ol>
+                
+                <h3>4.3 网络监控操作</h3>
+                <ol>
+                    <li><strong>查看网络状态</strong>：点击「小局域网功能」→「网络监控」→「网络状态」</li>
+                    <li><strong>监控带宽使用</strong>：点击「小局域网功能」→「网络监控」→「带宽监控」</li>
+                    <li><strong>分析流量数据</strong>：在带宽监控页面查看历史流量图表，分析流量趋势</li>
+                </ol>
+            </section>
+            
+            <section id="screenshots">
+                <h2>5. 截图说明</h2>
+                <p>本手册包含以下页面的截图：</p>
+                
+                <div class="screenshot-gallery">
+                    <div class="screenshot-item">
+                        <img src="screenshots/lan/dashboard.png" alt="仪表盘截图">
+                        <div class="screenshot-caption">
+                            <a href="screenshots/lan/dashboard.png" target="_blank">仪表盘截图</a>
+                        </div>
+                    </div>
+                    
+                    <div class="screenshot-item">
+                        <img src="screenshots/lan/device-management.png" alt="设备管理截图">
+                        <div class="screenshot-caption">
+                            <a href="screenshots/lan/device-management.png" target="_blank">设备管理截图</a>
+                        </div>
+                    </div>
+                    
+                    <div class="screenshot-item">
+                        <img src="screenshots/lan/network-topology.png" alt="网络拓扑截图">
+                        <div class="screenshot-caption">
+                            <a href="screenshots/lan/network-topology.png" target="_blank">网络拓扑截图</a>
+                        </div>
+                    </div>
+                    
+                    <div class="screenshot-item">
+                        <img src="screenshots/lan/security-monitoring.png" alt="安全监控截图">
+                        <div class="screenshot-caption">
+                            <a href="screenshots/lan/security-monitoring.png" target="_blank">安全监控截图</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="faq">
+                <h2>6. 常见问题</h2>
+                
+                <div class="faq-item">
+                    <div class="faq-question">6.1 网络设备无法发现</div>
+                    <div class="faq-answer">
+                        <p><strong>原因</strong>：设备未开启SNMP、网络连接问题或权限不足</p>
+                        <p><strong>解决</strong>：确保设备已开启SNMP，检查网络连接，确认设备访问权限</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">6.2 IP地址冲突</div>
+                    <div class="faq-answer">
+                        <p><strong>原因</strong>：多个设备使用相同IP地址或IP地址分配策略问题</p>
+                        <p><strong>解决</strong>：使用IP管理功能检测冲突，重新分配IP地址，优化DHCP设置</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">6.3 网络带宽异常</div>
+                    <div class="faq-answer">
+                        <p><strong>原因</strong>：存在流量异常的设备或网络攻击</p>
+                        <p><strong>解决</strong>：使用带宽监控功能定位异常设备，检查网络安全状态</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="support">
+                <h2>7. 技术支持</h2>
+                <p>如有其他问题，请参考系统内的帮助文档或联系技术支持。</p>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2026 MCP Agent 文档. 保留所有权利.</p>
+        </footer>
+    </div>
+</body>
+</html>

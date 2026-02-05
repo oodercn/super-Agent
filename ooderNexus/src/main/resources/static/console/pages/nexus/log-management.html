@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日志管理 - Nexus - Nexus</title>
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+    <link rel="stylesheet" href="../../css/mcpagent/common.css">
+    <script src="../../js/theme-manager.js"></script>
+    <script src="../../js/nexus/base.js"></script>
+    <script src="../../js/nexus/api.js"></script>
+    <script src="../../js/nexus/ui.js"></script>
+    <script src="../../js/nexus/utils.js"></script>
+    <script src="../../js/nexus/sdk-proxy.js"></script>
+    <script src="../../js/nexus/common.js"></script>
+</head>
+<body class="nexus-page">
+    <div class="nexus-container">
+        <!-- 侧边导航栏 -->
+        <div class="nexus-sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> Nexus Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="nexus-main-content">
+            <div class="nexus-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h1><i class="ri-file-text-line"></i> 日志管理</h1>
+                    <button class="theme-toggle-btn nexus-btn nexus-btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                        <i class="ri-sun-line"></i> 浅色模式
+                    </button>
+                </div>
+                <div class="subtitle">
+                    <span class="badge nexus-badge">Nexus</span>
+                    <span>查看和管理Nexus系统日志</span>
+                </div>
+            </div>
+
+            <!-- 日志过滤和操作区 -->
+            <section class="nexus-operation-section">
+                <div class="nexus-section-header">
+                    <h3>日志操作</h3>
+                    <div class="nexus-operation-buttons">
+                        <button class="nexus-btn nexus-btn-primary" onclick="refreshLogs()">
+                            <i class="ri-refresh-line"></i>
+                            刷新日志
+                        </button>
+                        <button class="nexus-btn nexus-btn-secondary" onclick="exportLogs()">
+                            <i class="ri-download-line"></i>
+                            导出日志
+                        </button>
+                        <button class="nexus-btn nexus-btn-secondary" onclick="clearLogs()">
+                            <i class="ri-delete-bin-line"></i>
+                            清空日志
+                        </button>
+                    </div>
+                </div>
+                <div class="nexus-operation-card">
+                    <div class="nexus-form-group">
+                        <label for="logLevel">日志级别</label>
+                        <select id="logLevel">
+                            <option value="all">所有级别</option>
+                            <option value="ERROR">错误</option>
+                            <option value="WARNING">警告</option>
+                            <option value="INFO">信息</option>
+                            <option value="DEBUG">调试</option>
+                        </select>
+                    </div>
+                    <div class="nexus-form-group">
+                        <label for="logSource">日志来源</label>
+                        <select id="logSource">
+                            <option value="all">所有来源</option>
+                            <option value="system">系统</option>
+                            <option value="network">网络</option>
+                            <option value="terminal">终端</option>
+                            <option value="service">服务</option>
+                        </select>
+                    </div>
+                    <div class="nexus-form-group">
+                        <label for="logSearch">搜索关键词</label>
+                        <input type="text" id="logSearch" placeholder="输入关键词搜索日志">
+                    </div>
+                    <button class="nexus-btn nexus-btn-primary" onclick="filterLogs()">
+                        <i class="ri-filter-line"></i>
+                        应用过滤
+                    </button>
+                </div>
+            </section>
+
+            <!-- 日志统计 -->
+            <section class="nexus-operation-section">
+                <div class="nexus-section-header">
+                    <h3>日志统计</h3>
+                </div>
+                <div class="nexus-status-overview">
+                    <div class="nexus-status-card">
+                        <div class="nexus-status-icon">
+                            <i class="ri-error-warning-line"></i>
+                        </div>
+                        <div class="nexus-status-info">
+                            <h3>错误日志</h3>
+                            <p class="nexus-status-value" id="errorCount">0</p>
+                        </div>
+                    </div>
+                    <div class="nexus-status-card">
+                        <div class="nexus-status-icon">
+                            <i class="ri-alert-line"></i>
+                        </div>
+                        <div class="nexus-status-info">
+                            <h3>警告日志</h3>
+                            <p class="nexus-status-value" id="warningCount">0</p>
+                        </div>
+                    </div>
+                    <div class="nexus-status-card">
+                        <div class="nexus-status-icon">
+                            <i class="ri-information-line"></i>
+                        </div>
+                        <div class="nexus-status-info">
+                            <h3>信息日志</h3>
+                            <p class="nexus-status-value" id="infoCount">0</p>
+                        </div>
+                    </div>
+                    <div class="nexus-status-card">
+                        <div class="nexus-status-icon">
+                            <i class="ri-debug-line"></i>
+                        </div>
+                        <div class="nexus-status-info">
+                            <h3>调试日志</h3>
+                            <p class="nexus-status-value" id="debugCount">0</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 日志列表 -->
+            <section class="nexus-operation-section">
+                <div class="nexus-section-header">
+                    <h3>日志列表</h3>
+                    <span class="log-count" id="logCount">共 0 条日志</span>
+                </div>
+                <div class="nexus-card">
+                    <div class="log-container" id="logContainer">
+                        <!-- 日志数据将通过JS动态填充 -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 日志详情 -->
+            <section class="nexus-operation-section" id="logDetailsSection" style="display: none;">
+                <div class="nexus-section-header">
+                    <h3>日志详情</h3>
+                    <button class="nexus-btn nexus-btn-secondary" onclick="closeLogDetails()">
+                        <i class="ri-close-line"></i>
+                        关闭
+                    </button>
+                </div>
+                <div class="nexus-card">
+                    <div id="logDetailsContent">
+                        <!-- 日志详情将通过JS动态填充 -->
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- 公共JS模块 -->
+    <script src="../../js/menu-loader.js"></script>
+    <script>
+        window.onload = function() {
+            // 初始化菜单
+            initMenu();
+            // 初始化页面
+            nexusCommon.initPage('log-management', loadLogs);
+        };
+
+        // 模拟日志数据
+        let logs = [
+            {
+                id: 1,
+                timestamp: new Date(Date.now() - 300000).toISOString(),
+                level: "ERROR",
+                source: "network",
+                message: "网络连接失败: 无法连接到终端 endagent-003",
+                details: "连接超时，尝试重连失败，可能是网络问题或终端离线。"
+            },
+            {
+                id: 2,
+                timestamp: new Date(Date.now() - 600000).toISOString(),
+                level: "WARNING",
+                source: "service",
+                message: "服务重启: API Service 自动重启",
+                details: "服务内存使用过高，触发自动重启机制。"
+            },
+            {
+                id: 3,
+                timestamp: new Date(Date.now() - 900000).toISOString(),
+                level: "INFO",
+                source: "system",
+                message: "系统状态检查: 所有服务正常运行",
+                details: "CPU使用率: 12%, 内存使用率: 25%, 磁盘使用率: 15%"
+            },
+            {
+                id: 4,
+                timestamp: new Date(Date.now() - 1200000).toISOString(),
+                level: "DEBUG",
+                source: "terminal",
+                message: "终端注册: 新终端 endagent-004 注册成功",
+                details: "终端类型: Windows PC, IP地址: 192.168.1.104"
+            },
+            {
+                id: 5,
+                timestamp: new Date(Date.now() - 1500000).toISOString(),
+                level: "INFO",
+                source: "network",
+                message: "网络拓扑更新: 新增连接 endagent-001 -> endagent-002",
+                details: "连接类型: 有线，带宽: 100Mbps"
+            }
+        ];
+
+        function loadLogs() {
+            displayLogs(logs);
+            updateLogStats(logs);
+        }
+
+        function displayLogs(logList) {
+            const logContainer = document.getElementById('logContainer');
+            logContainer.innerHTML = '';
+
+            logList.forEach(log => {
+                const logItem = document.createElement('div');
+                logItem.className = 'nexus-log-item ' + log.level.toLowerCase();
+                logItem.innerHTML = `
+                    <div class="nexus-log-header">
+                        <span class="nexus-log-timestamp">${nexusCommon.formatTimestamp(new Date(log.timestamp).getTime())}</span>
+                        <span class="nexus-log-level ${log.level.toLowerCase()}">${log.level}</span>
+                        <span class="nexus-log-source">${log.source}</span>
+                    </div>
+                    <div class="nexus-log-message">${log.message}</div>
+                    <button class="nexus-btn nexus-btn-sm nexus-btn-primary" onclick="viewLogDetails(${log.id})">查看详情</button>
+                `;
+                logContainer.appendChild(logItem);
+            });
+
+            document.getElementById('logCount').textContent = `共 ${logList.length} 条日志`;
+        }
+
+        function updateLogStats(logList) {
+            const errorCount = logList.filter(log => log.level === 'ERROR').length;
+            const warningCount = logList.filter(log => log.level === 'WARNING').length;
+            const infoCount = logList.filter(log => log.level === 'INFO').length;
+            const debugCount = logList.filter(log => log.level === 'DEBUG').length;
+
+            document.getElementById('errorCount').textContent = errorCount;
+            document.getElementById('warningCount').textContent = warningCount;
+            document.getElementById('infoCount').textContent = infoCount;
+            document.getElementById('debugCount').textContent = debugCount;
+        }
+
+        async function refreshLogs() {
+            try {
+                nexusCommon.showMessage('刷新日志...', 'info');
+                
+                // 模拟添加新日志
+                const newLog = {
+                    id: logs.length + 1,
+                    timestamp: new Date().toISOString(),
+                    level: "INFO",
+                    source: "system",
+                    message: "日志刷新完成",
+                    details: "系统日志已更新"
+                };
+                logs.unshift(newLog);
+                
+                loadLogs();
+                nexusCommon.showMessage('日志已刷新', 'success');
+            } catch (error) {
+                nexusCommon.handleApiError(error, '刷新日志失败');
+            }
+        }
+
+        async function exportLogs() {
+            try {
+                const logData = JSON.stringify(logs, null, 2);
+                const blob = new Blob([logData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'nexus-logs-' + new Date().toISOString().slice(0, 10) + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                nexusCommon.showMessage('日志已导出', 'success');
+            } catch (error) {
+                nexusCommon.handleApiError(error, '导出日志失败');
+            }
+        }
+
+        async function clearLogs() {
+            try {
+                if (confirm('确定要清空所有日志吗？')) {
+                    logs = [];
+                    loadLogs();
+                    nexusCommon.showMessage('日志已清空', 'success');
+                }
+            } catch (error) {
+                nexusCommon.handleApiError(error, '清空日志失败');
+            }
+        }
+
+        async function filterLogs() {
+            try {
+                const level = document.getElementById('logLevel').value;
+                const source = document.getElementById('logSource').value;
+                const search = document.getElementById('logSearch').value.toLowerCase();
+
+                const filteredLogs = logs.filter(log => {
+                    const matchesLevel = level === 'all' || log.level === level;
+                    const matchesSource = source === 'all' || log.source === source;
+                    const matchesSearch = search === '' || log.message.toLowerCase().includes(search) || log.details.toLowerCase().includes(search);
+                    return matchesLevel && matchesSource && matchesSearch;
+                });
+
+                displayLogs(filteredLogs);
+                updateLogStats(filteredLogs);
+                nexusCommon.showMessage('日志过滤已应用', 'success');
+            } catch (error) {
+                nexusCommon.handleApiError(error, '过滤日志失败');
+            }
+        }
+
+        function viewLogDetails(logId) {
+            const log = logs.find(log => log.id === logId);
+            if (log) {
+                const detailsContent = document.getElementById('logDetailsContent');
+                detailsContent.innerHTML = `
+                    <div class="nexus-stats-grid">
+                        <div class="nexus-stats-card">
+                            <h4>日志详情</h4>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">时间戳:</span>
+                                <span class="nexus-stat-value">${nexusCommon.formatTimestamp(new Date(log.timestamp).getTime())}</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">日志级别:</span>
+                                <span class="nexus-stat-value">${log.level}</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">来源:</span>
+                                <span class="nexus-stat-value">${log.source}</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">消息:</span>
+                                <span class="nexus-stat-value">${log.message}</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">详情:</span>
+                                <span class="nexus-stat-value">${log.details}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('logDetailsSection').style.display = 'block';
+            }
+        }
+
+        function closeLogDetails() {
+            document.getElementById('logDetailsSection').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

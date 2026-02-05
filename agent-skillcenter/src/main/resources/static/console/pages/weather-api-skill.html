@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天气API导入 - SkillCenter 控制台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+    <style>
+        /* Ooder-Rad 风格基础样式 - 纯黑色系暗色主题 */
+        :root {
+            --ooder-primary: #3b82f6;
+            --ooder-secondary: #94a3b8;
+            --ooder-success: #22c55e;
+            --ooder-warning: #f59e0b;
+            --ooder-danger: #ef4444;
+            --ooder-light: #0f0f0f;
+            --ooder-dark: #ffffff;
+            --ooder-border: #2a2a2a;
+            --ooder-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            --ooder-radius: 8px;
+            --ooder-spacing: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #000000;
+            color: var(--ooder-dark);
+            line-height: 1.5;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            background-color: #000000;
+        }
+        
+        /* 侧边导航栏样式 - Ooder-Rad 风格 */
+        .sidebar {
+            width: 260px;
+            background-color: #121212;
+            border-right: 1px solid var(--ooder-border);
+            padding: 24px;
+            box-shadow: var(--ooder-shadow);
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 32px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ooder-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-menu li {
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu a {
+            color: var(--ooder-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--ooder-radius);
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .nav-menu a:hover {
+            background-color: var(--ooder-light);
+            color: var(--ooder-primary);
+        }
+        
+        .nav-menu a.active {
+            background-color: rgba(26, 115, 232, 0.1);
+            color: var(--ooder-primary);
+            font-weight: 600;
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            background-color: #000000;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--ooder-border);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ooder-dark);
+        }
+        
+        .header .subtitle {
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        /* 章节样式 */
+        .section {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            margin-bottom: 24px;
+        }
+        
+        .section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--ooder-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section h2::before {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background-color: var(--ooder-primary);
+            border-radius: 2px;
+        }
+        
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--ooder-secondary);
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="password"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            background-color: #1a1a1a;
+            color: var(--ooder-dark);
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--ooder-primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--ooder-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 12px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--ooder-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background-color: #1a1a1a;
+            color: var(--ooder-secondary);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2a2a2a;
+        }
+        
+        /* 卡片样式 */
+        .card {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 24px;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+        
+        .card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--ooder-dark);
+        }
+        
+        .card p {
+            color: var(--ooder-secondary);
+            margin-bottom: 16px;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--ooder-border);
+                padding: 16px;
+            }
+            
+            .main-content {
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .btn {
+                margin-bottom: 8px;
+            }
+        }
+        
+        /* 成功/错误消息样式 */
+        .message {
+            padding: 12px;
+            border-radius: var(--ooder-radius);
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .message-success {
+            background-color: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: var(--ooder-success);
+        }
+        
+        .message-error {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--ooder-danger);
+        }
+        
+        /* API提供商选择样式 */
+        .api-providers {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .api-provider {
+            padding: 20px;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            background-color: #1a1a1a;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .api-provider:hover {
+            border-color: var(--ooder-primary);
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+        
+        .api-provider.selected {
+            border-color: var(--ooder-primary);
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        
+        .api-provider h4 {
+            margin-bottom: 8px;
+            color: var(--ooder-dark);
+        }
+        
+        .api-provider p {
+            font-size: 12px;
+            color: var(--ooder-secondary);
+            margin-bottom: 12px;
+        }
+        
+        .api-provider .price {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ooder-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-cloud-sun-line"></i> 天气API导入</h2>
+            <ul class="nav-menu" id="nav-menu">
+                <li>
+                    <a href="#" class="active" onclick="switchTab('api-config')">
+                        <i class="ri-settings-3-line"></i>
+                        API配置
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchTab('skill-settings')">
+                        <i class="ri-code-box-line"></i>
+                        Skill设置
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchTab('preview-test')">
+                        <i class="ri-eye-line"></i>
+                        预览测试
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchTab('market-publish')">
+                        <i class="ri-upload-cloud-line"></i>
+                        发布到市场
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><i class="ri-cloud-sun-line"></i> 天气API导入</h1>
+                <div class="subtitle">
+                    <span class="badge" style="background-color: var(--ooder-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">v1.0.0</span>
+                    <span>Ooder Rad Style</span> | 
+                    <span id="timestamp"></span>
+                </div>
+            </div>
+            
+            <!-- API配置标签页 -->
+            <div id="api-config-tab" class="tab-content">
+                <div class="section">
+                    <h2>选择API提供商</h2>
+                    <div class="api-providers">
+                        <div class="api-provider" onclick="selectProvider('openweathermap')">
+                            <h4>OpenWeatherMap</h4>
+                            <p>全球天气数据，支持免费和付费计划</p>
+                            <div class="price">免费额度: 60次/分钟</div>
+                        </div>
+                        <div class="api-provider" onclick="selectProvider('weatherapi')">
+                            <h4>WeatherAPI.com</h4>
+                            <p>全球天气和地理编码服务</p>
+                            <div class="price">免费额度: 1,000次/天</div>
+                        </div>
+                        <div class="api-provider" onclick="selectProvider('accuweather')">
+                            <h4>AccuWeather</h4>
+                            <p>精确的全球天气预报</p>
+                            <div class="price">免费额度: 50次/天</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>API配置</h2>
+                    <form id="api-form">
+                        <div class="form-group">
+                            <label for="api-key">API密钥</label>
+                            <input type="password" id="api-key" placeholder="请输入API密钥" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="api-base-url">API基础URL</label>
+                            <input type="text" id="api-base-url" placeholder="请输入API基础URL" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="city">默认城市</label>
+                            <input type="text" id="city" placeholder="请输入默认城市" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="units">温度单位</label>
+                            <select id="units">
+                                <option value="metric">摄氏度 (°C)</option>
+                                <option value="imperial">华氏度 (°F)</option>
+                                <option value="standard">开尔文 (K)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="language">语言</label>
+                            <select id="language">
+                                <option value="zh_cn">简体中文</option>
+                                <option value="en">English</option>
+                                <option value="ja">日本語</option>
+                                <option value="ko">한국어</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="testApiConnection()">测试连接</button>
+                        <button type="button" class="btn btn-secondary" onclick="saveApiConfig()">保存配置</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Skill设置标签页 -->
+            <div id="skill-settings-tab" class="tab-content hidden">
+                <div class="section">
+                    <h2>Skill基本信息</h2>
+                    <form id="skill-form">
+                        <div class="form-group">
+                            <label for="skill-name">Skill名称</label>
+                            <input type="text" id="skill-name" placeholder="请输入Skill名称" value="天气查询" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="skill-description">Skill描述</label>
+                            <textarea id="skill-description" placeholder="请输入Skill描述">基于第三方API的天气查询技能，可以获取全球城市的实时天气信息。</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="skill-version">版本</label>
+                            <input type="text" id="skill-version" placeholder="请输入版本号" value="1.0.0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="skill-category">分类</label>
+                            <select id="skill-category">
+                                <option value="weather">天气</option>
+                                <option value="utility">实用工具</option>
+                                <option value="information">信息查询</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="skill-author">作者</label>
+                            <input type="text" id="skill-author" placeholder="请输入作者名称" required>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="saveSkillSettings()">保存设置</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- 预览测试标签页 -->
+            <div id="preview-test-tab" class="tab-content hidden">
+                <div class="section">
+                    <h2>天气预览</h2>
+                    <div id="weather-preview" class="card">
+                        <h3>北京天气</h3>
+                        <p>加载中...</p>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="testWeatherApi()">测试API</button>
+                </div>
+                
+                <div class="section">
+                    <h2>Skill测试</h2>
+                    <div class="card">
+                        <h3>测试命令</h3>
+                        <p>天气北京</p>
+                        <p>查询上海天气</p>
+                        <p>今天天气怎么样</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 发布到市场标签页 -->
+            <div id="market-publish-tab" class="tab-content hidden">
+                <div class="section">
+                    <h2>发布设置</h2>
+                    <form id="publish-form">
+                        <div class="form-group">
+                            <label for="publish-title">发布标题</label>
+                            <input type="text" id="publish-title" placeholder="请输入发布标题" value="天气查询Skill" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="publish-description">发布描述</label>
+                            <textarea id="publish-description" placeholder="请输入发布描述">一个功能强大的天气查询Skill，支持全球城市的实时天气信息查询，基于可靠的第三方天气API。</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="publish-tags">标签</label>
+                            <input type="text" id="publish-tags" placeholder="请输入标签，用逗号分隔" value="weather,utility,information">
+                        </div>
+                        <div class="form-group">
+                            <label for="publish-price">价格</label>
+                            <select id="publish-price">
+                                <option value="free">免费</option>
+                                <option value="paid">付费</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="publishToMarket()">发布到市场</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 当前选中的API提供商
+        let selectedProvider = null;
+        
+        // API提供商配置
+        const providers = {
+            openweathermap: {
+                name: 'OpenWeatherMap',
+                baseUrl: 'https://api.openweathermap.org/data/2.5',
+                docs: 'https://openweathermap.org/api'
+            },
+            weatherapi: {
+                name: 'WeatherAPI.com',
+                baseUrl: 'https://api.weatherapi.com/v1',
+                docs: 'https://www.weatherapi.com/docs/'
+            },
+            accuweather: {
+                name: 'AccuWeather',
+                baseUrl: 'https://dataservice.accuweather.com',
+                docs: 'https://developer.accuweather.com/apis'
+            }
+        };
+        
+        // 切换标签页
+        function switchTab(tabId) {
+            // 移除所有活动状态
+            document.querySelectorAll('.nav-menu a').forEach(a => {
+                a.classList.remove('active');
+            });
+            
+            // 添加当前活动状态
+            event.target.classList.add('active');
+            
+            // 隐藏所有标签页内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // 显示选中的标签页内容
+            document.getElementById(tabId + '-tab').style.display = 'block';
+        }
+        
+        // 选择API提供商
+        function selectProvider(providerId) {
+            selectedProvider = providerId;
+            
+            // 移除所有选中状态
+            document.querySelectorAll('.api-provider').forEach(provider => {
+                provider.classList.remove('selected');
+            });
+            
+            // 添加当前选中状态
+            event.target.classList.add('selected');
+            
+            // 填充API基础URL
+            const provider = providers[providerId];
+            if (provider) {
+                document.getElementById('api-base-url').value = provider.baseUrl;
+            }
+        }
+        
+        // 测试API连接
+        async function testApiConnection() {
+            const apiKey = document.getElementById('api-key').value;
+            const apiBaseUrl = document.getElementById('api-base-url').value;
+            const city = document.getElementById('city').value;
+            
+            if (!selectedProvider) {
+                alert('请先选择API提供商');
+                return;
+            }
+            
+            try {
+                let weatherData;
+                
+                if (selectedProvider === 'openweathermap') {
+                    // OpenWeatherMap API测试
+                    const response = await fetch(`${apiBaseUrl}/weather?q=${city}&appid=${apiKey}&units=metric&lang=zh_cn`);
+                    if (!response.ok) {
+                        throw new Error('API调用失败');
+                    }
+                    weatherData = await response.json();
+                } else if (selectedProvider === 'weatherapi') {
+                    // WeatherAPI.com API测试
+                    const response = await fetch(`${apiBaseUrl}/current.json?key=${apiKey}&q=${city}&aqi=no`);
+                    if (!response.ok) {
+                        throw new Error('API调用失败');
+                    }
+                    weatherData = await response.json();
+                } else if (selectedProvider === 'accuweather') {
+                    // AccuWeather API测试
+                    // 先获取位置ID
+                    const locationResponse = await fetch(`${apiBaseUrl}/locations/v1/cities/search?apikey=${apiKey}&q=${city}`);
+                    if (!locationResponse.ok) {
+                        throw new Error('获取位置ID失败');
+                    }
+                    const locations = await locationResponse.json();
+                    if (locations.length === 0) {
+                        throw new Error('未找到城市');
+                    }
+                    const locationKey = locations[0].Key;
+                    
+                    // 再获取天气数据
+                    const weatherResponse = await fetch(`${apiBaseUrl}/currentconditions/v1/${locationKey}?apikey=${apiKey}&language=zh-cn&details=false`);
+                    if (!weatherResponse.ok) {
+                        throw new Error('API调用失败');
+                    }
+                    weatherData = await weatherResponse.json();
+                }
+                
+                // 显示成功消息
+                const weatherPreview = document.getElementById('weather-preview');
+                weatherPreview.innerHTML = `
+                    <h3>${city}天气</h3>
+                    <p>温度: ${weatherData.main ? weatherData.main.temp : weatherData.current ? weatherData.current.temp_c : weatherData[0].Temperature.Metric.Value}°C</p>
+                    <p>天气: ${weatherData.weather ? weatherData.weather[0].description : weatherData.current ? weatherData.current.condition.text : weatherData[0].WeatherText}</p>
+                    <p>湿度: ${weatherData.main ? weatherData.main.humidity : weatherData.current ? weatherData.current.humidity : 'N/A'}%</p>
+                    <p>风速: ${weatherData.wind ? weatherData.wind.speed : weatherData.current ? weatherData.current.wind_kph : 'N/A'} km/h</p>
+                `;
+                
+                alert('API连接测试成功！');
+            } catch (error) {
+                alert('API连接测试失败: ' + error.message);
+            }
+        }
+        
+        // 保存API配置
+        function saveApiConfig() {
+            const apiKey = document.getElementById('api-key').value;
+            const apiBaseUrl = document.getElementById('api-base-url').value;
+            const city = document.getElementById('city').value;
+            const units = document.getElementById('units').value;
+            const language = document.getElementById('language').value;
+            
+            if (!selectedProvider) {
+                alert('请先选择API提供商');
+                return;
+            }
+            
+            const config = {
+                provider: selectedProvider,
+                apiKey: apiKey,
+                apiBaseUrl: apiBaseUrl,
+                city: city,
+                units: units,
+                language: language
+            };
+            
+            localStorage.setItem('weatherApiConfig', JSON.stringify(config));
+            alert('API配置保存成功！');
+        }
+        
+        // 保存Skill设置
+        function saveSkillSettings() {
+            const skillName = document.getElementById('skill-name').value;
+            const skillDescription = document.getElementById('skill-description').value;
+            const skillVersion = document.getElementById('skill-version').value;
+            const skillCategory = document.getElementById('skill-category').value;
+            const skillAuthor = document.getElementById('skill-author').value;
+            
+            const settings = {
+                name: skillName,
+                description: skillDescription,
+                version: skillVersion,
+                category: skillCategory,
+                author: skillAuthor
+            };
+            
+            localStorage.setItem('weatherSkillSettings', JSON.stringify(settings));
+            alert('Skill设置保存成功！');
+        }
+        
+        // 测试天气API
+        function testWeatherApi() {
+            const config = JSON.parse(localStorage.getItem('weatherApiConfig'));
+            if (!config) {
+                alert('请先保存API配置');
+                return;
+            }
+            
+            testApiConnection();
+        }
+        
+        // 发布到市场
+        function publishToMarket() {
+            const config = JSON.parse(localStorage.getItem('weatherApiConfig'));
+            const settings = JSON.parse(localStorage.getItem('weatherSkillSettings'));
+            
+            if (!config || !settings) {
+                alert('请先完成API配置和Skill设置');
+                return;
+            }
+            
+            const publishTitle = document.getElementById('publish-title').value;
+            const publishDescription = document.getElementById('publish-description').value;
+            const publishTags = document.getElementById('publish-tags').value;
+            const publishPrice = document.getElementById('publish-price').value;
+            
+            const skillData = {
+                title: publishTitle,
+                description: publishDescription,
+                tags: publishTags.split(',').map(tag => tag.trim()),
+                price: publishPrice,
+                config: config,
+                settings: settings
+            };
+            
+            // 模拟发布到市场
+            console.log('发布到市场:', skillData);
+            alert('发布到市场成功！Skill已添加到市场界面。');
+        }
+        
+        // 切换标签页函数
+        function switchTab(tabId) {
+            // 移除所有活动状态
+            document.querySelectorAll('.nav-menu a').forEach(a => {
+                a.classList.remove('active');
+            });
+            
+            // 添加当前活动状态
+            event.target.classList.add('active');
+            
+            // 隐藏所有标签页内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // 显示选中的标签页内容
+            document.getElementById(tabId + '-tab').style.display = 'block';
+        }
+        
+        // 更新时间戳
+        function updateTimestamp() {
+            const now = new Date();
+            const timestamp = document.getElementById('timestamp');
+            if (timestamp) {
+                timestamp.textContent = now.toLocaleString('zh-CN');
+            }
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = function() {
+            updateTimestamp();
+            setInterval(updateTimestamp, 60000); // 每分钟更新时间戳
+            
+            // 加载保存的配置
+            const savedConfig = localStorage.getItem('weatherApiConfig');
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                document.getElementById('api-key').value = config.apiKey || '';
+                document.getElementById('api-base-url').value = config.apiBaseUrl || '';
+                document.getElementById('city').value = config.city || '';
+                document.getElementById('units').value = config.units || 'metric';
+                document.getElementById('language').value = config.language || 'zh_cn';
+                
+                // 选择API提供商
+                if (config.provider) {
+                    selectedProvider = config.provider;
+                    const providers = document.querySelectorAll('.api-provider');
+                    providers.forEach(provider => {
+                        if (provider.textContent.includes(config.provider)) {
+                            provider.classList.add('selected');
+                        }
+                    });
+                }
+            }
+            
+            // 加载保存的Skill设置
+            const savedSettings = localStorage.getItem('weatherSkillSettings');
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                document.getElementById('skill-name').value = settings.name || '天气查询';
+                document.getElementById('skill-description').value = settings.description || '基于第三方API的天气查询技能，可以获取全球城市的实时天气信息。';
+                document.getElementById('skill-version').value = settings.version || '1.0.0';
+                document.getElementById('skill-category').value = settings.category || 'weather';
+                document.getElementById('skill-author').value = settings.author || '';
+            }
+        };
+    </script>
+</body>
+</html>

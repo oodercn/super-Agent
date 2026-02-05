@@ -1,0 +1,1081 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>链路管理 - 网络管理</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <style>
+        /* Ooder-Rad 风格基础样式 - 纯黑色系暗色主题 */
+        :root {
+            --ooder-primary: #3b82f6;
+            --ooder-secondary: #94a3b8;
+            --ooder-success: #22c55e;
+            --ooder-warning: #f59e0b;
+            --ooder-danger: #ef4444;
+            --ooder-light: #0f0f0f;
+            --ooder-dark: #ffffff;
+            --ooder-border: #2a2a2a;
+            --ooder-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            --ooder-radius: 8px;
+            --ooder-spacing: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #000000;
+            color: var(--ooder-dark);
+            line-height: 1.5;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            background-color: #000000;
+        }
+        
+        /* 侧边栏样式 - Ooder-Rad 风格 */
+        .sidebar {
+            width: 260px;
+            background-color: #121212;
+            border-right: 1px solid var(--ooder-border);
+            padding: 24px;
+            box-shadow: var(--ooder-shadow);
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 32px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ooder-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sidebar h2::before {
+            content: "⚡";
+            font-size: 20px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-menu li {
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu a {
+            color: var(--ooder-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--ooder-radius);
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .nav-menu a:hover {
+            background-color: var(--ooder-light);
+            color: var(--ooder-primary);
+        }
+        
+        .nav-menu a.active {
+            background-color: rgba(26, 115, 232, 0.1);
+            color: var(--ooder-primary);
+            font-weight: 600;
+        }
+        
+        /* 二级菜单样式 */
+        .nav-menu .submenu {
+            list-style: none;
+            margin-left: 16px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu .submenu li {
+            margin-bottom: 2px;
+        }
+        
+        .nav-menu .submenu a {
+            padding: 10px 16px;
+            font-size: 13px;
+            border-left: 2px solid var(--ooder-border);
+        }
+        
+        /* 三级菜单样式 */
+        .nav-menu .submenu .submenu {
+            margin-left: 32px;
+        }
+        
+        .nav-menu .submenu .submenu a {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-left: 2px solid var(--ooder-secondary);
+        }
+        
+        /* 展开/折叠图标 */
+        .nav-menu .toggle-icon {
+            margin-left: auto;
+            transition: transform 0.2s ease;
+        }
+        
+        .nav-menu .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        /* 菜单分隔线 */
+        .nav-menu .menu-divider {
+            height: 1px;
+            background-color: var(--ooder-border);
+            margin: 16px 0;
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            background-color: #000000;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--ooder-border);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ooder-dark);
+        }
+        
+        .header .subtitle {
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        /* 仪表盘卡片样式 */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .card {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+        
+        .card h3 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: var(--ooder-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--ooder-primary);
+            margin-bottom: 8px;
+        }
+        
+        .card .label {
+            font-size: 12px;
+            color: var(--ooder-secondary);
+        }
+        
+        /* 章节样式 */
+        .section {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            margin-bottom: 24px;
+        }
+        
+        .section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--ooder-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section h2::before {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background-color: var(--ooder-primary);
+            border-radius: 2px;
+        }
+        
+        /* 表格样式 */
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--ooder-radius);
+            border: 1px solid var(--ooder-border);
+            background-color: #1a1a1a;
+            margin-bottom: 24px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ooder-border);
+            color: var(--ooder-dark);
+        }
+        
+        th {
+            background-color: #121212;
+            font-weight: 600;
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        tr:hover {
+            background-color: #1a1a1a;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--ooder-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 12px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--ooder-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background-color: #1a1a1a;
+            color: var(--ooder-secondary);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2a2a2a;
+        }
+        
+        .btn-success {
+            background-color: var(--ooder-success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #16a34a;
+            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.4);
+        }
+        
+        .btn-danger {
+            background-color: var(--ooder-danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+        }
+        
+        /* 提示框样式 */
+        .alert {
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: var(--ooder-radius);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .alert-success {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--ooder-success);
+            border-left: 4px solid var(--ooder-success);
+        }
+        
+        .alert-error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--ooder-danger);
+            border-left: 4px solid var(--ooder-danger);
+        }
+        
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--ooder-secondary);
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            color: var(--ooder-dark);
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--ooder-primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        /* 隐藏样式 */
+        .hidden {
+            display: none;
+        }
+        
+        /* 网络拓扑图样式 */
+        .network-topology {
+            width: 100%;
+            height: 400px;
+            background-color: #1a1a1a;
+            border-radius: var(--ooder-radius);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--ooder-border);
+            box-shadow: var(--ooder-shadow);
+        }
+        
+        .topology-node {
+            position: absolute;
+            width: 64px;
+            height: 64px;
+            background-color: var(--ooder-primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+        
+        .topology-node:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+        }
+        
+        .topology-link {
+            position: absolute;
+            background-color: var(--ooder-secondary);
+            height: 2px;
+            transform-origin: 0 0;
+            opacity: 0.6;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--ooder-border);
+                padding: 16px;
+            }
+            
+            .main-content {
+                padding: 16px;
+            }
+            
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> MCP Agent Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><i class="ri-link-line"></i> 链路管理</h1>
+                <div class="subtitle">
+                    <span class="badge" style="background-color: var(--ooder-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">v0.6.5</span>
+                    <span>Ooder Rad Style</span> | 
+                    <span id="timestamp"></span>
+                </div>
+            </div>
+            
+            <!-- 链路统计 -->
+            <div class="dashboard">
+                <div class="card">
+                    <h3>链路总数</h3>
+                    <div class="value" id="total-links">24</div>
+                    <div class="label">链路数量</div>
+                </div>
+                <div class="card">
+                    <h3>活跃链路</h3>
+                    <div class="value" id="active-links">20</div>
+                    <div class="label">活跃数量</div>
+                </div>
+                <div class="card">
+                    <h3>链路类型</h3>
+                    <div class="value" id="link-types">3</div>
+                    <div class="label">类型数量</div>
+                </div>
+                <div class="card">
+                    <h3>链路状态</h3>
+                    <div class="value" id="link-status">83.3%</div>
+                    <div class="label">健康率</div>
+                </div>
+            </div>
+            
+            <!-- 链路管理操作 -->
+            <div class="section">
+                <h2>链路管理</h2>
+                <div style="margin-bottom: 24px;">
+                    <button class="btn btn-primary" onclick="createLink()">
+                        <i class="ri-add-line"></i> 创建链路
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshLinks()">
+                        <i class="ri-refresh-line"></i> 刷新链路
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportLinks()">
+                        <i class="ri-download-line"></i> 导出链路
+                    </button>
+                </div>
+                
+                <!-- 链路列表 -->
+                <div class="table-container">
+                    <table id="link-list-table">
+                        <thead>
+                            <tr>
+                                <th>链路ID</th>
+                                <th>源节点</th>
+                                <th>目标节点</th>
+                                <th>链路类型</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>最后更新</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>link-001</td>
+                                <td>mcp-agent-001</td>
+                                <td>route-agent-001</td>
+                                <td>直接</td>
+                                <td>活跃</td>
+                                <td>2026-01-30 10:00:00</td>
+                                <td>2026-01-30 17:00:00</td>
+                                <td>
+                                    <button class="btn btn-secondary" onclick="viewLink('link-001')">查看</button>
+                                    <button class="btn btn-secondary" onclick="editLink('link-001')">编辑</button>
+                                    <button class="btn btn-danger" onclick="removeLink('link-001')">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>link-002</td>
+                                <td>route-agent-001</td>
+                                <td>end-agent-001</td>
+                                <td>直接</td>
+                                <td>活跃</td>
+                                <td>2026-01-30 10:30:00</td>
+                                <td>2026-01-30 16:30:00</td>
+                                <td>
+                                    <button class="btn btn-secondary" onclick="viewLink('link-002')">查看</button>
+                                    <button class="btn btn-secondary" onclick="editLink('link-002')">编辑</button>
+                                    <button class="btn btn-danger" onclick="removeLink('link-002')">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>link-003</td>
+                                <td>mcp-agent-001</td>
+                                <td>end-agent-001</td>
+                                <td>间接</td>
+                                <td>活跃</td>
+                                <td>2026-01-30 11:00:00</td>
+                                <td>2026-01-30 16:00:00</td>
+                                <td>
+                                    <button class="btn btn-secondary" onclick="viewLink('link-003')">查看</button>
+                                    <button class="btn btn-secondary" onclick="editLink('link-003')">编辑</button>
+                                    <button class="btn btn-danger" onclick="removeLink('link-003')">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>link-004</td>
+                                <td>mcp-agent-001</td>
+                                <td>route-agent-002</td>
+                                <td>直接</td>
+                                <td>非活跃</td>
+                                <td>2026-01-30 11:30:00</td>
+                                <td>2026-01-30 15:30:00</td>
+                                <td>
+                                    <button class="btn btn-secondary" onclick="viewLink('link-004')">查看</button>
+                                    <button class="btn btn-secondary" onclick="editLink('link-004')">编辑</button>
+                                    <button class="btn btn-danger" onclick="removeLink('link-004')">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>link-005</td>
+                                <td>route-agent-002</td>
+                                <td>end-agent-002</td>
+                                <td>直接</td>
+                                <td>活跃</td>
+                                <td>2026-01-30 12:00:00</td>
+                                <td>2026-01-30 15:00:00</td>
+                                <td>
+                                    <button class="btn btn-secondary" onclick="viewLink('link-005')">查看</button>
+                                    <button class="btn btn-secondary" onclick="editLink('link-005')">编辑</button>
+                                    <button class="btn btn-danger" onclick="removeLink('link-005')">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 链路详情 -->
+            <div class="section">
+                <h2>链路详情</h2>
+                <div id="link-details" class="hidden">
+                    <div style="margin-bottom: 24px;">
+                        <h3 style="margin-bottom: 16px; color: var(--ooder-primary);">链路信息</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                            <div>
+                                <strong style="color: var(--ooder-secondary);">链路ID:</strong> <span id="detail-link-id"></span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--ooder-secondary);">源节点:</strong> <span id="detail-source"></span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--ooder-secondary);">目标节点:</strong> <span id="detail-target"></span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--ooder-secondary);">链路类型:</strong> <span id="detail-type"></span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--ooder-secondary);">状态:</strong> <span id="detail-status"></span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--ooder-secondary);">创建时间:</strong> <span id="detail-create-time"></span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--ooder-secondary);">最后更新:</strong> <span id="detail-update-time"></span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--ooder-secondary);">延迟:</strong> <span id="detail-latency"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 24px;">
+                        <h3 style="margin-bottom: 16px; color: var(--ooder-primary);">链路配置</h3>
+                        <div style="background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); border: 1px solid var(--ooder-border);">
+                            <pre id="detail-link-config" style="white-space: pre-wrap; color: var(--ooder-dark);"></pre>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 16px; color: var(--ooder-primary);">链路监控</h3>
+                        <div style="background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); border: 1px solid var(--ooder-border);">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                                <div>
+                                    <strong style="color: var(--ooder-secondary);">延迟:</strong> <span id="detail-monitor-latency"></span>
+                                </div>
+                                <div>
+                                    <strong style="color: var(--ooder-secondary);">丢包率:</strong> <span id="detail-monitor-loss"></span>
+                                </div>
+                                <div>
+                                    <strong style="color: var(--ooder-secondary);">带宽:</strong> <span id="detail-monitor-bandwidth"></span>
+                                </div>
+                                <div>
+                                    <strong style="color: var(--ooder-secondary);">状态:</strong> <span id="detail-monitor-status"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="no-details" style="text-align: center; padding: 64px;">
+                    <p style="color: var(--ooder-secondary);">请从列表中选择一个链路查看详情</p>
+                    <div style="margin-top: 32px; font-size: 64px;">
+                        <i class="ri-link-line"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 网络拓扑图 -->
+            <div class="section">
+                <h2>网络拓扑</h2>
+                <div id="network-topology" class="network-topology">
+                    <!-- 动态生成网络拓扑图 -->
+                </div>
+            </div>
+            
+            <!-- 创建/编辑链路表单 -->
+            <div class="section hidden" id="link-form-section">
+                <h2 id="form-title">创建链路</h2>
+                <form id="link-form">
+                    <div class="form-group">
+                        <label for="link-id">链路ID</label>
+                        <input type="text" id="link-id" name="link-id" placeholder="请输入链路ID">
+                    </div>
+                    <div class="form-group">
+                        <label for="source">源节点</label>
+                        <input type="text" id="source" name="source" placeholder="请输入源节点ID">
+                    </div>
+                    <div class="form-group">
+                        <label for="target">目标节点</label>
+                        <input type="text" id="target" name="target" placeholder="请输入目标节点ID">
+                    </div>
+                    <div class="form-group">
+                        <label for="link-type">链路类型</label>
+                        <select id="link-type" name="link-type">
+                            <option value="direct">直接</option>
+                            <option value="indirect">间接</option>
+                            <option value="virtual">虚拟</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="link-status">状态</label>
+                        <select id="link-status" name="link-status">
+                            <option value="active">活跃</option>
+                            <option value="inactive">非活跃</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="link-config">链路配置 (JSON)</label>
+                        <textarea id="link-config" name="link-config" rows="4" placeholder="请输入链路配置的JSON格式"></textarea>
+                    </div>
+                    <div style="margin-top: 24px;">
+                        <button type="button" class="btn btn-primary" onclick="saveLink()">保存链路</button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelEdit()">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 菜单配置
+        let menuConfig = null;
+        let currentLink = null;
+        
+        // 初始化页面
+        function init() {
+            updateTimestamp();
+            loadMenuConfig();
+            loadLinkData();
+            generateNetworkTopology();
+            setInterval(updateTimestamp, 60000); // 每分钟更新时间戳
+        }
+        
+        // 加载菜单配置
+        async function loadMenuConfig() {
+            try {
+                const response = await fetch('../../menu-config.json');
+                if (!response.ok) {
+                    throw new Error('菜单配置加载失败');
+                }
+                menuConfig = await response.json();
+                renderMenu();
+            } catch (error) {
+                console.error('加载菜单配置错误:', error);
+                // 加载失败时显示默认菜单
+                renderDefaultMenu();
+            }
+        }
+        
+        // 渲染菜单
+        function renderMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            
+            menuConfig.menu.forEach(item => {
+                const menuItem = createMenuItem(item);
+                navMenu.appendChild(menuItem);
+                // 添加菜单分隔线
+                if (item.id !== 'dashboard') {
+                    const divider = document.createElement('div');
+                    divider.className = 'menu-divider';
+                    navMenu.appendChild(divider);
+                }
+            });
+            
+            setupNavigation();
+        }
+        
+        // 创建菜单项
+        function createMenuItem(menuItem) {
+            const li = document.createElement('li');
+            
+            if (menuItem.children && menuItem.children.length > 0) {
+                // 有子菜单的菜单项
+                const a = document.createElement('a');
+                a.href = `#${menuItem.id}`;
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                    <span class="toggle-icon">›</span>
+                `;
+                
+                // 处理点击事件
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const toggleIcon = this.querySelector('.toggle-icon');
+                    const submenu = this.nextElementSibling;
+                    
+                    if (submenu) {
+                        submenu.classList.toggle('hidden');
+                        toggleIcon.classList.toggle('collapsed');
+                    }
+                });
+                
+                li.appendChild(a);
+                
+                // 创建子菜单
+                const submenu = document.createElement('ul');
+                submenu.className = 'submenu';
+                
+                menuItem.children.forEach(childItem => {
+                    const childLi = createMenuItem(childItem);
+                    submenu.appendChild(childLi);
+                });
+                
+                li.appendChild(submenu);
+            } else {
+                // 无子菜单的菜单项
+                const a = document.createElement('a');
+                if (menuItem.url) {
+                    a.href = menuItem.url;
+                } else {
+                    a.href = `#${menuItem.id}`;
+                    a.setAttribute('data-page', menuItem.page || menuItem.id);
+                }
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                `;
+                li.appendChild(a);
+            }
+            
+            return li;
+        }
+        
+        // 渲染默认菜单（加载失败时使用）
+        function renderDefaultMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = `
+                <li><a href="../../index.html"><i class="ri-dashboard-line"></i> 仪表盘</a></li>
+                <li><a href="../../pages/system/request-management.html"><i class="ri-computer-line"></i> 系统管理</a></li>
+                <li><a href="../../pages/network/route-management.html"><i class="ri-network-line"></i> 网络管理</a></li>
+                <li><a href="../../pages/terminal/terminal-management.html"><i class="ri-terminal-line"></i> 终端管理</a></li>
+                <li><a href="../../pages/config/service-config.html"><i class="ri-settings-3-line"></i> 配置中心</a></li>
+            `;
+            setupNavigation();
+        }
+        
+        // 设置导航
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-menu a');
+            navLinks.forEach(link => {
+                // 只处理带有data-page属性的链接（即叶子节点且没有url属性）
+                if (link.hasAttribute('data-page') && !link.hasAttribute('href') && link.getAttribute('href') !== '#') {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                    });
+                }
+            });
+        }
+        
+        // 更新时间戳
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = now.toLocaleString('zh-CN');
+        }
+        
+        // 加载链路数据
+        async function loadLinkData() {
+            try {
+                // 模拟数据加载
+                setTimeout(() => {
+                    document.getElementById('total-links').textContent = '24';
+                    document.getElementById('active-links').textContent = '20';
+                    document.getElementById('link-types').textContent = '3';
+                    document.getElementById('link-status').textContent = '83.3%';
+                }, 500);
+            } catch (error) {
+                console.error('加载链路数据错误:', error);
+            }
+        }
+        
+        // 生成网络拓扑图
+        function generateNetworkTopology() {
+            const topologyContainer = document.getElementById('network-topology');
+            topologyContainer.innerHTML = '';
+            
+            // 定义节点
+            const nodes = [
+                { id: 'mcp', name: 'MCP', x: 100, y: 200 },
+                { id: 'route1', name: 'Route1', x: 300, y: 100 },
+                { id: 'route2', name: 'Route2', x: 300, y: 300 },
+                { id: 'end1', name: 'End1', x: 500, y: 50 },
+                { id: 'end2', name: 'End2', x: 500, y: 150 },
+                { id: 'end3', name: 'End3', x: 500, y: 250 },
+                { id: 'end4', name: 'End4', x: 500, y: 350 }
+            ];
+            
+            // 定义连接
+            const links = [
+                { source: 'mcp', target: 'route1' },
+                { source: 'mcp', target: 'route2' },
+                { source: 'route1', target: 'end1' },
+                { source: 'route1', target: 'end2' },
+                { source: 'route2', target: 'end3' },
+                { source: 'route2', target: 'end4' }
+            ];
+            
+            // 创建节点
+            nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'topology-node';
+                nodeElement.style.left = `${node.x}px`;
+                nodeElement.style.top = `${node.y}px`;
+                nodeElement.textContent = node.name;
+                topologyContainer.appendChild(nodeElement);
+            });
+            
+            // 创建连接
+            links.forEach(link => {
+                const sourceNode = nodes.find(n => n.id === link.source);
+                const targetNode = nodes.find(n => n.id === link.target);
+                
+                if (sourceNode && targetNode) {
+                    const linkElement = document.createElement('div');
+                    linkElement.className = 'topology-link';
+                    
+                    // 计算连接长度和角度
+                    const dx = targetNode.x - sourceNode.x;
+                    const dy = targetNode.y - sourceNode.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    linkElement.style.width = `${length}px`;
+                    linkElement.style.left = `${sourceNode.x + 32}px`;
+                    linkElement.style.top = `${sourceNode.y + 32}px`;
+                    linkElement.style.transform = `rotate(${angle}deg)`;
+                    
+                    topologyContainer.appendChild(linkElement);
+                }
+            });
+        }
+        
+        // 创建链路
+        function createLink() {
+            const formSection = document.getElementById('link-form-section');
+            const formTitle = document.getElementById('form-title');
+            
+            formTitle.textContent = '创建链路';
+            formSection.classList.remove('hidden');
+            
+            // 重置表单
+            document.getElementById('link-form').reset();
+            document.getElementById('link-id').value = 'link-' + String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+            document.getElementById('link-config').value = JSON.stringify({
+                "timeout": 30000,
+                "retry": 3,
+                "bandwidth": "1Gbps",
+                "latency": 10
+            }, null, 2);
+            
+            currentLink = null;
+        }
+        
+        // 编辑链路
+        function editLink(linkId) {
+            const formSection = document.getElementById('link-form-section');
+            const formTitle = document.getElementById('form-title');
+            
+            formTitle.textContent = '编辑链路';
+            formSection.classList.remove('hidden');
+            
+            // 填充表单数据
+            document.getElementById('link-id').value = linkId;
+            document.getElementById('source').value = 'mcp-agent-001';
+            document.getElementById('target').value = 'route-agent-001';
+            document.getElementById('link-type').value = 'direct';
+            document.getElementById('link-status').value = 'active';
+            document.getElementById('link-config').value = JSON.stringify({
+                "timeout": 30000,
+                "retry": 3,
+                "bandwidth": "1Gbps",
+                "latency": 10
+            }, null, 2);
+            
+            currentLink = linkId;
+        }
+        
+        // 查看链路
+        function viewLink(linkId) {
+            const noDetails = document.getElementById('no-details');
+            const linkDetails = document.getElementById('link-details');
+            const formSection = document.getElementById('link-form-section');
+            
+            noDetails.classList.add('hidden');
+            linkDetails.classList.remove('hidden');
+            formSection.classList.add('hidden');
+            
+            // 填充详情数据
+            document.getElementById('detail-link-id').textContent = linkId;
+            document.getElementById('detail-source').textContent = 'mcp-agent-001';
+            document.getElementById('detail-target').textContent = 'route-agent-001';
+            document.getElementById('detail-type').textContent = '直接';
+            document.getElementById('detail-status').textContent = '活跃';
+            document.getElementById('detail-create-time').textContent = '2026-01-30 10:00:00';
+            document.getElementById('detail-update-time').textContent = '2026-01-30 17:00:00';
+            document.getElementById('detail-latency').textContent = '10ms';
+            
+            // 填充配置数据
+            document.getElementById('detail-link-config').textContent = JSON.stringify({
+                "timeout": 30000,
+                "retry": 3,
+                "bandwidth": "1Gbps",
+                "latency": 10
+            }, null, 2);
+            
+            // 填充监控数据
+            document.getElementById('detail-monitor-latency').textContent = '10ms';
+            document.getElementById('detail-monitor-loss').textContent = '0%';
+            document.getElementById('detail-monitor-bandwidth').textContent = '1Gbps';
+            document.getElementById('detail-monitor-status').textContent = '健康';
+        }
+        
+        // 保存链路
+        function saveLink() {
+            // 模拟保存
+            alert('链路保存成功');
+            cancelEdit();
+        }
+        
+        // 取消编辑
+        function cancelEdit() {
+            const formSection = document.getElementById('link-form-section');
+            formSection.classList.add('hidden');
+            currentLink = null;
+        }
+        
+        // 刷新链路
+        function refreshLinks() {
+            // 模拟刷新
+            const table = document.getElementById('link-list-table');
+            const tbody = table.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            // 生成新的模拟数据
+            for (let i = 1; i <= 5; i++) {
+                const tr = document.createElement('tr');
+                const status = i % 5 === 0 ? '非活跃' : '活跃';
+                tr.innerHTML = `
+                    <td>link-${String(i).padStart(3, '0')}</td>
+                    <td>mcp-agent-001</td>
+                    <td>route-agent-${String(i).padStart(3, '0')}</td>
+                    <td>${i % 2 === 0 ? '间接' : '直接'}</td>
+                    <td>${status}</td>
+                    <td>${new Date().toLocaleString('zh-CN')}</td>
+                    <td>${new Date().toLocaleString('zh-CN')}</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="viewLink('link-${String(i).padStart(3, '0')}')">查看</button>
+                        <button class="btn btn-secondary" onclick="editLink('link-${String(i).padStart(3, '0')}')">编辑</button>
+                        <button class="btn btn-danger" onclick="removeLink('link-${String(i).padStart(3, '0')}')">删除</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+        
+        // 删除链路
+        function removeLink(linkId) {
+            if (confirm(`确定要删除链路 ${linkId} 吗？`)) {
+                // 模拟删除
+                alert(`链路 ${linkId} 已删除`);
+                refreshLinks();
+            }
+        }
+        
+        // 导出链路
+        function exportLinks() {
+            // 模拟导出
+            alert('链路导出功能正在开发中');
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>

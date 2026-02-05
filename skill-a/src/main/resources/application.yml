@@ -1,0 +1,59 @@
+# Server Configuration
+server:
+  port: 9013
+  servlet:
+    context-path: /
+
+# Spring Configuration
+spring:
+  application:
+    name: skill-a
+  http:
+    converters:
+      preferred-json-mapper: fastjson
+
+# Agent Configuration
+agent:
+  agentId: skill-a-001
+  agentName: SkillA
+  agentType: skill
+  endpoint: http://localhost:9013
+  udpPort: 9009
+  heartbeatInterval: 30000
+
+# Skill A Configuration
+skill:
+  a:
+    name: SkillA
+    type: skill-a
+    target:
+      url: http://localhost:8080/api/v1/data
+    use:
+      mock:
+        data: true
+  discovery:
+    port: 5000
+    broadcast-address: 255.255.255.255
+    skill-name: SkillA
+    skill-type: skill-a
+    skill-port: 9013
+  scene:
+    id: RBC_SCENE_001
+  security:
+    key: default_security_key_2023
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    net.ooder.examples.skilla: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# VFS Configuration
+vfs:
+  serverUrl: http://localhost:8080/vfs
+  groupName: skill-a-group
+  connectionTimeout: 5000
+  retryCount: 3
+  enabled: true

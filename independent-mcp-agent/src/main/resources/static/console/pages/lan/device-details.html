@@ -1,0 +1,347 @@
+﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备详情 - 小局域网功能</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> MCP Agent Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+        <!-- 头部 -->
+        <div class="header">
+            <h1><i class="ri-information-line"></i> 设备详情</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="toggleTheme()">
+                    <i class="ri-moon-line"></i> 切换主题
+                </button>
+                <button class="btn btn-secondary" onclick="backToList()">
+                    <i class="ri-arrow-left-line"></i> 返回列表
+                </button>
+                <button class="btn btn-primary" onclick="editDevice()">
+                    <i class="ri-edit-line"></i> 编辑
+                </button>
+                <button class="btn btn-danger" onclick="deleteDevice()">
+                    <i class="ri-delete-line"></i> 删除
+                </button>
+            </div>
+        </div>
+        
+        <!-- 设备信息 -->
+        <div class="device-info">
+            <div class="device-icon-large" id="deviceIcon">
+                <i class="ri-router-wireless-line"></i>
+            </div>
+            <div class="device-details">
+                <h2 id="deviceName">主路由器</h2>
+                <p><strong>类型:</strong> <span id="deviceType">路由器</span></p>
+                <p><strong>IP地址:</strong> <span id="deviceIp">192.168.1.1</span></p>
+                <p><strong>MAC地址:</strong> <span id="deviceMac">AA:BB:CC:DD:EE:FF</span></p>
+                <div class="device-status">
+                    <div class="status-indicator status-online" id="deviceStatusIndicator"></div>
+                    <span id="deviceStatusText">在线</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 详细信息 -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">详细信息</h3>
+            </div>
+            <table class="info-table">
+                <tr>
+                    <th>设备名称</th>
+                    <td id="detailName">主路由器</td>
+                </tr>
+                <tr>
+                    <th>设备类型</th>
+                    <td id="detailType">路由器</td>
+                </tr>
+                <tr>
+                    <th>IP地址</th>
+                    <td id="detailIp">192.168.1.1</td>
+                </tr>
+                <tr>
+                    <th>MAC地址</th>
+                    <td id="detailMac">AA:BB:CC:DD:EE:FF</td>
+                </tr>
+                <tr>
+                    <th>子网掩码</th>
+                    <td id="detailSubnet">255.255.255.0</td>
+                </tr>
+                <tr>
+                    <th>默认网关</th>
+                    <td id="detailGateway">192.168.1.1</td>
+                </tr>
+                <tr>
+                    <th>DNS服务器</th>
+                    <td id="detailDns">8.8.8.8, 8.8.4.4</td>
+                </tr>
+                <tr>
+                    <th>厂商</th>
+                    <td id="detailVendor">TP-Link</td>
+                </tr>
+                <tr>
+                    <th>型号</th>
+                    <td id="detailModel">TL-WR841N</td>
+                </tr>
+                <tr>
+                    <th>固件版本</th>
+                    <td id="detailFirmware">3.16.9 Build 190104 Rel.36464n</td>
+                </tr>
+                <tr>
+                    <th>首次发现</th>
+                    <td id="detailFirstSeen">2026-01-01 10:00:00</td>
+                </tr>
+                <tr>
+                    <th>最后在线</th>
+                    <td id="detailLastSeen">2026-01-30 19:00:00</td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- 网络状态 -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">网络状态</h3>
+            </div>
+            <div class="network-status">
+                <div class="status-item">
+                    <h3>信号强度</h3>
+                    <p>95%</p>
+                </div>
+                <div class="status-item">
+                    <h3>连接速度</h3>
+                    <p>100Mbps</p>
+                </div>
+                <div class="status-item">
+                    <h3>负载</h3>
+                    <p>30%</p>
+                </div>
+                <div class="status-item">
+                    <h3>温度</h3>
+                    <p>45°C</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 历史记录 -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">历史记录</h3>
+                <button class="btn btn-secondary">
+                    <i class="ri-history-line"></i> 查看全部
+                </button>
+            </div>
+            <div class="history-list">
+                <div class="history-item">
+                    <div class="history-icon">
+                        <i class="ri-refresh-line"></i>
+                    </div>
+                    <div class="history-info">
+                        <div class="history-title">设备重启</div>
+                        <div class="history-time">2026-01-30 18:30:00</div>
+                    </div>
+                </div>
+                <div class="history-item">
+                    <div class="history-icon">
+                        <i class="ri-edit-line"></i>
+                    </div>
+                    <div class="history-info">
+                        <div class="history-title">配置更新</div>
+                        <div class="history-time">2026-01-30 12:00:00</div>
+                    </div>
+                </div>
+                <div class="history-item">
+                    <div class="history-icon">
+                        <i class="ri-check-line"></i>
+                    </div>
+                    <div class="history-info">
+                        <div class="history-title">固件更新</div>
+                        <div class="history-time">2026-01-29 10:00:00</div>
+                    </div>
+                </div>
+                <div class="history-item">
+                    <div class="history-icon">
+                        <i class="ri-alert-line"></i>
+                    </div>
+                    <div class="history-info">
+                        <div class="history-title">连接中断</div>
+                        <div class="history-time">2026-01-28 15:30:00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 模拟设备数据
+        const devices = {
+            1: {
+                id: 1,
+                name: "主路由器",
+                type: "router",
+                ip: "192.168.1.1",
+                mac: "AA:BB:CC:DD:EE:FF",
+                status: "online",
+                subnet: "255.255.255.0",
+                gateway: "192.168.1.1",
+                dns: "8.8.8.8, 8.8.4.4",
+                vendor: "TP-Link",
+                model: "TL-WR841N",
+                firmware: "3.16.9 Build 190104 Rel.36464n",
+                firstSeen: "2026-01-01 10:00:00",
+                lastSeen: "2026-01-30 19:00:00"
+            },
+            2: {
+                id: 2,
+                name: "交换机",
+                type: "switch",
+                ip: "192.168.1.2",
+                mac: "AA:BB:CC:DD:EE:GG",
+                status: "online",
+                subnet: "255.255.255.0",
+                gateway: "192.168.1.1",
+                dns: "8.8.8.8, 8.8.4.4",
+                vendor: "D-Link",
+                model: "DES-1008D",
+                firmware: "1.00.03",
+                firstSeen: "2026-01-02 11:00:00",
+                lastSeen: "2026-01-30 18:50:00"
+            },
+            3: {
+                id: 3,
+                name: "PC 1",
+                type: "pc",
+                ip: "192.168.1.100",
+                mac: "AA:BB:CC:DD:EE:HH",
+                status: "online",
+                subnet: "255.255.255.0",
+                gateway: "192.168.1.1",
+                dns: "8.8.8.8, 8.8.4.4",
+                vendor: "Dell",
+                model: "OptiPlex 7090",
+                firmware: "Windows 11 Pro",
+                firstSeen: "2026-01-03 09:00:00",
+                lastSeen: "2026-01-30 19:10:00"
+            }
+        };
+        
+        // 获取URL参数中的设备ID
+        function getDeviceId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id') || '1';
+        }
+        
+        // 初始化页面
+        function init() {
+            const deviceId = getDeviceId();
+            const device = devices[deviceId] || devices[1];
+            loadDeviceData(device);
+        }
+        
+        // 加载设备数据
+        function loadDeviceData(device) {
+            // 更新设备基本信息
+            document.getElementById('deviceName').textContent = device.name;
+            document.getElementById('deviceType').textContent = getDeviceTypeName(device.type);
+            document.getElementById('deviceIp').textContent = device.ip;
+            document.getElementById('deviceMac').textContent = device.mac;
+            document.getElementById('deviceStatusText').textContent = device.status === 'online' ? '在线' : device.status === 'warning' ? '警告' : '离线';
+            document.getElementById('deviceStatusIndicator').className = `status-indicator status-${device.status}`;
+            
+            // 更新设备图标
+            const deviceIcon = document.getElementById('deviceIcon');
+            deviceIcon.innerHTML = `<i class="ri-${getDeviceIcon(device.type)}"></i>`;
+            
+            // 更新详细信息
+            document.getElementById('detailName').textContent = device.name;
+            document.getElementById('detailType').textContent = getDeviceTypeName(device.type);
+            document.getElementById('detailIp').textContent = device.ip;
+            document.getElementById('detailMac').textContent = device.mac;
+            document.getElementById('detailSubnet').textContent = device.subnet;
+            document.getElementById('detailGateway').textContent = device.gateway;
+            document.getElementById('detailDns').textContent = device.dns;
+            document.getElementById('detailVendor').textContent = device.vendor;
+            document.getElementById('detailModel').textContent = device.model;
+            document.getElementById('detailFirmware').textContent = device.firmware;
+            document.getElementById('detailFirstSeen').textContent = device.firstSeen;
+            document.getElementById('detailLastSeen').textContent = device.lastSeen;
+        }
+        
+        // 获取设备图标
+        function getDeviceIcon(type) {
+            const iconMap = {
+                router: 'router-wireless-line',
+                switch: 'exchange-line',
+                pc: 'computer-line',
+                printer: 'printer-line',
+                nas: 'hard-drive-line'
+            };
+            return iconMap[type] || 'device-line';
+        }
+        
+        // 获取设备类型名称
+        function getDeviceTypeName(type) {
+            const typeMap = {
+                router: '路由器',
+                switch: '交换机',
+                pc: '电脑',
+                printer: '打印机',
+                nas: 'NAS'
+            };
+            return typeMap[type] || '其他';
+        }
+        
+        // 返回设备列表
+        function backToList() {
+            window.location.href = 'network-devices.html';
+        }
+        
+        // 编辑设备
+        function editDevice() {
+            alert('编辑设备功能开发中...');
+        }
+        
+        // 删除设备
+        function deleteDevice() {
+            if (confirm('确定要删除此设备吗？')) {
+                alert('设备已删除');
+                backToList();
+            }
+        }
+        
+        // 切换主题
+        function toggleTheme() {
+            const body = document.body;
+            if (body.classList.contains('dark-theme')) {
+                body.classList.remove('dark-theme');
+            } else {
+                body.classList.add('dark-theme');
+            }
+        }
+        
+        // 初始化函数（由window.onload调用）
+    </script>
+    
+    <!-- 统一菜单加载脚本 -->
+    <script src="/console/js/menu-loader.js"></script>
+    <script>
+        // 初始化菜单和页面
+        window.onload = function() {
+            init();
+            initMenu();
+        };
+    </script>
+</div>
+</body>
+</html>

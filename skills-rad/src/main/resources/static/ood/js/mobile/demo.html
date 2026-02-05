@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ood.js 移动端组件库演示 - 主题切换与可访问性</title>
+    <link rel="stylesheet" href="mobile.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--mobile-bg-secondary);
+            transition: all var(--mobile-duration-normal) ease;
+        }
+        
+        .demo-header {
+            background: var(--mobile-bg-primary);
+            border-radius: var(--mobile-border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--mobile-shadow-light);
+        }
+        
+        .demo-header h1 {
+            margin: 0 0 20px 0;
+            color: var(--mobile-text-primary);
+            font-size: var(--mobile-font-xxxl);
+            font-weight: 600;
+        }
+        
+        .theme-controls {
+            display: flex;
+            gap: var(--mobile-spacing-md);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .theme-controls label {
+            font-size: var(--mobile-font-sm);
+            color: var(--mobile-text-secondary);
+            font-weight: 500;
+        }
+        
+        .demo-section {
+            margin-bottom: 30px;
+            background: var(--mobile-bg-primary);
+            border-radius: var(--mobile-border-radius);
+            padding: 20px;
+            box-shadow: var(--mobile-shadow-light);
+            transition: all var(--mobile-duration-normal) ease;
+        }
+        
+        .demo-section:hover {
+            box-shadow: var(--mobile-shadow-medium);
+        }
+        
+        .demo-title {
+            font-size: var(--mobile-font-xl);
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--mobile-text-primary);
+            border-bottom: 2px solid var(--mobile-primary);
+            padding-bottom: var(--mobile-spacing-xs);
+        }
+        
+        .demo-item {
+            margin-bottom: 15px;
+        }
+        
+        .demo-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .demo-description {
+            font-size: var(--mobile-font-sm);
+            color: var(--mobile-text-tertiary);
+            margin-bottom: var(--mobile-spacing-sm);
+            line-height: var(--mobile-line-height-relaxed);
+        }
+        
+        /* 主题切换按钮样式 */
+        .theme-button {
+            background: var(--mobile-primary);
+            color: var(--mobile-text-inverse);
+            border: none;
+            border-radius: var(--mobile-border-radius);
+            padding: var(--mobile-spacing-sm) var(--mobile-spacing-md);
+            font-size: var(--mobile-font-sm);
+            cursor: pointer;
+            transition: all var(--mobile-duration-fast) ease;
+            min-height: var(--mobile-touch-target-sm);
+        }
+        
+        .theme-button:hover {
+            background: var(--mobile-primary);
+            transform: translateY(-1px);
+            box-shadow: var(--mobile-shadow-medium);
+        }
+        
+        .theme-button:focus {
+            outline: 2px solid var(--mobile-primary);
+            outline-offset: 2px;
+        }
+        
+        .theme-button.active {
+            background: var(--mobile-success);
+        }
+        
+        /* 响应式设计演示 */
+        .responsive-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--mobile-spacing-md);
+        }
+        
+        @media (max-width: 767px) {
+            .theme-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .responsive-demo {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* 可访问性指示器 */
+        .accessibility-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: var(--mobile-info);
+            color: var(--mobile-text-inverse);
+            padding: var(--mobile-spacing-xs) var(--mobile-spacing-sm);
+            border-radius: var(--mobile-border-radius);
+            font-size: var(--mobile-font-xs);
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <!-- 可访问性指示器 -->
+    <div class="accessibility-indicator" id="accessibility-indicator">
+        键盘导航已启用
+    </div>
+    
+    <div class="demo-container">
+        <!-- 头部和主题控制 -->
+        <div class="demo-header">
+            <h1>ood.js 移动端组件库演示</h1>
+            <p class="demo-description">
+                支持 Light、Dark 和高对比度主题，具备完整的可访问性和响应式设计。
+            </p>
+            <div class="theme-controls">
+                <label>主题切换：</label>
+                <button class="theme-button" onclick="setTheme('light')" id="theme-light">亮色模式</button>
+                <button class="theme-button" onclick="setTheme('dark')" id="theme-dark">暗黑模式</button>
+                <button class="theme-button" onclick="setTheme('light-hc')" id="theme-light-hc">高对比亮色</button>
+                <button class="theme-button" onclick="setTheme('dark-hc')" id="theme-dark-hc">高对比暗黑</button>
+                <button class="theme-button" onclick="toggleDarkMode()">切换暗黑模式</button>
+                <button class="theme-button" onclick="toggleHighContrast()">切换高对比度</button>
+            </div>
+        </div>
+        
+        <!-- 响应式设计演示 -->
+        <div class="demo-section">
+            <div class="demo-title">响应式设计演示</div>
+            <div class="demo-description">
+                调整浏览器窗口大小查看组件在不同屏幕尺寸下的表现。
+            </div>
+            <div class="responsive-demo">
+                <div id="responsive-button-demo"></div>
+                <div id="responsive-input-demo"></div>
+                <div id="responsive-card-demo"></div>
+            </div>
+        </div>
+        
+        <!-- 按钮组件演示 -->
+        <div class="demo-section">
+            <div class="demo-title">Button 按钮组件</div>
+            <div class="demo-item" id="demo-button-primary"></div>
+            <div class="demo-item" id="demo-button-secondary"></div>
+            <div class="demo-item" id="demo-button-ghost"></div>
+        </div>
+        
+        <!-- 输入框组件演示 -->
+        <div class="demo-section">
+            <div class="demo-title">Input 输入框组件</div>
+            <div class="demo-item" id="demo-input-text"></div>
+            <div class="demo-item" id="demo-input-email"></div>
+            <div class="demo-item" id="demo-input-tel"></div>
+        </div>
+        
+        <!-- 开关组件演示 -->
+        <div class="demo-section">
+            <div class="demo-title">Switch 开关组件</div>
+            <div class="demo-item" id="demo-switch-1"></div>
+            <div class="demo-item" id="demo-switch-2"></div>
+        </div>
+        
+        <!-- 选择器组件演示 -->
+        <div class="demo-section">
+            <div class="demo-title">Picker 选择器组件</div>
+            <div class="demo-item" id="demo-picker-single"></div>
+            <div class="demo-item" id="demo-picker-multiple"></div>
+        </div>
+        
+        <!-- 布局组件演示 -->
+        <div class="demo-section">
+            <div class="demo-title">Layout 布局组件</div>
+            <div class="demo-item" id="demo-layout-row"></div>
+            <div class="demo-item" id="demo-layout-column"></div>
+        </div>
+        
+        <!-- 面板组件演示 -->
+        <div class="demo-section">
+            <div class="demo-title">Panel 面板组件</div>
+            <div class="demo-item" id="demo-panel"></div>
+        </div>
+        
+        <!-- 列表组件演示 -->
+        <div class="demo-section">
+            <div class="demo-title">List 列表组件</div>
+            <div class="demo-item" id="demo-list" style="height: 300px;"></div>
+        </div>
+        
+        <!-- 导航组件演示 -->
+        <div class="demo-section">
+            <div class="demo-title">NavBar 导航栏组件</div>
+            <div class="demo-item" id="demo-navbar"></div>
+        </div>
+        
+        <div class="demo-section">
+            <div class="demo-title">TabBar 标签栏组件</div>
+            <div class="demo-item" id="demo-tabbar"></div>
+        </div>
+        
+        <!-- 反馈组件演示 -->
+        <div class="demo-section">
+            <div class="demo-title">Toast 消息提示</div>
+            <div class="demo-item">
+                <button onclick="showToastDemo()">显示Toast</button>
+                <button onclick="showModalDemo()">显示Modal</button>
+                <button onclick="showActionSheetDemo()">显示ActionSheet</button>
+            </div>
+        </div>
+        
+        <!-- 数据展示组件演示 -->
+        <div class="demo-section">
+            <div class="demo-title">Card 卡片组件</div>
+            <div class="demo-item" id="demo-card"></div>
+        </div>
+        
+        <div class="demo-section">
+            <div class="demo-title">Badge 徽章组件</div>
+            <div class="demo-item" id="demo-badge"></div>
+        </div>
+        
+        <div class="demo-section">
+            <div class="demo-title">Avatar 头像组件</div>
+            <div class="demo-item" id="demo-avatar"></div>
+        </div>
+    </div>
+
+    <!-- 引入ood.js和组件库 -->
+    <script src="../ood.js"></script>
+    <script src="../UI.js"></script>
+    <script src="index.js"></script>
+    <script src="ThemeManager.js"></script>
+    <script src="Basic/Button.js"></script>
+    <script src="Basic/Input.js"></script>
+    <script src="Basic/List.js"></script>
+    <script src="Layout/Grid.js"></script>
+    <script src="Layout/Layout.js"></script>
+    <script src="Layout/Panel.js"></script>
+    <script src="Form/Form.js"></script>
+    <script src="Form/Switch.js"></script>
+    <script src="Form/Picker.js"></script>
+    <script src="Navigation/NavBar.js"></script>
+    <script src="Navigation/TabBar.js"></script>
+    <script src="Navigation/Drawer.js"></script>
+    <script src="Feedback/Toast.js"></script>
+    <script src="Feedback/Modal.js"></script>
+    <script src="Feedback/ActionSheet.js"></script>
+    <script src="Display/Card.js"></script>
+    <script src="Display/Badge.js"></script>
+    <script src="Display/Avatar.js"></script>
+
+    <script>
+        // 全局组件实例存储
+        var componentInstances = {};
+        
+        // 主题切换函数
+        function setTheme(theme) {
+            if (typeof ood.Mobile.ThemeManager !== 'undefined') {
+                ood.Mobile.ThemeManager.setGlobalTheme(theme);
+                updateThemeButtons(theme);
+                
+                // 屏幕阅读器通知
+                if (ood.Mobile.ThemeManager.AccessibilityManager) {
+                    var themeNames = {
+                        'light': '亮色模式',
+                        'dark': '暗黑模式',
+                        'light-hc': '高对比亮色模式',
+                        'dark-hc': '高对比暗黑模式'
+                    };
+                    ood.Mobile.ThemeManager.AccessibilityManager.announce('已切换到' + themeNames[theme]);
+                }
+            }
+        }
+        
+        function toggleDarkMode() {
+            if (typeof ood.Mobile.ThemeManager !== 'undefined') {
+                ood.Mobile.ThemeManager.toggleDarkMode();
+                updateThemeButtons(ood.Mobile.ThemeManager.getCurrentTheme());
+            }
+        }
+        
+        function toggleHighContrast() {
+            if (typeof ood.Mobile.ThemeManager !== 'undefined') {
+                ood.Mobile.ThemeManager.toggleHighContrast();
+                updateThemeButtons(ood.Mobile.ThemeManager.getCurrentTheme());
+            }
+        }
+        
+        // 更新主题按钮状态
+        function updateThemeButtons(currentTheme) {
+            var buttons = document.querySelectorAll('.theme-button');
+            buttons.forEach(function(button) {
+                button.classList.remove('active');
+            });
+            
+            var activeButton = document.getElementById('theme-' + currentTheme);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+        }
+        
+        // Toast演示函数
+        function showToastDemo() {
+            if (typeof ood.Mobile.Toast !== 'undefined') {
+                ood.Mobile.Toast.success('这是一个成功消息提示！');
+            }
+        }
+        
+        function showModalDemo() {
+            alert('模拟 Modal 弹窗显示');
+        }
+        
+        function showActionSheetDemo() {
+            alert('模拟 ActionSheet 显示');
+        }
+        
+        // 等待DOM加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化主题按钮状态
+            if (typeof ood.Mobile.ThemeManager !== 'undefined') {
+                var currentTheme = ood.Mobile.ThemeManager.getCurrentTheme();
+                updateThemeButtons(currentTheme);
+            }
+            
+            // 监听主题变化事件
+            document.addEventListener('oodMobileThemeChange', function(e) {
+                updateThemeButtons(e.detail.newTheme);
+            });
+            
+            // 响应式演示组件
+            var responsiveButton = new ood.Mobile.Button({
+                text: '响应式按钮',
+                type: 'primary',
+                responsive: true
+            });
+            responsiveButton.render(document.getElementById('responsive-button-demo'));
+            componentInstances.responsiveButton = responsiveButton;
+            
+            var responsiveInput = new ood.Mobile.Input({
+                label: '响应式输入框',
+                placeholder: '试试在不同屏幕尺寸下输入',
+                type: 'text',
+                responsive: true
+            });
+            responsiveInput.render(document.getElementById('responsive-input-demo'));
+            componentInstances.responsiveInput = responsiveInput;
+            
+            // 演示按钮组件
+            var buttonPrimary = new ood.Mobile.Button({
+                text: '主要按钮',
+                type: 'primary',
+                size: 'md',
+                ariaLabel: '点击执行主要操作',
+                onButtonClick: function(profile, event) {
+                    if (ood.Mobile.ThemeManager && ood.Mobile.ThemeManager.AccessibilityManager) {
+                        ood.Mobile.ThemeManager.AccessibilityManager.announce('主要按钮被点击');
+                    }
+                    alert('主要按钮被点击');
+                }
+            });
+            buttonPrimary.render(document.getElementById('demo-button-primary'));
+            componentInstances.buttonPrimary = buttonPrimary;
+            
+            var buttonSecondary = new ood.Mobile.Button({
+                text: '次要按钮',
+                type: 'secondary',
+                size: 'md',
+                ariaLabel: '点击执行次要操作'
+            });
+            buttonSecondary.render(document.getElementById('demo-button-secondary'));
+            componentInstances.buttonSecondary = buttonSecondary;
+            
+            var buttonGhost = new ood.Mobile.Button({
+                text: '幽灵按钮',
+                type: 'ghost',
+                size: 'md',
+                ariaLabel: '点击执行幽灵按钮操作'
+            });
+            buttonGhost.render(document.getElementById('demo-button-ghost'));
+            componentInstances.buttonGhost = buttonGhost;
+            
+            // 演示输入框组件
+            var inputText = new ood.Mobile.Input({
+                label: '用户名',
+                placeholder: '请输入用户名',
+                type: 'text',
+                required: true,
+                ariaLabel: '用户名输入框，必填字段',
+                onInputChange: function(profile, event, value) {
+                    console.log('用户名输入：', value);
+                }
+            });
+            inputText.render(document.getElementById('demo-input-text'));
+            componentInstances.inputText = inputText;
+            
+            var inputEmail = new ood.Mobile.Input({
+                label: '邮箱',
+                placeholder: '请输入邮箱地址',
+                type: 'email',
+                ariaLabel: '邮箱地址输入框'
+            });
+            inputEmail.render(document.getElementById('demo-input-email'));
+            componentInstances.inputEmail = inputEmail;
+            
+            var inputTel = new ood.Mobile.Input({
+                label: '手机号',
+                placeholder: '请输入手机号码',
+                type: 'tel',
+                ariaLabel: '手机号码输入框'
+            });
+            inputTel.render(document.getElementById('demo-input-tel'));
+            componentInstances.inputTel = inputTel;
+            
+            // 演示开关组件
+            var switch1 = new ood.Mobile.Switch({
+                label: '启用通知',
+                checked: true,
+                onChange: function(profile, checked) {
+                    console.log('通知开关:', checked);
+                }
+            });
+            switch1.render(document.getElementById('demo-switch-1'));
+            
+            var switch2 = new ood.Mobile.Switch({
+                label: '夜间模式',
+                checked: false
+            });
+            switch2.render(document.getElementById('demo-switch-2'));
+            
+            // 演示选择器组件
+            var pickerSingle = new ood.Mobile.Picker({
+                placeholder: '选择城市',
+                title: '请选择城市',
+                options: [
+                    { value: 'beijing', label: '北京' },
+                    { value: 'shanghai', label: '上海' },
+                    { value: 'guangzhou', label: '广州' },
+                    { value: 'shenzhen', label: '深圳' }
+                ]
+            });
+            pickerSingle.render(document.getElementById('demo-picker-single'));
+            
+            var pickerMultiple = new ood.Mobile.Picker({
+                placeholder: '选择兴趣爱好',
+                title: '请选择兴趣爱好',
+                multiple: true,
+                options: [
+                    { value: 'reading', label: '阅读' },
+                    { value: 'sports', label: '运动' },
+                    { value: 'music', label: '音乐' },
+                    { value: 'travel', label: '旅行' }
+                ]
+            });
+            pickerMultiple.render(document.getElementById('demo-picker-multiple'));
+            
+            // 演示布局组件
+            var layoutRow = new ood.Mobile.Layout({
+                direction: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '10px',
+                style: 'border: 1px solid var(--mobile-border-color); padding: 10px; border-radius: 8px;'
+            });
+            layoutRow.render(document.getElementById('demo-layout-row'));
+            
+            var layoutColumn = new ood.Mobile.Layout({
+                direction: 'column',
+                gap: '10px',
+                style: 'border: 1px solid var(--mobile-border-color); padding: 10px; border-radius: 8px; margin-top: 10px;'
+            });
+            layoutColumn.render(document.getElementById('demo-layout-column'));
+            
+            // 演示面板组件
+            var panel = new ood.Mobile.Panel({
+                title: '信息面板',
+                bordered: true,
+                shadow: true,
+                rounded: true
+            });
+            panel.render(document.getElementById('demo-panel'));
+            panel.setContent('<p>这是面板的内容区域，可以放置任何内容。</p>');
+            
+            // 演示列表组件
+            var listData = [
+                { title: '列表项目1', subtitle: '这是项目1的描述', rightText: '详情' },
+                { title: '列表项目2', subtitle: '这是项目2的描述', rightText: '详情' },
+                { title: '列表项目3', subtitle: '这是项目3的描述', rightText: '详情' },
+                { title: '列表项目4', subtitle: '这是项目4的描述', rightText: '详情' },
+                { title: '列表项目5', subtitle: '这是项目5的描述', rightText: '详情' }
+            ];
+            
+            var list = new ood.Mobile.List({
+                data: listData,
+                onItemClick: function(profile, index, data, event) {
+                    alert('点击了: ' + data.title);
+                }
+            });
+            list.render(document.getElementById('demo-list'));
+            
+            // 演示导航组件
+            var navbar = new ood.Mobile.NavBar({
+                title: '页面标题',
+                leftButton: {
+                    text: '返回',
+                    handler: function() {
+                        alert('返回按钮被点击');
+                    }
+                },
+                rightButton: {
+                    text: '菜单',
+                    handler: function() {
+                        alert('菜单按钮被点击');
+                    }
+                }
+            });
+            navbar.render(document.getElementById('demo-navbar'));
+            
+            var tabbar = new ood.Mobile.TabBar({
+                tabs: [
+                    { text: '首页', icon: '🏠' },
+                    { text: '分类', icon: '📋', badge: 5 },
+                    { text: '购物车', icon: '🛒', badge: 99 },
+                    { text: '我的', icon: '👤' }
+                ],
+                activeIndex: 0,
+                onTabChange: function(profile, index, tab) {
+                    console.log('切换到标签:', tab.text);
+                }
+            });
+            tabbar.render(document.getElementById('demo-tabbar'));
+            
+            // 演示卡片组件
+            var card = new ood.Mobile.Card({
+                title: '卡片标题',
+                content: '这是卡片的内容区域，可以放置任意内容。',
+                cover: 'https://via.placeholder.com/300x200',
+                actions: [
+                    { text: '取消', type: 'cancel' },
+                    { text: '确定', type: 'primary' }
+                ],
+                hoverable: true,
+                onCardClick: function(profile, event) {
+                    alert('卡片被点击');
+                }
+            });
+            card.render(document.getElementById('demo-card'));
+            
+            // 演示徽章组件
+            var badge1 = new ood.Mobile.Badge({
+                count: 5,
+                content: '消息'
+            });
+            badge1.render(document.getElementById('demo-badge'));
+            
+            // 演示头像组件
+            var avatarContainer = document.getElementById('demo-avatar');
+            
+            var avatar1 = new ood.Mobile.Avatar({
+                text: '张三',
+                size: 'sm',
+                online: true
+            });
+            var avatar2 = new ood.Mobile.Avatar({
+                src: 'https://via.placeholder.com/100x100',
+                size: 'md',
+                online: false
+            });
+            var avatar3 = new ood.Mobile.Avatar({
+                icon: '👤',
+                size: 'lg',
+                shape: 'square'
+            });
+            
+            var avatarDiv = document.createElement('div');
+            avatarDiv.style.display = 'flex';
+            avatarDiv.style.gap = '10px';
+            avatarContainer.appendChild(avatarDiv);
+            
+            avatar1.render(avatarDiv);
+            avatar2.render(avatarDiv);
+            avatar3.render(avatarDiv);
+            
+            // 添加一些演示内容到布局中
+            setTimeout(function() {
+                var rowLayout = layoutRow.get(0);
+                var colLayout = layoutColumn.get(0);
+                
+                if (rowLayout) {
+                    var container = rowLayout.getSubNode('CONTAINER');
+                    container.html('<div style="padding: 10px; background: var(--mobile-primary); color: white; border-radius: 4px;">项目1</div><div style="padding: 10px; background: var(--mobile-secondary); color: white; border-radius: 4px;">项目2</div><div style="padding: 10px; background: var(--mobile-success); color: white; border-radius: 4px;">项目3</div>');
+                }
+                
+                if (colLayout) {
+                    var container = colLayout.getSubNode('CONTAINER');
+                    container.html('<div style="padding: 10px; background: var(--mobile-warning); color: white; border-radius: 4px;">垂直项目1</div><div style="padding: 10px; background: var(--mobile-danger); color: white; border-radius: 4px;">垂直项目2</div>');
+                }
+            }, 100);
+        });
+        
+        // 全局函数演示反馈组件
+        function showToastDemo() {
+            ood.Mobile.Toast.success('操作成功！', 2000);
+        }
+        
+        function showModalDemo() {
+            ood.Mobile.Modal.confirm({
+                title: '确认操作',
+                content: '您确定要执行这个操作吗？',
+                onConfirm: function() {
+                    ood.Mobile.Toast.success('已确认');
+                },
+                onCancel: function() {
+                    ood.Mobile.Toast.info('已取消');
+                }
+            });
+        }
+        
+        function showActionSheetDemo() {
+            ood.Mobile.ActionSheet.show({
+                title: '选择操作',
+                actions: [
+                    { text: '拍照', icon: '📷' },
+                    { text: '从相册选择', icon: '🖼️' },
+                    { text: '删除', type: 'destructive', icon: '🗑️' }
+                ],
+                onActionClick: function(profile, action, index) {
+                    ood.Mobile.Toast.info('选择了: ' + action.text);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

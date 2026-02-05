@@ -1,0 +1,387 @@
+﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>命令发送 - MCP Agent Console</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> MCP Agent Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><i class="ri-send-plane-line"></i> 命令发送</h1>
+                <div class="subtitle">
+                    <span class="badge" style="background-color: var(--ooder-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">命令体系</span>
+                    <span>Ooder Rad Style</span> | 
+                    <span id="timestamp"></span>
+                </div>
+            </div>
+            
+            <!-- 命令发送表单 -->
+            <div class="section">
+                <h2>命令发送表单</h2>
+                
+                <!-- 命令类型选择 -->
+                <div class="form-group">
+                    <label for="command-type">命令类型</label>
+                    <select id="command-type" class="form-control">
+                        <option value="MCP_REGISTER">MCP注册命令</option>
+                        <option value="MCP_DEREGISTER">MCP注销命令</option>
+                        <option value="MCP_HEARTBEAT">MCP心跳命令</option>
+                        <option value="MCP_STATUS">MCP状态查询命令</option>
+                        <option value="MCP_DISCOVER">MCP发现命令</option>
+                        <option value="ROUTE_QUERY">路由查询命令</option>
+                        <option value="ROUTE_UPDATE">路由更新命令</option>
+                        <option value="ENDAGENT_DISCOVER">终端发现命令</option>
+                        <option value="ENDAGENT_STATUS">终端状态查询命令</option>
+                        <option value="ENDAGENT_ADD">终端添加命令</option>
+                        <option value="ENDAGENT_REMOVE">终端移除命令</option>
+                        <option value="TASK_REQUEST">任务请求命令</option>
+                        <option value="TASK_RESPONSE">任务响应命令</option>
+                        <option value="AUTHENTICATE">认证命令</option>
+                        <option value="AUTH_RESPONSE">认证响应命令</option>
+                    </select>
+                </div>
+                
+                <!-- 目标Agent -->
+                <div class="form-group">
+                    <label for="target-agent">目标Agent</label>
+                    <input type="text" id="target-agent" class="form-control" placeholder="输入目标Agent ID">
+                </div>
+                
+                <!-- 命令参数 -->
+                <div class="form-group">
+                    <label for="command-params">命令参数 (JSON格式)</label>
+                    <textarea id="command-params" class="form-control" placeholder='{"key": "value"}'>{"test": "value"}</textarea>
+                </div>
+                
+                <!-- 超时设置 -->
+                <div class="form-group">
+                    <label for="timeout">超时设置 (毫秒)</label>
+                    <input type="number" id="timeout" class="form-control" value="30000" min="1000" max="600000">
+                </div>
+                
+                <!-- 优先级设置 -->
+                <div class="form-group">
+                    <label for="priority">优先级</label>
+                    <select id="priority" class="form-control">
+                        <option value="low">低</option>
+                        <option value="medium" selected>中</option>
+                        <option value="high">高</option>
+                        <option value="urgent">紧急</option>
+                    </select>
+                </div>
+                
+                <!-- 按钮组 -->
+                <div style="margin-top: 32px;">
+                    <button id="send-command" class="btn btn-primary">
+                        <i class="ri-send-plane-line"></i>
+                        发送命令
+                    </button>
+                    <button id="reset-form" class="btn btn-secondary">
+                        <i class="ri-refresh-line"></i>
+                        重置表单
+                    </button>
+                    <button id="load-template" class="btn btn-secondary">
+                        <i class="ri-file-text-line"></i>
+                        加载模板
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 命令响应 -->
+            <div class="section">
+                <h2>命令响应</h2>
+                <div class="response-area">
+                    <h3>响应内容</h3>
+                    <div id="command-response" class="response-content">
+                        等待命令发送...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 公共JS模块 -->
+    <script src="../../common/api-client.js"></script>
+    <script src="../../common/list-manager.js"></script>
+    <script src="../../common/form-manager.js"></script>
+    <script src="../../common/utils.js"></script>
+    
+    <script>
+        // 当前页面
+        let currentPage = 'command-send';
+        
+        // 菜单配置
+        let menuConfig = null;
+        
+        // 初始化页面
+        function init() {
+            updateTimestamp();
+            loadMenuConfig();
+            setupEventListeners();
+            setInterval(updateTimestamp, 60000); // 每分钟更新时间戳
+        }
+        
+        // 加载菜单配置
+        async function loadMenuConfig() {
+            try {
+                const response = await fetch('../../menu-config.json');
+                if (!response.ok) {
+                    throw new Error('菜单配置加载失败');
+                }
+                menuConfig = await response.json();
+                renderMenu();
+            } catch (error) {
+                console.error('加载菜单配置错误:', error);
+                renderDefaultMenu();
+            }
+        }
+        
+        // 渲染菜单
+        function renderMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            
+            menuConfig.menu.forEach(item => {
+                const menuItem = createMenuItem(item);
+                navMenu.appendChild(menuItem);
+                // 添加菜单分隔线
+                if (item.id !== 'dashboard') {
+                    const divider = document.createElement('div');
+                    divider.className = 'menu-divider';
+                    navMenu.appendChild(divider);
+                }
+            });
+            
+            setupNavigation();
+        }
+        
+        // 创建菜单项
+        function createMenuItem(menuItem) {
+            const li = document.createElement('li');
+            
+            if (menuItem.children && menuItem.children.length > 0) {
+                // 有子菜单的菜单项
+                const a = document.createElement('a');
+                a.href = `#${menuItem.id}`;
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                    <span class="toggle-icon">›</span>
+                `;
+                
+                // 处理点击事件
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const toggleIcon = this.querySelector('.toggle-icon');
+                    const submenu = this.nextElementSibling;
+                    
+                    if (submenu) {
+                        if (submenu.style.display === 'block') {
+                            submenu.style.display = 'none';
+                        } else {
+                            submenu.style.display = 'block';
+                        }
+                        toggleIcon.classList.toggle('collapsed');
+                    }
+                });
+                
+                li.appendChild(a);
+                
+                // 创建子菜单
+                const submenu = document.createElement('ul');
+                submenu.className = 'submenu';
+                
+                menuItem.children.forEach(childItem => {
+                    const childLi = createMenuItem(childItem);
+                    submenu.appendChild(childLi);
+                });
+                
+                li.appendChild(submenu);
+            } else {
+                // 无子菜单的菜单项
+                const a = document.createElement('a');
+                if (menuItem.url) {
+                    // 修复路径构建，确保从 command 目录正确访问其他页面
+                    if (menuItem.url.startsWith('pages/')) {
+                        if (menuItem.url.startsWith('pages/command/')) {
+                            // 同一目录下的命令页面，直接使用相对路径
+                            a.href = `../${menuItem.url.replace('pages/command/', '')}`;
+                        } else {
+                            // 其他目录的页面，使用 ../../ 前缀
+                            a.href = `../../${menuItem.url}`;
+                        }
+                    } else {
+                        a.href = menuItem.url;
+                    }
+                    if (menuItem.url.includes('command-send.html')) {
+                        a.classList.add('active');
+                    }
+                } else {
+                    a.href = `#${menuItem.id}`;
+                    a.setAttribute('data-page', menuItem.page || menuItem.id);
+                }
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                `;
+                li.appendChild(a);
+            }
+            
+            return li;
+        }
+        
+        // 渲染默认菜单（加载失败时使用）
+        function renderDefaultMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = `
+                <li><a href="../../pages/dashboard.html"><i class="ri-dashboard-line"></i> 仪表盘</a></li>
+                <li><a href="../../pages/command/command-dashboard.html"><i class="ri-dashboard-2-line"></i> 命令仪表盘</a></li>
+                <li><a href="../../pages/command/command-send.html" class="active"><i class="ri-send-plane-line"></i> 命令发送</a></li>
+            `;
+            setupNavigation();
+        }
+        
+        // 设置导航
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-menu a');
+            navLinks.forEach(link => {
+                if (link.hasAttribute('data-page') && !link.hasAttribute('href') && link.getAttribute('href') !== '#') {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // 更新活跃状态
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                }
+            });
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 发送命令按钮
+            document.getElementById('send-command').addEventListener('click', function() {
+                sendCommand();
+            });
+            
+            // 重置表单按钮
+            document.getElementById('reset-form').addEventListener('click', function() {
+                resetForm();
+            });
+            
+            // 加载模板按钮
+            document.getElementById('load-template').addEventListener('click', function() {
+                loadTemplate();
+            });
+            
+            // 命令类型变化事件
+            document.getElementById('command-type').addEventListener('change', function() {
+                updateTemplateBasedOnType(this.value);
+            });
+        }
+        
+        // 发送命令
+        async function sendCommand() {
+            try {
+                const commandType = document.getElementById('command-type').value;
+                const targetAgent = document.getElementById('target-agent').value;
+                const commandParams = document.getElementById('command-params').value;
+                const timeout = document.getElementById('timeout').value;
+                const priority = document.getElementById('priority').value;
+                
+                // 验证输入
+                if (!targetAgent) {
+                    alert('请输入目标Agent ID');
+                    return;
+                }
+                
+                // 解析JSON参数
+                let params;
+                try {
+                    params = JSON.parse(commandParams);
+                } catch (error) {
+                    alert('命令参数必须是有效的JSON格式');
+                    return;
+                }
+                
+                // 显示加载状态
+                document.getElementById('command-response').textContent = '发送命令中...';
+                
+                // 调用实际API
+                const response = await apiClient.post('/command/send', {
+                    commandType: commandType,
+                    targetAgent: targetAgent,
+                    parameters: params,
+                    timeout: parseInt(timeout),
+                    priority: priority
+                });
+                
+                document.getElementById('command-response').textContent = JSON.stringify(response, null, 2);
+                
+            } catch (error) {
+                console.error('命令发送错误:', error);
+                document.getElementById('command-response').textContent = '错误: ' + (error.message || '发送命令失败');
+            }
+        }
+        
+        // 重置表单
+        function resetForm() {
+            document.getElementById('target-agent').value = '';
+            document.getElementById('command-params').value = '{"test": "value"}';
+            document.getElementById('timeout').value = '30000';
+            document.getElementById('priority').value = 'medium';
+            document.getElementById('command-response').textContent = '等待命令发送...';
+        }
+        
+        // 加载模板
+        function loadTemplate() {
+            const commandType = document.getElementById('command-type').value;
+            updateTemplateBasedOnType(commandType);
+        }
+        
+        // 根据命令类型更新模板
+        function updateTemplateBasedOnType(commandType) {
+            let template = '{"test": "value"}';
+            
+            switch (commandType) {
+                case 'MCP_REGISTER':
+                    template = '{"agentName": "Test Agent", "agentType": "mcp", "version": "1.0.0"}';
+                    break;
+                case 'MCP_HEARTBEAT':
+                    template = '{"timestamp": ' + Date.now() + ', "status": "online"}';
+                    break;
+                case 'MCP_STATUS':
+                    template = '{"detail": true}';
+                    break;
+                case 'ENDAGENT_ADD':
+                    template = '{"endagentId": "endagent-123", "name": "Test End Agent", "type": "device"}';
+                    break;
+                case 'AUTHENTICATE':
+                    template = '{"username": "test", "password": "test123"}';
+                    break;
+            }
+            
+            document.getElementById('command-params').value = template;
+        }
+        
+        // 更新时间戳
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = utils.formatTimestamp(now.getTime());
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>

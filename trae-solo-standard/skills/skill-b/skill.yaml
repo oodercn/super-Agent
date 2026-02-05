@@ -1,0 +1,74 @@
+name: "SKILL B"
+description: "数据提交服务，负责将处理后的数据提交到目标系统"
+author: "OODER Team"
+version: "0.1.0"
+created: "2026-01-22"
+updated: "2026-01-22"
+
+# 技能类型
+type: "service"
+
+# 分类
+categories:
+  - "data"
+  - "service"
+  - "core"
+
+# 标签
+tags:
+  - "data-submission"
+  - "database"
+  - "api"
+  - "file"
+
+# 支持的功能
+functions:
+  - name: "submit-data"
+    description: "提交数据到目标系统"
+    parameters:
+      - name: "target"
+        type: "string"
+        required: true
+        description: "目标系统类型 (api/file/database)"
+      - name: "data"
+        type: "object"
+        required: true
+        description: "要提交的数据"
+      - name: "options"
+        type: "object"
+        required: false
+        description: "提交选项"
+    returnType: "object"
+    returnDescription: "提交结果"
+
+  - name: "info"
+    description: "获取技能信息"
+    parameters: []
+    returnType: "object"
+    returnDescription: "技能信息"
+
+# 执行环境
+environment:
+  required:
+    - "bash"
+    - "curl"
+
+# 脚本路径
+scripts:
+  basePath: "./scripts"
+  functions:
+    submit-data: "submit-data.sh"
+    info: "info.sh"
+
+# 依赖服务
+dependencies:
+  services:
+    - name: "ooder-agent"
+      url: "http://localhost:9010/api/v1"
+      required: true
+
+# 配置选项
+config:
+  timeout: 30
+  retryCount: 3
+  retryDelay: 1000

@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备控制 - 家庭功能</title>
+    <style>
+        /* Ooder-Rad 风格基础样式 */
+        :root {
+            /* 亮色主题 */
+            --ooder-primary: #1a73e8;
+            --ooder-secondary: #5f6368;
+            --ooder-success: #34a853;
+            --ooder-warning: #fbbc04;
+            --ooder-danger: #ea4335;
+            --ooder-light: #f8f9fa;
+            --ooder-dark: #202124;
+            --ooder-border: #dadce0;
+            --ooder-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --ooder-radius: 8px;
+            --ooder-spacing: 16px;
+            --ooder-background: #ffffff;
+            --ooder-text: #202124;
+            --ooder-card-bg: #ffffff;
+        }
+        
+        /* 暗色主题 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --ooder-primary: #8ab4f8;
+                --ooder-secondary: #9aa0a6;
+                --ooder-success: #81c995;
+                --ooder-warning: #fbbc04;
+                --ooder-danger: #f8877f;
+                --ooder-light: #303134;
+                --ooder-dark: #e8eaed;
+                --ooder-border: #5f6368;
+                --ooder-shadow: 0 1px 3px rgba(0,0,0,0.3);
+                --ooder-background: #202124;
+                --ooder-text: #e8eaed;
+                --ooder-card-bg: #303134;
+            }
+        }
+        
+        /* 手动切换暗色主题 */
+        body.dark-theme {
+            --ooder-primary: #8ab4f8;
+            --ooder-secondary: #9aa0a6;
+            --ooder-success: #81c995;
+            --ooder-warning: #fbbc04;
+            --ooder-danger: #f8877f;
+            --ooder-light: #303134;
+            --ooder-dark: #e8eaed;
+            --ooder-border: #5f6368;
+            --ooder-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            --ooder-background: #000000;
+            --ooder-text: #e8eaed;
+            --ooder-card-bg: #1a1a1a;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--ooder-background);
+            color: var(--ooder-text);
+            line-height: 1.5;
+            transition: all 0.3s ease;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+        
+        /* 头部样式 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--ooder-border);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ooder-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--ooder-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--ooder-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1565c0;
+            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: var(--ooder-light);
+            color: var(--ooder-text);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--ooder-border);
+        }
+        
+        /* 卡片样式 */
+        .card {
+            background-color: var(--ooder-card-bg);
+            border-radius: var(--ooder-radius);
+            border: 1px solid var(--ooder-border);
+            padding: 24px;
+            box-shadow: var(--ooder-shadow);
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ooder-text);
+        }
+        
+        /* 设备信息 */
+        .device-info {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 32px;
+            padding: 24px;
+            background-color: var(--ooder-light);
+            border-radius: var(--ooder-radius);
+        }
+        
+        .device-icon-large {
+            font-size: 64px;
+            color: var(--ooder-primary);
+        }
+        
+        .device-details {
+            flex: 1;
+        }
+        
+        .device-details h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .device-details p {
+            font-size: 14px;
+            color: var(--ooder-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .device-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .status-online {
+            background-color: var(--ooder-success);
+        }
+        
+        .status-offline {
+            background-color: var(--ooder-danger);
+        }
+        
+        /* 控制区域 */
+        .control-section {
+            margin-bottom: 32px;
+        }
+        
+        .control-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--ooder-text);
+        }
+        
+        /* 开关控制 */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--ooder-border);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--ooder-primary);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
+        /* 滑块控制 */
+        .slider-control {
+            margin: 24px 0;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .slider-label {
+            width: 120px;
+            font-size: 14px;
+            color: var(--ooder-text);
+        }
+        
+        .slider {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--ooder-border);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--ooder-primary);
+            cursor: pointer;
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--ooder-primary);
+            cursor: pointer;
+            border: none;
+        }
+        
+        .slider-value {
+            width: 60px;
+            text-align: right;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--ooder-primary);
+        }
+        
+        /* 颜色选择器 */
+        .color-picker {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .color-label {
+            width: 120px;
+            font-size: 14px;
+            color: var(--ooder-text);
+        }
+        
+        .color-options {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .color-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+        
+        .color-option.active {
+            border-color: var(--ooder-primary);
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.3);
+        }
+        
+        /* 场景选择 */
+        .scene-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .scene-button {
+            padding: 12px 20px;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            background-color: var(--ooder-light);
+            color: var(--ooder-text);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .scene-button:hover {
+            background-color: var(--ooder-border);
+        }
+        
+        .scene-button.active {
+            background-color: var(--ooder-primary);
+            color: white;
+            border-color: var(--ooder-primary);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .device-info {
+                flex-direction: column;
+                text-align: center;
+                gap: 16px;
+            }
+            
+            .device-icon-large {
+                font-size: 48px;
+            }
+            
+            .slider-container {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            
+            .slider-label {
+                width: unset;
+            }
+            
+            .slider-value {
+                width: unset;
+                text-align: left;
+            }
+            
+            .color-picker {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            
+            .color-label {
+                width: unset;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1><i class="ri-control-line"></i> 设备控制</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="toggleTheme()">
+                    <i class="ri-moon-line"></i> 切换主题
+                </button>
+                <button class="btn btn-secondary" onclick="backToList()">
+                    <i class="ri-arrow-left-line"></i> 返回列表
+                </button>
+            </div>
+        </div>
+        
+        <!-- 设备信息 -->
+        <div class="device-info">
+            <div class="device-icon-large" id="deviceIcon">
+                <i class="ri-lightbulb-line"></i>
+            </div>
+            <div class="device-details">
+                <h2 id="deviceName">智能灯泡</h2>
+                <p><strong>类型:</strong> <span id="deviceType">灯光</span></p>
+                <p><strong>位置:</strong> <span id="deviceLocation">客厅</span></p>
+                <p><strong>IP地址:</strong> <span id="deviceIp">192.168.1.101</span></p>
+                <p><strong>最后活动:</strong> <span id="deviceLastActive">2026-01-30 19:00</span></p>
+                <div class="device-status">
+                    <div class="status-indicator status-online" id="deviceStatusIndicator"></div>
+                    <span id="deviceStatusText">在线</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 控制卡片 -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">基本控制</h3>
+            </div>
+            
+            <!-- 开关控制 -->
+            <div class="control-section">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <span style="font-size: 16px; color: var(--ooder-text);">电源</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="powerToggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- 亮度控制 -->
+            <div class="control-section">
+                <h3>亮度</h3>
+                <div class="slider-control">
+                    <div class="slider-container">
+                        <span class="slider-label">亮度</span>
+                        <input type="range" min="0" max="100" value="80" class="slider" id="brightnessSlider">
+                        <span class="slider-value" id="brightnessValue">80%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 颜色控制 -->
+            <div class="control-section">
+                <h3>颜色</h3>
+                <div class="color-picker">
+                    <span class="color-label">选择颜色</span>
+                    <div class="color-options">
+                        <div class="color-option active" style="background-color: #ffffff;" data-color="#ffffff"></div>
+                        <div class="color-option" style="background-color: #ff0000;" data-color="#ff0000"></div>
+                        <div class="color-option" style="background-color: #00ff00;" data-color="#00ff00"></div>
+                        <div class="color-option" style="background-color: #0000ff;" data-color="#0000ff"></div>
+                        <div class="color-option" style="background-color: #ffff00;" data-color="#ffff00"></div>
+                        <div class="color-option" style="background-color: #ff00ff;" data-color="#ff00ff"></div>
+                        <div class="color-option" style="background-color: #00ffff;" data-color="#00ffff"></div>
+                        <div class="color-option" style="background-color: #ff8000;" data-color="#ff8000"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 场景控制 -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">场景控制</h3>
+            </div>
+            <div class="scene-selector">
+                <button class="scene-button" data-scene="reading">
+                    <i class="ri-book-line"></i> 阅读模式
+                </button>
+                <button class="scene-button" data-scene="movie">
+                    <i class="ri-film-line"></i> 影院模式
+                </button>
+                <button class="scene-button" data-scene="party">
+                    <i class="ri-party-line"></i> 派对模式
+                </button>
+                <button class="scene-button" data-scene="relax">
+                    <i class="ri-coffee-line"></i> 放松模式
+                </button>
+                <button class="scene-button" data-scene="sleep">
+                    <i class="ri-moon-line"></i> 睡眠模式
+                </button>
+            </div>
+        </div>
+        
+        <!-- 定时控制 -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">定时控制</h3>
+            </div>
+            <div class="control-section">
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--ooder-text);">设置定时</label>
+                    <input type="time" style="padding: 8px; border: 1px solid var(--ooder-border); border-radius: var(--ooder-radius); background-color: var(--ooder-background); color: var(--ooder-text);">
+                    <button class="btn btn-primary" style="margin-left: 12px;">
+                        <i class="ri-add-line"></i> 添加
+                    </button>
+                </div>
+                <div style="background-color: var(--ooder-light); border-radius: var(--ooder-radius); padding: 16px;">
+                    <p style="font-size: 14px; color: var(--ooder-secondary); margin-bottom: 8px;">当前定时任务</p>
+                    <p style="font-size: 14px;">• 每天 07:00 开启</p>
+                    <p style="font-size: 14px;">• 每天 22:00 关闭</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 模拟设备数据
+        const devices = {
+            1: {
+                id: 1,
+                name: "智能灯泡",
+                type: "light",
+                location: "客厅",
+                status: "online",
+                ip: "192.168.1.101",
+                lastActive: "2026-01-30 19:00"
+            },
+            2: {
+                id: 2,
+                name: "智能插座",
+                type: "socket",
+                location: "卧室",
+                status: "online",
+                ip: "192.168.1.102",
+                lastActive: "2026-01-30 18:30"
+            },
+            3: {
+                id: 3,
+                name: "智能门锁",
+                type: "lock",
+                location: "前门",
+                status: "online",
+                ip: "192.168.1.103",
+                lastActive: "2026-01-30 18:00"
+            }
+        };
+        
+        // 获取URL参数中的设备ID
+        function getDeviceId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id') || '1';
+        }
+        
+        // 初始化页面
+        function init() {
+            const deviceId = getDeviceId();
+            const device = devices[deviceId] || devices[1];
+            loadDeviceData(device);
+            bindEvents();
+        }
+        
+        // 加载设备数据
+        function loadDeviceData(device) {
+            document.getElementById('deviceName').textContent = device.name;
+            document.getElementById('deviceType').textContent = getDeviceTypeName(device.type);
+            document.getElementById('deviceLocation').textContent = device.location;
+            document.getElementById('deviceIp').textContent = device.ip;
+            document.getElementById('deviceLastActive').textContent = device.lastActive;
+            document.getElementById('deviceStatusText').textContent = device.status === 'online' ? '在线' : '离线';
+            document.getElementById('deviceStatusIndicator').className = `status-indicator status-${device.status}`;
+            
+            // 更新设备图标
+            const deviceIcon = document.getElementById('deviceIcon');
+            deviceIcon.innerHTML = `<i class="ri-${getDeviceIcon(device.type)}"></i>`;
+        }
+        
+        // 获取设备图标
+        function getDeviceIcon(type) {
+            const iconMap = {
+                light: 'lightbulb-line',
+                socket: 'power-plug-line',
+                lock: 'lock-line',
+                camera: 'video-line'
+            };
+            return iconMap[type] || 'device-line';
+        }
+        
+        // 获取设备类型名称
+        function getDeviceTypeName(type) {
+            const typeMap = {
+                light: '灯光',
+                socket: '插座',
+                lock: '门锁',
+                camera: '摄像头'
+            };
+            return typeMap[type] || '其他';
+        }
+        
+        // 绑定事件
+        function bindEvents() {
+            // 电源开关
+            const powerToggle = document.getElementById('powerToggle');
+            powerToggle.addEventListener('change', function() {
+                console.log('Power toggled:', this.checked);
+            });
+            
+            // 亮度滑块
+            const brightnessSlider = document.getElementById('brightnessSlider');
+            const brightnessValue = document.getElementById('brightnessValue');
+            brightnessSlider.addEventListener('input', function() {
+                brightnessValue.textContent = this.value + '%';
+                console.log('Brightness changed:', this.value);
+            });
+            
+            // 颜色选择
+            const colorOptions = document.querySelectorAll('.color-option');
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // 移除其他选项的active状态
+                    colorOptions.forEach(opt => opt.classList.remove('active'));
+                    // 添加当前选项的active状态
+                    this.classList.add('active');
+                    console.log('Color selected:', this.dataset.color);
+                });
+            });
+            
+            // 场景选择
+            const sceneButtons = document.querySelectorAll('.scene-button');
+            sceneButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 移除其他按钮的active状态
+                    sceneButtons.forEach(btn => btn.classList.remove('active'));
+                    // 添加当前按钮的active状态
+                    this.classList.add('active');
+                    console.log('Scene selected:', this.dataset.scene);
+                });
+            });
+        }
+        
+        // 返回设备列表
+        function backToList() {
+            window.location.href = 'device-list.html';
+        }
+        
+        // 切换主题
+        function toggleTheme() {
+            const body = document.body;
+            if (body.classList.contains('dark-theme')) {
+                body.classList.remove('dark-theme');
+            } else {
+                body.classList.add('dark-theme');
+            }
+        }
+        
+        // 初始化
+        init();
+    </script>
+</body>
+</html>

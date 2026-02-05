@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统状态 - Nexus - Nexus</title>
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+    <link rel="stylesheet" href="../../css/mcpagent/common.css">
+    <script src="../../js/theme-manager.js"></script>
+    <script src="../../js/nexus/base.js"></script>
+    <script src="../../js/nexus/api.js"></script>
+    <script src="../../js/nexus/ui.js"></script>
+    <script src="../../js/nexus/utils.js"></script>
+    <script src="../../js/nexus/sdk-proxy.js"></script>
+</head>
+<body class="nexus-page">
+    <div class="nexus-container">
+        <!-- 侧边导航栏 -->
+        <div class="nexus-sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> Nexus Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="nexus-main-content">
+            <div class="nexus-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h1><i class="ri-bar-chart-line"></i> 系统状态</h1>
+                    <button class="theme-toggle-btn nexus-btn nexus-btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                        <i class="ri-sun-line"></i> 浅色模式
+                    </button>
+                </div>
+                <div class="subtitle">
+                    <span class="badge" style="background-color: var(--nexus-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">Nexus</span>
+                    <span>监控和管理Nexus系统运行状态</span>
+                </div>
+            </div>
+
+            <!-- 状态操作区 -->
+            <section class="nexus-operation-section">
+                <div class="nexus-section-header">
+                    <h3>状态操作</h3>
+                    <div class="nexus-operation-buttons">
+                        <button class="nexus-btn nexus-btn-primary" onclick="refreshSystemStatus()">
+                            <i class="ri-refresh-line"></i>
+                            刷新状态
+                        </button>
+                        <button class="nexus-btn nexus-btn-secondary" onclick="exportSystemReport()">
+                            <i class="ri-download-line"></i>
+                            导出报告
+                        </button>
+                        <button class="nexus-btn nexus-btn-secondary" onclick="restartSystem()">
+                            <i class="ri-restart-line"></i>
+                            重启系统
+                        </button>
+                    </div>
+                </div>
+                <div class="nexus-operation-card">
+                    <div class="nexus-form-group">
+                        <label for="statusInterval">刷新间隔 (秒)</label>
+                        <select id="statusInterval">
+                            <option value="5">5秒</option>
+                            <option value="10">10秒</option>
+                            <option value="30">30秒</option>
+                            <option value="60">1分钟</option>
+                            <option value="300">5分钟</option>
+                        </select>
+                    </div>
+                    <div class="nexus-form-group">
+                        <label for="statusView">状态视图</label>
+                        <select id="statusView">
+                            <option value="summary">摘要视图</option>
+                            <option value="detailed">详细视图</option>
+                            <option value="compact">紧凑视图</option>
+                        </select>
+                    </div>
+                    <div class="nexus-form-group">
+                        <label for="statusFilter">状态过滤</label>
+                        <select id="statusFilter">
+                            <option value="all">所有状态</option>
+                            <option value="critical">仅关键状态</option>
+                            <option value="warning">仅警告状态</option>
+                            <option value="normal">仅正常状态</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 系统概览 -->
+            <section class="nexus-section">
+                <div class="nexus-section-header">
+                    <h3>系统概览</h3>
+                </div>
+                <div class="nexus-status-grid">
+                    <div class="nexus-status-card">
+                        <div class="nexus-status-icon">
+                            <i class="ri-server-line"></i>
+                        </div>
+                        <div class="nexus-status-info">
+                            <h3>系统版本</h3>
+                            <p class="nexus-status-value" id="systemVersion">v1.0.0</p>
+                        </div>
+                    </div>
+                    <div class="nexus-status-card">
+                        <div class="nexus-status-icon">
+                            <i class="ri-calendar-check-line"></i>
+                        </div>
+                        <div class="nexus-status-info">
+                            <h3>运行时间</h3>
+                            <p class="nexus-status-value" id="uptime">24天 12小时 30分钟</p>
+                        </div>
+                    </div>
+                    <div class="nexus-status-card">
+                        <div class="nexus-status-icon">
+                            <i class="ri-flag-line"></i>
+                        </div>
+                        <div class="nexus-status-info">
+                            <h3>系统状态</h3>
+                            <p class="nexus-status-value" id="systemStatus">正常运行</p>
+                        </div>
+                    </div>
+                    <div class="nexus-status-card">
+                        <div class="nexus-status-icon">
+                            <i class="ri-time-line"></i>
+                        </div>
+                        <div class="nexus-status-info">
+                            <h3>上次重启</h3>
+                            <p class="nexus-status-value" id="lastRestart">2024-01-01 00:00:00</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 资源使用情况 -->
+            <section class="nexus-section">
+                <div class="nexus-section-header">
+                    <h3>资源使用情况</h3>
+                </div>
+                <div class="nexus-stats-grid">
+                    <div class="nexus-stats-card">
+                        <h4>CPU使用</h4>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">使用率</span>
+                            <span class="nexus-stat-value" id="cpuUsage">12%</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">核心数</span>
+                            <span class="nexus-stat-value">4</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">负载</span>
+                            <span class="nexus-stat-value">0.8</span>
+                        </div>
+                    </div>
+                    <div class="nexus-stats-card">
+                        <h4>内存使用</h4>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">使用率</span>
+                            <span class="nexus-stat-value" id="memoryUsage">25%</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">总量</span>
+                            <span class="nexus-stat-value">8GB</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">已用</span>
+                            <span class="nexus-stat-value">2GB</span>
+                        </div>
+                    </div>
+                    <div class="nexus-stats-card">
+                        <h4>磁盘使用</h4>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">使用率</span>
+                            <span class="nexus-stat-value" id="diskUsage">15%</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">总量</span>
+                            <span class="nexus-stat-value">100GB</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">已用</span>
+                            <span class="nexus-stat-value">15GB</span>
+                        </div>
+                    </div>
+                    <div class="nexus-stats-card">
+                        <h4>网络使用</h4>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">总带宽</span>
+                            <span class="nexus-stat-value" id="networkUsage">10Mbps</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">上行</span>
+                            <span class="nexus-stat-value">2Mbps</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">下行</span>
+                            <span class="nexus-stat-value">8Mbps</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 服务状态 -->
+            <section class="nexus-section">
+                <div class="nexus-section-header">
+                    <h3>服务状态</h3>
+                </div>
+                <div class="nexus-card">
+                    <table class="nexus-data-table">
+                        <thead>
+                            <tr>
+                                <th>服务名称</th>
+                                <th>状态</th>
+                                <th>进程ID</th>
+                                <th>启动时间</th>
+                                <th>内存使用</th>
+                                <th>CPU使用</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="serviceTableBody">
+                            <!-- 服务数据将通过JS动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 系统统计 -->
+            <section class="nexus-section">
+                <div class="nexus-section-header">
+                    <h3>系统统计</h3>
+                </div>
+                <div class="nexus-stats-grid">
+                    <div class="nexus-stats-card">
+                        <h4>网络统计</h4>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">总连接数</span>
+                            <span class="nexus-stat-value">128</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">活跃连接</span>
+                            <span class="nexus-stat-value">12</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">数据包发送</span>
+                            <span class="nexus-stat-value">1,245</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">数据包接收</span>
+                            <span class="nexus-stat-value">1,189</span>
+                        </div>
+                    </div>
+                    <div class="nexus-stats-card">
+                        <h4>命令统计</h4>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">总命令数</span>
+                            <span class="nexus-stat-value">1,567</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">成功命令</span>
+                            <span class="nexus-stat-value">1,489</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">失败命令</span>
+                            <span class="nexus-stat-value">56</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">超时命令</span>
+                            <span class="nexus-stat-value">22</span>
+                        </div>
+                    </div>
+                    <div class="nexus-stats-card">
+                        <h4>终端统计</h4>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">总终端数</span>
+                            <span class="nexus-stat-value">50</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">活跃终端</span>
+                            <span class="nexus-stat-value">45</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">离线终端</span>
+                            <span class="nexus-stat-value">5</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">故障终端</span>
+                            <span class="nexus-stat-value">0</span>
+                        </div>
+                    </div>
+                    <div class="nexus-stats-card">
+                        <h4>系统统计</h4>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">系统负载</span>
+                            <span class="nexus-stat-value">0.8</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">启动次数</span>
+                            <span class="nexus-stat-value">42</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">错误数</span>
+                            <span class="nexus-stat-value">12</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">警告数</span>
+                            <span class="nexus-stat-value">34</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 系统事件 -->
+            <section class="nexus-section">
+                <div class="nexus-section-header">
+                    <h3>系统事件</h3>
+                </div>
+                <div class="nexus-card">
+                    <div class="event-container" id="eventContainer">
+                        <!-- 事件数据将通过JS动态填充 -->
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- 公共JS模块 -->
+    <script src="../../js/menu-loader.js"></script>
+    <script src="../../js/nexus/common.js"></script>
+    <script>
+        window.onload = function() {
+            // 初始化菜单
+            initMenu();
+            // 初始化页面
+            nexusCommon.initPage('system-status', loadSystemStatus);
+        };
+
+        // 模拟系统状态数据
+        let systemStatus = {
+            overview: {
+                version: "v1.0.0",
+                uptime: "24天 12小时 30分钟",
+                status: "正常运行",
+                lastRestart: new Date(Date.now() - 24 * 24 * 60 * 60 * 1000).toISOString(),
+                timestamp: new Date().toISOString()
+            },
+            resources: {
+                cpu: {
+                    usage: 12,
+                    cores: 4,
+                    load: 0.8
+                },
+                memory: {
+                    usage: 25,
+                    total: 8,
+                    used: 2
+                },
+                disk: {
+                    usage: 15,
+                    total: 100,
+                    used: 15
+                },
+                network: {
+                    usage: 10,
+                    upload: 2,
+                    download: 8
+                }
+            },
+            services: [
+                {
+                    name: "Nexus Service",
+                    status: "running",
+                    pid: 1234,
+                    startTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+                    memory: "512MB",
+                    cpu: "2%"
+                },
+                {
+                    name: "Web Console",
+                    status: "running",
+                    pid: 1235,
+                    startTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+                    memory: "256MB",
+                    cpu: "1%"
+                },
+                {
+                    name: "API Service",
+                    status: "running",
+                    pid: 1236,
+                    startTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+                    memory: "128MB",
+                    cpu: "1%"
+                },
+                {
+                    name: "Monitoring Service",
+                    status: "running",
+                    pid: 1237,
+                    startTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+                    memory: "64MB",
+                    cpu: "0.5%"
+                }
+            ],
+            events: [
+                {
+                    timestamp: new Date(Date.now() - 300000).toISOString(),
+                    level: "INFO",
+                    source: "system",
+                    message: "系统状态检查完成: 所有服务正常"
+                },
+                {
+                    timestamp: new Date(Date.now() - 600000).toISOString(),
+                    level: "WARNING",
+                    source: "network",
+                    message: "网络连接暂时中断，已自动恢复"
+                },
+                {
+                    timestamp: new Date(Date.now() - 900000).toISOString(),
+                    level: "INFO",
+                    source: "service",
+                    message: "API Service 重启完成"
+                },
+                {
+                    timestamp: new Date(Date.now() - 1200000).toISOString(),
+                    level: "ERROR",
+                    source: "terminal",
+                    message: "终端 endagent-003 连接失败"
+                }
+            ]
+        };
+
+        function loadSystemStatus() {
+            updateSystemOverview();
+            updateServiceStatus();
+            updateSystemEvents();
+        }
+
+        function updateSystemOverview() {
+            document.getElementById('systemVersion').textContent = systemStatus.overview.version;
+            document.getElementById('uptime').textContent = systemStatus.overview.uptime;
+            document.getElementById('systemStatus').textContent = systemStatus.overview.status;
+            document.getElementById('lastRestart').textContent = nexusCommon.formatTimestamp(new Date(systemStatus.overview.lastRestart).getTime());
+            document.getElementById('cpuUsage').textContent = systemStatus.resources.cpu.usage + '%';
+            document.getElementById('memoryUsage').textContent = systemStatus.resources.memory.usage + '%';
+            document.getElementById('diskUsage').textContent = systemStatus.resources.disk.usage + '%';
+            document.getElementById('networkUsage').textContent = systemStatus.resources.network.usage + 'Mbps';
+        }
+
+        function updateServiceStatus() {
+            const tbody = document.getElementById('serviceTableBody');
+            tbody.innerHTML = '';
+
+            systemStatus.services.forEach(service => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${service.name}</td>
+                    <td><span class="nexus-status-badge ${service.status === 'running' ? 'nexus-status-active' : 'nexus-status-inactive'}">${service.status === 'running' ? '运行中' : '停止'}</span></td>
+                    <td>${service.pid}</td>
+                    <td>${nexusCommon.formatTimestamp(new Date(service.startTime).getTime())}</td>
+                    <td>${service.memory}</td>
+                    <td>${service.cpu}</td>
+                    <td>
+                        <button class="nexus-btn nexus-btn-sm nexus-btn-primary" onclick="restartService('${service.name}')">重启</button>
+                        <button class="nexus-btn nexus-btn-sm nexus-btn-secondary" onclick="stopService('${service.name}')">停止</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateSystemEvents() {
+            const eventContainer = document.getElementById('eventContainer');
+            eventContainer.innerHTML = '';
+
+            systemStatus.events.forEach(event => {
+                const eventItem = document.createElement('div');
+                eventItem.className = 'nexus-log-item ' + event.level.toLowerCase();
+                eventItem.innerHTML = `
+                    <div class="nexus-log-header">
+                        <span class="nexus-log-timestamp">${nexusCommon.formatTimestamp(new Date(event.timestamp).getTime())}</span>
+                        <span class="nexus-log-level ${event.level.toLowerCase()}">${event.level}</span>
+                    </div>
+                    <div class="nexus-log-message">${event.message}</div>
+                    <div class="nexus-log-details">
+                        <span>来源: ${event.source}</span>
+                    </div>
+                `;
+                eventContainer.appendChild(eventItem);
+            });
+        }
+
+        async function refreshSystemStatus() {
+            try {
+                nexusCommon.showMessage('刷新系统状态...', 'info');
+                
+                // 模拟API请求
+                // const response = await nexusCommon.get('/mcp/system/status');
+                // systemStatus = response.data;
+                
+                // 模拟更新系统状态数据
+                systemStatus.overview.timestamp = new Date().toISOString();
+                systemStatus.resources.cpu.usage = Math.floor(Math.random() * 20) + 5;
+                systemStatus.resources.memory.usage = Math.floor(Math.random() * 10) + 20;
+                systemStatus.resources.disk.usage = Math.floor(Math.random() * 5) + 15;
+                systemStatus.resources.network.usage = Math.floor(Math.random() * 10) + 5;
+                
+                // 添加新的事件
+                const newEvent = {
+                    timestamp: new Date().toISOString(),
+                    level: "INFO",
+                    source: "system",
+                    message: "系统状态刷新完成"
+                };
+                systemStatus.events.unshift(newEvent);
+                if (systemStatus.events.length > 10) {
+                    systemStatus.events.pop();
+                }
+                
+                // 更新页面
+                updateSystemOverview();
+                updateSystemEvents();
+                
+                nexusCommon.showMessage('系统状态已刷新', 'success');
+            } catch (error) {
+                nexusCommon.handleApiError(error, '刷新系统状态失败');
+            }
+        }
+
+        function exportSystemReport() {
+            try {
+                // 模拟导出系统报告
+                const reportData = JSON.stringify(systemStatus, null, 2);
+                const blob = new Blob([reportData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'system-status-' + new Date().toISOString().slice(0, 10) + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                nexusCommon.showMessage('系统报告已导出', 'success');
+            } catch (error) {
+                nexusCommon.handleApiError(error, '导出系统报告失败');
+            }
+        }
+
+        async function restartSystem() {
+            if (confirm('确定要重启系统吗？')) {
+                try {
+                    nexusCommon.showMessage('系统重启中...', 'info');
+                    
+                    // 模拟API请求
+                    // const response = await nexusCommon.post('/mcp/system/restart', { reason: '用户手动重启' });
+                    // nexusCommon.handleApiSuccess(response);
+                    
+                    setTimeout(() => {
+                        // 更新系统状态
+                        systemStatus.overview.lastRestart = new Date().toISOString();
+                        systemStatus.overview.uptime = "0天 0小时 1分钟";
+                        systemStatus.overview.status = "重启完成";
+                        
+                        // 添加重启事件
+                        const restartEvent = {
+                            timestamp: new Date().toISOString(),
+                            level: "INFO",
+                            source: "system",
+                            message: "系统重启完成"
+                        };
+                        systemStatus.events.unshift(restartEvent);
+                        if (systemStatus.events.length > 10) {
+                            systemStatus.events.pop();
+                        }
+                        
+                        // 更新页面
+                        updateSystemOverview();
+                        updateSystemEvents();
+                        
+                        nexusCommon.showMessage('系统重启完成', 'success');
+                    }, 3000);
+                } catch (error) {
+                    nexusCommon.handleApiError(error, '重启系统失败');
+                }
+            }
+        }
+
+        async function restartService(serviceName) {
+            try {
+                nexusCommon.showMessage(`重启服务 ${serviceName}...`, 'info');
+                
+                // 模拟API请求
+                // const response = await nexusCommon.post(`/mcp/service/restart`, { serviceName });
+                // nexusCommon.handleApiSuccess(response);
+                
+                setTimeout(() => {
+                    nexusCommon.showMessage(`服务 ${serviceName} 重启完成`, 'success');
+                }, 2000);
+            } catch (error) {
+                nexusCommon.handleApiError(error, `重启服务 ${serviceName} 失败`);
+            }
+        }
+
+        async function stopService(serviceName) {
+            if (confirm(`确定要停止服务 ${serviceName} 吗？`)) {
+                try {
+                    nexusCommon.showMessage(`停止服务 ${serviceName}...`, 'info');
+                    
+                    // 模拟API请求
+                    // const response = await nexusCommon.post(`/mcp/service/stop`, { serviceName });
+                    // nexusCommon.handleApiSuccess(response);
+                    
+                    setTimeout(() => {
+                        nexusCommon.showMessage(`服务 ${serviceName} 已停止`, 'success');
+                    }, 1000);
+                } catch (error) {
+                    nexusCommon.handleApiError(error, `停止服务 ${serviceName} 失败`);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

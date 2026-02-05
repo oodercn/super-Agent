@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>通知公告设计器版本演示</title>
+    <link rel="stylesheet" type="text/css" href="../../../css/ood.css"/>
+    <link rel="stylesheet" type="text/css" href="../../../css/mobile/oa-mobile.css"/>
+    <script type="text/javascript" src="../../../js/ood.js"></script>
+    <script type="text/javascript" src="../OA/NoticeDesigner.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--mobile-bg-primary);
+        }
+        
+        .demo-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .demo-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--mobile-border-color);
+        }
+        
+        .demo-header h1 {
+            color: var(--mobile-text-primary);
+            font-size: var(--mobile-font-lg);
+            margin: 0;
+        }
+        
+        .demo-description {
+            color: var(--mobile-text-secondary);
+            font-size: var(--mobile-font-sm);
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .implementation-details {
+            background-color: var(--mobile-bg-secondary);
+            border-radius: var(--mobile-border-radius);
+            padding: 15px;
+            margin: 20px 0;
+            border: 1px solid var(--mobile-border-color);
+        }
+        
+        .implementation-details h3 {
+            margin-top: 0;
+            color: var(--mobile-text-primary);
+            font-size: var(--mobile-font-md);
+        }
+        
+        .implementation-details ul {
+            color: var(--mobile-text-secondary);
+            font-size: var(--mobile-font-sm);
+            padding-left: 20px;
+        }
+        
+        .implementation-details li {
+            margin-bottom: 8px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .action-button {
+            padding: 10px 15px;
+            background-color: var(--mobile-primary);
+            color: white;
+            border: none;
+            border-radius: var(--mobile-border-radius);
+            cursor: pointer;
+            font-size: var(--mobile-font-sm);
+            transition: background-color 0.2s;
+        }
+        
+        .action-button:hover {
+            background-color: var(--mobile-primary-dark);
+        }
+        
+        .action-button.secondary {
+            background-color: var(--mobile-secondary);
+        }
+        
+        .action-button.secondary:hover {
+            background-color: var(--mobile-secondary-dark);
+        }
+        
+        .selected-notice {
+            background-color: var(--mobile-bg-secondary);
+            border-radius: var(--mobile-border-radius);
+            padding: 15px;
+            margin: 20px 0;
+            border: 1px solid var(--mobile-border-color);
+        }
+        
+        .selected-notice h3 {
+            margin-top: 0;
+            color: var(--mobile-text-primary);
+            font-size: var(--mobile-font-md);
+        }
+        
+        .selected-notice p {
+            margin: 5px 0;
+            color: var(--mobile-text-secondary);
+            font-size: var(--mobile-font-sm);
+        }
+        
+        .api-config {
+            background-color: var(--mobile-bg-secondary);
+            border-radius: var(--mobile-border-radius);
+            padding: 15px;
+            margin: 20px 0;
+            border: 1px solid var(--mobile-border-color);
+        }
+        
+        .api-config h3 {
+            margin-top: 0;
+            color: var(--mobile-text-primary);
+            font-size: var(--mobile-font-md);
+        }
+        
+        .api-config input, .api-config select {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            border: 1px solid var(--mobile-border-color);
+            border-radius: var(--mobile-border-radius);
+            background-color: var(--mobile-bg-input);
+            color: var(--mobile-text-primary);
+            font-size: var(--mobile-font-sm);
+        }
+        
+        .api-config button {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--mobile-primary);
+            color: white;
+            border: none;
+            border-radius: var(--mobile-border-radius);
+            cursor: pointer;
+            font-size: var(--mobile-font-sm);
+        }
+        
+        .api-config button:hover {
+            background-color: var(--mobile-primary-dark);
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1>通知公告设计器版本</h1>
+            <p class="demo-description">演示如何使用 NoticeDesigner 组件</p>
+        </div>
+        
+        <div class="implementation-details">
+            <h3>实现特点</h3>
+            <ul>
+                <li>使用 KEY:VALUE 方式组合样式，符合设计器的虚拟DOM读取CSS要求</li>
+                <li>使用 OOD APICall 组件完成数据源交互</li>
+                <li>事件处理放在具体的组件中，而非全局events</li>
+                <li>采用组件对象添加方式，而非直接添加模板</li>
+                <li>遵循通用业务组件开发规范，支持数据关联和动作关联</li>
+            </ul>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="action-button" onclick="addSampleNotice()">添加示例通知</button>
+            <button class="action-button secondary" onclick="clearNotices()">清空通知</button>
+        </div>
+        
+        <div class="api-config">
+            <h3>API数据源配置</h3>
+            <input type="text" id="apiUrl" placeholder="API URL (例如: /api/notices)" value="/api/notices">
+            <select id="apiMethod">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+            </select>
+            <button onclick="loadFromAPI()">从API加载数据</button>
+        </div>
+        
+        <div id="noticeDesignerContainer"></div>
+        
+        <div class="selected-notice" id="selectedNoticePanel" style="display: none;">
+            <h3>选中的通知</h3>
+            <p>标题: <span id="selectedTitle"></span></p>
+            <p>时间: <span id="selectedTime"></span></p>
+            <p>摘要: <span id="selectedSummary"></span></p>
+            <p>状态: <span id="selectedStatus"></span></p>
+        </div>
+    </div>
+
+    <script>
+        var noticeDesigner;
+        
+        ood.ready(function() {
+            // 创建通知公告设计器组件
+            noticeDesigner = ood.create("ood.Mobile.OA.NoticeDesigner");
+            noticeDesigner.setHost(null, "noticeDesigner");
+            
+            // 设置组件属性
+            noticeDesigner.setWidth("100%");
+            noticeDesigner.setHeight("auto");
+            
+            // 设置事件处理
+            noticeDesigner.events.onNoticeClick = function(profile, index, notice) {
+                showSelectedNotice(notice);
+            };
+            
+            noticeDesigner.events.onNoticeStatusChange = function(profile, index, notice, status) {
+                console.log("通知状态改变:", index, notice.title, status);
+            };
+            
+            // 添加到页面
+            document.getElementById("noticeDesignerContainer").appendChild(noticeDesigner.get(0));
+            
+            // 初始化一些示例数据
+            var sampleNotices = [
+                {
+                    id: '1',
+                    title: '关于五一假期安排的通知',
+                    time: '2025-04-25',
+                    summary: '根据国家规定，结合公司实际情况，现将2025年五一劳动节放假安排通知如下...',
+                    important: true,
+                    read: false,
+                    disabled: false
+                },
+                {
+                    id: '2',
+                    title: '新员工入职培训安排',
+                    time: '2025-04-20',
+                    summary: '欢迎新员工加入公司，现将入职培训相关安排通知如下...',
+                    important: false,
+                    read: true,
+                    disabled: false
+                },
+                {
+                    id: '3',
+                    title: '办公系统升级通知',
+                    time: '2025-04-15',
+                    summary: '为了提供更好的办公体验，系统将于本周末进行升级...',
+                    important: false,
+                    read: false,
+                    disabled: false
+                }
+            ];
+            
+            noticeDesigner.functions.setNotices(sampleNotices);
+        });
+        
+        function addSampleNotice() {
+            if (noticeDesigner) {
+                var newNotice = {
+                    id: Date.now().toString(),
+                    title: '新通知 - ' + new Date().toLocaleString(),
+                    time: new Date().toISOString().split('T')[0],
+                    summary: '这是一条新添加的通知示例...',
+                    important: Math.random() > 0.5,
+                    read: false,
+                    disabled: false
+                };
+                
+                noticeDesigner.functions.addNotice(newNotice);
+            }
+        }
+        
+        function clearNotices() {
+            if (noticeDesigner) {
+                noticeDesigner.functions.setNotices([]);
+            }
+        }
+        
+        function showSelectedNotice(notice) {
+            document.getElementById("selectedNoticePanel").style.display = "block";
+            document.getElementById("selectedTitle").textContent = notice.title;
+            document.getElementById("selectedTime").textContent = notice.time;
+            document.getElementById("selectedSummary").textContent = notice.summary;
+            document.getElementById("selectedStatus").textContent = notice.read ? "已读" : "未读";
+        }
+        
+        function loadFromAPI() {
+            if (noticeDesigner) {
+                var url = document.getElementById("apiUrl").value;
+                var method = document.getElementById("apiMethod").value;
+                
+                // 模拟API调用
+                var mockData = [
+                    {
+                        id: 'api-1',
+                        title: 'API加载的通知1',
+                        time: '2025-04-30',
+                        summary: '这是从API加载的通知数据示例1...',
+                        important: true,
+                        read: false,
+                        disabled: false
+                    },
+                    {
+                        id: 'api-2',
+                        title: 'API加载的通知2',
+                        time: '2025-04-29',
+                        summary: '这是从API加载的通知数据示例2...',
+                        important: false,
+                        read: true,
+                        disabled: false
+                    }
+                ];
+                
+                // 模拟异步请求
+                setTimeout(function() {
+                    noticeDesigner.functions.setNotices(mockData);
+                    alert("数据加载完成");
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>

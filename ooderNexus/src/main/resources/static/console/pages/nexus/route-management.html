@@ -1,0 +1,416 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>路由管理 - Nexus - Nexus</title>
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+    <script src="../../js/theme-manager.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> Nexus Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h1><i class="ri-map-line"></i> 路由管理</h1>
+                    <button class="theme-toggle-btn btn btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                        <i class="ri-sun-line"></i> 浅色模式
+                    </button>
+                </div>
+                <div class="subtitle">
+                    <span class="badge dashboard-badge" style="background-color: var(--nexus-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">Nexus</span>
+                    <span>管理和监控Nexus网络路由</span>
+                </div>
+            </div>
+
+            <!-- 路由操作区 -->
+            <section class="operation-section">
+                <div class="section-header">
+                    <h3>路由操作</h3>
+                    <button class="btn-primary" onclick="showAddRouteModal()">
+                        <i class="ri-add-circle-line"></i>
+                        添加路由
+                    </button>
+                </div>
+                <div class="operation-card">
+                    <div class="form-group">
+                        <label for="routeId">路由ID</label>
+                        <input type="text" id="routeId" placeholder="输入路由ID">
+                    </div>
+                    <div class="form-group">
+                        <label for="routeName">路由名称</label>
+                        <input type="text" id="routeName" placeholder="输入路由名称">
+                    </div>
+                    <div class="form-group">
+                        <label for="sourceNode">源节点</label>
+                        <input type="text" id="sourceNode" placeholder="输入源节点ID">
+                    </div>
+                    <div class="form-group">
+                        <label for="targetNode">目标节点</label>
+                        <input type="text" id="targetNode" placeholder="输入目标节点ID">
+                    </div>
+                    <div class="form-group">
+                        <label for="routeType">路由类型</label>
+                        <select id="routeType">
+                            <option value="direct">直接路由</option>
+                            <option value="indirect">间接路由</option>
+                            <option value="static">静态路由</option>
+                            <option value="dynamic">动态路由</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-primary" onclick="addRoute()">添加路由</button>
+                        <button class="btn-secondary" onclick="removeRoute()">移除路由</button>
+                        <button class="btn-secondary" onclick="getRouteDetails()">查看详情</button>
+                        <button class="btn-secondary" onclick="refreshRoutes()">刷新列表</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 路由列表 -->
+            <section class="route-list">
+                <div class="section-header">
+                    <h3>路由列表</h3>
+                    <div class="search-box">
+                        <input type="text" id="routeSearch" placeholder="搜索路由...">
+                        <button onclick="searchRoutes()"><i class="ri-search-line"></i></button>
+                    </div>
+                </div>
+                <div class="card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>路由ID</th>
+                                <th>路由名称</th>
+                                <th>源节点</th>
+                                <th>目标节点</th>
+                                <th>路由类型</th>
+                                <th>状态</th>
+                                <th>延迟 (ms)</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="routeTableBody">
+                            <!-- 路由数据将通过JS动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 路由详情 -->
+            <section class="route-details">
+                <div class="section-header">
+                    <h3>路由详情</h3>
+                </div>
+                <div class="card">
+                    <div id="routeDetailsContent">
+                        <p>选择路由查看详情...</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- 公共JS模块 -->
+    <script src="../../js/menu-loader.js"></script>
+    <script src="../../common/api-client.js"></script>
+    <script src="../../common/utils.js"></script>
+    <script>
+        window.onload = function() {
+            initMenu();
+            loadRoutes();
+        };
+
+        // 模拟路由数据
+        let routes = [];
+
+        function loadRoutes() {
+            // 模拟加载路由数据
+            routes = [
+                {
+                    id: "route-001",
+                    name: "主路由",
+                    source: "mcp-agent-001",
+                    target: "route-agent-001",
+                    type: "direct",
+                    status: "active",
+                    latency: 10,
+                    bandwidth: "100Mbps",
+                    createTime: new Date().toISOString(),
+                    lastUpdate: new Date().toISOString()
+                },
+                {
+                    id: "route-002",
+                    name: "备用路由",
+                    source: "mcp-agent-001",
+                    target: "route-agent-002",
+                    type: "indirect",
+                    status: "inactive",
+                    latency: 15,
+                    bandwidth: "50Mbps",
+                    createTime: new Date().toISOString(),
+                    lastUpdate: new Date().toISOString()
+                },
+                {
+                    id: "route-003",
+                    name: "终端路由",
+                    source: "route-agent-001",
+                    target: "end-agent-001",
+                    type: "direct",
+                    status: "active",
+                    latency: 8,
+                    bandwidth: "100Mbps",
+                    createTime: new Date().toISOString(),
+                    lastUpdate: new Date().toISOString()
+                },
+                {
+                    id: "route-004",
+                    name: "网关路由",
+                    source: "mcp-agent-001",
+                    target: "gateway-001",
+                    type: "direct",
+                    status: "active",
+                    latency: 12,
+                    bandwidth: "200Mbps",
+                    createTime: new Date().toISOString(),
+                    lastUpdate: new Date().toISOString()
+                }
+            ];
+            renderRoutes();
+        }
+
+        function renderRoutes() {
+            const tbody = document.getElementById('routeTableBody');
+            tbody.innerHTML = '';
+
+            routes.forEach(route => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${route.id}</td>
+                    <td>${route.name}</td>
+                    <td>${route.source}</td>
+                    <td>${route.target}</td>
+                    <td>${getRouteTypeName(route.type)}</td>
+                    <td><span class="status-badge ${route.status}">${route.status === 'active' ? '活跃' : '非活跃'}</span></td>
+                    <td>${route.latency}</td>
+                    <td>
+                        <button class="btn-sm btn-primary" onclick="selectRoute('${route.id}')">选择</button>
+                        <button class="btn-sm btn-danger" onclick="removeRouteById('${route.id}')">移除</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function addRoute() {
+            const routeId = document.getElementById('routeId').value;
+            const routeName = document.getElementById('routeName').value;
+            const sourceNode = document.getElementById('sourceNode').value;
+            const targetNode = document.getElementById('targetNode').value;
+            const routeType = document.getElementById('routeType').value;
+
+            if (!routeId) {
+                alert('请输入路由ID');
+                return;
+            }
+
+            if (!sourceNode || !targetNode) {
+                alert('请输入源节点和目标节点');
+                return;
+            }
+
+            // 检查路由是否已存在
+            const existingRoute = routes.find(r => r.id === routeId);
+            if (existingRoute) {
+                alert('路由ID已存在');
+                return;
+            }
+
+            // 添加新路由
+            const newRoute = {
+                id: routeId,
+                name: routeName || routeId,
+                source: sourceNode,
+                target: targetNode,
+                type: routeType,
+                status: 'active',
+                latency: Math.floor(Math.random() * 50) + 1,
+                bandwidth: '100Mbps',
+                createTime: new Date().toISOString(),
+                lastUpdate: new Date().toISOString()
+            };
+
+            routes.push(newRoute);
+            renderRoutes();
+            clearRouteForm();
+            showMessage('路由添加成功');
+        }
+
+        function removeRoute() {
+            const routeId = document.getElementById('routeId').value;
+            if (!routeId) {
+                alert('请输入路由ID');
+                return;
+            }
+            removeRouteById(routeId);
+        }
+
+        function removeRouteById(routeId) {
+            const index = routes.findIndex(r => r.id === routeId);
+            if (index === -1) {
+                alert('路由不存在');
+                return;
+            }
+
+            routes.splice(index, 1);
+            renderRoutes();
+            showMessage('路由移除成功');
+        }
+
+        function getRouteDetails() {
+            const routeId = document.getElementById('routeId').value;
+            if (!routeId) {
+                alert('请输入路由ID');
+                return;
+            }
+
+            const route = routes.find(r => r.id === routeId);
+            if (!route) {
+                alert('路由不存在');
+                return;
+            }
+
+            // 显示路由详情
+            const detailsContent = document.getElementById('routeDetailsContent');
+            detailsContent.innerHTML = `
+                <div class="route-details-grid">
+                    <div class="detail-item">
+                        <label>路由ID:</label>
+                        <span>${route.id}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>路由名称:</label>
+                        <span>${route.name}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>源节点:</label>
+                        <span>${route.source}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>目标节点:</label>
+                        <span>${route.target}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>路由类型:</label>
+                        <span>${getRouteTypeName(route.type)}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>状态:</label>
+                        <span>${route.status === 'active' ? '活跃' : '非活跃'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>延迟:</label>
+                        <span>${route.latency} ms</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>带宽:</label>
+                        <span>${route.bandwidth}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>创建时间:</label>
+                        <span>${new Date(route.createTime).toLocaleString()}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>最后更新:</label>
+                        <span>${new Date(route.lastUpdate).toLocaleString()}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectRoute(routeId) {
+            const route = routes.find(r => r.id === routeId);
+            if (route) {
+                document.getElementById('routeId').value = route.id;
+                document.getElementById('routeName').value = route.name;
+                document.getElementById('sourceNode').value = route.source;
+                document.getElementById('targetNode').value = route.target;
+                document.getElementById('routeType').value = route.type;
+                getRouteDetails();
+            }
+        }
+
+        function refreshRoutes() {
+            loadRoutes();
+            showMessage('路由列表已刷新');
+        }
+
+        function searchRoutes() {
+            const searchTerm = document.getElementById('routeSearch').value.toLowerCase();
+            const filteredRoutes = routes.filter(r => 
+                r.id.toLowerCase().includes(searchTerm) ||
+                r.name.toLowerCase().includes(searchTerm) ||
+                r.source.toLowerCase().includes(searchTerm) ||
+                r.target.toLowerCase().includes(searchTerm)
+            );
+
+            const tbody = document.getElementById('routeTableBody');
+            tbody.innerHTML = '';
+
+            filteredRoutes.forEach(route => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${route.id}</td>
+                    <td>${route.name}</td>
+                    <td>${route.source}</td>
+                    <td>${route.target}</td>
+                    <td>${getRouteTypeName(route.type)}</td>
+                    <td><span class="status-badge ${route.status}">${route.status === 'active' ? '活跃' : '非活跃'}</span></td>
+                    <td>${route.latency}</td>
+                    <td>
+                        <button class="btn-sm btn-primary" onclick="selectRoute('${route.id}')">选择</button>
+                        <button class="btn-sm btn-danger" onclick="removeRouteById('${route.id}')">移除</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function clearRouteForm() {
+            document.getElementById('routeId').value = '';
+            document.getElementById('routeName').value = '';
+            document.getElementById('sourceNode').value = '';
+            document.getElementById('targetNode').value = '';
+            document.getElementById('routeType').value = 'direct';
+        }
+
+        function getRouteTypeName(routeType) {
+            const typeMap = {
+                'direct': '直接路由',
+                'indirect': '间接路由',
+                'static': '静态路由',
+                'dynamic': '动态路由'
+            };
+            return typeMap[routeType] || routeType;
+        }
+
+        function showAddRouteModal() {
+            // 这里可以实现模态框逻辑
+            alert('添加路由功能');
+        }
+
+        function showMessage(message) {
+            // 简单的消息提示
+            alert(message);
+        }
+    </script>
+</body>
+</html>

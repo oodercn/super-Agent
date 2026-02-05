@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="Content-Style-Type" content="text/css"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta http-equiv="imagetoolbar" content="no"/>
+    <meta name="viewport"
+          content="user-scalable=no, initial-scale=1.2, minimum-scale=0.5, maximum-scale=2.0,width=device-width, height=device-height"/>
+    
+    <!-- CSS资源放在头部 -->
+    <link rel="stylesheet" type="text/css" href="ood/css/default.css"/>
+    <link rel="stylesheet" type="text/css" href="ood/appearance/dark/theme.css" id="theme-style"/>
+    <link rel="stylesheet" type="text/css" href="ood/css/remixicon/remixicon.css"/>
+    <link rel="stylesheet" type="text/css" href="ood/plugins/formlayout/handsontable.full.min.css"/>
+    
+    <title>OOD ES6 模块化升级测试界面</title>
+    
+    <style>
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 16px;
+            color: #333;
+        }
+        
+        #error-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #f44336;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            display: none;
+            z-index: 9999;
+        }
+        
+        #success-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            display: none;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">正在加载...</div>
+    <div id="error-message"></div>
+    <div id="success-message"></div>
+    
+    <script type="text/javascript">
+        // 显示消息
+        function showMessage(type, message) {
+            const element = document.getElementById(type === 'error' ? 'error-message' : 'success-message');
+            element.textContent = message;
+            element.style.display = 'block';
+            
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        // 加载脚本
+        function loadScript(src, onsuccess, onerror) {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = function() {
+                console.log('✓ 加载成功:', src);
+                if (onsuccess) onsuccess();
+            };
+            script.onerror = function() {
+                console.error('✗ 加载失败:', src);
+                if (onerror) onerror();
+            };
+            document.head.appendChild(script);
+        }
+
+        // 加载序列
+        function loadScriptsSequentially(scripts, index, onComplete, onError) {
+            if (index >= scripts.length) {
+                console.log('所有脚本加载完成');
+                if (onComplete) onComplete();
+                return;
+            }
+            
+            loadScript(scripts[index], function() {
+                loadScriptsSequentially(scripts, index + 1, onComplete, onError);
+            }, function() {
+                if (onError) onError(scripts[index]);
+            });
+        }
+
+        // 主初始化函数
+        function initApplication() {
+            // 检查 ood 对象
+            if (typeof ood === 'undefined') {
+                showMessage('error', 'ood 对象未定义，无法启动应用');
+                return;
+            }
+            
+            console.log('✓ ood 对象已初始化');
+            console.log('✓ 版本:', ood.version || 'legacy');
+            
+            // 设置项目信息
+            currProjectName = "ooder";
+            domainId = "ooder";
+            
+            var args = ood.getUrlParams ? ood.getUrlParams() : {};
+            var onEnd = function() {
+                document.getElementById('loading').remove();
+                SPA = this;
+                SPA.curProjectName = currProjectName;
+                if (this.initData) {
+                    this.initData();
+                }
+                showMessage('success', '应用启动成功！');
+            };
+            
+            // 启动应用
+            try {
+                if (ood.launch) {
+                    ood.launch('ooder.Index', onEnd, 'en', args.theme || 'default');
+                } else {
+                    showMessage('error', 'ood.launch 函数未找到，可能是旧版本');
+                    document.getElementById('loading').remove();
+                }
+            } catch (e) {
+                console.error('启动失败:', e);
+                showMessage('error', '应用启动失败: ' + e.message);
+                document.getElementById('loading').remove();
+            }
+        }
+
+        // 加载配置
+        function main() {
+            console.log('=== OOD ES6 模块化升级测试 ===\n');
+            
+            // 优先尝试加载 Webpack 构建的文件
+            const webpackBundle = 'dist/ood-compat.js';
+            
+            loadScript(webpackBundle, function() {
+                console.log('✓ Webpack 构建文件加载成功');
+                console.log('✓ 使用 ES6 模块化版本');
+                
+                // 加载配置文件
+                loadScript('conf.js', function() {
+                    console.log('✓ 配置文件加载成功');
+                    
+                    // 加载应用脚本
+                    loadScript('ooder.js', function() {
+                        console.log('✓ 应用脚本加载成功');
+                        
+                        // 初始化应用
+                        initApplication();
+                    }, function() {
+                        console.warn('✗ 应用脚本加载失败，继续初始化');
+                        initApplication();
+                    });
+                }, function() {
+                    console.warn('✗ 配置文件加载失败，继续初始化');
+                    initApplication();
+                });
+            }, function() {
+                console.warn('✗ Webpack 构建文件加载失败，回退到传统加载方式');
+                
+                // 回退到传统加载方式
+                const legacyScripts = [
+                    'ood/js/ThirdParty/hammer.js',
+                    'ood/js/ood.js',
+                    'conf.js',
+                    'ood/js/APICaller.js',
+                    'ood/js/MQTT.js',
+                    'ood/js/DataBinder.js',
+                    'ood/js/Event.js',
+                    'ood/js/CSS.js',
+                    'ood/js/Dom.js',
+                    'ood/js/DragDrop.js',
+                    'ood/js/Template.js',
+                    'ood/js/Cookies.js',
+                    'ood/js/History.js',
+                    'ood/js/Tips.js',
+                    'ood/js/Module.js',
+                    'ood/js/XML.js',
+                    'ood/js/XMLRPC.js',
+                    'ood/js/SOAP.js',
+                    'ood/js/ModuleFactory.js',
+                    'ood/js/Debugger.js',
+                    'ood/js/Date.js',
+                    'ood/Locale/en.js',
+                    'ood/js/UI.js',
+                    'ood/js/IconMapping.js',
+                    'ood/js/UI/Image.js',
+                    'ood/js/UI/Flash.js',
+                    'ood/js/UI/Audio.js',
+                    'ood/js/UI/FileUpload.js',
+                    'ood/js/UI/Video.js',
+                    'ood/js/UI/Tensor.js',
+                    'ood/js/UI/Camera.js',
+                    'ood/js/UI/Resizer.js',
+                    'ood/js/UI/Block.js',
+                    'ood/js/UI/Label.js',
+                    'ood/js/UI/ProgressBar.js',
+                    'ood/js/UI/Slider.js',
+                    'ood/js/UI/Input.js',
+                    'ood/js/UI/CheckBox.js',
+                    'ood/js/UI/HiddenInput.js',
+                    'ood/js/UI/RichEditor.js',
+                    'ood/js/UI/ComboInput.js',
+                    'ood/js/UI/ColorPicker.js',
+                    'ood/js/UI/DatePicker.js',
+                    'ood/js/UI/TimePicker.js',
+                    'ood/js/UI/List.js',
+                    'ood/js/UI/Gallery.js',
+                    'ood/js/UI/ButtonLayout.js',
+                    'ood/js/UI/TitleBlock.js',
+                    'ood/js/UI/ContentBlock.js',
+                    'ood/js/UI/Panel.js',
+                    'ood/js/UI/Group.js',
+                    'ood/js/UI/PageBar.js',
+                    'ood/js/UI/Tabs.js',
+                    'ood/js/UI/Stacks.js',
+                    'ood/js/UI/ButtonViews.js',
+                    'ood/js/UI/MTabs.js',
+                    'ood/js/UI/RadioBox.js',
+                    'ood/js/UI/StatusButtons.js',
+                    'ood/js/UI/TreeBar.js',
+                    'ood/js/UI/TreeView.js',
+                    'ood/js/UI/MTreeView.js',
+                    'ood/js/UI/PopMenu.js',
+                    'ood/js/UI/MenuBar.js',
+                    'ood/js/UI/ToolBar.js',
+                    'ood/js/UI/Layout.js',
+                    'ood/js/UI/TreeGrid.js',
+                    'ood/js/UI/MTreeGrid.js',
+                    'ood/js/UI/Dialog.js',
+                    'ood/js/UI/FormLayout.js',
+                    'ood/js/UI/MFormLayout.js',
+                    'ood/js/UI/FoldingTabs.js',
+                    'ood/js/UI/FoldingList.js',
+                    'ood/js/UI/Opinion.js',
+                    'ood/js/ThirdParty/raphael.js',
+                    'ood/js/svg.js',
+                    'ood/js/UI/SVGPaper.js',
+                    'ood/js/UI/FusionChartsXT.js',
+                    'ood/js/UI/ECharts.js',
+                    'ood/js/Coder.js',
+                    'ood/js/Module/JSONEditor.js',
+                    'ooder.js'
+                ];
+                
+                console.log('开始加载传统脚本...');
+                loadScriptsSequentially(legacyScripts, 0, function() {
+                    console.log('✓ 传统脚本加载完成');
+                    console.log('✓ 使用传统版本');
+                    initApplication();
+                }, function(failedScript) {
+                    console.error('✗ 传统脚本加载失败:', failedScript);
+                    showMessage('error', '脚本加载失败: ' + failedScript);
+                    document.getElementById('loading').textContent = '加载失败，请查看控制台';
+                });
+            });
+        }
+
+        // 开始加载
+        main();
+    </script>
+</body>
+</html>

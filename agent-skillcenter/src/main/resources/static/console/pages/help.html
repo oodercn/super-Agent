@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>帮助与支持 - SkillCenter 控制台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+    <style>
+        /* Ooder-Rad 风格基础样式 - 纯黑色系暗色主题 */
+        :root {
+            --ooder-primary: #3b82f6;
+            --ooder-secondary: #94a3b8;
+            --ooder-success: #22c55e;
+            --ooder-warning: #f59e0b;
+            --ooder-danger: #ef4444;
+            --ooder-light: #0f0f0f;
+            --ooder-dark: #ffffff;
+            --ooder-border: #2a2a2a;
+            --ooder-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            --ooder-radius: 8px;
+            --ooder-spacing: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #000000;
+            color: var(--ooder-dark);
+            line-height: 1.5;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            background-color: #000000;
+        }
+        
+        /* 侧边栏样式 - Ooder-Rad 风格 */
+        .sidebar {
+            width: 260px;
+            background-color: #121212;
+            border-right: 1px solid var(--ooder-border);
+            padding: 24px;
+            box-shadow: var(--ooder-shadow);
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 32px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ooder-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-menu li {
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu a {
+            color: var(--ooder-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--ooder-radius);
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .nav-menu a:hover {
+            background-color: var(--ooder-light);
+            color: var(--ooder-primary);
+        }
+        
+        .nav-menu a.active {
+            background-color: rgba(26, 115, 232, 0.1);
+            color: var(--ooder-primary);
+            font-weight: 600;
+        }
+        
+        /* 二级菜单样式 */
+        .nav-menu .submenu {
+            list-style: none;
+            margin-left: 16px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu .submenu li {
+            margin-bottom: 2px;
+        }
+        
+        .nav-menu .submenu a {
+            padding: 10px 16px;
+            font-size: 13px;
+            border-left: 2px solid var(--ooder-border);
+        }
+        
+        /* 三级菜单样式 */
+        .nav-menu .submenu .submenu {
+            margin-left: 32px;
+        }
+        
+        .nav-menu .submenu .submenu a {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-left: 2px solid var(--ooder-secondary);
+        }
+        
+        /* 展开/折叠图标 */
+        .nav-menu .toggle-icon {
+            margin-left: auto;
+            transition: transform 0.2s ease;
+        }
+        
+        .nav-menu .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        /* 菜单分隔线 */
+        .nav-menu .menu-divider {
+            height: 1px;
+            background-color: var(--ooder-border);
+            margin: 16px 0;
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            background-color: #000000;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--ooder-border);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ooder-dark);
+        }
+        
+        .header .subtitle {
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        /* 章节样式 */
+        .section {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            margin-bottom: 24px;
+        }
+        
+        .section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--ooder-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section h2::before {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background-color: var(--ooder-primary);
+            border-radius: 2px;
+        }
+        
+        /* 状态网格样式 */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .status-item {
+            padding: 16px;
+            border-radius: var(--ooder-radius);
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .status-item .key {
+            font-size: 14px;
+            color: var(--ooder-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .status-item .value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ooder-dark);
+        }
+        
+        .status-item.ok {
+            border-left: 4px solid var(--ooder-success);
+            background-color: rgba(34, 197, 94, 0.1);
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--ooder-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 12px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--ooder-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background-color: #1a1a1a;
+            color: var(--ooder-secondary);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2a2a2a;
+        }
+        
+        /* 隐藏类 */
+        .hidden {
+            display: none;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--ooder-border);
+                padding: 16px;
+            }
+            
+            .main-content {
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-bolt-line"></i> SkillCenter</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><span>⚡</span> 帮助与支持</h1>
+                <div class="subtitle">
+                    <span class="badge" style="background-color: var(--ooder-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">v0.6.5</span>
+                    <span>Ooder Rad Style</span> | 
+                    <span id="timestamp"></span>
+                </div>
+            </div>
+            
+            <!-- 标签页导航 -->
+            <div class="section" style="padding-bottom: 0;">
+                <div style="display: flex; border-bottom: 1px solid var(--ooder-border); margin-bottom: 0;">
+                    <button class="btn btn-secondary" style="border-radius: var(--ooder-radius) var(--ooder-radius) 0 0; border-bottom: none; margin-right: 0;" onclick="switchTab('help-guide')">用户指南</button>
+                    <button class="btn btn-secondary" style="border-radius: 0; border-bottom: none; margin-right: 0;" onclick="switchTab('help-faq')">常见问题</button>
+                    <button class="btn btn-secondary" style="border-radius: 0; border-bottom: none; margin-right: 0;" onclick="switchTab('help-about')">关于系统</button>
+                    <button class="btn btn-secondary" style="border-radius: 0 var(--ooder-radius) 0 0; border-bottom: none; margin-right: 0;" onclick="switchTab('help-contact')">联系支持</button>
+                </div>
+            </div>
+            
+            <!-- 标签页内容 -->
+            <div class="section">
+                <!-- 用户指南标签页 -->
+                <div id="help-guide-tab" class="tab-content">
+                    <h3>用户指南</h3>
+                    <div style="margin-bottom: 16px;">
+                        <h4>平台介绍</h4>
+                        <p style="color: var(--ooder-secondary); margin-bottom: 16px;">SkillCenter 是一个技能管理和执行平台，支持技能的注册、执行、发布和管理。</p>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <h4>核心功能</h4>
+                        <ul style="color: var(--ooder-secondary); margin-left: 24px;">
+                            <li>技能管理：注册、编辑、删除技能</li>
+                            <li>技能执行：执行技能并查看结果</li>
+                            <li>市场管理：发布和下载技能</li>
+                            <li>存储管理：备份和恢复数据</li>
+                            <li>系统管理：监控和控制系统</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>使用流程</h4>
+                        <ol style="color: var(--ooder-secondary); margin-left: 24px;">
+                            <li>登录系统</li>
+                            <li>注册新技能或从市场下载技能</li>
+                            <li>配置技能参数</li>
+                            <li>执行技能并查看结果</li>
+                            <li>管理技能和查看执行历史</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <!-- 常见问题标签页 -->
+                <div id="help-faq-tab" class="tab-content hidden">
+                    <h3>常见问题</h3>
+                    <div style="margin-bottom: 16px;">
+                        <h4>技能管理</h4>
+                        <div style="background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); margin-bottom: 8px;">
+                            <h5 style="margin-bottom: 8px;">如何注册新技能？</h5>
+                            <p style="color: var(--ooder-secondary);">在技能管理页面，点击"注册技能"按钮，填写技能信息并提交。</p>
+                        </div>
+                        <div style="background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); margin-bottom: 8px;">
+                            <h5 style="margin-bottom: 8px;">如何发布技能到市场？</h5>
+                            <p style="color: var(--ooder-secondary);">在技能管理页面，选择要发布的技能，点击"发布到市场"按钮。</p>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <h4>技能执行</h4>
+                        <div style="background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); margin-bottom: 8px;">
+                            <h5 style="margin-bottom: 8px;">如何执行技能？</h5>
+                            <p style="color: var(--ooder-secondary);">在执行管理页面，选择要执行的技能，填写执行参数并点击"执行"按钮。</p>
+                        </div>
+                        <div style="background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); margin-bottom: 8px;">
+                            <h5 style="margin-bottom: 8px;">如何查看执行历史？</h5>
+                            <p style="color: var(--ooder-secondary);">在执行管理页面，切换到"执行历史"标签页查看执行记录。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 关于系统标签页 -->
+                <div id="help-about-tab" class="tab-content hidden">
+                    <h3>关于系统</h3>
+                    <div style="margin-bottom: 16px;">
+                        <h4>系统信息</h4>
+                        <div class="status-grid">
+                            <div class="status-item ok">
+                                <div class="key">系统版本</div>
+                                <div class="value">v0.6.5</div>
+                            </div>
+                            <div class="status-item ok">
+                                <div class="key">设计风格</div>
+                                <div class="value">Ooder Rad Style</div>
+                            </div>
+                            <div class="status-item ok">
+                                <div class="key">Java版本</div>
+                                <div class="value">1.8+</div>
+                            </div>
+                            <div class="status-item ok">
+                                <div class="key">服务端口</div>
+                                <div class="value">8081</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4>技术栈</h4>
+                        <ul style="color: var(--ooder-secondary); margin-left: 24px;">
+                            <li>后端：Spring Boot 2.7.x</li>
+                            <li>前端：HTML5, CSS3, JavaScript</li>
+                            <li>设计：Ooder Rad Style (暗色主题)</li>
+                            <li>支持：Java 8+</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- 联系支持标签页 -->
+                <div id="help-contact-tab" class="tab-content hidden">
+                    <h3>联系支持</h3>
+                    <div style="margin-bottom: 16px;">
+                        <h4>支持渠道</h4>
+                        <div style="background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); margin-bottom: 8px;">
+                            <h5 style="margin-bottom: 8px;">技术支持</h5>
+                            <p style="color: var(--ooder-secondary);">邮箱：support@skillcenter.com</p>
+                            <p style="color: var(--ooder-secondary);">电话：400-123-4567</p>
+                        </div>
+                        <div style="background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); margin-bottom: 8px;">
+                            <h5 style="margin-bottom: 8px;">反馈建议</h5>
+                            <p style="color: var(--ooder-secondary);">邮箱：feedback@skillcenter.com</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h4>提交问题</h4>
+                        <form id="support-form">
+                            <div style="margin-bottom: 12px;">
+                                <label style="display: block; margin-bottom: 8px;">问题类型</label>
+                                <select style="padding: 10px; border: 1px solid var(--ooder-border); border-radius: var(--ooder-radius); background-color: #1a1a1a; color: var(--ooder-dark); width: 300px;">
+                                    <option>技术问题</option>
+                                    <option>功能建议</option>
+                                    <option>Bug报告</option>
+                                    <option>其他</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <label style="display: block; margin-bottom: 8px;">问题描述</label>
+                                <textarea style="padding: 10px; border: 1px solid var(--ooder-border); border-radius: var(--ooder-radius); background-color: #1a1a1a; color: var(--ooder-dark); width: 100%; height: 120px;"></textarea>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <label style="display: block; margin-bottom: 8px;">联系方式</label>
+                                <input type="email" placeholder="您的邮箱" style="padding: 10px; border: 1px solid var(--ooder-border); border-radius: var(--ooder-radius); background-color: #1a1a1a; color: var(--ooder-dark); width: 300px;">
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="submitSupportRequest()">提交</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 当前页面
+        let currentPage = 'help';
+        
+        // API基础URL
+        const API_BASE_URL = '/skillcenter/api';
+        
+        // 菜单配置
+        let menuConfig = null;
+        
+        // 初始化页面
+        function init() {
+            updateTimestamp();
+            loadMenuConfig();
+            setInterval(updateTimestamp, 60000); // 每分钟更新时间戳
+        }
+        
+        // 加载菜单配置
+        async function loadMenuConfig() {
+            try {
+                const response = await fetch('../menu-config.json');
+                if (!response.ok) {
+                    throw new Error('菜单配置加载失败');
+                }
+                menuConfig = await response.json();
+                renderMenu();
+            } catch (error) {
+                console.error('加载菜单配置错误:', error);
+                // 加载失败时显示默认菜单
+                renderDefaultMenu();
+            }
+        }
+        
+        // 渲染菜单
+        function renderMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            
+            menuConfig.menu.forEach(item => {
+                const menuItem = createMenuItem(item);
+                navMenu.appendChild(menuItem);
+                // 添加菜单分隔线
+                if (item.id !== 'dashboard') {
+                    const divider = document.createElement('div');
+                    divider.className = 'menu-divider';
+                    navMenu.appendChild(divider);
+                }
+            });
+            
+            setupNavigation();
+        }
+        
+        // 创建菜单项
+        function createMenuItem(menuItem) {
+            const li = document.createElement('li');
+            
+            if (menuItem.children && menuItem.children.length > 0) {
+                // 有子菜单的菜单项
+                const a = document.createElement('a');
+                a.href = '#';
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                    <span class="toggle-icon">›</span>
+                `;
+                
+                // 处理点击事件
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleSubmenu(this);
+                });
+                
+                li.appendChild(a);
+                
+                // 创建子菜单
+                const submenu = document.createElement('ul');
+                submenu.className = 'submenu';
+                
+                menuItem.children.forEach(child => {
+                    const childItem = createMenuItem(child);
+                    submenu.appendChild(childItem);
+                });
+                
+                li.appendChild(submenu);
+            } else {
+                // 无子菜单的菜单项
+                const a = document.createElement('a');
+                a.href = menuItem.src || `./pages/${menuItem.page}.html`;
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                `;
+                
+                // 设置活动状态
+                if (menuItem.page === currentPage) {
+                    a.classList.add('active');
+                }
+                
+                li.appendChild(a);
+            }
+            
+            return li;
+        }
+        
+        // 切换子菜单
+        function toggleSubmenu(element) {
+            const submenu = element.nextElementSibling;
+            const toggleIcon = element.querySelector('.toggle-icon');
+            
+            if (submenu && submenu.classList.contains('submenu')) {
+                submenu.classList.toggle('hidden');
+                if (toggleIcon) {
+                    toggleIcon.classList.toggle('collapsed');
+                }
+            }
+        }
+        
+        // 设置导航
+        function setupNavigation() {
+            // 为所有菜单项添加点击事件
+            const menuItems = document.querySelectorAll('.nav-menu a');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // 移除所有活动状态
+                    menuItems.forEach(mi => mi.classList.remove('active'));
+                    // 添加活动状态
+                    this.classList.add('active');
+                });
+            });
+        }
+        
+        // 更新时间戳
+        function updateTimestamp() {
+            const now = new Date();
+            const timestamp = document.getElementById('timestamp');
+            if (timestamp) {
+                timestamp.textContent = now.toLocaleString('zh-CN');
+            }
+        }
+        
+        // 标签页切换函数
+        function switchTab(tabId) {
+            // 隐藏所有标签页内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // 显示选中的标签页内容
+            document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+            
+            // 更新标签页按钮状态
+            document.querySelectorAll('.btn-secondary').forEach(btn => {
+                btn.style.backgroundColor = '#1a1a1a';
+                btn.style.color = 'var(--ooder-secondary)';
+            });
+            
+            // 高亮当前标签页按钮
+            event.target.style.backgroundColor = 'var(--ooder-primary)';
+            event.target.style.color = 'white';
+        }
+        
+        // 提交支持请求
+        function submitSupportRequest() {
+            // 获取表单数据
+            const form = document.getElementById('support-form');
+            const formData = new FormData(form);
+            
+            // 模拟提交
+            alert('支持请求已提交！我们会尽快与您联系。');
+            
+            // 重置表单
+            form.reset();
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>

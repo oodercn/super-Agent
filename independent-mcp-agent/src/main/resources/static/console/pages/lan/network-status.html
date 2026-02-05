@@ -1,0 +1,1137 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络状态 - 小局域网功能</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <style>
+        /* Ooder-Rad 风格基础样式 - 纯黑色系暗色主题 */
+        :root {
+            --ooder-primary: #3b82f6;
+            --ooder-secondary: #94a3b8;
+            --ooder-success: #22c55e;
+            --ooder-warning: #f59e0b;
+            --ooder-danger: #ef4444;
+            --ooder-light: #0f0f0f;
+            --ooder-dark: #ffffff;
+            --ooder-border: #2a2a2a;
+            --ooder-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            --ooder-radius: 8px;
+            --ooder-spacing: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #000000;
+            color: var(--ooder-dark);
+            line-height: 1.5;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            background-color: #000000;
+        }
+        
+        /* 侧边栏样式 - Ooder-Rad 风格 */
+        .sidebar {
+            width: 260px;
+            background-color: #121212;
+            border-right: 1px solid var(--ooder-border);
+            padding: 24px;
+            box-shadow: var(--ooder-shadow);
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 32px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ooder-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sidebar h2::before {
+            content: "⚡";
+            font-size: 20px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-menu li {
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu a {
+            color: var(--ooder-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--ooder-radius);
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .nav-menu a:hover {
+            background-color: var(--ooder-light);
+            color: var(--ooder-primary);
+        }
+        
+        .nav-menu a.active {
+            background-color: rgba(26, 115, 232, 0.1);
+            color: var(--ooder-primary);
+            font-weight: 600;
+        }
+        
+        /* 二级菜单样式 */
+        .nav-menu .submenu {
+            list-style: none;
+            margin-left: 16px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu .submenu li {
+            margin-bottom: 2px;
+        }
+        
+        .nav-menu .submenu a {
+            padding: 10px 16px;
+            font-size: 13px;
+            border-left: 2px solid var(--ooder-border);
+        }
+        
+        /* 三级菜单样式 */
+        .nav-menu .submenu .submenu {
+            margin-left: 32px;
+        }
+        
+        .nav-menu .submenu .submenu a {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-left: 2px solid var(--ooder-secondary);
+        }
+        
+        /* 展开/折叠图标 */
+        .nav-menu .toggle-icon {
+            margin-left: auto;
+            transition: transform 0.2s ease;
+        }
+        
+        .nav-menu .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        /* 菜单分隔线 */
+        .nav-menu .menu-divider {
+            height: 1px;
+            background-color: var(--ooder-border);
+            margin: 16px 0;
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            background-color: #000000;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--ooder-border);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ooder-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header .subtitle {
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        /* 章节样式 */
+        .section {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            margin-bottom: 24px;
+        }
+        
+        .section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--ooder-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section h2::before {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background-color: var(--ooder-primary);
+            border-radius: 2px;
+        }
+        
+        /* 卡片样式 */
+        .card {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 16px;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+        
+        .card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--ooder-dark);
+        }
+        
+        /* 网格样式 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        /* 表格样式 */
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--ooder-radius);
+            border: 1px solid var(--ooder-border);
+            background-color: #1a1a1a;
+            margin-bottom: 24px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ooder-border);
+            color: var(--ooder-dark);
+        }
+        
+        th {
+            background-color: #121212;
+            font-weight: 600;
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        tr:hover {
+            background-color: #1a1a1a;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--ooder-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 12px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--ooder-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background-color: #1a1a1a;
+            color: var(--ooder-secondary);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2a2a2a;
+        }
+        
+        .btn-success {
+            background-color: var(--ooder-success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #16a34a;
+            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.4);
+        }
+        
+        .btn-danger {
+            background-color: var(--ooder-danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+        }
+        
+        /* 按钮组 */
+        .btn-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 32px;
+        }
+        
+        /* 提示框样式 */
+        .alert {
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: var(--ooder-radius);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .alert-success {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--ooder-success);
+            border-left: 4px solid var(--ooder-success);
+        }
+        
+        .alert-error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--ooder-danger);
+            border-left: 4px solid var(--ooder-danger);
+        }
+        
+        .alert-info {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--ooder-primary);
+            border-left: 4px solid var(--ooder-primary);
+        }
+        
+        /* 网络状态指示器 */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-online {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: var(--ooder-success);
+        }
+        
+        .status-offline {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--ooder-danger);
+        }
+        
+        .status-warning {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: var(--ooder-warning);
+        }
+        
+        /* 信号强度指示器 */
+        .signal-strength {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .signal-bar {
+            width: 8px;
+            background-color: var(--ooder-primary);
+            border-radius: 4px;
+            transition: height 0.3s ease;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .main-content {
+                padding: 24px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 300px;
+                border-right: none;
+                border-bottom: 1px solid var(--ooder-border);
+            }
+            
+            .nav-menu {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 16px;
+                padding: 16px;
+            }
+            
+            .nav-menu > li {
+                margin-bottom: 0;
+            }
+            
+            .nav-menu .submenu {
+                display: none;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                margin-right: 0;
+                margin-bottom: 8px;
+                justify-content: center;
+            }
+        }
+        
+        /* 隐藏样式 */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> MCP Agent Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><i class="ri-signal-line"></i> 网络状态</h1>
+                <div class="subtitle">监控局域网网络状态和连接情况</div>
+            </div>
+            
+            <!-- 页面内容区域 -->
+            <div id="page-content">
+                <!-- 网络状态概览 -->
+                <div class="grid">
+                    <div class="card">
+                        <h3>网络状态</h3>
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div class="status-indicator status-online">
+                                <span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--ooder-success);"></span>
+                                在线
+                            </div>
+                            <span style="font-size: 14px; color: var(--ooder-secondary);">所有设备正常连接</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>连接设备</h3>
+                        <div style="display: flex; gap: 16px;">
+                            <div style="flex: 1;">
+                                <p style="font-size: 14px; color: var(--ooder-secondary); margin-bottom: 8px;">总设备数</p>
+                                <p style="font-size: 24px; font-weight: 600; color: var(--ooder-dark);">15</p>
+                            </div>
+                            <div style="flex: 1;">
+                                <p style="font-size: 14px; color: var(--ooder-secondary); margin-bottom: 8px;">活跃设备</p>
+                                <p style="font-size: 24px; font-weight: 600; color: var(--ooder-success);">12</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>网络延迟</h3>
+                        <div style="display: flex; gap: 16px;">
+                            <div style="flex: 1;">
+                                <p style="font-size: 14px; color: var(--ooder-secondary); margin-bottom: 8px;">平均延迟</p>
+                                <p style="font-size: 24px; font-weight: 600; color: var(--ooder-dark);">12ms</p>
+                            </div>
+                            <div style="flex: 1;">
+                                <p style="font-size: 14px; color: var(--ooder-secondary); margin-bottom: 8px;">丢包率</p>
+                                <p style="font-size: 24px; font-weight: 600; color: var(--ooder-success);">0%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 网络设备状态 -->
+                <div class="section">
+                    <h2>网络设备状态</h2>
+                    
+                    <!-- 设备状态表格 -->
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>设备名称</th>
+                                    <th>IP 地址</th>
+                                    <th>MAC 地址</th>
+                                    <th>状态</th>
+                                    <th>信号强度</th>
+                                    <th>最后活动</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>主路由器</td>
+                                    <td>192.168.1.1</td>
+                                    <td>00:11:22:33:44:55</td>
+                                    <td><div class="status-indicator status-online"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--ooder-success);"></span>在线</div></td>
+                                    <td>
+                                        <div class="signal-strength">
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                        </div>
+                                    </td>
+                                    <td>2分钟前</td>
+                                    <td>
+                                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">详情</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>智能家居中心</td>
+                                    <td>192.168.1.10</td>
+                                    <td>AA:BB:CC:DD:EE:FF</td>
+                                    <td><div class="status-indicator status-online"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--ooder-success);"></span>在线</div></td>
+                                    <td>
+                                        <div class="signal-strength">
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 16px;"></div>
+                                            <div class="signal-bar" style="height: 8px;"></div>
+                                        </div>
+                                    </td>
+                                    <td>5分钟前</td>
+                                    <td>
+                                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">详情</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>网络存储</td>
+                                    <td>192.168.1.20</td>
+                                    <td>11:22:33:44:55:66</td>
+                                    <td><div class="status-indicator status-online"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--ooder-success);"></span>在线</div></td>
+                                    <td>
+                                        <div class="signal-strength">
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                        </div>
+                                    </td>
+                                    <td>10分钟前</td>
+                                    <td>
+                                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">详情</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>打印机</td>
+                                    <td>192.168.1.30</td>
+                                    <td>22:33:44:55:66:77</td>
+                                    <td><div class="status-indicator status-offline"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--ooder-danger);"></span>离线</div></td>
+                                    <td>
+                                        <div class="signal-strength">
+                                            <div class="signal-bar" style="height: 0;"></div>
+                                            <div class="signal-bar" style="height: 0;"></div>
+                                            <div class="signal-bar" style="height: 0;"></div>
+                                            <div class="signal-bar" style="height: 0;"></div>
+                                            <div class="signal-bar" style="height: 0;"></div>
+                                        </div>
+                                    </td>
+                                    <td>2小时前</td>
+                                    <td>
+                                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">详情</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>监控摄像头</td>
+                                    <td>192.168.1.40</td>
+                                    <td>33:44:55:66:77:88</td>
+                                    <td><div class="status-indicator status-online"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--ooder-success);"></span>在线</div></td>
+                                    <td>
+                                        <div class="signal-strength">
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 8px;"></div>
+                                            <div class="signal-bar" style="height: 0;"></div>
+                                        </div>
+                                    </td>
+                                    <td>1分钟前</td>
+                                    <td>
+                                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">详情</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>笔记本电脑</td>
+                                    <td>192.168.1.101</td>
+                                    <td>AA:BB:CC:DD:EE:01</td>
+                                    <td><div class="status-indicator status-online"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--ooder-success);"></span>在线</div></td>
+                                    <td>
+                                        <div class="signal-strength">
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 16px;"></div>
+                                            <div class="signal-bar" style="height: 8px;"></div>
+                                            <div class="signal-bar" style="height: 0;"></div>
+                                        </div>
+                                    </td>
+                                    <td>30秒前</td>
+                                    <td>
+                                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">详情</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>智能手机</td>
+                                    <td>192.168.1.102</td>
+                                    <td>AA:BB:CC:DD:EE:02</td>
+                                    <td><div class="status-indicator status-online"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--ooder-success);"></span>在线</div></td>
+                                    <td>
+                                        <div class="signal-strength">
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 16px;"></div>
+                                            <div class="signal-bar" style="height: 8px;"></div>
+                                        </div>
+                                    </td>
+                                    <td>5分钟前</td>
+                                    <td>
+                                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">详情</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>智能电视</td>
+                                    <td>192.168.1.104</td>
+                                    <td>AA:BB:CC:DD:EE:04</td>
+                                    <td><div class="status-indicator status-online"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--ooder-success);"></span>在线</div></td>
+                                    <td>
+                                        <div class="signal-strength">
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 24px;"></div>
+                                            <div class="signal-bar" style="height: 16px;"></div>
+                                        </div>
+                                    </td>
+                                    <td>10分钟前</td>
+                                    <td>
+                                        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">详情</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 网络连接历史 -->
+                <div class="section">
+                    <h2>网络连接历史</h2>
+                    
+                    <!-- 连接历史表格 -->
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>设备名称</th>
+                                    <th>IP 地址</th>
+                                    <th>MAC 地址</th>
+                                    <th>事件类型</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2023-12-01 14:30:15</td>
+                                    <td>笔记本电脑</td>
+                                    <td>192.168.1.101</td>
+                                    <td>AA:BB:CC:DD:EE:01</td>
+                                    <td>连接</td>
+                                    <td><div class="status-indicator status-online"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--ooder-success);"></span>成功</div></td>
+                                </tr>
+                                <tr>
+                                    <td>2023-12-01 14:25:30</td>
+                                    <td>智能手机</td>
+                                    <td>192.168.1.102</td>
+                                    <td>AA:BB:CC:DD:EE:02</td>
+                                    <td>连接</td>
+                                    <td><div class="status-indicator status-online"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--ooder-success);"></span>成功</div></td>
+                                </tr>
+                                <tr>
+                                    <td>2023-12-01 14:20:45</td>
+                                    <td>平板电脑</td>
+                                    <td>192.168.1.103</td>
+                                    <td>AA:BB:CC:DD:EE:03</td>
+                                    <td>断开</td>
+                                    <td><div class="status-indicator status-offline"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--ooder-danger);"></span>成功</div></td>
+                                </tr>
+                                <tr>
+                                    <td>2023-12-01 14:15:00</td>
+                                    <td>打印机</td>
+                                    <td>192.168.1.30</td>
+                                    <td>22:33:44:55:66:77</td>
+                                    <td>断开</td>
+                                    <td><div class="status-indicator status-offline"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--ooder-danger);"></span>成功</div></td>
+                                </tr>
+                                <tr>
+                                    <td>2023-12-01 14:10:15</td>
+                                    <td>监控摄像头</td>
+                                    <td>192.168.1.40</td>
+                                    <td>33:44:55:66:77:88</td>
+                                    <td>连接</td>
+                                    <td><div class="status-indicator status-online"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--ooder-success);"></span>成功</div></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 网络诊断 -->
+                <div class="section">
+                    <h2>网络诊断</h2>
+                    
+                    <div style="display: flex; gap: 16px; margin-bottom: 24px;">
+                        <button class="btn btn-primary" onclick="runNetworkDiagnostic()">
+                            <i class="ri-refresh-line"></i> 运行诊断
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearDiagnosticResults()">
+                            <i class="ri-delete-bin-line"></i> 清除结果
+                        </button>
+                    </div>
+                    
+                    <!-- 诊断结果 -->
+                    <div class="alert alert-info" id="diagnostic-result">
+                        <h4 style="margin-bottom: 12px;">诊断结果</h4>
+                        <p>点击 "运行诊断" 按钮开始网络诊断</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 菜单配置
+        const menuConfig = {
+            batch: 1,
+            totalBatches: 3,
+            description: "第一批次实现的核心功能",
+            menu: [
+                {
+                    id: "dashboard",
+                    name: "仪表盘",
+                    icon: "ri-dashboard-line",
+                    level: 1,
+                    url: "../../index.html",
+                    priority: "high",
+                    status: "implemented"
+                },
+                {
+                    id: "home-function",
+                    name: "家庭功能",
+                    icon: "ri-home-line",
+                    level: 1,
+                    priority: "high",
+                    status: "implemented",
+                    children: [
+                        {
+                            id: "home-dashboard",
+                            name: "家庭仪表盘",
+                            icon: "ri-home-smile-line",
+                            level: 2,
+                            url: "../home/home-dashboard.html",
+                            priority: "high",
+                            status: "implemented"
+                        },
+                        {
+                            id: "home-devices",
+                            name: "设备管理",
+                            icon: "ri-device-line",
+                            level: 2,
+                            priority: "high",
+                            status: "implemented",
+                            children: [
+                                {
+                                    id: "device-list",
+                                    name: "设备列表",
+                                    icon: "ri-list-check",
+                                    level: 3,
+                                    url: "../home/device-list.html",
+                                    priority: "high",
+                                    status: "implemented"
+                                },
+                                {
+                                    id: "device-control",
+                                    name: "设备控制",
+                                    icon: "ri-control-line",
+                                    level: 3,
+                                    url: "../home/device-control.html",
+                                    priority: "high",
+                                    status: "implemented"
+                                }
+                            ]
+                        },
+                        {
+                            id: "home-security",
+                            name: "家庭安全",
+                            icon: "ri-shield-home-line",
+                            level: 2,
+                            priority: "high",
+                            status: "implemented",
+                            children: [
+                                {
+                                    id: "security-status",
+                                    name: "安全状态",
+                                    icon: "ri-secure-payment-line",
+                                    level: 3,
+                                    url: "../home/security-status.html",
+                                    priority: "high",
+                                    status: "implemented"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: "lan-function",
+                    name: "小局域网功能",
+                    icon: "ri-wifi-line",
+                    level: 1,
+                    priority: "high",
+                    status: "implemented",
+                    children: [
+                        {
+                            id: "lan-dashboard",
+                            name: "局域网仪表盘",
+                            icon: "ri-network-line",
+                            level: 2,
+                            url: "../lan/lan-dashboard.html",
+                            priority: "high",
+                            status: "implemented"
+                        },
+                        {
+                            id: "lan-devices",
+                            name: "网络设备",
+                            icon: "ri-router-wireless-line",
+                            level: 2,
+                            priority: "high",
+                            status: "implemented",
+                            children: [
+                                {
+                                    id: "network-devices",
+                                    name: "设备列表",
+                                    icon: "ri-list-check",
+                                    level: 3,
+                                    url: "../lan/network-devices.html",
+                                    priority: "high",
+                                    status: "implemented"
+                                },
+                                {
+                                    id: "device-details",
+                                    name: "设备详情",
+                                    icon: "ri-information-line",
+                                    level: 3,
+                                    url: "../lan/device-details.html",
+                                    priority: "high",
+                                    status: "implemented"
+                                }
+                            ]
+                        },
+                        {
+                            id: "lan-config",
+                            name: "网络配置",
+                            icon: "ri-settings-3-line",
+                            level: 2,
+                            priority: "high",
+                            status: "implemented",
+                            children: [
+                                {
+                                    id: "network-settings",
+                                    name: "网络设置",
+                                    icon: "ri-wifi-settings-line",
+                                    level: 3,
+                                    url: "../lan/network-settings.html",
+                                    priority: "high",
+                                    status: "implemented"
+                                },
+                                {
+                                    id: "ip-management",
+                                    name: "IP管理",
+                                    icon: "ri-ip-line",
+                                    level: 3,
+                                    url: "../lan/ip-management.html",
+                                    priority: "high",
+                                    status: "implemented"
+                                }
+                            ]
+                        },
+                        {
+                            id: "lan-monitoring",
+                            name: "网络监控",
+                            icon: "ri-bar-chart-2-line",
+                            level: 2,
+                            priority: "high",
+                            status: "implemented",
+                            children: [
+                                {
+                                    id: "network-status",
+                                    name: "网络状态",
+                                    icon: "ri-signal-line",
+                                    level: 3,
+                                    url: "../lan/network-status.html",
+                                    priority: "high",
+                                    status: "implemented"
+                                },
+                                {
+                                    id: "bandwidth-monitor",
+                                    name: "带宽监控",
+                                    icon: "ri-data-line",
+                                    level: 3,
+                                    url: "../lan/bandwidth-monitor.html",
+                                    priority: "high",
+                                    status: "implemented"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: "enterprise-function",
+                    name: "企业级全功能应用",
+                    icon: "ri-building-line",
+                    level: 1,
+                    priority: "medium",
+                    status: "planned",
+                    children: [
+                        {
+                            id: "enterprise-dashboard",
+                            name: "企业仪表盘",
+                            icon: "ri-dashboard-2-line",
+                            level: 2,
+                            url: "../enterprise/enterprise-dashboard.html",
+                            priority: "medium",
+                            status: "planned"
+                        }
+                    ]
+                }
+            ]
+        };
+        
+        // 初始化菜单
+        function initMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            
+            menuConfig.menu.forEach(item => {
+                const menuItem = createMenuItem(item);
+                navMenu.appendChild(menuItem);
+                // 添加菜单分隔线
+                if (item.id !== 'dashboard') {
+                    const divider = document.createElement('div');
+                    divider.className = 'menu-divider';
+                    navMenu.appendChild(divider);
+                }
+            });
+            
+            setupNavigation();
+        }
+        
+        // 创建菜单项
+        function createMenuItem(menuItem) {
+            const li = document.createElement('li');
+            
+            if (menuItem.children && menuItem.children.length > 0) {
+                // 有子菜单的菜单项
+                const a = document.createElement('a');
+                a.href = `#${menuItem.id}`;
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                    <span class="toggle-icon">›</span>
+                `;
+                
+                // 处理点击事件
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const toggleIcon = this.querySelector('.toggle-icon');
+                    const submenu = this.nextElementSibling;
+                    
+                    if (submenu) {
+                        submenu.classList.toggle('hidden');
+                        toggleIcon.classList.toggle('collapsed');
+                    }
+                });
+                
+                li.appendChild(a);
+                
+                // 创建子菜单
+                const submenu = document.createElement('ul');
+                submenu.className = 'submenu';
+                
+                menuItem.children.forEach(childItem => {
+                    const childLi = createMenuItem(childItem);
+                    submenu.appendChild(childLi);
+                });
+                
+                li.appendChild(submenu);
+            } else {
+                // 无子菜单的菜单项
+                const a = document.createElement('a');
+                if (menuItem.url) {
+                    a.href = menuItem.url;
+                } else {
+                    a.href = `#${menuItem.id}`;
+                    a.setAttribute('data-page', menuItem.page || menuItem.id);
+                }
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                `;
+                li.appendChild(a);
+            }
+            
+            return li;
+        }
+        
+        // 设置导航
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-menu a');
+            navLinks.forEach(link => {
+                // 只处理带有data-page属性的链接（即叶子节点且没有url属性）
+                if (link.hasAttribute('data-page') && !link.hasAttribute('href') && link.getAttribute('href') !== '#') {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // 更新活跃状态
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        // 加载对应页面
+                        const page = this.getAttribute('data-page');
+                        loadPage(page);
+                    });
+                }
+            });
+        }
+        
+        // 运行网络诊断
+        function runNetworkDiagnostic() {
+            const diagnosticResult = document.getElementById('diagnostic-result');
+            diagnosticResult.innerHTML = `
+                <h4 style="margin-bottom: 12px;">诊断结果</h4>
+                <p>正在运行网络诊断，请稍候...</p>
+            `;
+            
+            // 模拟诊断过程
+            setTimeout(() => {
+                diagnosticResult.innerHTML = `
+                    <h4 style="margin-bottom: 12px;">诊断结果</h4>
+                    <ul style="margin-left: 24px; margin-bottom: 16px;">
+                        <li>网络连接: <span style="color: var(--ooder-success);">正常</span></li>
+                        <li>DNS 解析: <span style="color: var(--ooder-success);">正常</span></li>
+                        <li>网关响应: <span style="color: var(--ooder-success);">正常</span></li>
+                        <li>设备连接: <span style="color: var(--ooder-success);">12/15 设备在线</span></li>
+                        <li>网络延迟: <span style="color: var(--ooder-success);">12ms</span></li>
+                        <li>丢包率: <span style="color: var(--ooder-success);">0%</span></li>
+                    </ul>
+                    <p style="color: var(--ooder-secondary);">网络状态良好，所有设备正常运行。</p>
+                `;
+            }, 2000);
+        }
+        
+        // 清除诊断结果
+        function clearDiagnosticResults() {
+            const diagnosticResult = document.getElementById('diagnostic-result');
+            diagnosticResult.innerHTML = `
+                <h4 style="margin-bottom: 12px;">诊断结果</h4>
+                <p>点击 "运行诊断" 按钮开始网络诊断</p>
+            `;
+        }
+        
+        // 初始化
+        function init() {
+            initMenu();
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>

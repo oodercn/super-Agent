@@ -1,0 +1,167 @@
+<html>
+
+<head>
+    <title>文件上传控件</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="vault.js?v=3.0.0"></script>
+    <link rel="stylesheet" type="text/css" href="vault.css?v=3.0.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .vault .dhx-files-grid .dhx-preview-wrapper canvas {
+            width: 96%;
+            height: 60%;
+        }
+
+        .vault .dhx-files-grid .dhx-file-grid-item .dhx-default-actions {
+            top: 2px;
+            right: 2px;
+        }
+
+        .vault .dhx-files-grid .dhx-file-grid-item {
+            width: 70px;
+            height: 15px;
+        }
+
+        .vault-file-grid {
+            position: absolute !important;
+            left: 75px;
+        }
+
+        .dhx_widget button {
+            position: absolute;
+            top: 7px;
+        }
+
+        .dhx-dropable-area .dhx-big-icon-block {
+            width: 75px;
+            height: 39px;
+        }
+
+        .dhx-dropable-area .drop-area-bold-text {
+            display: none
+        }
+
+        .dhx-dropable-area .drop-area-light-text {
+            display: none
+        }
+
+        .dhx-dropable-area .dhx-big-icon-block .dxi {
+            display: none;
+        }
+
+        .scroll-view {
+            overflow-y: auto !important;
+        }
+        .vault .dhx-files-grid .dhx-file-grid-item > .dhx-preview-wrapper > .dhx-file-preview{
+            height: 60%;
+        }
+        .dhx_widget button{
+           
+        }
+        .vault-topbar{
+            height: 100%!important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="test" class="container"></div>
+
+    <script>
+        var _GET = new Array();
+        var u = window.location.toString();
+        u = u.split('?');
+        if (typeof (u[1]) == 'string') {
+            u = u[1].split('&');
+            for (i = 0; i < u.length; i++) {
+                s = u[i].split("=");
+                if (s) {
+                    try {
+                        eval('_GET["' + s[0] + '"]' + '="' + decodeURIComponent(s[1]) + '"');
+                    } catch (e) {
+
+                    }
+
+
+                }
+
+            }
+        }
+        var targetUrl = _GET['uploadUrl'];
+        if (targetUrl == null) {
+            alert("上传地址不能为空！");
+        }
+        var params = {};
+        for (key in _GET) {
+            if (key && key != "uploadUrl" && _GET[key]) {
+                params[key] = _GET[key];
+                //alert(  params[key]+  _GET[key]);
+            }
+        }
+
+
+
+        //alert(targetUrl);
+
+
+        var vault = new dhx.Vault('vault', {
+            mode: "grid",
+            uploader: {
+                target: targetUrl,
+                autosend: true,
+                params: params,
+                fieldName:'file',
+            }
+        });
+
+        try {
+            if (filter && filter.indexOf(";") > -1) {
+                var filters = filter.split(";");
+                vault.events.on("beforeAdd", function (item) {
+                    var extension = item.file.name.split(".").pop();
+                    var size = item.file.size;
+                    for (var i = 0; i < filters.length; i++) {
+                        if (extension == filters[i]) {
+                            return true;
+                        }
+                        ;
+                    }
+                    return false;
+                });
+
+                vault.events.on("uploadcomplete", function (item) {
+
+                    try {
+
+                        var data = {
+                            eventType: 'uploadcomplete',
+                            item: _this._uploadInfo.files[0].file,
+                            response: request.response
+
+                        }
+                        parent.postMessage(data)
+
+
+                    } catch (e) {
+                        console.log(e);
+
+                    }
+                });
+
+
+            }
+        } catch (e) {
+
+        }
+
+
+    // vault.data.parse(filesData);
+
+    </script>
+</body>
+
+</html>

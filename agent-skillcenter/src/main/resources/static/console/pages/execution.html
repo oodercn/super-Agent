@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>执行管理 - SkillCenter 控制台</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
+    <link href="/skillcenter/console/assets/css/remixicon/remixicon.css" rel="stylesheet">
+    <script src="/skillcenter/console/js/menu.js"></script>
+
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <!-- 菜单将通过menu.js动态加载 -->
+        </aside>
+        <main class="main-content">
+            <div class="header">
+                <h1><i class="ri-play-circle-line"></i> 执行管理</h1>
+                <div class="user-info">
+                    <span class="user-name">管理员</span>
+                </div>
+            </div>
+            
+            <!-- 标签页导航 -->
+            <div class="section execution-tabs">
+                <button class="btn btn-secondary tab-btn active" onclick="switchTab('execute-run')">执行技能</button>
+                <button class="btn btn-secondary tab-btn" onclick="switchTab('execute-history')">执行历史</button>
+                <button class="btn btn-secondary tab-btn" onclick="switchTab('execute-status')">执行状态</button>
+                <button class="btn btn-secondary tab-btn" onclick="switchTab('execute-result')">执行结果</button>
+            </div>
+            
+            <!-- 标签页内容 -->
+            <div class="section">
+                <!-- 执行技能标签页 -->
+                <div id="execute-run-tab" class="tab-content">
+                    <div class="form-group">
+                        <h3>执行技能</h3>
+                        <div style="margin-top: 8px;">
+                            <select id="skill-select" class="form-control" style="margin-right: 12px;">
+                                <option value="">选择技能</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="executeSkillFromForm()">执行</button>
+                        </div>
+                    </div>
+                    <div id="execution-parameters" style="margin-top: 16px;">
+                        <!-- 执行参数将在这里显示 -->
+                    </div>
+                </div>
+                
+                <!-- 执行历史标签页 -->
+                <div id="execute-history-tab" class="tab-content hidden">
+                    <div class="table-container">
+                        <table id="execution-history-table">
+                            <thead>
+                                <tr>
+                                    <th>执行ID</th>
+                                    <th>技能ID</th>
+                                    <th>执行时间</th>
+                                    <th>状态</th>
+                                    <th>执行时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 执行历史将在这里显示 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 执行状态标签页 -->
+                <div id="execute-status-tab" class="tab-content hidden">
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="status-execution-id" placeholder="输入执行ID" style="margin-right: 12px;">
+                        <button class="btn btn-primary" onclick="getStatus()">获取状态</button>
+                    </div>
+                    <div id="execution-status-result">
+                        <!-- 执行状态将在这里显示 -->
+                    </div>
+                </div>
+                
+                <!-- 执行结果标签页 -->
+                <div id="execute-result-tab" class="tab-content hidden">
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="result-execution-id" placeholder="输入执行ID" style="margin-right: 12px;">
+                        <button class="btn btn-primary" onclick="getResult()">获取结果</button>
+                        <button class="btn btn-danger" onclick="cleanResult()">清理结果</button>
+                    </div>
+                    <div id="execution-result-content">
+                        <!-- 执行结果将在这里显示 -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // API基础URL
+        const API_BASE_URL = '/skillcenter/api';
+        
+        // 初始化页面
+        function init() {
+            updateTimestamp();
+            loadExecutionHistory();
+            setInterval(updateTimestamp, 60000); // 每分钟更新时间戳
+        }
+        
+        // 更新时间戳
+        function updateTimestamp() {
+            const now = new Date();
+            const timestamp = document.getElementById('timestamp');
+            if (timestamp) {
+                timestamp.textContent = now.toLocaleString('zh-CN');
+            }
+        }
+        
+        // 执行管理相关函数
+        
+        // 加载执行历史
+        async function loadExecutionHistory() {
+            try {
+                // 由于后端API没有直接提供执行历史的接口，我们需要从其他接口获取数据
+                // 这里我们暂时使用模拟数据
+                const executions = [
+                    {
+                        executionId: 'exec-12345',
+                        skillId: 'text-uppercase',
+                        timestamp: new Date().toLocaleString('zh-CN'),
+                        status: 'SUCCESS',
+                        executionTime: '0.5s'
+                    },
+                    {
+                        executionId: 'exec-12344',
+                        skillId: 'code-generation',
+                        timestamp: new Date().toLocaleString('zh-CN'),
+                        status: 'SUCCESS',
+                        executionTime: '3.2s'
+                    },
+                    {
+                        executionId: 'exec-12343',
+                        skillId: 'local-deployment',
+                        timestamp: new Date().toLocaleString('zh-CN'),
+                        status: 'FAILED',
+                        executionTime: '1.8s'
+                    }
+                ];
+                renderExecutionHistory(executions);
+            } catch (error) {
+                console.error('加载执行历史错误:', error);
+                alert('加载执行历史失败: ' + error.message);
+            }
+        }
+        
+        // 渲染执行历史
+        function renderExecutionHistory(executions) {
+            const tbody = document.querySelector('table tbody');
+            tbody.innerHTML = '';
+            
+            executions.forEach(execution => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${execution.executionId}</td>
+                    <td>${execution.skillId}</td>
+                    <td>${execution.timestamp}</td>
+                    <td>${execution.status === 'SUCCESS' ? '成功' : '失败'}</td>
+                    <td>${execution.executionTime}</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="showExecutionDetail('${execution.executionId}')">详情</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // 显示执行详情
+        async function showExecutionDetail(executionId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/execution/result/${executionId}`);
+                if (!response.ok) {
+                    throw new Error('获取执行详情失败');
+                }
+                const result = await response.json();
+                alert(`执行详情:\n执行ID: ${executionId}\n状态: ${result.status === 'SUCCESS' ? '成功' : '失败'}\n结果: ${result.output || result.errorMessage}\n执行时间: ${result.executionTime || '未知'}`);
+            } catch (error) {
+                console.error('获取执行详情错误:', error);
+                alert('获取执行详情失败: ' + error.message);
+            }
+        }
+        
+        // 获取执行状态
+        async function getExecutionStatus(executionId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/execution/status/${executionId}`);
+                if (!response.ok) {
+                    throw new Error('获取执行状态失败');
+                }
+                const status = await response.text();
+                alert(`执行状态: ${status}`);
+            } catch (error) {
+                console.error('获取执行状态错误:', error);
+                alert('获取执行状态失败: ' + error.message);
+            }
+        }
+        
+        // 清理执行结果
+        async function clearExecutionResult(executionId) {
+            if (!confirm('确定要清理执行结果 ' + executionId + ' 吗?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/execution/result/${executionId}`, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) {
+                    throw new Error('清理执行结果失败');
+                }
+                const result = await response.json();
+                if (result) {
+                    alert('执行结果清理成功!');
+                    loadExecutionHistory();
+                } else {
+                    alert('执行结果清理失败!');
+                }
+            } catch (error) {
+                console.error('清理执行结果错误:', error);
+                alert('清理执行结果失败: ' + error.message);
+            }
+        }
+        
+        // 标签页切换函数
+        function switchTab(tabId) {
+            // 隐藏所有标签页内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // 显示选中的标签页内容
+            document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+            
+            // 更新标签页按钮状态
+            document.querySelectorAll('.btn-secondary').forEach(btn => {
+                btn.style.backgroundColor = '#1a1a1a';
+                btn.style.color = 'var(--ooder-secondary)';
+            });
+            
+            // 高亮当前标签页按钮
+            event.target.style.backgroundColor = 'var(--ooder-primary)';
+            event.target.style.color = 'white';
+            
+            // 根据标签页ID加载相应的数据
+            if (tabId === 'execute-history') {
+                loadExecutionHistory();
+            } else if (tabId === 'execute-run') {
+                loadSkillsForExecution();
+            }
+        }
+        
+        // 加载技能列表供执行选择
+        async function loadSkillsForExecution() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/skills`);
+                if (!response.ok) {
+                    throw new Error('加载技能列表失败');
+                }
+                const skills = await response.json();
+                const skillSelect = document.getElementById('skill-select');
+                skillSelect.innerHTML = '<option value="">选择技能</option>';
+                
+                skills.forEach(skill => {
+                    const option = document.createElement('option');
+                    option.value = skill.id;
+                    option.textContent = skill.name;
+                    skillSelect.appendChild(option);
+                });
+                
+                // 添加技能选择事件监听器
+                skillSelect.addEventListener('change', function() {
+                    const skillId = this.value;
+                    if (skillId) {
+                        loadSkillParameters(skillId);
+                    } else {
+                        document.getElementById('execution-parameters').innerHTML = '';
+                    }
+                });
+            } catch (error) {
+                console.error('加载技能列表错误:', error);
+                alert('加载技能列表失败: ' + error.message);
+            }
+        }
+        
+        // 加载技能参数
+        async function loadSkillParameters(skillId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/skills/${skillId}`);
+                if (!response.ok) {
+                    throw new Error('获取技能详情失败');
+                }
+                const skill = await response.json();
+                const parametersContainer = document.getElementById('execution-parameters');
+                parametersContainer.innerHTML = `
+                    <h4>执行参数</h4>
+                    <div style="margin-top: 8px;">
+                        <p>技能: ${skill.name}</p>
+                        <p>分类: ${skill.category || '未分类'}</p>
+                        <p>描述: ${skill.description || '无描述'}</p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('获取技能详情错误:', error);
+                alert('获取技能详情失败: ' + error.message);
+            }
+        }
+        
+        // 从表单执行技能
+        async function executeSkillFromForm() {
+            const skillId = document.getElementById('skill-select').value;
+            if (!skillId) {
+                alert('请选择技能');
+                return;
+            }
+            
+            try {
+                const parameters = {};
+                if (skillId === 'text-uppercase') {
+                    parameters.text = prompt('请输入要转换的文本:');
+                } else if (skillId === 'code-generation') {
+                    parameters.language = prompt('请输入语言:');
+                    parameters.prompt = prompt('请输入代码生成提示:');
+                } else if (skillId === 'local-deployment') {
+                    parameters.appName = prompt('请输入应用名称:');
+                    parameters.appPath = prompt('请输入应用路径:');
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/skills/${skillId}/execute`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ parameters })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('执行技能失败');
+                }
+                
+                const result = await response.json();
+                if (result.status === 'SUCCESS') {
+                    alert('执行成功!\n结果: ' + result.output);
+                } else {
+                    alert('执行失败!\n错误: ' + result.errorMessage);
+                }
+            } catch (error) {
+                console.error('执行技能错误:', error);
+                alert('执行技能失败: ' + error.message);
+            }
+        }
+        
+        // 加载执行历史
+        async function loadExecutionHistory() {
+            try {
+                // 由于后端API没有直接提供执行历史的接口，我们需要从其他接口获取数据
+                // 这里我们暂时使用模拟数据
+                const executions = [
+                    {
+                        executionId: 'exec-12345',
+                        skillId: 'text-uppercase',
+                        timestamp: new Date().toLocaleString('zh-CN'),
+                        status: 'SUCCESS',
+                        executionTime: '0.5s'
+                    },
+                    {
+                        executionId: 'exec-12344',
+                        skillId: 'code-generation',
+                        timestamp: new Date().toLocaleString('zh-CN'),
+                        status: 'SUCCESS',
+                        executionTime: '3.2s'
+                    },
+                    {
+                        executionId: 'exec-12343',
+                        skillId: 'local-deployment',
+                        timestamp: new Date().toLocaleString('zh-CN'),
+                        status: 'FAILED',
+                        executionTime: '1.8s'
+                    }
+                ];
+                renderExecutionHistory(executions);
+            } catch (error) {
+                console.error('加载执行历史错误:', error);
+                alert('加载执行历史失败: ' + error.message);
+            }
+        }
+        
+        // 渲染执行历史
+        function renderExecutionHistory(executions) {
+            const tbody = document.querySelector('#execution-history-table tbody');
+            tbody.innerHTML = '';
+            
+            executions.forEach(execution => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${execution.executionId}</td>
+                    <td>${execution.skillId}</td>
+                    <td>${execution.timestamp}</td>
+                    <td>${execution.status === 'SUCCESS' ? '成功' : '失败'}</td>
+                    <td>${execution.executionTime}</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="showExecutionDetail('${execution.executionId}')">详情</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // 显示执行详情
+        async function showExecutionDetail(executionId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/execution/result/${executionId}`);
+                if (!response.ok) {
+                    throw new Error('获取执行详情失败');
+                }
+                const result = await response.json();
+                alert(`执行详情:\n执行ID: ${executionId}\n状态: ${result.status === 'SUCCESS' ? '成功' : '失败'}\n结果: ${result.output || result.errorMessage}\n执行时间: ${result.executionTime || '未知'}`);
+            } catch (error) {
+                console.error('获取执行详情错误:', error);
+                alert('获取执行详情失败: ' + error.message);
+            }
+        }
+        
+        // 获取执行状态
+        async function getStatus() {
+            const executionId = document.getElementById('status-execution-id').value;
+            if (!executionId) {
+                alert('请输入执行ID');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/execution/status/${executionId}`);
+                if (!response.ok) {
+                    throw new Error('获取执行状态失败');
+                }
+                const status = await response.text();
+                const statusResult = document.getElementById('execution-status-result');
+                statusResult.innerHTML = `
+                    <div style="padding: 12px; background-color: #1a1a1a; border-radius: var(--ooder-radius);">
+                        <p>执行ID: ${executionId}</p>
+                        <p>状态: ${status}</p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('获取执行状态错误:', error);
+                alert('获取执行状态失败: ' + error.message);
+            }
+        }
+        
+        // 获取执行结果
+        async function getResult() {
+            const executionId = document.getElementById('result-execution-id').value;
+            if (!executionId) {
+                alert('请输入执行ID');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/execution/result/${executionId}`);
+                if (!response.ok) {
+                    throw new Error('获取执行结果失败');
+                }
+                const result = await response.json();
+                const resultContent = document.getElementById('execution-result-content');
+                resultContent.innerHTML = `
+                    <div style="padding: 12px; background-color: #1a1a1a; border-radius: var(--ooder-radius);">
+                        <p>执行ID: ${executionId}</p>
+                        <p>状态: ${result.status === 'SUCCESS' ? '成功' : '失败'}</p>
+                        <p>结果: ${result.output || result.errorMessage}</p>
+                        <p>执行时间: ${result.executionTime || '未知'}</p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('获取执行结果错误:', error);
+                alert('获取执行结果失败: ' + error.message);
+            }
+        }
+        
+        // 清理执行结果
+        async function cleanResult() {
+            const executionId = document.getElementById('result-execution-id').value;
+            if (!executionId) {
+                alert('请输入执行ID');
+                return;
+            }
+            
+            if (!confirm('确定要清理执行结果 ' + executionId + ' 吗?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/execution/result/${executionId}`, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) {
+                    throw new Error('清理执行结果失败');
+                }
+                const result = await response.json();
+                if (result) {
+                    alert('执行结果清理成功!');
+                    document.getElementById('execution-result-content').innerHTML = '';
+                } else {
+                    alert('执行结果清理失败!');
+                }
+            } catch (error) {
+                console.error('清理执行结果错误:', error);
+                alert('清理执行结果失败: ' + error.message);
+            }
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = function() {
+            initMenu('execution');
+            init();
+        };
+    </script>
+</body>
+</html>

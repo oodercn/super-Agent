@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景管理 - Nexus</title>
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+    <link rel="stylesheet" href="../../css/mcpagent/common.css">
+    <script src="../../js/theme-manager.js"></script>
+</head>
+<body class="nexus-page">
+    <div class="nexus-container">
+        <!-- 侧边导航栏 -->
+        <div class="nexus-sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> Nexus Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="nexus-main-content">
+            <div class="nexus-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h1><i class="ri-scene-line"></i> 场景管理</h1>
+                    <button class="theme-toggle-btn nexus-btn nexus-btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                        <i class="ri-sun-line"></i> 浅色模式
+                    </button>
+                </div>
+                <div class="subtitle">
+                    <span class="badge dashboard-badge" style="background-color: var(--nexus-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">Nexus</span>
+                    <span>管理网络场景和配置</span>
+                </div>
+            </div>
+
+            <!-- 状态概览 -->
+            <section class="nexus-status-overview">
+                <div class="nexus-status-card">
+                    <div class="nexus-status-icon">
+                        <i class="ri-scene-line"></i>
+                    </div>
+                    <div class="nexus-status-info">
+                        <h3>场景总数</h3>
+                        <p class="nexus-status-value" id="totalScenarios">0</p>
+                    </div>
+                </div>
+                <div class="nexus-status-card">
+                    <div class="nexus-status-icon">
+                        <i class="ri-play-circle-line"></i>
+                    </div>
+                    <div class="nexus-status-info">
+                        <h3>活跃场景</h3>
+                        <p class="nexus-status-value" id="activeScenarios">0</p>
+                    </div>
+                </div>
+                <div class="nexus-status-card">
+                    <div class="nexus-status-icon">
+                        <i class="ri-folder-line"></i>
+                    </div>
+                    <div class="nexus-status-info">
+                        <h3>场景类型</h3>
+                        <p class="nexus-status-value" id="scenarioTypes">0</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 场景管理 -->
+            <section class="nexus-operation-section">
+                <div class="nexus-section-header">
+                    <h3>场景管理</h3>
+                    <div class="nexus-operation-buttons">
+                        <button class="nexus-btn nexus-btn-primary" onclick="createScenario()">
+                            <i class="ri-add-line"></i>
+                            创建场景
+                        </button>
+                        <button class="nexus-btn nexus-btn-secondary" onclick="importScenario()">
+                            <i class="ri-upload-line"></i>
+                            导入场景
+                        </button>
+                        <button class="nexus-btn nexus-btn-secondary" onclick="exportScenario()">
+                            <i class="ri-download-line"></i>
+                            导出场景
+                        </button>
+                        <button class="nexus-btn nexus-btn-secondary" onclick="refreshScenarios()">
+                            <i class="ri-refresh-line"></i>
+                            刷新
+                        </button>
+                    </div>
+                </div>
+                <div id="scenarioList" class="nexus-stats-grid">
+                </div>
+            </section>
+        </div>
+    </div>
+    
+    <!-- 场景编辑模态框 -->
+    <div id="scenarioModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">创建场景</h3>
+                <button class="close-btn" onclick="closeModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="scenarioForm" onsubmit="saveScenario(event)">
+                    <div class="nexus-form-group">
+                        <label for="scenarioName">场景名称</label>
+                        <input type="text" id="scenarioName" required placeholder="请输入场景名称">
+                    </div>
+                    <div class="nexus-form-group">
+                        <label for="scenarioType">场景类型</label>
+                        <select id="scenarioType" required>
+                            <option value="enterprise">企业网络</option>
+                            <option value="personal">个人网络</option>
+                            <option value="multi-network">多网络</option>
+                            <option value="test">测试网络</option>
+                            <option value="development">开发环境</option>
+                        </select>
+                    </div>
+                    <div class="nexus-form-group">
+                        <label for="scenarioStatus">场景状态</label>
+                        <select id="scenarioStatus" required>
+                            <option value="active">活跃</option>
+                            <option value="inactive">非活跃</option>
+                        </select>
+                    </div>
+                    <div class="nexus-form-group">
+                        <label for="scenarioDescription">场景描述</label>
+                        <textarea id="scenarioDescription" placeholder="请输入场景描述" style="min-height: 100px; resize: vertical;"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="nexus-btn nexus-btn-secondary" onclick="closeModal()">取消</button>
+                <button type="submit" form="scenarioForm" class="nexus-btn nexus-btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 公共JS模块 -->
+    <script src="../../js/menu-loader.js"></script>
+    <script src="../../js/nexus/base.js"></script>
+    <script src="../../js/nexus/api.js"></script>
+    <script src="../../js/nexus/ui.js"></script>
+    <script src="../../js/nexus/utils.js"></script>
+    <script src="../../js/nexus/sdk-proxy.js"></script>
+    <script src="../../js/nexus/common.js"></script>
+    <script>
+        window.onload = function() {
+            // 初始化菜单
+            initMenu();
+            // 初始化页面
+            loadScenarios();
+        };
+
+        // 模拟场景数据
+        let scenarios = [];
+
+        async function loadScenarios() {
+            try {
+                // 模拟API请求
+                const mockResponse = {
+                    status: 'success',
+                    message: '获取场景列表成功',
+                    data: [
+                        {
+                            id: 'scenario-001',
+                            name: '企业网络场景',
+                            type: 'enterprise',
+                            status: 'active',
+                            description: '企业网络环境',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            id: 'scenario-002',
+                            name: '个人网络场景',
+                            type: 'personal',
+                            status: 'active',
+                            description: '个人网络环境',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        },
+                        {
+                            id: 'scenario-003',
+                            name: '测试网络场景',
+                            type: 'test',
+                            status: 'inactive',
+                            description: '测试网络环境',
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        }
+                    ],
+                    timestamp: new Date().getTime()
+                };
+
+                // 验证API返回格式
+                const validatedResponse = nexusCommon.validateApiResponse(mockResponse);
+
+                if (validatedResponse.status === 'success' && validatedResponse.data) {
+                    scenarios = validatedResponse.data;
+                    renderScenarios();
+                    updateStatusOverview();
+                }
+            } catch (error) {
+                console.error('加载场景列表失败:', error);
+                nexusCommon.handleApiError(error, '加载场景列表失败');
+            }
+        }
+
+        function renderScenarios() {
+            const scenarioList = document.getElementById('scenarioList');
+            scenarioList.innerHTML = '';
+
+            scenarios.forEach(scenario => {
+                const scenarioCard = document.createElement('div');
+                scenarioCard.className = 'nexus-stats-card';
+                scenarioCard.innerHTML = `
+                    <div class="nexus-stats-card-header">
+                        <h4>${scenario.name}</h4>
+                        <span class="nexus-status-badge ${scenario.status === 'active' ? 'nexus-status-active' : 'nexus-status-inactive'}">${scenario.status === 'active' ? '活跃' : '非活跃'}</span>
+                    </div>
+                    <div class="nexus-stats-card-content">
+                        <p>${scenario.description}</p>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">类型:</span>
+                            <span class="nexus-stat-value">${getScenarioTypeName(scenario.type)}</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">创建时间:</span>
+                            <span class="nexus-stat-value">${new Date(scenario.createdAt).toLocaleString()}</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">更新时间:</span>
+                            <span class="nexus-stat-value">${new Date(scenario.updatedAt).toLocaleString()}</span>
+                        </div>
+                        <div style="margin-top: 16px; display: flex; gap: 8px;">
+                            <button class="nexus-btn nexus-btn-sm nexus-btn-primary" onclick="editScenario('${scenario.id}')">编辑</button>
+                            <button class="nexus-btn nexus-btn-sm ${scenario.status === 'active' ? 'nexus-btn-secondary' : 'nexus-btn-primary'}" onclick="toggleScenarioStatus('${scenario.id}')">${scenario.status === 'active' ? '停用' : '启用'}</button>
+                            <button class="nexus-btn nexus-btn-sm nexus-btn-danger" onclick="deleteScenario('${scenario.id}')">删除</button>
+                        </div>
+                    </div>
+                `;
+                scenarioList.appendChild(scenarioCard);
+            });
+        }
+
+        function updateStatusOverview() {
+            document.getElementById('totalScenarios').textContent = scenarios.length;
+            document.getElementById('activeScenarios').textContent = scenarios.filter(s => s.status === 'active').length;
+            document.getElementById('scenarioTypes').textContent = new Set(scenarios.map(s => s.type)).size;
+        }
+
+        function createScenario() {
+            document.getElementById('modalTitle').textContent = '创建场景';
+            document.getElementById('scenarioForm').reset();
+            document.getElementById('scenarioModal').style.display = 'block';
+        }
+
+        function editScenario(scenarioId) {
+            const scenario = scenarios.find(s => s.id === scenarioId);
+            if (scenario) {
+                document.getElementById('modalTitle').textContent = '编辑场景';
+                document.getElementById('scenarioName').value = scenario.name;
+                document.getElementById('scenarioType').value = scenario.type;
+                document.getElementById('scenarioStatus').value = scenario.status;
+                document.getElementById('scenarioDescription').value = scenario.description;
+                document.getElementById('scenarioModal').style.display = 'block';
+            }
+        }
+
+        function saveScenario(event) {
+            event.preventDefault();
+            const name = document.getElementById('scenarioName').value;
+            const type = document.getElementById('scenarioType').value;
+            const status = document.getElementById('scenarioStatus').value;
+            const description = document.getElementById('scenarioDescription').value;
+
+            // 模拟保存场景
+            const newScenario = {
+                id: 'scenario-' + Date.now(),
+                name,
+                type,
+                status,
+                description,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            scenarios.push(newScenario);
+            renderScenarios();
+            updateStatusOverview();
+            closeModal();
+            nexusCommon.showMessage('场景保存成功', 'success');
+        }
+
+        function deleteScenario(scenarioId) {
+            if (confirm('确定要删除该场景吗？')) {
+                scenarios = scenarios.filter(s => s.id !== scenarioId);
+                renderScenarios();
+                updateStatusOverview();
+                nexusCommon.showMessage('场景删除成功', 'success');
+            }
+        }
+
+        function toggleScenarioStatus(scenarioId) {
+            const scenario = scenarios.find(s => s.id === scenarioId);
+            if (scenario) {
+                scenario.status = scenario.status === 'active' ? 'inactive' : 'active';
+                scenario.updatedAt = new Date().toISOString();
+                renderScenarios();
+                updateStatusOverview();
+                nexusCommon.showMessage(`场景已${scenario.status === 'active' ? '启用' : '停用'}`, 'success');
+            }
+        }
+
+        function importScenario() {
+            nexusCommon.showMessage('导入场景功能开发中', 'info');
+        }
+
+        function exportScenario() {
+            try {
+                // 模拟导出场景
+                const scenarioData = JSON.stringify(scenarios, null, 2);
+                const blob = new Blob([scenarioData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'scenarios-' + new Date().toISOString().slice(0, 10) + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                nexusCommon.showMessage('场景已导出', 'success');
+            } catch (error) {
+                console.error('导出场景失败:', error);
+                nexusCommon.handleApiError(error, '导出场景失败');
+            }
+        }
+
+        function refreshScenarios() {
+            loadScenarios();
+            nexusCommon.showMessage('场景列表已刷新', 'success');
+        }
+
+        function closeModal() {
+            document.getElementById('scenarioModal').style.display = 'none';
+        }
+
+        function getScenarioTypeName(type) {
+            const typeMap = {
+                'enterprise': '企业网络',
+                'personal': '个人网络',
+                'multi-network': '多网络',
+                'test': '测试网络',
+                'development': '开发环境'
+            };
+            return typeMap[type] || type;
+        }
+    </script>
+</body>
+</html>

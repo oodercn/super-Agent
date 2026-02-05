@@ -1,0 +1,417 @@
+﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备控制 - 家庭功能</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> MCP Agent Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+        <!-- 头部 -->
+        <div class="header">
+            <h1><i class="ri-control-line"></i> 设备控制 2</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="toggleTheme()">
+                    <i class="ri-moon-line"></i> 切换主题
+                </button>
+                <button class="btn btn-secondary" onclick="backToList()">
+                    <i class="ri-arrow-left-line"></i> 返回列表
+                </button>
+            </div>
+        </div>
+        
+        <!-- 设备信息 -->
+        <div class="device-info">
+            <div class="device-icon-large" id="deviceIcon">
+                <i class="ri-lightbulb-line"></i>
+            </div>
+            <div class="device-details">
+                <h2 id="deviceName">智能灯泡</h2>
+                <p><strong>类型:</strong> <span id="deviceType">灯光</span></p>
+                <p><strong>位置:</strong> <span id="deviceLocation">客厅</span></p>
+                <p><strong>IP地址:</strong> <span id="deviceIp">192.168.1.101</span></p>
+                <p><strong>最后活动:</strong> <span id="deviceLastActive">2026-01-30 19:00</span></p>
+                <div class="device-status">
+                    <div class="status-indicator status-online" id="deviceStatusIndicator"></div>
+                    <span id="deviceStatusText">在线</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 控制卡片 -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">基本控制</h3>
+            </div>
+            
+            <!-- 开关控制 -->
+            <div class="control-section">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <span style="font-size: 16px; color: var(--ooder-text);">电源</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="powerToggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- 亮度控制 -->
+            <div class="control-section">
+                <h3>亮度</h3>
+                <div class="slider-control">
+                    <div class="slider-container">
+                        <span class="slider-label">亮度</span>
+                        <input type="range" min="0" max="100" value="80" class="slider" id="brightnessSlider">
+                        <span class="slider-value" id="brightnessValue">80%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 颜色控制 -->
+            <div class="control-section">
+                <h3>颜色</h3>
+                <div class="color-picker">
+                    <span class="color-label">选择颜色</span>
+                    <div class="color-options">
+                        <div class="color-option active" style="background-color: #ffffff;" data-color="#ffffff"></div>
+                        <div class="color-option" style="background-color: #ff0000;" data-color="#ff0000"></div>
+                        <div class="color-option" style="background-color: #00ff00;" data-color="#00ff00"></div>
+                        <div class="color-option" style="background-color: #0000ff;" data-color="#0000ff"></div>
+                        <div class="color-option" style="background-color: #ffff00;" data-color="#ffff00"></div>
+                        <div class="color-option" style="background-color: #ff00ff;" data-color="#ff00ff"></div>
+                        <div class="color-option" style="background-color: #00ffff;" data-color="#00ffff"></div>
+                        <div class="color-option" style="background-color: #ff8000;" data-color="#ff8000"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 场景控制 -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">场景控制</h3>
+            </div>
+            <div class="scene-selector">
+                <button class="scene-button" data-scene="reading">
+                    <i class="ri-book-line"></i> 阅读模式
+                </button>
+                <button class="scene-button" data-scene="movie">
+                    <i class="ri-film-line"></i> 影院模式
+                </button>
+                <button class="scene-button" data-scene="party">
+                    <i class="ri-party-line"></i> 派对模式
+                </button>
+                <button class="scene-button" data-scene="relax">
+                    <i class="ri-coffee-line"></i> 放松模式
+                </button>
+                <button class="scene-button" data-scene="sleep">
+                    <i class="ri-moon-line"></i> 睡眠模式
+                </button>
+            </div>
+        </div>
+        
+        <!-- 定时控制 -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">定时控制</h3>
+            </div>
+            <div class="control-section">
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--ooder-text);">设置定时</label>
+                    <input type="time" style="padding: 8px; border: 1px solid var(--ooder-border); border-radius: var(--ooder-radius); background-color: var(--ooder-background); color: var(--ooder-text);">
+                    <button class="btn btn-primary" style="margin-left: 12px;">
+                        <i class="ri-add-line"></i> 添加
+                    </button>
+                </div>
+                <div style="background-color: var(--ooder-light); border-radius: var(--ooder-radius); padding: 16px;">
+                    <p style="font-size: 14px; color: var(--ooder-secondary); margin-bottom: 8px;">当前定时任务</p>
+                    <p style="font-size: 14px;">• 每天 07:00 开启</p>
+                    <p style="font-size: 14px;">• 每天 22:00 关闭</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 模拟设备数据
+        const devices = {
+            1: {
+                id: 1,
+                name: "智能灯泡",
+                type: "light",
+                location: "客厅",
+                status: "online",
+                ip: "192.168.1.101",
+                lastActive: "2026-01-30 19:00"
+            },
+            2: {
+                id: 2,
+                name: "智能插座",
+                type: "socket",
+                location: "卧室",
+                status: "online",
+                ip: "192.168.1.102",
+                lastActive: "2026-01-30 18:30"
+            },
+            3: {
+                id: 3,
+                name: "智能门锁",
+                type: "lock",
+                location: "前门",
+                status: "online",
+                ip: "192.168.1.103",
+                lastActive: "2026-01-30 18:00"
+            }
+        };
+        
+        // 获取URL参数中的设备ID
+        function getDeviceId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id') || '1';
+        }
+        
+        // 初始化页面
+        function init() {
+            const deviceId = getDeviceId();
+            const device = devices[deviceId] || devices[1];
+            loadDeviceData(device);
+            bindEvents();
+        }
+        
+        // 加载设备数据
+        function loadDeviceData(device) {
+            document.getElementById('deviceName').textContent = device.name;
+            document.getElementById('deviceType').textContent = getDeviceTypeName(device.type);
+            document.getElementById('deviceLocation').textContent = device.location;
+            document.getElementById('deviceIp').textContent = device.ip;
+            document.getElementById('deviceLastActive').textContent = device.lastActive;
+            document.getElementById('deviceStatusText').textContent = device.status === 'online' ? '在线' : '离线';
+            document.getElementById('deviceStatusIndicator').className = `status-indicator status-${device.status}`;
+            
+            // 更新设备图标
+            const deviceIcon = document.getElementById('deviceIcon');
+            deviceIcon.innerHTML = `<i class="ri-${getDeviceIcon(device.type)}"></i>`;
+        }
+        
+        // 获取设备图标
+        function getDeviceIcon(type) {
+            const iconMap = {
+                light: 'lightbulb-line',
+                socket: 'power-plug-line',
+                lock: 'lock-line',
+                camera: 'video-line'
+            };
+            return iconMap[type] || 'device-line';
+        }
+        
+        // 获取设备类型名称
+        function getDeviceTypeName(type) {
+            const typeMap = {
+                light: '灯光',
+                socket: '插座',
+                lock: '门锁',
+                camera: '摄像头'
+            };
+            return typeMap[type] || '其他';
+        }
+        
+        // 绑定事件
+        function bindEvents() {
+            // 电源开关
+            const powerToggle = document.getElementById('powerToggle');
+            powerToggle.addEventListener('change', function() {
+                console.log('Power toggled:', this.checked);
+            });
+            
+            // 亮度滑块
+            const brightnessSlider = document.getElementById('brightnessSlider');
+            const brightnessValue = document.getElementById('brightnessValue');
+            brightnessSlider.addEventListener('input', function() {
+                brightnessValue.textContent = this.value + '%';
+                console.log('Brightness changed:', this.value);
+            });
+            
+            // 颜色选择
+            const colorOptions = document.querySelectorAll('.color-option');
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // 移除其他选项的active状态
+                    colorOptions.forEach(opt => opt.classList.remove('active'));
+                    // 添加当前选项的active状态
+                    this.classList.add('active');
+                    console.log('Color selected:', this.dataset.color);
+                });
+            });
+            
+            // 场景选择
+            const sceneButtons = document.querySelectorAll('.scene-button');
+            sceneButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 移除其他按钮的active状态
+                    sceneButtons.forEach(btn => btn.classList.remove('active'));
+                    // 添加当前按钮的active状态
+                    this.classList.add('active');
+                    console.log('Scene selected:', this.dataset.scene);
+                });
+            });
+        }
+        
+        // 返回设备列表
+        function backToList() {
+            window.location.href = 'device-list.html';
+        }
+        
+        // 切换主题
+        function toggleTheme() {
+            const body = document.body;
+            if (body.classList.contains('dark-theme')) {
+                body.classList.remove('dark-theme');
+            } else {
+                body.classList.add('dark-theme');
+            }
+        }
+        
+        // 初始化
+        init();
+        
+        // 加载导航菜单
+        loadMenuConfig();
+    </script>
+    
+    <script>
+        // 菜单配置
+        let menuConfig = null;
+        
+        // 加载菜单配置
+        async function loadMenuConfig() {
+            try {
+                const response = await fetch('../../menu-config.json');
+                if (!response.ok) {
+                    throw new Error('菜单配置加载失败');
+                }
+                menuConfig = await response.json();
+                renderMenu();
+            } catch (error) {
+                console.error('加载菜单配置错误:', error);
+                // 加载失败时显示默认菜单
+                renderDefaultMenu();
+            }
+        }
+        
+        // 渲染菜单
+        function renderMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            
+            menuConfig.menu.forEach(item => {
+                // 只显示已实现的功能（status为implemented）
+                if (item.status === 'implemented' || item.id === 'dashboard') {
+                    const menuItem = createMenuItem(item);
+                    navMenu.appendChild(menuItem);
+                    // 添加菜单分隔线
+                    if (item.id !== 'dashboard') {
+                        const divider = document.createElement('div');
+                        divider.className = 'menu-divider';
+                        navMenu.appendChild(divider);
+                    }
+                }
+            });
+        }
+        
+        // 创建菜单项
+        function createMenuItem(menuItem) {
+            const li = document.createElement('li');
+            
+            if (menuItem.children && menuItem.children.length > 0) {
+                // 有子菜单的菜单项
+                const a = document.createElement('a');
+                a.href = `#${menuItem.id}`;
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                    <span class="toggle-icon">›</span>
+                `;
+                
+                // 处理点击事件
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const toggleIcon = this.querySelector('.toggle-icon');
+                    const submenu = this.nextElementSibling;
+                    
+                    if (submenu) {
+                        submenu.classList.toggle('hidden');
+                        toggleIcon.classList.toggle('collapsed');
+                    }
+                });
+                
+                li.appendChild(a);
+                
+                // 创建子菜单
+                const submenu = document.createElement('ul');
+                submenu.className = 'submenu';
+                
+                menuItem.children.forEach(childItem => {
+                    // 只显示已实现的子功能
+                    if (childItem.status === 'implemented') {
+                        const childLi = createMenuItem(childItem);
+                        submenu.appendChild(childLi);
+                    }
+                });
+                
+                // 只有当子菜单不为空时才添加
+                if (submenu.children.length > 0) {
+                    li.appendChild(submenu);
+                }
+            } else {
+                // 无子菜单的菜单项
+                const a = document.createElement('a');
+                if (menuItem.url) {
+                    // 使用绝对路径，确保从任何页面访问都正确
+                    if (menuItem.url.startsWith('pages/')) {
+                        a.href = '../../' + menuItem.url;
+                    } else {
+                        a.href = menuItem.url;
+                    }
+                } else {
+                    a.href = `#${menuItem.id}`;
+                    a.setAttribute('data-page', menuItem.page || menuItem.id);
+                }
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                `;
+                
+                // 标记当前页面为活跃状态
+                if (menuItem.url && menuItem.url.includes('device-control')) {
+                    a.classList.add('active');
+                }
+                
+                li.appendChild(a);
+            }
+            
+            return li;
+        }
+        
+        // 渲染默认菜单（加载失败时使用）
+        function renderDefaultMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = `
+                <li><a href="../../index.html"><i class="ri-dashboard-line"></i> 仪表盘</a></li>
+                <li><a href="../../pages/home/home-dashboard.html"><i class="ri-home-line"></i> 家庭功能</a></li>
+                <li><a href="../../pages/lan/lan-dashboard.html"><i class="ri-wifi-line"></i> 小局域网功能</a></li>
+                <li><a href="../../pages/enterprise/enterprise-dashboard.html"><i class="ri-building-line"></i> 企业级全功能应用</a></li>
+            `;
+        }
+    </script>
+</div>
+</body>
+</html>

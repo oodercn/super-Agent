@@ -1,0 +1,49 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /skill-a
+
+spring:
+  application:
+    name: skill-a-service-discovery
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+# Skill-specific configuration
+skill:
+  discovery:
+    enabled: true
+    port: 5000
+    broadcastInterval: 5000
+    maxRetries: 3
+
+# Agent SDK configuration
+agent:
+  sdk:
+    enabled: true
+    logLevel: info
+    debug: false
+
+# Network configuration
+network:
+  udp:
+    port: 9001
+    bufferSize: 65536
+    timeout: 5000
+
+# Logging configuration
+logging:
+  level:
+    root: info
+    net.ooder: debug
+  file:
+    name: logs/skill-a-service-discovery.log
+    max-size: 10MB
+    max-history: 7

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的技能 - Nexus SkillCenter</title>
+    <link rel="stylesheet" href="/console/css/styles.css">
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <script src="/console/js/menu-loader.js"></script>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="main-content">
+            <header class="header">
+                <h1>我的技能</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showPublishModal()">
+                        <i class="ri-add-line"></i> 发布技能
+                    </button>
+                </div>
+            </header>
+            <div class="content">
+                <div class="skill-list" id="skill-list">
+                    <div class="loading">加载中...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="publish-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>发布技能</h3>
+                <button class="modal-close" onclick="closeModal('publish-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="publish-form">
+                    <div class="form-group">
+                        <label>技能名称</label>
+                        <input type="text" id="skill-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>技能描述</label>
+                        <textarea id="skill-description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>技能分类</label>
+                        <select id="skill-category" class="form-control">
+                            <option value="text-processing">文本处理</option>
+                            <option value="development">开发工具</option>
+                            <option value="deployment">部署工具</option>
+                            <option value="media">媒体处理</option>
+                            <option value="storage">存储管理</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>技能代码</label>
+                        <textarea id="skill-code" class="form-control" rows="10" placeholder="输入技能代码"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="publishSkill()">发布</button>
+                <button class="btn btn-secondary" onclick="closeModal('publish-modal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            initMenu();
+            loadSkills();
+        };
+
+        async function loadSkills() {
+            try {
+                const response = await fetch('/api/personal/skills');
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result.status === 'success') {
+                    renderSkillList(result.data);
+                } else {
+                    showError('加载技能列表失败');
+                }
+            } catch (error) {
+                console.error('加载技能列表错误:', error);
+                showError('加载技能列表失败');
+            }
+        }
+
+        function renderSkillList(skills) {
+            const skillList = document.getElementById('skill-list');
+            skillList.innerHTML = '';
+            
+            skills.forEach(skill => {
+                const skillItem = document.createElement('div');
+                skillItem.className = 'skill-item';
+                skillItem.innerHTML = `
+                    <div class="skill-info">
+                        <h3>${skill.name}</h3>
+                        <p>${skill.description || '暂无描述'}</p>
+                        <span class="skill-category">${getCategoryName(skill.category)}</span>
+                    </div>
+                    <div class="skill-actions">
+                        <button class="btn btn-secondary" onclick="editSkill('${skill.id}')">
+                            <i class="ri-edit-line"></i> 编辑
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteSkill('${skill.id}')">
+                            <i class="ri-delete-line"></i> 删除
+                        </button>
+                    </div>
+                `;
+                skillList.appendChild(skillItem);
+            });
+        }
+
+        function getCategoryName(category) {
+            const categoryMap = {
+                'text-processing': '文本处理',
+                'development': '开发工具',
+                'deployment': '部署工具',
+                'media': '媒体处理',
+                'storage': '存储管理'
+            };
+            return categoryMap[category] || category;
+        }
+
+        function showPublishModal() {
+            document.getElementById('publish-modal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function publishSkill() {
+            const name = document.getElementById('skill-name').value;
+            const description = document.getElementById('skill-description').value;
+            const category = document.getElementById('skill-category').value;
+            const code = document.getElementById('skill-code').value;
+            
+            if (!name || !code) {
+                showError('请填写技能名称和代码');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/personal/skills', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        description: description,
+                        category: category,
+                        code: code
+                    })
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result.status === 'success') {
+                    closeModal('publish-modal');
+                    showSuccess('技能发布成功');
+                    loadSkills();
+                } else {
+                    showError('技能发布失败');
+                }
+            } catch (error) {
+                console.error('发布技能错误:', error);
+                showError('技能发布失败');
+            }
+        }
+
+        async function editSkill(skillId) {
+            alert('编辑技能功能开发中...');
+        }
+
+        async function deleteSkill(skillId) {
+            if (!confirm('确定要删除此技能吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/personal/skills/${skillId}`, {
+                    method: 'DELETE'
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result.status === 'success') {
+                    showSuccess('技能删除成功');
+                    loadSkills();
+                } else {
+                    showError('技能删除失败');
+                }
+            } catch (error) {
+                console.error('删除技能错误:', error);
+                showError('技能删除失败');
+            }
+        }
+
+        function showError(message) {
+            showNotification(message, 'error');
+        }
+
+        function showSuccess(message) {
+            showNotification(message, 'success');
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

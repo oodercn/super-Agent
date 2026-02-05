@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>远程托管 - Nexus SkillCenter</title>
+    <link rel="stylesheet" href="/console/css/styles.css">
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <script src="/console/js/menu-loader.js"></script>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="main-content">
+            <header class="header">
+                <h1>远程托管</h1>
+            </header>
+            <div class="content">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('skills')">远程技能</button>
+                    <button class="tab-btn" onclick="switchTab('hosting')">技能托管</button>
+                    <button class="tab-btn" onclick="switchTab('monitoring')">远程监控</button>
+                </div>
+                
+                <div class="tab-content" id="skills-tab">
+                    <div class="skill-list" id="remote-skills">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="hosting-tab" style="display: none;">
+                    <div class="hosting-list" id="hosting-list">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="monitoring-tab" style="display: none;">
+                    <div class="monitoring-list" id="monitoring-list">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        window.onload = function() {
+            initMenu();
+            loadRemoteSkills();
+            loadHostingList();
+            loadMonitoringList();
+        };
+
+        async function loadRemoteSkills() {
+            try {
+                const remoteSkills = document.getElementById('remote-skills');
+                remoteSkills.innerHTML = '<div class="loading">加载中...</div>';
+                
+                const response = await fetch('/api/admin/remote/skills');
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.status === 'success') {
+                    renderRemoteSkills(result.data || []);
+                } else {
+                    throw new Error('响应数据格式错误');
+                }
+            } catch (error) {
+                console.error('加载远程技能列表错误:', error);
+                document.getElementById('remote-skills').innerHTML = '<div class="empty-state">加载失败</div>';
+                showError('加载远程技能列表失败');
+            }
+        }
+
+        function renderRemoteSkills(skills) {
+            const skillList = document.getElementById('remote-skills');
+            skillList.innerHTML = '';
+            
+            if (skills.length === 0) {
+                skillList.innerHTML = '<div class="empty-state">暂无远程技能</div>';
+                return;
+            }
+            
+            skills.forEach(skill => {
+                const skillItem = document.createElement('div');
+                skillItem.className = 'skill-item';
+                skillItem.innerHTML = `
+                    <div class="skill-info">
+                        <h3>${skill.name}</h3>
+                        <p>${skill.description || '暂无描述'}</p>
+                        <span class="skill-category">${getCategoryName(skill.category)}</span>
+                        <span class="skill-author">作者: ${skill.author}</span>
+                        <span class="skill-url">${skill.remoteUrl}</span>
+                    </div>
+                    <div class="skill-actions">
+                        <button class="btn btn-secondary" onclick="viewSkill('${skill.id}')">
+                            <i class="ri-eye-line"></i> 查看
+                        </button>
+                        <button class="btn btn-primary" onclick="syncSkill('${skill.id}')">
+                            <i class="ri-refresh-line"></i> 同步
+                        </button>
+                        <button class="btn btn-danger" onclick="removeSkill('${skill.id}')">
+                            <i class="ri-delete-line"></i> 移除
+                        </button>
+                    </div>
+                `;
+                skillList.appendChild(skillItem);
+            });
+        }
+
+        async function loadHostingList() {
+            try {
+                const hostingList = document.getElementById('hosting-list');
+                hostingList.innerHTML = '<div class="loading">加载中...</div>';
+                
+                const response = await fetch('/api/admin/remote/hosting');
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.status === 'success') {
+                    renderHostingList(result.data || []);
+                } else {
+                    throw new Error('响应数据格式错误');
+                }
+            } catch (error) {
+                console.error('加载托管列表错误:', error);
+                document.getElementById('hosting-list').innerHTML = '<div class="empty-state">加载失败</div>';
+                showError('加载托管列表失败');
+            }
+        }
+
+        function renderHostingList(hostingList) {
+            const list = document.getElementById('hosting-list');
+            list.innerHTML = '';
+            
+            if (hostingList.length === 0) {
+                list.innerHTML = '<div class="empty-state">暂无托管</div>';
+                return;
+            }
+            
+            hostingList.forEach(item => {
+                const hostingItem = document.createElement('div');
+                hostingItem.className = 'hosting-item';
+                hostingItem.innerHTML = `
+                    <div class="hosting-info">
+                        <h3>${item.skillName}</h3>
+                        <p><strong>托管地址:</strong> ${item.hostingUrl}</p>
+                        <p><strong>状态:</strong> <span class="hosting-status ${item.status === 'active' ? 'success' : 'warning'}">${item.status === 'active' ? '活跃' : '停用'}</span></p>
+                        <p><strong>创建时间:</strong> ${formatTime(item.createdAt)}</p>
+                    </div>
+                    <div class="hosting-actions">
+                        <button class="btn btn-secondary" onclick="viewHosting('${item.id}')">
+                            <i class="ri-eye-line"></i> 查看
+                        </button>
+                        <button class="btn btn-primary" onclick="toggleHosting('${item.id}')">
+                            <i class="ri-toggle-line"></i> ${item.status === 'active' ? '停用' : '启用'}
+                        </button>
+                        <button class="btn btn-danger" onclick="removeHosting('${item.id}')">
+                            <i class="ri-delete-line"></i> 移除
+                        </button>
+                    </div>
+                `;
+                list.appendChild(hostingItem);
+            });
+        }
+
+        async function loadMonitoringList() {
+            try {
+                const monitoringList = document.getElementById('monitoring-list');
+                monitoringList.innerHTML = '<div class="loading">加载中...</div>';
+                
+                const response = await fetch('/api/admin/remote/monitoring');
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.status === 'success') {
+                    renderMonitoringList(result.data || []);
+                } else {
+                    throw new Error('响应数据格式错误');
+                }
+            } catch (error) {
+                console.error('加载监控列表错误:', error);
+                document.getElementById('monitoring-list').innerHTML = '<div class="empty-state">加载失败</div>';
+                showError('加载监控列表失败');
+            }
+        }
+
+        function renderMonitoringList(monitoringList) {
+            const list = document.getElementById('monitoring-list');
+            list.innerHTML = '';
+            
+            if (monitoringList.length === 0) {
+                list.innerHTML = '<div class="empty-state">暂无监控</div>';
+                return;
+            }
+            
+            monitoringList.forEach(item => {
+                const monitoringItem = document.createElement('div');
+                monitoringItem.className = 'monitoring-item';
+                monitoringItem.innerHTML = `
+                    <div class="monitoring-info">
+                        <h3>${item.skillName}</h3>
+                        <p><strong>监控地址:</strong> ${item.monitoringUrl}</p>
+                        <p><strong>状态:</strong> <span class="monitoring-status ${item.status === 'online' ? 'success' : 'failed'}">${item.status === 'online' ? '在线' : '离线'}</span></p>
+                        <p><strong>最后检查:</strong> ${formatTime(item.lastChecked)}</p>
+                        <p><strong>响应时间:</strong> ${item.responseTime}ms</p>
+                    </div>
+                    <div class="monitoring-actions">
+                        <button class="btn btn-secondary" onclick="viewMonitoring('${item.id}')">
+                            <i class="ri-eye-line"></i> 查看
+                        </button>
+                        <button class="btn btn-primary" onclick="checkMonitoring('${item.id}')">
+                            <i class="ri-refresh-line"></i> 检查
+                        </button>
+                        <button class="btn btn-danger" onclick="removeMonitoring('${item.id}')">
+                            <i class="ri-delete-line"></i> 移除
+                        </button>
+                    </div>
+                `;
+                list.appendChild(monitoringItem);
+            });
+        }
+
+        function getCategoryName(category) {
+            const categoryMap = {
+                'text-processing': '文本处理',
+                'development': '开发工具',
+                'deployment': '部署工具',
+                'media': '媒体处理',
+                'storage': '存储管理'
+            };
+            return categoryMap[category] || category;
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').style.display = 'block';
+        }
+
+        function viewSkill(skillId) {
+            showError('查看技能功能开发中...');
+        }
+
+        async function syncSkill(skillId) {
+            try {
+                const response = await fetch(`/api/admin/remote/skills/${skillId}/sync`, {
+                    method: 'POST'
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.status === 'success') {
+                    showSuccess('技能同步成功');
+                    loadRemoteSkills();
+                } else {
+                    showError('技能同步失败');
+                }
+            } catch (error) {
+                console.error('同步技能错误:', error);
+                showError('技能同步失败');
+            }
+        }
+
+        async function removeSkill(skillId) {
+            if (!confirm('确定要移除此技能吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/remote/skills/${skillId}`, {
+                    method: 'DELETE'
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.status === 'success') {
+                    showSuccess('技能移除成功');
+                    loadRemoteSkills();
+                } else {
+                    showError('技能移除失败');
+                }
+            } catch (error) {
+                console.error('移除技能错误:', error);
+                showError('技能移除失败');
+            }
+        }
+
+        function viewHosting(hostingId) {
+            showError('查看托管功能开发中...');
+        }
+
+        async function toggleHosting(hostingId) {
+            try {
+                const response = await fetch(`/api/admin/remote/hosting/${hostingId}/toggle`, {
+                    method: 'POST'
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.status === 'success') {
+                    showSuccess('托管状态切换成功');
+                    loadHostingList();
+                } else {
+                    showError('托管状态切换失败');
+                }
+            } catch (error) {
+                console.error('切换托管状态错误:', error);
+                showError('托管状态切换失败');
+            }
+        }
+
+        async function removeHosting(hostingId) {
+            if (!confirm('确定要移除此托管吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/remote/hosting/${hostingId}`, {
+                    method: 'DELETE'
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.status === 'success') {
+                    showSuccess('托管移除成功');
+                    loadHostingList();
+                } else {
+                    showError('托管移除失败');
+                }
+            } catch (error) {
+                console.error('移除托管错误:', error);
+                showError('托管移除失败');
+            }
+        }
+
+        function viewMonitoring(monitoringId) {
+            showError('查看监控功能开发中...');
+        }
+
+        async function checkMonitoring(monitoringId) {
+            try {
+                const response = await fetch(`/api/admin/remote/monitoring/${monitoringId}/check`, {
+                    method: 'POST'
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.status === 'success') {
+                    showSuccess('监控检查成功');
+                    loadMonitoringList();
+                } else {
+                    showError('监控检查失败');
+                }
+            } catch (error) {
+                console.error('检查监控错误:', error);
+                showError('监控检查失败');
+            }
+        }
+
+        async function removeMonitoring(monitoringId) {
+            if (!confirm('确定要移除此监控吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/remote/monitoring/${monitoringId}`, {
+                    method: 'DELETE'
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.status === 'success') {
+                    showSuccess('监控移除成功');
+                    loadMonitoringList();
+                } else {
+                    showError('监控移除失败');
+                }
+            } catch (error) {
+                console.error('移除监控错误:', error);
+                showError('监控移除失败');
+            }
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '未知';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function showError(message) {
+            showNotification(message, 'error');
+        }
+
+        function showSuccess(message) {
+            showNotification(message, 'success');
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

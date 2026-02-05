@@ -1,0 +1,657 @@
+﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>结果处理 - 系统管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+    <style>
+        /* Ooder-Rad 风格基础样式 - 纯黑色系暗色主题 */
+        :root {
+            --ooder-primary: #3b82f6;
+            --ooder-secondary: #94a3b8;
+            --ooder-success: #22c55e;
+            --ooder-warning: #f59e0b;
+            --ooder-danger: #ef4444;
+            --ooder-light: #0f0f0f;
+            --ooder-dark: #ffffff;
+            --ooder-border: #2a2a2a;
+            --ooder-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            --ooder-radius: 8px;
+            --ooder-spacing: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #000000;
+            color: var(--ooder-dark);
+            line-height: 1.5;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            background-color: #000000;
+        }
+        
+        /* 侧边栏样式 - Ooder-Rad 风格 */
+        .sidebar {
+            width: 260px;
+            background-color: #121212;
+            border-right: 1px solid var(--ooder-border);
+            padding: 24px;
+            box-shadow: var(--ooder-shadow);
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 32px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ooder-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sidebar h2::before {
+            content: "⚡";
+            font-size: 20px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-menu li {
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu a {
+            color: var(--ooder-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--ooder-radius);
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .nav-menu a:hover {
+            background-color: var(--ooder-light);
+            color: var(--ooder-primary);
+        }
+        
+        .nav-menu a.active {
+            background-color: rgba(26, 115, 232, 0.1);
+            color: var(--ooder-primary);
+            font-weight: 600;
+        }
+        
+        /* 二级菜单样式 */
+        .nav-menu .submenu {
+            list-style: none;
+            margin-left: 16px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu .submenu li {
+            margin-bottom: 2px;
+        }
+        
+        .nav-menu .submenu a {
+            padding: 10px 16px;
+            font-size: 13px;
+            border-left: 2px solid var(--ooder-border);
+        }
+        
+        /* 三级菜单样式 */
+        .nav-menu .submenu .submenu {
+            margin-left: 32px;
+        }
+        
+        .nav-menu .submenu .submenu a {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-left: 2px solid var(--ooder-secondary);
+        }
+        
+        /* 展开/折叠图标 */
+        .nav-menu .toggle-icon {
+            margin-left: auto;
+            transition: transform 0.2s ease;
+        }
+        
+        .nav-menu .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        /* 菜单分隔线 */
+        .nav-menu .menu-divider {
+            height: 1px;
+            background-color: var(--ooder-border);
+            margin: 16px 0;
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            background-color: #000000;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--ooder-border);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ooder-dark);
+        }
+        
+        .header .subtitle {
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        /* 仪表盘卡片样式 */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .card {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+        
+        .card h3 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: var(--ooder-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--ooder-primary);
+            margin-bottom: 8px;
+        }
+        
+        .card .label {
+            font-size: 12px;
+            color: var(--ooder-secondary);
+        }
+        
+        /* 章节样式 */
+        .section {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            margin-bottom: 24px;
+        }
+        
+        .section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--ooder-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section h2::before {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background-color: var(--ooder-primary);
+            border-radius: 2px;
+        }
+        
+        /* 表格样式 */
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--ooder-radius);
+            border: 1px solid var(--ooder-border);
+            background-color: #1a1a1a;
+            margin-bottom: 24px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ooder-border);
+            color: var(--ooder-dark);
+        }
+        
+        th {
+            background-color: #121212;
+            font-weight: 600;
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        tr:hover {
+            background-color: #1a1a1a;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--ooder-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 12px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--ooder-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background-color: #1a1a1a;
+            color: var(--ooder-secondary);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2a2a2a;
+        }
+        
+        .btn-success {
+            background-color: var(--ooder-success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #16a34a;
+            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.4);
+        }
+        
+        .btn-danger {
+            background-color: var(--ooder-danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+        }
+        
+        /* 提示框样式 */
+        .alert {
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: var(--ooder-radius);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .alert-success {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--ooder-success);
+            border-left: 4px solid var(--ooder-success);
+        }
+        
+        .alert-error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--ooder-danger);
+            border-left: 4px solid var(--ooder-danger);
+        }
+        
+        /* 隐藏样式 */
+        .hidden {
+            display: none;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--ooder-border);
+                padding: 16px;
+            }
+            
+            .main-content {
+                padding: 16px;
+            }
+            
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> MCP Agent Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><i class="ri-file-check-line"></i> 结果处理</h1>
+                <div class="subtitle">
+                    <span class="badge" style="background-color: var(--ooder-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">v0.6.5</span>
+                    <span>Ooder Rad Style</span> | 
+                    <span id="timestamp"></span>
+                </div>
+            </div>
+            
+            <!-- 结果处理统计 -->
+            <div class="dashboard">
+                <div class="card">
+                    <h3>处理结果数</h3>
+                    <div class="value" id="total-results">128</div>
+                    <div class="label">总处理结果数</div>
+                </div>
+                <div class="card">
+                    <h3>成功结果</h3>
+                    <div class="value" id="success-results">112</div>
+                    <div class="label">成功处理数</div>
+                </div>
+                <div class="card">
+                    <h3>失败结果</h3>
+                    <div class="value" id="failed-results">16</div>
+                    <div class="label">失败处理数</div>
+                </div>
+                <div class="card">
+                    <h3>处理成功率</h3>
+                    <div class="value" id="success-rate">87.5%</div>
+                    <div class="label">成功率</div>
+                </div>
+            </div>
+            
+            <!-- 结果处理列表 -->
+            <div class="section">
+                <h2>结果处理列表</h2>
+                <div class="table-container">
+                    <table id="result-list-table">
+                        <thead>
+                            <tr>
+                                <th>结果ID</th>
+                                <th>请求ID</th>
+                                <th>处理状态</th>
+                                <th>处理时间</th>
+                                <th>处理耗时</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>result-001</td>
+                                <td>request-001</td>
+                                <td>成功</td>
+                                <td>2026-01-30 17:30:00</td>
+                                <td>120ms</td>
+                                <td>
+                                    <button class="btn btn-secondary" onclick="viewResultDetails('result-001')">查看</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>result-002</td>
+                                <td>request-002</td>
+                                <td>成功</td>
+                                <td>2026-01-30 17:29:30</td>
+                                <td>95ms</td>
+                                <td>
+                                    <button class="btn btn-secondary" onclick="viewResultDetails('result-002')">查看</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>result-003</td>
+                                <td>request-003</td>
+                                <td>失败</td>
+                                <td>2026-01-30 17:29:00</td>
+                                <td>50ms</td>
+                                <td>
+                                    <button class="btn btn-secondary" onclick="viewResultDetails('result-003')">查看</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>result-004</td>
+                                <td>request-004</td>
+                                <td>成功</td>
+                                <td>2026-01-30 17:28:30</td>
+                                <td>150ms</td>
+                                <td>
+                                    <button class="btn btn-secondary" onclick="viewResultDetails('result-004')">查看</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>result-005</td>
+                                <td>request-005</td>
+                                <td>成功</td>
+                                <td>2026-01-30 17:28:00</td>
+                                <td>80ms</td>
+                                <td>
+                                    <button class="btn btn-secondary" onclick="viewResultDetails('result-005')">查看</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 24px;">
+                    <button class="btn btn-primary" onclick="refreshResultList()">
+                        <i class="ri-refresh-line"></i> 刷新列表
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportResults()">
+                        <i class="ri-download-line"></i> 导出结果
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 结果处理详情 -->
+            <div class="section">
+                <h2>结果处理详情</h2>
+                <div id="result-details" class="hidden">
+                    <div style="margin-bottom: 24px;">
+                        <h3 style="margin-bottom: 16px; color: var(--ooder-primary);">结果信息</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                            <div>
+                                <strong style="color: var(--ooder-secondary);">结果ID:</strong> <span id="detail-result-id"></span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--ooder-secondary);">请求ID:</strong> <span id="detail-request-id"></span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--ooder-secondary);">处理状态:</strong> <span id="detail-status"></span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--ooder-secondary);">处理时间:</strong> <span id="detail-time"></span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--ooder-secondary);">处理耗时:</strong> <span id="detail-duration"></span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--ooder-secondary);">处理节点:</strong> <span id="detail-node"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 24px;">
+                        <h3 style="margin-bottom: 16px; color: var(--ooder-primary);">处理结果</h3>
+                        <div style="background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); border: 1px solid var(--ooder-border);">
+                            <pre id="detail-result" style="white-space: pre-wrap; color: var(--ooder-dark);"></pre>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 16px; color: var(--ooder-primary);">处理日志</h3>
+                        <div style="background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); border: 1px solid var(--ooder-border);">
+                            <pre id="detail-logs" style="white-space: pre-wrap; color: var(--ooder-secondary);"></pre>
+                        </div>
+                    </div>
+                </div>
+                <div id="no-details" style="text-align: center; padding: 64px;">
+                    <p style="color: var(--ooder-secondary);">请从列表中选择一个结果查看详情</p>
+                    <div style="margin-top: 32px; font-size: 64px;">
+                        <i class="ri-file-check-line"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        // 菜单配置
+        let menuConfig = null;
+        
+        // 初始化页面
+        function init() {
+            loadResultData();
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // 加载结果数据
+        async function loadResultData() {
+            try {
+                // 模拟数据加载
+                setTimeout(() => {
+                    document.getElementById('total-results').textContent = '128';
+                    document.getElementById('success-results').textContent = '112';
+                    document.getElementById('failed-results').textContent = '16';
+                    document.getElementById('success-rate').textContent = '87.5%';
+                }, 500);
+            } catch (error) {
+                console.error('加载结果数据错误:', error);
+            }
+        }
+        
+        // 刷新结果列表
+        function refreshResultList() {
+            // 模拟刷新
+            const table = document.getElementById('result-list-table');
+            const tbody = table.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            // 生成新的模拟数据
+            for (let i = 1; i <= 5; i++) {
+                const tr = document.createElement('tr');
+                const status = i % 5 === 0 ? '失败' : '成功';
+                tr.innerHTML = `
+                    <td>result-${String(i).padStart(3, '0')}</td>
+                    <td>request-${String(i).padStart(3, '0')}</td>
+                    <td>${status}</td>
+                    <td>${new Date().toLocaleString('zh-CN')}</td>
+                    <td>${Math.floor(Math.random() * 200) + 50}ms</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="viewResultDetails('result-${String(i).padStart(3, '0')}')">查看</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+        
+        // 查看结果详情
+        function viewResultDetails(resultId) {
+            const noDetails = document.getElementById('no-details');
+            const resultDetails = document.getElementById('result-details');
+            
+            noDetails.classList.add('hidden');
+            resultDetails.classList.remove('hidden');
+            
+            // 填充详情数据
+            document.getElementById('detail-result-id').textContent = resultId;
+            document.getElementById('detail-request-id').textContent = resultId.replace('result', 'request');
+            document.getElementById('detail-status').textContent = resultId === 'result-003' ? '失败' : '成功';
+            document.getElementById('detail-time').textContent = new Date().toLocaleString('zh-CN');
+            document.getElementById('detail-duration').textContent = Math.floor(Math.random() * 200) + 50 + 'ms';
+            document.getElementById('detail-node').textContent = 'mcp-agent-001';
+            
+            // 填充结果数据
+            document.getElementById('detail-result').textContent = JSON.stringify({
+                "status": resultId === 'result-003' ? "error" : "success",
+                "message": resultId === 'result-003' ? "处理失败: 资源不足" : "处理成功",
+                "data": {
+                    "processedData": "示例数据",
+                    "metrics": {
+                        "processingTime": Math.floor(Math.random() * 200) + 50,
+                        "memoryUsed": Math.floor(Math.random() * 100) + 50,
+                        "cpuUsed": Math.floor(Math.random() * 50) + 10
+                    }
+                },
+                "timestamp": Date.now()
+            }, null, 2);
+            
+            // 填充日志数据
+            document.getElementById('detail-logs').textContent = `[INFO] 2026-01-30 17:30:00 - 开始处理结果 ${resultId}
+[INFO] 2026-01-30 17:30:00 - 加载请求数据
+[INFO] 2026-01-30 17:30:00 - 处理数据...
+${resultId === 'result-003' ? '[ERROR] 2026-01-30 17:30:00 - 处理失败: 资源不足' : '[INFO] 2026-01-30 17:30:00 - 处理完成'}
+[INFO] 2026-01-30 17:30:00 - 保存处理结果`;
+        }
+        
+        // 导出结果
+        function exportResults() {
+            // 模拟导出
+            alert('结果导出功能正在开发中');
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>

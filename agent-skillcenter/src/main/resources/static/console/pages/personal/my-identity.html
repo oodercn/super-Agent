@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人身份 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
+    <link href="../../assets/css/remixicon/remixicon.css" rel="stylesheet">
+    <script src="/skillcenter/console/js/menu.js"></script>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <!-- 菜单将通过menu.js动态加载 -->
+        </aside>
+        <main class="main-content">
+            <header class="header">
+                <h1>个人身份</h1>
+                <div class="user-info">
+                    <span class="user-name">用户</span>
+                    <i class="ri-user-line"></i>
+                </div>
+            </header>
+            <div class="identity-content">
+                <div class="identity-card">
+                    <div class="identity-card-header">
+                        <h2>个人信息</h2>
+                        <button class="btn-sm btn-primary edit-identity-btn">
+                            <i class="ri-edit-line"></i> 编辑
+                        </button>
+                    </div>
+                    <div class="identity-card-body">
+                        <div class="identity-info">
+                            <div class="identity-item">
+                                <span class="identity-label">用户名:</span>
+                                <span class="identity-value" id="username">user123</span>
+                            </div>
+                            <div class="identity-item">
+                                <span class="identity-label">姓名:</span>
+                                <span class="identity-value" id="name">用户</span>
+                            </div>
+                            <div class="identity-item">
+                                <span class="identity-label">邮箱:</span>
+                                <span class="identity-value" id="email">user@example.com</span>
+                            </div>
+                            <div class="identity-item">
+                                <span class="identity-label">手机号:</span>
+                                <span class="identity-value" id="phone">13800138000</span>
+                            </div>
+                            <div class="identity-item">
+                                <span class="identity-label">创建时间:</span>
+                                <span class="identity-value" id="created-at">2026-01-01 00:00:00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="identity-card">
+                    <div class="identity-card-header">
+                        <h2>身份映射</h2>
+                    </div>
+                    <div class="identity-card-body">
+                        <div class="identity-mappings" id="identity-mappings">
+                            <!-- 身份映射将通过JavaScript动态加载 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <!-- 编辑个人信息模态框 -->
+    <div class="modal" id="edit-identity-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>编辑个人信息</h2>
+                <button class="close-btn" id="close-edit-modal">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-identity-form">
+                    <div class="form-group">
+                        <label for="edit-username">用户名</label>
+                        <input type="text" id="edit-username" value="user123" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-name">姓名</label>
+                        <input type="text" id="edit-name" value="用户" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-email">邮箱</label>
+                        <input type="email" id="edit-email" value="user@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-phone">手机号</label>
+                        <input type="tel" id="edit-phone" value="13800138000" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancel-edit-btn">取消</button>
+                <button class="btn-primary" id="submit-edit-btn">保存</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // 初始化菜单
+        initMenu('my-identity');
+        
+        // 模拟身份映射数据
+        const identityMappings = [
+            {
+                id: 'mapping-001',
+                identityType: '个人',
+                skillId: 'text-to-uppercase',
+                skillName: '文本转大写',
+                permission: '执行',
+                createdAt: '2026-01-20'
+            },
+            {
+                id: 'mapping-002',
+                identityType: '个人',
+                skillId: 'json-formatter',
+                skillName: 'JSON格式化',
+                permission: '执行',
+                createdAt: '2026-01-22'
+            },
+            {
+                id: 'mapping-003',
+                identityType: '群组',
+                groupId: 'dev-team',
+                groupName: '开发团队',
+                skillId: 'code-generator',
+                skillName: '代码生成',
+                permission: '执行',
+                createdAt: '2026-01-25'
+            }
+        ];
+        
+        // 渲染身份映射
+        function renderIdentityMappings() {
+            const mappingsContainer = document.getElementById('identity-mappings');
+            mappingsContainer.innerHTML = '';
+            
+            identityMappings.forEach(mapping => {
+                const mappingCard = document.createElement('div');
+                mappingCard.className = 'identity-mapping-card';
+                
+                if (mapping.identityType === '个人') {
+                    mappingCard.innerHTML = `
+                        <div class="mapping-card-header">
+                            <h4>${mapping.skillName}</h4>
+                            <span class="mapping-type">个人身份</span>
+                        </div>
+                        <div class="mapping-card-body">
+                            <div class="mapping-info">
+                                <span class="mapping-permission">权限: ${mapping.permission}</span>
+                                <span class="mapping-created">创建时间: ${mapping.createdAt}</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    mappingCard.innerHTML = `
+                        <div class="mapping-card-header">
+                            <h4>${mapping.skillName}</h4>
+                            <span class="mapping-type">群组身份</span>
+                        </div>
+                        <div class="mapping-card-body">
+                            <div class="mapping-info">
+                                <span class="mapping-group">群组: ${mapping.groupName}</span>
+                                <span class="mapping-permission">权限: ${mapping.permission}</span>
+                                <span class="mapping-created">创建时间: ${mapping.createdAt}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                mappingsContainer.appendChild(mappingCard);
+            });
+        }
+        
+        // 事件监听
+        document.addEventListener('DOMContentLoaded', function() {
+            // 渲染身份映射
+            renderIdentityMappings();
+            
+            // 编辑个人信息按钮
+            document.querySelector('.edit-identity-btn').addEventListener('click', function() {
+                document.getElementById('edit-identity-modal').style.display = 'block';
+            });
+            
+            // 关闭编辑模态框
+            document.getElementById('close-edit-modal').addEventListener('click', function() {
+                document.getElementById('edit-identity-modal').style.display = 'none';
+            });
+            
+            document.getElementById('cancel-edit-btn').addEventListener('click', function() {
+                document.getElementById('edit-identity-modal').style.display = 'none';
+            });
+            
+            // 提交编辑
+            document.getElementById('submit-edit-btn').addEventListener('click', function() {
+                const form = document.getElementById('edit-identity-form');
+                if (form.checkValidity()) {
+                    // 更新个人信息
+                    document.getElementById('name').textContent = document.getElementById('edit-name').value;
+                    document.getElementById('email').textContent = document.getElementById('edit-email').value;
+                    document.getElementById('phone').textContent = document.getElementById('edit-phone').value;
+                    
+                    document.getElementById('edit-identity-modal').style.display = 'none';
+                    alert('个人信息更新成功！');
+                } else {
+                    form.reportValidity();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能管理 - Nexus SkillCenter</title>
+    <link rel="stylesheet" href="/console/css/styles.css">
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <script src="/console/js/menu-loader.js"></script>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="main-content">
+            <header class="header">
+                <h1>技能管理</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showAddCategoryModal()">
+                        <i class="ri-add-line"></i> 添加分类
+                    </button>
+                </div>
+            </header>
+            <div class="content">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('skills')">技能列表</button>
+                    <button class="tab-btn" onclick="switchTab('categories')">技能分类</button>
+                    <button class="tab-btn" onclick="switchTab('approvals')">技能审批</button>
+                </div>
+                
+                <div class="tab-content" id="skills-tab">
+                    <div class="skill-list" id="skill-list">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="categories-tab" style="display: none;">
+                    <div class="category-list" id="category-list">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="approvals-tab" style="display: none;">
+                    <div class="skill-list" id="approval-list">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="add-category-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加分类</h3>
+                <button class="modal-close" onclick="closeModal('add-category-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="add-category-form">
+                    <div class="form-group">
+                        <label>分类名称</label>
+                        <input type="text" id="category-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>分类描述</label>
+                        <textarea id="category-description" class="form-control" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="addCategory()">添加</button>
+                <button class="btn btn-secondary" onclick="closeModal('add-category-modal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            initMenu();
+            loadSkills();
+            loadCategories();
+            loadApprovals();
+        };
+
+        async function loadSkills() {
+            try {
+                const skillList = document.getElementById('skill-list');
+                skillList.innerHTML = '<div class="loading">加载中...</div>';
+                
+                const response = await fetch('/api/admin/skills');
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.code === 200) {
+                    renderSkillList(result.data || []);
+                } else {
+                    throw new Error(result.message || '响应数据格式错误');
+                }
+            } catch (error) {
+                console.error('加载技能列表错误:', error);
+                document.getElementById('skill-list').innerHTML = '<div class="empty-state">加载失败</div>';
+                showError('加载技能列表失败');
+            }
+        }
+
+        function renderSkillList(skills) {
+            const skillList = document.getElementById('skill-list');
+            skillList.innerHTML = '';
+            
+            if (skills.length === 0) {
+                skillList.innerHTML = '<div class="empty-state">暂无技能</div>';
+                return;
+            }
+            
+            skills.forEach(skill => {
+                const skillItem = document.createElement('div');
+                skillItem.className = 'skill-item';
+                skillItem.innerHTML = `
+                    <div class="skill-info">
+                        <h3>${skill.name}</h3>
+                        <p>${skill.description || '暂无描述'}</p>
+                        <span class="skill-category">${getCategoryName(skill.category)}</span>
+                        <span class="skill-author">作者: ${skill.author}</span>
+                    </div>
+                    <div class="skill-actions">
+                        <button class="btn btn-secondary" onclick="viewSkill('${skill.id}')">
+                            <i class="ri-eye-line"></i> 查看
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteSkill('${skill.id}')">
+                            <i class="ri-delete-line"></i> 删除
+                        </button>
+                    </div>
+                `;
+                skillList.appendChild(skillItem);
+            });
+        }
+
+        async function loadCategories() {
+            try {
+                const categoryList = document.getElementById('category-list');
+                categoryList.innerHTML = '<div class="loading">加载中...</div>';
+                
+                const response = await fetch('/api/admin/categories');
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.code === 200) {
+                    renderCategoryList(result.data || []);
+                } else {
+                    throw new Error(result.message || '响应数据格式错误');
+                }
+            } catch (error) {
+                console.error('加载分类列表错误:', error);
+                document.getElementById('category-list').innerHTML = '<div class="empty-state">加载失败</div>';
+                showError('加载分类列表失败');
+            }
+        }
+
+        function renderCategoryList(categories) {
+            const categoryList = document.getElementById('category-list');
+            categoryList.innerHTML = '';
+            
+            if (categories.length === 0) {
+                categoryList.innerHTML = '<div class="empty-state">暂无分类</div>';
+                return;
+            }
+            
+            categories.forEach(category => {
+                const categoryItem = document.createElement('div');
+                categoryItem.className = 'category-item';
+                categoryItem.innerHTML = `
+                    <div class="category-info">
+                        <h3>${category.name}</h3>
+                        <p>${category.description || '暂无描述'}</p>
+                        <span class="category-count">${category.skillCount || 0} 个技能</span>
+                    </div>
+                    <div class="category-actions">
+                        <button class="btn btn-secondary" onclick="editCategory('${category.id}')">
+                            <i class="ri-edit-line"></i> 编辑
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteCategory('${category.id}')">
+                            <i class="ri-delete-line"></i> 删除
+                        </button>
+                    </div>
+                `;
+                categoryList.appendChild(categoryItem);
+            });
+        }
+
+        async function loadApprovals() {
+            try {
+                const approvalList = document.getElementById('approval-list');
+                approvalList.innerHTML = '<div class="loading">加载中...</div>';
+                
+                const response = await fetch('/api/admin/skills/pending');
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.code === 200) {
+                    renderApprovalList(result.data || []);
+                } else {
+                    throw new Error(result.message || '响应数据格式错误');
+                }
+            } catch (error) {
+                console.error('加载审批列表错误:', error);
+                document.getElementById('approval-list').innerHTML = '<div class="empty-state">加载失败</div>';
+                showError('加载审批列表失败');
+            }
+        }
+
+        function renderApprovalList(skills) {
+            const approvalList = document.getElementById('approval-list');
+            approvalList.innerHTML = '';
+            
+            if (skills.length === 0) {
+                approvalList.innerHTML = '<div class="empty-state">暂无待审批技能</div>';
+                return;
+            }
+            
+            skills.forEach(skill => {
+                const skillItem = document.createElement('div');
+                skillItem.className = 'skill-item';
+                skillItem.innerHTML = `
+                    <div class="skill-info">
+                        <h3>${skill.name}</h3>
+                        <p>${skill.description || '暂无描述'}</p>
+                        <span class="skill-author">作者: ${skill.author}</span>
+                        <span class="skill-time">提交时间: ${formatTime(skill.submittedAt)}</span>
+                    </div>
+                    <div class="skill-actions">
+                        <button class="btn btn-primary" onclick="approveSkill('${skill.id}')">
+                            <i class="ri-check-line"></i> 通过
+                        </button>
+                        <button class="btn btn-danger" onclick="rejectSkill('${skill.id}')">
+                            <i class="ri-close-line"></i> 拒绝
+                        </button>
+                    </div>
+                `;
+                approvalList.appendChild(skillItem);
+            });
+        }
+
+        function getCategoryName(category) {
+            const categoryMap = {
+                'text-processing': '文本处理',
+                'development': '开发工具',
+                'deployment': '部署工具',
+                'media': '媒体处理',
+                'storage': '存储管理'
+            };
+            return categoryMap[category] || category;
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').style.display = 'block';
+        }
+
+        function showAddCategoryModal() {
+            document.getElementById('add-category-modal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function addCategory() {
+            const name = document.getElementById('category-name').value;
+            const description = document.getElementById('category-description').value;
+            
+            if (!name) {
+                showError('请填写分类名称');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/admin/categories', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        description: description
+                    })
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.code === 200) {
+                    closeModal('add-category-modal');
+                    showSuccess('分类添加成功');
+                    loadCategories();
+                } else {
+                    showError(result.message || '分类添加失败');
+                }
+            } catch (error) {
+                console.error('添加分类错误:', error);
+                showError('分类添加失败');
+            }
+        }
+
+        function editCategory(categoryId) {
+            showError('编辑分类功能开发中...');
+        }
+
+        async function deleteCategory(categoryId) {
+            if (!confirm('确定要删除此分类吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/categories/${categoryId}`, {
+                    method: 'DELETE'
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.code === 200) {
+                    showSuccess('分类删除成功');
+                    loadCategories();
+                } else {
+                    showError(result.message || '分类删除失败');
+                }
+            } catch (error) {
+                console.error('删除分类错误:', error);
+                showError('分类删除失败');
+            }
+        }
+
+        function viewSkill(skillId) {
+            showError('查看技能功能开发中...');
+        }
+
+        async function deleteSkill(skillId) {
+            if (!confirm('确定要删除此技能吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/skills/${skillId}`, {
+                    method: 'DELETE'
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.code === 200) {
+                    showSuccess('技能删除成功');
+                    loadSkills();
+                } else {
+                    showError(result.message || '技能删除失败');
+                }
+            } catch (error) {
+                console.error('删除技能错误:', error);
+                showError('技能删除失败');
+            }
+        }
+
+        async function approveSkill(skillId) {
+            try {
+                const response = await fetch(`/api/admin/skills/${skillId}/approve`, {
+                    method: 'POST'
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.code === 200) {
+                    showSuccess('技能已通过审批');
+                    loadApprovals();
+                } else {
+                    showError(result.message || '审批失败');
+                }
+            } catch (error) {
+                console.error('审批技能错误:', error);
+                showError('审批失败');
+            }
+        }
+
+        async function rejectSkill(skillId) {
+            if (!confirm('确定要拒绝此技能吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/skills/${skillId}/reject`, {
+                    method: 'POST'
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result && result.code === 200) {
+                    showSuccess('技能已拒绝');
+                    loadApprovals();
+                } else {
+                    showError(result.message || '拒绝失败');
+                }
+            } catch (error) {
+                console.error('拒绝技能错误:', error);
+                showError('拒绝失败');
+            }
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '未知';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function showError(message) {
+            showNotification(message, 'error');
+        }
+
+        function showSuccess(message) {
+            showNotification(message, 'success');
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1014 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络链接管理 - MCP Agent Console</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <style>
+        /* Ooder-Rad 风格基础样式 - 纯黑色系暗色主题 */
+        :root {
+            --ooder-primary: #3b82f6;
+            --ooder-secondary: #94a3b8;
+            --ooder-success: #22c55e;
+            --ooder-warning: #f59e0b;
+            --ooder-danger: #ef4444;
+            --ooder-light: #0f0f0f;
+            --ooder-dark: #ffffff;
+            --ooder-border: #2a2a2a;
+            --ooder-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            --ooder-radius: 8px;
+            --ooder-spacing: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #000000;
+            color: var(--ooder-dark);
+            line-height: 1.5;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            background-color: #000000;
+        }
+        
+        /* 侧边栏样式 - Ooder-Rad 风格 */
+        .sidebar {
+            width: 260px;
+            background-color: #121212;
+            border-right: 1px solid var(--ooder-border);
+            padding: 24px;
+            box-shadow: var(--ooder-shadow);
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 32px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ooder-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sidebar h2::before {
+            content: "⚡";
+            font-size: 20px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-menu li {
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu a {
+            color: var(--ooder-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--ooder-radius);
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .nav-menu a:hover {
+            background-color: var(--ooder-light);
+            color: var(--ooder-primary);
+        }
+        
+        .nav-menu a.active {
+            background-color: rgba(26, 115, 232, 0.1);
+            color: var(--ooder-primary);
+            font-weight: 600;
+        }
+        
+        /* 二级菜单样式 */
+        .nav-menu .submenu {
+            list-style: none;
+            margin-left: 16px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu .submenu li {
+            margin-bottom: 2px;
+        }
+        
+        .nav-menu .submenu a {
+            padding: 10px 16px;
+            font-size: 13px;
+            border-left: 2px solid var(--ooder-border);
+        }
+        
+        /* 三级菜单样式 */
+        .nav-menu .submenu .submenu {
+            margin-left: 32px;
+        }
+        
+        .nav-menu .submenu .submenu a {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-left: 2px solid var(--ooder-secondary);
+        }
+        
+        /* 展开/折叠图标 */
+        .nav-menu .toggle-icon {
+            margin-left: auto;
+            transition: transform 0.2s ease;
+        }
+        
+        .nav-menu .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        /* 菜单分隔线 */
+        .nav-menu .menu-divider {
+            height: 1px;
+            background-color: var(--ooder-border);
+            margin: 16px 0;
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            background-color: #000000;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--ooder-border);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ooder-dark);
+        }
+        
+        .header .subtitle {
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        /* 章节样式 */
+        .section {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            margin-bottom: 24px;
+        }
+        
+        .section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--ooder-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section h2::before {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background-color: var(--ooder-primary);
+            border-radius: 2px;
+        }
+        
+        /* 网络链接统计 */
+        .link-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            padding: 16px;
+        }
+        
+        .stat-card h3 {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ooder-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--ooder-primary);
+        }
+        
+        /* 网络链接列表 */
+        .network-links-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        
+        .network-links-table th,
+        .network-links-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ooder-border);
+        }
+        
+        .network-links-table th {
+            background-color: #1a1a1a;
+            font-weight: 600;
+            color: var(--ooder-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .network-links-table tr:hover {
+            background-color: rgba(26, 115, 232, 0.05);
+        }
+        
+        /* 状态徽章 */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: var(--ooder-success);
+        }
+        
+        .status-warning {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: var(--ooder-warning);
+        }
+        
+        .status-error {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--ooder-danger);
+        }
+        
+        .status-inactive {
+            background-color: rgba(148, 163, 184, 0.2);
+            color: var(--ooder-secondary);
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--ooder-radius);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 8px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-primary {
+            background-color: var(--ooder-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-danger {
+            background-color: var(--ooder-danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+        }
+        
+        .btn-secondary {
+            background-color: #1a1a1a;
+            color: var(--ooder-secondary);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2a2a2a;
+        }
+        
+        /* 工具栏 */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--ooder-border);
+        }
+        
+        .toolbar-left {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .toolbar-right {
+            display: flex;
+            gap: 12px;
+        }
+        
+        /* 搜索框 */
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box input {
+            padding: 8px 16px 8px 40px;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            background-color: #1a1a1a;
+            color: var(--ooder-dark);
+            font-size: 13px;
+            width: 200px;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--ooder-primary);
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--ooder-secondary);
+        }
+        
+        /* 分页控件 */
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        .pagination button {
+            padding: 6px 12px;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            background-color: #1a1a1a;
+            color: var(--ooder-secondary);
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .pagination button:hover {
+            background-color: #2a2a2a;
+        }
+        
+        .pagination button.active {
+            background-color: var(--ooder-primary);
+            color: white;
+            border-color: var(--ooder-primary);
+        }
+        
+        /* 网络拓扑图 */
+        .network-topology {
+            width: 100%;
+            height: 400px;
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            position: relative;
+            overflow: hidden;
+            padding: 24px;
+        }
+        
+        .topology-node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .topology-node.mcp {
+            background-color: var(--ooder-primary);
+            color: white;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+        
+        .topology-node.route {
+            background-color: var(--ooder-success);
+            color: white;
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+        }
+        
+        .topology-node.end {
+            background-color: var(--ooder-warning);
+            color: white;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+        }
+        
+        .topology-node:hover {
+            transform: scale(1.1);
+        }
+        
+        .topology-link {
+            position: absolute;
+            background-color: var(--ooder-secondary);
+            height: 2px;
+            transform-origin: 0 0;
+            opacity: 0.6;
+        }
+        
+        .topology-link.active {
+            background-color: var(--ooder-success);
+            opacity: 0.8;
+        }
+        
+        .topology-link.warning {
+            background-color: var(--ooder-warning);
+            opacity: 0.8;
+        }
+        
+        .topology-link.error {
+            background-color: var(--ooder-danger);
+            opacity: 0.8;
+        }
+        
+        /* 隐藏样式 */
+        .hidden {
+            display: none;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--ooder-border);
+                padding: 16px;
+            }
+            
+            .main-content {
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .link-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            
+            .toolbar-left,
+            .toolbar-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .network-links-table {
+                font-size: 12px;
+            }
+            
+            .network-links-table th,
+            .network-links-table td {
+                padding: 8px 12px;
+            }
+            
+            .network-topology {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> MCP Agent Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><i class="ri-link-line"></i> 网络链接管理</h1>
+                <div class="subtitle">
+                    <span class="badge" style="background-color: var(--ooder-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">命令体系</span>
+                    <span>Ooder Rad Style</span> | 
+                    <span id="timestamp"></span>
+                </div>
+            </div>
+            
+            <!-- 网络链接统计 -->
+            <div class="section">
+                <h2>链接统计</h2>
+                <div class="link-stats">
+                    <div class="stat-card">
+                        <h3>总链接数</h3>
+                        <div class="value">24</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>活跃链接</h3>
+                        <div class="value">20</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>警告链接</h3>
+                        <div class="value">3</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>错误链接</h3>
+                        <div class="value">1</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 网络拓扑图 -->
+            <div class="section">
+                <h2>网络拓扑图</h2>
+                <div id="network-topology" class="network-topology">
+                    <!-- 动态生成网络拓扑图 -->
+                </div>
+            </div>
+            
+            <!-- 网络链接列表 -->
+            <div class="section">
+                <h2>网络链接列表</h2>
+                
+                <!-- 工具栏 -->
+                <div class="toolbar">
+                    <div class="toolbar-left">
+                        <button class="btn btn-primary" onclick="showAddLinkForm()">
+                            <i class="ri-plus-line"></i>
+                            添加链接
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="ri-filter-line"></i>
+                            筛选
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="ri-download-line"></i>
+                            导出
+                        </button>
+                    </div>
+                    <div class="toolbar-right">
+                        <div class="search-box">
+                            <i class="ri-search-line"></i>
+                            <input type="text" placeholder="搜索链接ID">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 网络链接表格 -->
+                <table class="network-links-table" id="network-links-table">
+                    <thead>
+                        <tr>
+                            <th>链接ID</th>
+                            <th>源节点</th>
+                            <th>目标节点</th>
+                            <th>链接类型</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>最后心跳</th>
+                            <th>延迟</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="link-items">
+                        <!-- 动态生成 -->
+                    </tbody>
+                </table>
+                
+                <!-- 分页控件 -->
+                <div class="pagination">
+                    <button>&laquo;</button>
+                    <button class="active">1</button>
+                    <button>2</button>
+                    <button>3</button>
+                    <button>&raquo;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 公共JS模块 -->
+    <script src="../../common/api-client.js"></script>
+    <script src="../../common/list-manager.js"></script>
+    <script src="../../common/form-manager.js"></script>
+    <script src="../../common/utils.js"></script>
+    
+    <script>
+        // 当前页面
+        let currentPage = 'network-links';
+        
+        // 菜单配置
+        let menuConfig = null;
+        
+        // 初始化页面
+        function init() {
+            updateTimestamp();
+            loadMenuConfig();
+            loadNetworkLinks();
+            generateNetworkTopology();
+            setInterval(updateTimestamp, 60000); // 每分钟更新时间戳
+        }
+        
+        // 加载菜单配置
+        async function loadMenuConfig() {
+            try {
+                const response = await fetch('../../menu-config.json');
+                if (!response.ok) {
+                    throw new Error('菜单配置加载失败');
+                }
+                menuConfig = await response.json();
+                renderMenu();
+            } catch (error) {
+                console.error('加载菜单配置错误:', error);
+                renderDefaultMenu();
+            }
+        }
+        
+        // 渲染菜单
+        function renderMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            
+            menuConfig.menu.forEach(item => {
+                const menuItem = createMenuItem(item);
+                navMenu.appendChild(menuItem);
+                // 添加菜单分隔线
+                if (item.id !== 'dashboard') {
+                    const divider = document.createElement('div');
+                    divider.className = 'menu-divider';
+                    navMenu.appendChild(divider);
+                }
+            });
+            
+            setupNavigation();
+        }
+        
+        // 创建菜单项
+        function createMenuItem(menuItem) {
+            const li = document.createElement('li');
+            
+            if (menuItem.children && menuItem.children.length > 0) {
+                // 有子菜单的菜单项
+                const a = document.createElement('a');
+                a.href = `#${menuItem.id}`;
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                    <span class="toggle-icon">›</span>
+                `;
+                
+                // 处理点击事件
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const toggleIcon = this.querySelector('.toggle-icon');
+                    const submenu = this.nextElementSibling;
+                    
+                    if (submenu) {
+                        submenu.classList.toggle('hidden');
+                        toggleIcon.classList.toggle('collapsed');
+                    }
+                });
+                
+                li.appendChild(a);
+                
+                // 创建子菜单
+                const submenu = document.createElement('ul');
+                submenu.className = 'submenu';
+                
+                menuItem.children.forEach(childItem => {
+                    const childLi = createMenuItem(childItem);
+                    submenu.appendChild(childLi);
+                });
+                
+                li.appendChild(submenu);
+            } else {
+                // 无子菜单的菜单项
+                const a = document.createElement('a');
+                if (menuItem.url) {
+                    a.href = menuItem.url;
+                    if (menuItem.url.includes('network-links.html')) {
+                        a.classList.add('active');
+                    }
+                } else {
+                    a.href = `#${menuItem.id}`;
+                    a.setAttribute('data-page', menuItem.page || menuItem.id);
+                }
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                `;
+                li.appendChild(a);
+            }
+            
+            return li;
+        }
+        
+        // 渲染默认菜单（加载失败时使用）
+        function renderDefaultMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = `
+                <li><a href="../../pages/dashboard.html"><i class="ri-dashboard-line"></i> 仪表盘</a></li>
+                <li><a href="../../pages/command/command-dashboard.html"><i class="ri-dashboard-2-line"></i> 命令仪表盘</a></li>
+                <li><a href="../../pages/command/command-send.html"><i class="ri-send-plane-line"></i> 命令发送</a></li>
+                <li><a href="../../pages/command/command-queue.html"><i class="ri-list-check"></i> 命令队列管理</a></li>
+                <li><a href="../../pages/command/network-links.html" class="active"><i class="ri-link-line"></i> 网络链接管理</a></li>
+            `;
+            setupNavigation();
+        }
+        
+        // 设置导航
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-menu a');
+            navLinks.forEach(link => {
+                if (link.hasAttribute('data-page') && !link.hasAttribute('href') && link.getAttribute('href') !== '#') {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // 更新活跃状态
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                }
+            });
+        }
+        
+        // 加载网络链接数据
+        async function loadNetworkLinks() {
+            const linkItems = document.getElementById('link-items');
+            linkItems.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px;">加载中...</td></tr>';
+            
+            try {
+                // 调用API获取网络链接
+                const response = await apiClient.get('/command/network/links');
+                
+                if (response.status === 'success') {
+                    const links = response.data || [];
+                    const stats = document.querySelectorAll('.link-stats .stat-card .value');
+                    
+                    // 更新统计信息
+                    if (stats.length > 0) {
+                        stats[0].textContent = links.length;
+                        stats[1].textContent = links.filter(link => link.status === 'ACTIVE').length;
+                        stats[2].textContent = links.filter(link => link.status === 'WARNING').length;
+                        stats[3].textContent = links.filter(link => link.status === 'ERROR').length;
+                    }
+                    
+                    // 渲染网络链接
+                    linkItems.innerHTML = '';
+                    
+                    if (links.length === 0) {
+                        linkItems.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px;">暂无网络链接</td></tr>';
+                        return;
+                    }
+                    
+                    links.forEach(link => {
+                        const row = document.createElement('tr');
+                        const createTime = new Date(link.createTime).toLocaleString('zh-CN');
+                        const lastHeartbeat = new Date(link.createTime + 3600000).toLocaleString('zh-CN'); // 模拟心跳时间
+                        const latency = link.status === 'ACTIVE' ? Math.floor(Math.random() * 50) + 'ms' : '---';
+                        
+                        row.innerHTML = `
+                            <td>${link.id}</td>
+                            <td>${link.sourceAgent}</td>
+                            <td>${link.targetAgent}</td>
+                            <td>${link.type}</td>
+                            <td><span class="status-badge status-${link.status.toLowerCase()}">${link.status}</span></td>
+                            <td>${createTime}</td>
+                            <td>${lastHeartbeat}</td>
+                            <td>${latency}</td>
+                            <td>
+                                <button class="btn btn-primary" onclick="viewLink('${link.id}')">
+                                    <i class="ri-eye-line"></i>
+                                    查看
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteLink('${link.id}')">
+                                    <i class="ri-close-line"></i>
+                                    删除
+                                </button>
+                            </td>
+                        `;
+                        linkItems.appendChild(row);
+                    });
+                } else {
+                    linkItems.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--ooder-danger);">加载失败: ' + (response.message || '未知错误') + '</td></tr>';
+                }
+            } catch (error) {
+                console.error('加载网络链接错误:', error);
+                linkItems.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--ooder-danger);">网络错误: ' + (error.message || '无法连接到服务器') + '</td></tr>';
+            }
+        }
+        
+        // 查看链接详情
+        function viewLink(linkId) {
+            alert('查看链接详情: ' + linkId);
+        }
+        
+        // 删除链接
+        function deleteLink(linkId) {
+            if (confirm('确定要删除这个链接吗？')) {
+                alert('删除链接: ' + linkId);
+                loadNetworkLinks(); // 刷新链接列表
+            }
+        }
+        
+        // 添加网络链接
+        function showAddLinkForm() {
+            const formHtml = `
+                <div style="background-color: #1a1a1a; padding: 24px; border-radius: var(--ooder-radius);">
+                    <h3 style="margin-bottom: 16px; font-size: 16px;">添加网络链接</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--ooder-secondary);">源节点</label>
+                            <input type="text" id="source-agent" style="width: 100%; padding: 8px 12px; border: 1px solid var(--ooder-border); border-radius: var(--ooder-radius); background-color: #0f0f0f; color: var(--ooder-dark);">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--ooder-secondary);">目标节点</label>
+                            <input type="text" id="target-agent" style="width: 100%; padding: 8px 12px; border: 1px solid var(--ooder-border); border-radius: var(--ooder-radius); background-color: #0f0f0f; color: var(--ooder-dark);">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--ooder-secondary);">链接类型</label>
+                            <select id="link-type" style="width: 100%; padding: 8px 12px; border: 1px solid var(--ooder-border); border-radius: var(--ooder-radius); background-color: #0f0f0f; color: var(--ooder-dark);">
+                                <option value="direct">直接链接</option>
+                                <option value="indirect">间接链接</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-top: 24px; display: flex; gap: 12px;">
+                        <button onclick="addNetworkLink()" class="btn btn-primary">添加</button>
+                        <button onclick="this.parentElement.parentElement.remove()" class="btn btn-secondary">取消</button>
+                    </div>
+                </div>
+            `;
+            
+            const section = document.querySelector('.section:nth-child(3)');
+            const formContainer = document.createElement('div');
+            formContainer.innerHTML = formHtml;
+            formContainer.style.marginBottom = '24px';
+            section.parentNode.insertBefore(formContainer, section);
+        }
+        
+        // 添加网络链接
+        async function addNetworkLink() {
+            const sourceAgent = document.getElementById('source-agent').value;
+            const targetAgent = document.getElementById('target-agent').value;
+            const linkType = document.getElementById('link-type').value;
+            
+            if (!sourceAgent || !targetAgent) {
+                alert('请填写完整的链接信息');
+                return;
+            }
+            
+            try {
+                const response = await apiClient.post('/command/network/link', {
+                    sourceAgent: sourceAgent,
+                    targetAgent: targetAgent,
+                    type: linkType
+                });
+                
+                if (response.status === 'success') {
+                    alert('网络链接添加成功');
+                    // 移除表单
+                    document.getElementById('source-agent').parentElement.parentElement.parentElement.remove();
+                    // 刷新链接列表
+                    loadNetworkLinks();
+                } else {
+                    alert('添加失败: ' + (response.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('添加网络链接错误:', error);
+                alert('网络错误: ' + (error.message || '无法连接到服务器'));
+            }
+        }
+        
+        // 生成网络拓扑图
+        function generateNetworkTopology() {
+            const topologyContainer = document.getElementById('network-topology');
+            topologyContainer.innerHTML = '';
+            
+            // 定义节点
+            const nodes = [
+                { id: 'mcp-001', type: 'mcp', name: 'MCP', x: 100, y: 200 },
+                { id: 'route-001', type: 'route', name: 'Route1', x: 300, y: 100 },
+                { id: 'route-002', type: 'route', name: 'Route2', x: 300, y: 300 },
+                { id: 'route-003', type: 'route', name: 'Route3', x: 300, y: 200 },
+                { id: 'end-001', type: 'end', name: 'End1', x: 500, y: 60 },
+                { id: 'end-002', type: 'end', name: 'End2', x: 500, y: 140 },
+                { id: 'end-003', type: 'end', name: 'End3', x: 500, y: 260 },
+                { id: 'end-004', type: 'end', name: 'End4', x: 500, y: 340 },
+                { id: 'end-005', type: 'end', name: 'End5', x: 500, y: 200 }
+            ];
+            
+            // 定义连接
+            const links = [
+                { source: 'mcp-001', target: 'route-001', status: 'active' },
+                { source: 'mcp-001', target: 'route-002', status: 'active' },
+                { source: 'mcp-001', target: 'route-003', status: 'error' },
+                { source: 'route-001', target: 'end-001', status: 'active' },
+                { source: 'route-001', target: 'end-002', status: 'warning' },
+                { source: 'route-002', target: 'end-003', status: 'active' },
+                { source: 'route-002', target: 'end-004', status: 'warning' },
+                { source: 'route-003', target: 'end-005', status: 'inactive' }
+            ];
+            
+            // 创建节点
+            nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = `topology-node ${node.type}`;
+                nodeElement.style.left = `${node.x}px`;
+                nodeElement.style.top = `${node.y}px`;
+                nodeElement.textContent = node.name;
+                nodeElement.title = node.id;
+                topologyContainer.appendChild(nodeElement);
+            });
+            
+            // 创建连接
+            links.forEach(link => {
+                const sourceNode = nodes.find(n => n.id === link.source);
+                const targetNode = nodes.find(n => n.id === link.target);
+                
+                if (sourceNode && targetNode) {
+                    const linkElement = document.createElement('div');
+                    linkElement.className = `topology-link ${link.status}`;
+                    
+                    // 计算连接长度和角度
+                    const dx = targetNode.x - sourceNode.x;
+                    const dy = targetNode.y - sourceNode.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    linkElement.style.width = `${length}px`;
+                    linkElement.style.left = `${sourceNode.x + 30}px`;
+                    linkElement.style.top = `${sourceNode.y + 30}px`;
+                    linkElement.style.transform = `rotate(${angle}deg)`;
+                    
+                    topologyContainer.appendChild(linkElement);
+                }
+            });
+        }
+        
+        // 更新时间戳
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = utils.formatTimestamp(now.getTime());
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>

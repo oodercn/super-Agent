@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康检查 - Nexus - Nexus</title>
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+    <link rel="stylesheet" href="../../css/mcpagent/common.css">
+    <script src="../../js/theme-manager.js"></script>
+    <script src="../../js/nexus/base.js"></script>
+    <script src="../../js/nexus/api.js"></script>
+    <script src="../../js/nexus/ui.js"></script>
+    <script src="../../js/nexus/utils.js"></script>
+    <script src="../../js/nexus/sdk-proxy.js"></script>
+    <script src="../../js/nexus/common.js"></script>
+</head>
+<body class="nexus-page">
+    <div class="nexus-container">
+        <!-- 侧边导航栏 -->
+        <div class="nexus-sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> Nexus Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="nexus-main-content">
+            <div class="nexus-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h1><i class="ri-heart-pulse-line"></i> 健康检查</h1>
+                    <button class="theme-toggle-btn nexus-btn nexus-btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                        <i class="ri-sun-line"></i> 浅色模式
+                    </button>
+                </div>
+                <div class="subtitle">
+                    <span class="badge dashboard-badge" style="background-color: var(--nexus-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">Nexus</span>
+                    <span>监控和检查Nexus系统健康状态</span>
+                </div>
+            </div>
+
+            <!-- 健康检查操作区 -->
+            <section class="nexus-operation-section">
+                <div class="nexus-section-header">
+                    <h3>健康检查操作</h3>
+                    <div class="nexus-operation-buttons">
+                        <button class="nexus-btn nexus-btn-primary" onclick="runHealthCheck()">
+                            <i class="ri-refresh-line"></i>
+                            运行检查
+                        </button>
+                        <button class="nexus-btn nexus-btn-secondary" onclick="exportHealthReport()">
+                            <i class="ri-download-line"></i>
+                            导出报告
+                        </button>
+                        <button class="nexus-btn nexus-btn-secondary" onclick="scheduleHealthCheck()">
+                            <i class="ri-calendar-line"></i>
+                            定时检查
+                        </button>
+                    </div>
+                </div>
+                <div class="nexus-operation-card">
+                    <div class="nexus-form-group">
+                        <label for="checkType">检查类型</label>
+                        <select id="checkType">
+                            <option value="full">全面检查</option>
+                            <option value="quick">快速检查</option>
+                            <option value="network">网络检查</option>
+                            <option value="system">系统检查</option>
+                            <option value="services">服务检查</option>
+                        </select>
+                    </div>
+                    <div class="nexus-form-group">
+                        <label for="checkTimeout">超时设置 (秒)</label>
+                        <input type="number" id="checkTimeout" value="30" min="5" max="300">
+                    </div>
+                    <div class="nexus-form-group">
+                        <label for="checkDetails">检查详情</label>
+                        <select id="checkDetails">
+                            <option value="basic">基本详情</option>
+                            <option value="detailed">详细信息</option>
+                            <option value="verbose">完整信息</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 整体健康状态 -->
+            <section class="nexus-section">
+                <div class="nexus-section-header">
+                    <h3>整体健康状态</h3>
+                </div>
+                <div class="nexus-card">
+                    <div class="nexus-health-status">
+                        <div class="nexus-health-icon">
+                            <i class="ri-heart-pulse-line"></i>
+                        </div>
+                        <div class="nexus-health-info">
+                            <h3 id="overallHealthStatus">健康</h3>
+                            <p id="overallHealthMessage">系统运行正常，所有组件状态良好</p>
+                            <div class="nexus-health-metrics">
+                                <div class="nexus-stat-item">
+                                    <span class="nexus-stat-label">上次检查:</span>
+                                    <span class="nexus-stat-value" id="lastCheckTime">2024-01-01 12:00:00</span>
+                                </div>
+                                <div class="nexus-stat-item">
+                                    <span class="nexus-stat-label">检查耗时:</span>
+                                    <span class="nexus-stat-value" id="checkDuration">1.2秒</span>
+                                </div>
+                                <div class="nexus-stat-item">
+                                    <span class="nexus-stat-label">健康评分:</span>
+                                    <span class="nexus-stat-value" id="healthScore">98/100</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 组件健康状态 -->
+            <section class="nexus-section">
+                <div class="nexus-section-header">
+                    <h3>组件健康状态</h3>
+                </div>
+                <div class="nexus-stats-grid">
+                    <div class="nexus-stats-card">
+                        <div class="nexus-stats-card-header">
+                            <h4>Nexus核心</h4>
+                            <span class="nexus-status-badge nexus-status-active">健康</span>
+                        </div>
+                        <div class="nexus-stats-card-content">
+                            <p>核心服务运行正常</p>
+                            <div class="nexus-stat-item">
+                                <span>CPU使用率: 12%</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span>内存使用率: 25%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nexus-stats-card">
+                        <div class="nexus-stats-card-header">
+                            <h4>网络服务</h4>
+                            <span class="nexus-status-badge nexus-status-active">健康</span>
+                        </div>
+                        <div class="nexus-stats-card-content">
+                            <p>网络连接正常</p>
+                            <div class="nexus-stat-item">
+                                <span>连接数: 12</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span>丢包率: 0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nexus-stats-card">
+                        <div class="nexus-stats-card-header">
+                            <h4>终端代理</h4>
+                            <span class="nexus-status-badge nexus-status-warning">警告</span>
+                        </div>
+                        <div class="nexus-stats-card-content">
+                            <p>部分终端离线</p>
+                            <div class="nexus-stat-item">
+                                <span>活跃终端: 5/6</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span>离线终端: 1</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nexus-stats-card">
+                        <div class="nexus-stats-card-header">
+                            <h4>存储服务</h4>
+                            <span class="nexus-status-badge nexus-status-active">健康</span>
+                        </div>
+                        <div class="nexus-stats-card-content">
+                            <p>存储状态正常</p>
+                            <div class="nexus-stat-item">
+                                <span>可用空间: 85%</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span>文件系统: 正常</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 系统资源使用 -->
+            <section class="nexus-section">
+                <div class="nexus-section-header">
+                    <h3>系统资源使用</h3>
+                </div>
+                <div class="nexus-card">
+                    <div class="nexus-stats-grid">
+                        <div class="nexus-stats-card">
+                            <div class="nexus-stat-header">
+                                <h4>CPU使用率</h4>
+                                <span id="cpuUsage">12%</span>
+                            </div>
+                            <div class="nexus-progress-bar">
+                                <div class="nexus-progress-fill" style="width: 12%; background-color: #4CAF50;"></div>
+                            </div>
+                        </div>
+                        <div class="nexus-stats-card">
+                            <div class="nexus-stat-header">
+                                <h4>内存使用率</h4>
+                                <span id="memoryUsage">25%</span>
+                            </div>
+                            <div class="nexus-progress-bar">
+                                <div class="nexus-progress-fill" style="width: 25%; background-color: #2196F3;"></div>
+                            </div>
+                        </div>
+                        <div class="nexus-stats-card">
+                            <div class="nexus-stat-header">
+                                <h4>磁盘使用率</h4>
+                                <span id="diskUsage">15%</span>
+                            </div>
+                            <div class="nexus-progress-bar">
+                                <div class="nexus-progress-fill" style="width: 15%; background-color: #FFC107;"></div>
+                            </div>
+                        </div>
+                        <div class="nexus-stats-card">
+                            <div class="nexus-stat-header">
+                                <h4>网络带宽</h4>
+                                <span id="networkUsage">10Mbps</span>
+                            </div>
+                            <div class="nexus-progress-bar">
+                                <div class="nexus-progress-fill" style="width: 10%; background-color: #9C27B0;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 服务状态 -->
+            <section class="nexus-section">
+                <div class="nexus-section-header">
+                    <h3>服务状态</h3>
+                </div>
+                <div class="nexus-card">
+                    <table class="nexus-data-table">
+                        <thead>
+                            <tr>
+                                <th>服务名称</th>
+                                <th>状态</th>
+                                <th>端口</th>
+                                <th>启动时间</th>
+                                <th>响应时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="serviceTableBody">
+                            <!-- 服务数据将通过JS动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 健康检查日志 -->
+            <section class="nexus-section">
+                <div class="nexus-section-header">
+                    <h3>健康检查日志</h3>
+                </div>
+                <div class="nexus-card">
+                    <div class="nexus-log-container" id="healthLogContainer">
+                        <!-- 日志数据将通过JS动态填充 -->
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- 公共JS模块 -->
+    <script src="../../js/menu-loader.js"></script>
+    <script>
+        window.onload = function() {
+            // 初始化菜单
+            initMenu();
+            // 初始化页面
+            nexusCommon.initPage('health-check', loadHealthData);
+        };
+
+        // 模拟健康检查数据
+        let healthData = {
+            overall: {
+                status: "healthy",
+                message: "系统运行正常，所有组件状态良好",
+                score: 98,
+                lastCheck: new Date().toISOString(),
+                duration: 1.2
+            },
+            components: [
+                {
+                    name: "Nexus核心",
+                    status: "healthy",
+                    message: "核心服务运行正常",
+                    metrics: {
+                        cpu: 12,
+                        memory: 25
+                    }
+                },
+                {
+                    name: "网络服务",
+                    status: "healthy",
+                    message: "网络连接正常",
+                    metrics: {
+                        connections: 12,
+                        packetLoss: 0
+                    }
+                },
+                {
+                    name: "终端代理",
+                    status: "warning",
+                    message: "部分终端离线",
+                    metrics: {
+                        activeEndpoints: 5,
+                        totalEndpoints: 6,
+                        offlineEndpoints: 1
+                    }
+                },
+                {
+                    name: "存储服务",
+                    status: "healthy",
+                    message: "存储状态正常",
+                    metrics: {
+                        freeSpace: 85,
+                        filesystem: "正常"
+                    }
+                }
+            ],
+            resources: {
+                cpu: 12,
+                memory: 25,
+                disk: 15,
+                network: 10
+            },
+            services: [
+                {
+                    name: "Nexus Service",
+                    status: "running",
+                    port: 9876,
+                    startTime: new Date(Date.now() - 3600000).toISOString(),
+                    responseTime: 15
+                },
+                {
+                    name: "Web Console",
+                    status: "running",
+                    port: 8080,
+                    startTime: new Date(Date.now() - 3600000).toISOString(),
+                    responseTime: 20
+                },
+                {
+                    name: "API Service",
+                    status: "running",
+                    port: 8081,
+                    startTime: new Date(Date.now() - 3600000).toISOString(),
+                    responseTime: 10
+                },
+                {
+                    name: "Monitoring Service",
+                    status: "running",
+                    port: 9090,
+                    startTime: new Date(Date.now() - 3600000).toISOString(),
+                    responseTime: 5
+                }
+            ],
+            logs: [
+                {
+                    timestamp: new Date(Date.now() - 300000).toISOString(),
+                    level: "INFO",
+                    message: "健康检查完成: 系统状态良好"
+                },
+                {
+                    timestamp: new Date(Date.now() - 600000).toISOString(),
+                    level: "INFO",
+                    message: "网络检查完成: 所有连接正常"
+                },
+                {
+                    timestamp: new Date(Date.now() - 900000).toISOString(),
+                    level: "WARNING",
+                    message: "终端代理检查: 1个终端离线"
+                },
+                {
+                    timestamp: new Date(Date.now() - 1200000).toISOString(),
+                    level: "INFO",
+                    message: "服务检查完成: 所有服务运行正常"
+                }
+            ]
+        };
+
+        function loadHealthData() {
+            updateOverallHealth();
+            updateServiceStatus();
+            updateHealthLogs();
+        }
+
+        function updateOverallHealth() {
+            document.getElementById('overallHealthStatus').textContent = healthData.overall.status === 'healthy' ? '健康' : '异常';
+            document.getElementById('overallHealthMessage').textContent = healthData.overall.message;
+            document.getElementById('lastCheckTime').textContent = nexusCommon.formatTimestamp(new Date(healthData.overall.lastCheck).getTime());
+            document.getElementById('checkDuration').textContent = healthData.overall.duration + '秒';
+            document.getElementById('healthScore').textContent = healthData.overall.score + '/100';
+            document.getElementById('cpuUsage').textContent = healthData.resources.cpu + '%';
+            document.getElementById('memoryUsage').textContent = healthData.resources.memory + '%';
+            document.getElementById('diskUsage').textContent = healthData.resources.disk + '%';
+            document.getElementById('networkUsage').textContent = healthData.resources.network + 'Mbps';
+        }
+
+        function updateServiceStatus() {
+            const tbody = document.getElementById('serviceTableBody');
+            tbody.innerHTML = '';
+
+            healthData.services.forEach(service => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${service.name}</td>
+                    <td><span class="nexus-status-badge ${service.status === 'running' ? 'nexus-status-active' : 'nexus-status-inactive'}">${service.status === 'running' ? '运行中' : '停止'}</span></td>
+                    <td>${service.port}</td>
+                    <td>${nexusCommon.formatTimestamp(new Date(service.startTime).getTime())}</td>
+                    <td>${service.responseTime}ms</td>
+                    <td>
+                        <button class="nexus-btn nexus-btn-sm nexus-btn-primary" onclick="restartService('${service.name}')">重启</button>
+                        <button class="nexus-btn nexus-btn-sm nexus-btn-secondary" onclick="checkService('${service.name}')">检查</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateHealthLogs() {
+            const logContainer = document.getElementById('healthLogContainer');
+            logContainer.innerHTML = '';
+
+            healthData.logs.forEach(log => {
+                const logItem = document.createElement('div');
+                logItem.className = 'nexus-log-item ' + log.level.toLowerCase();
+                logItem.innerHTML = `
+                    <div class="nexus-log-header">
+                        <span class="nexus-log-timestamp">${nexusCommon.formatTimestamp(new Date(log.timestamp).getTime())}</span>
+                        <span class="nexus-log-level ${log.level.toLowerCase()}">${log.level}</span>
+                    </div>
+                    <div class="nexus-log-message">${log.message}</div>
+                `;
+                logContainer.appendChild(logItem);
+            });
+        }
+
+        async function runHealthCheck() {
+            try {
+                const checkType = document.getElementById('checkType').value;
+                const checkTimeout = document.getElementById('checkTimeout').value;
+                const checkDetails = document.getElementById('checkDetails').value;
+
+                // 模拟健康检查
+                nexusCommon.showMessage('开始健康检查...', 'info');
+                
+                setTimeout(() => {
+                    // 更新健康检查数据
+                    healthData.overall.lastCheck = new Date().toISOString();
+                    healthData.overall.duration = Math.random() * 2 + 0.5;
+                    healthData.overall.score = Math.floor(Math.random() * 5) + 95;
+                    
+                    // 添加新的日志条目
+                    const newLog = {
+                        timestamp: new Date().toISOString(),
+                        level: "INFO",
+                        message: `健康检查完成 (${getCheckTypeName(checkType)}): 系统状态${healthData.overall.score > 90 ? '良好' : '正常'}`
+                    };
+                    healthData.logs.unshift(newLog);
+                    if (healthData.logs.length > 10) {
+                        healthData.logs.pop();
+                    }
+                    
+                    // 更新页面
+                    updateOverallHealth();
+                    updateHealthLogs();
+                    
+                    nexusCommon.showMessage('健康检查完成', 'success');
+                }, 1500);
+            } catch (error) {
+                nexusCommon.handleApiError(error, '健康检查失败');
+            }
+        }
+
+        function exportHealthReport() {
+            try {
+                // 模拟导出健康报告
+                const reportData = JSON.stringify(healthData, null, 2);
+                const blob = new Blob([reportData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'health-report-' + new Date().toISOString().slice(0, 10) + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                nexusCommon.showMessage('健康报告已导出', 'success');
+            } catch (error) {
+                nexusCommon.handleApiError(error, '导出健康报告失败');
+            }
+        }
+
+        function scheduleHealthCheck() {
+            // 模拟定时检查设置
+            nexusCommon.showMessage('定时检查功能已设置', 'success');
+        }
+
+        function restartService(serviceName) {
+            try {
+                // 模拟重启服务
+                nexusCommon.showMessage(`服务 ${serviceName} 重启中...`, 'info');
+                setTimeout(() => {
+                    nexusCommon.showMessage(`服务 ${serviceName} 重启成功`, 'success');
+                }, 2000);
+            } catch (error) {
+                nexusCommon.handleApiError(error, `重启服务 ${serviceName} 失败`);
+            }
+        }
+
+        function checkService(serviceName) {
+            try {
+                // 模拟检查服务
+                nexusCommon.showMessage(`检查服务 ${serviceName}...`, 'info');
+                setTimeout(() => {
+                    nexusCommon.showMessage(`服务 ${serviceName} 状态正常`, 'success');
+                }, 1000);
+            } catch (error) {
+                nexusCommon.handleApiError(error, `检查服务 ${serviceName} 失败`);
+            }
+        }
+
+        function getCheckTypeName(checkType) {
+            const typeMap = {
+                'full': '全面检查',
+                'quick': '快速检查',
+                'network': '网络检查',
+                'system': '系统检查',
+                'services': '服务检查'
+            };
+            return typeMap[checkType] || checkType;
+        }
+    </script>
+</body>
+</html>

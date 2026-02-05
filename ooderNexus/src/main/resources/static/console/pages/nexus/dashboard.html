@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus仪表盘 - Nexus</title>
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/mcpagent/common.css">
+    <script src="../../js/theme-manager.js"></script>
+</head>
+<body class="nexus-page">
+    <div class="nexus-container">
+        <!-- 侧边导航栏 -->
+        <div class="nexus-sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> Nexus Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="nexus-main-content">
+            <div class="nexus-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h1><i class="ri-dashboard-line"></i> Nexus仪表盘</h1>
+                    <button class="theme-toggle-btn nexus-btn nexus-btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                        <i class="ri-sun-line"></i> 浅色模式
+                    </button>
+                </div>
+                <div class="subtitle">
+                    <span class="badge nexus-badge">Nexus</span>
+                    <span>监控和管理Nexus系统状态</span>
+                </div>
+            </div>
+
+            <!-- 状态概览 -->
+            <section class="nexus-status-overview">
+                <div class="nexus-status-card">
+                    <div class="nexus-status-icon">
+                        <i class="ri-router-wireless-line"></i>
+                    </div>
+                    <div class="nexus-status-info">
+                        <h3>终端代理数</h3>
+                        <p class="nexus-status-value" id="endAgentCount">0</p>
+                    </div>
+                </div>
+                <div class="nexus-status-card">
+                    <div class="nexus-status-icon">
+                        <i class="ri-link-line"></i>
+                    </div>
+                    <div class="nexus-status-info">
+                        <h3>网络链路数</h3>
+                        <p class="nexus-status-value" id="linkCount">0</p>
+                    </div>
+                </div>
+                <div class="nexus-status-card">
+                    <div class="nexus-status-icon">
+                        <i class="ri-network-line"></i>
+                    </div>
+                    <div class="nexus-status-info">
+                        <h3>网络状态</h3>
+                        <p class="nexus-status-value" id="networkStatus">正常</p>
+                    </div>
+                </div>
+                <div class="nexus-status-card">
+                    <div class="nexus-status-icon">
+                        <i class="ri-command-line"></i>
+                    </div>
+                    <div class="nexus-status-info">
+                        <h3>命令执行数</h3>
+                        <p class="nexus-status-value" id="commandCount">0</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 网络状态 -->
+            <section class="nexus-operation-section">
+                <div class="nexus-section-header">
+                    <h3>网络状态</h3>
+                    <button class="nexus-btn nexus-btn-secondary" onclick="refreshNetworkStatus()">
+                        <i class="ri-refresh-line"></i>
+                        刷新
+                    </button>
+                </div>
+                <div class="nexus-stats-grid">
+                    <div class="nexus-stats-card">
+                        <h4>网络统计</h4>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">数据包发送</span>
+                            <span class="nexus-stat-value" id="packetsSent">0</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">数据包接收</span>
+                            <span class="nexus-stat-value" id="packetsReceived">0</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">数据包失败</span>
+                            <span class="nexus-stat-value" id="packetsFailed">0</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">网络状态</span>
+                            <span class="nexus-stat-value" id="networkStatusText">正常</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 命令执行统计 -->
+            <section class="nexus-operation-section">
+                <div class="nexus-section-header">
+                    <h3>命令执行统计</h3>
+                    <button class="nexus-btn nexus-btn-secondary" onclick="refreshCommandStats()">
+                        <i class="ri-refresh-line"></i>
+                        刷新
+                    </button>
+                </div>
+                <div class="nexus-stats-grid">
+                    <div class="nexus-stats-card">
+                        <h4>命令统计</h4>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">总命令数</span>
+                            <span class="nexus-stat-value" id="totalCommands">0</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">成功命令</span>
+                            <span class="nexus-stat-value" id="successfulCommands">0</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">失败命令</span>
+                            <span class="nexus-stat-value" id="failedCommands">0</span>
+                        </div>
+                        <div class="nexus-stat-item">
+                            <span class="nexus-stat-label">超时命令</span>
+                            <span class="nexus-stat-value" id="timeoutCommands">0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- 公共JS模块 -->
+    <script src="../../js/menu-loader.js"></script>
+    <script src="../../js/nexus/base.js"></script>
+    <script src="../../js/nexus/api.js"></script>
+    <script src="../../js/nexus/ui.js"></script>
+    <script src="../../js/nexus/utils.js"></script>
+    <script src="../../js/nexus/sdk-proxy.js"></script>
+    <script src="../../js/nexus/common.js"></script>
+    <script>
+        window.onload = function() {
+            // 初始化菜单
+            initMenu();
+            // 初始化页面
+            nexusCommon.initPage('dashboard', loadDashboardData);
+        };
+
+        async function loadDashboardData() {
+            try {
+                // 模拟API请求
+                const mockResponse = {
+                    status: 'success',
+                    message: '获取仪表盘数据成功',
+                    data: {
+                        endAgentCount: 12,
+                        linkCount: 8,
+                        networkStatus: '正常',
+                        commandCount: 156,
+                        packetsSent: 1245,
+                        packetsReceived: 1189,
+                        packetsFailed: 12,
+                        networkStatusText: '正常',
+                        totalCommands: 156,
+                        successfulCommands: 148,
+                        failedCommands: 5,
+                        timeoutCommands: 3
+                    },
+                    timestamp: new Date().getTime()
+                };
+
+                // 验证API返回格式
+                const validatedResponse = nexusCommon.validateApiResponse(mockResponse);
+
+                // 更新页面数据
+                if (validatedResponse.status === 'success' && validatedResponse.data) {
+                    const data = validatedResponse.data;
+                    document.getElementById('endAgentCount').textContent = data.endAgentCount;
+                    document.getElementById('linkCount').textContent = data.linkCount;
+                    document.getElementById('networkStatus').textContent = data.networkStatus;
+                    document.getElementById('commandCount').textContent = data.commandCount;
+                    document.getElementById('packetsSent').textContent = nexusCommon.formatNumber(data.packetsSent);
+                    document.getElementById('packetsReceived').textContent = nexusCommon.formatNumber(data.packetsReceived);
+                    document.getElementById('packetsFailed').textContent = data.packetsFailed;
+                    document.getElementById('networkStatusText').textContent = data.networkStatusText;
+                    document.getElementById('totalCommands').textContent = data.totalCommands;
+                    document.getElementById('successfulCommands').textContent = data.successfulCommands;
+                    document.getElementById('failedCommands').textContent = data.failedCommands;
+                    document.getElementById('timeoutCommands').textContent = data.timeoutCommands;
+                }
+            } catch (error) {
+                console.error('加载仪表盘数据失败:', error);
+                nexusCommon.showMessage('加载仪表盘数据失败', 'error');
+            }
+        }
+
+        function refreshNetworkStatus() {
+            loadDashboardData();
+            nexusCommon.showMessage('网络状态已刷新', 'success');
+        }
+
+        function refreshCommandStats() {
+            loadDashboardData();
+            nexusCommon.showMessage('命令统计已刷新', 'success');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="Content-Style-Type" content="text/css"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, width=device-width, height=device-height"/>
+    
+    <!-- 引入ooderui样式 -->
+    <link rel="stylesheet" type="text/css" href="dist/release/traditional/ood/css/default.css"/>
+    <link rel="stylesheet" type="text/css" href="dist/release/traditional/ood/appearance/light/theme.css" id="theme-style"/>
+    <link rel="stylesheet" type="text/css" href="dist/release/traditional/ood/css/remixicon.css"/>
+    
+    <!-- 引入ooderui脚本 -->
+    <script type="text/javascript" src="dist/release/traditional/ood/js/ood.js"></script>
+    <script type="text/javascript" src="conf.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/APICaller.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/Event.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/CSS.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/Dom.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/Module.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/Locale/cn.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/UI.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/UI/Block.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/UI/Label.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/UI/Input.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/UI/ButtonLayout.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/UI/ContentBlock.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/UI/Panel.js"></script>
+    <script type="text/javascript" src="dist/release/traditional/ood/js/UI/Group.js"></script>
+    
+    <title>登录界面 - OoderUI 组件版</title>
+    
+    <style type="text/css">
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+        }
+        
+        .login-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .ood-panel {
+            width: 100%;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div id="loginPanel"></div>
+    </div>
+    
+    <script type="text/javascript">
+        // 使用ooderui的方式初始化
+        ood.ready(function() {
+            // 确保登录面板元素存在
+            var loginPanelElement = document.getElementById('loginPanel');
+            if (!loginPanelElement) {
+                console.error('登录面板元素不存在');
+                return;
+            }
+            
+            try {
+                // 创建登录面板
+                var loginPanel = ood.create('ood.UI.Panel', {
+                    renderTo: loginPanelElement,
+                    title: 'OoderAI 登录',
+                    width: '100%',
+                    height: 'auto',
+                    collapsible: false,
+                    draggable: false
+                });
+                
+                // 创建内容块
+                var contentBlock = ood.create('ood.UI.ContentBlock', {
+                    renderTo: loginPanel,
+                    padding: 20
+                });
+                
+                // 创建用户名输入组
+                var usernameGroup = ood.create('ood.UI.Group', {
+                    renderTo: contentBlock,
+                    width: '100%',
+                    marginBottom: 15
+                });
+                
+                // 创建用户名标签
+                var usernameLabel = ood.create('ood.UI.Label', {
+                    renderTo: usernameGroup,
+                    text: '用户名',
+                    width: '100%',
+                    marginBottom: 5
+                });
+                
+                // 创建用户名输入框
+                var usernameInput = ood.create('ood.UI.Input', {
+                    renderTo: usernameGroup,
+                    width: '100%',
+                    placeholder: '请输入用户名'
+                });
+                
+                // 创建密码输入组
+                var passwordGroup = ood.create('ood.UI.Group', {
+                    renderTo: contentBlock,
+                    width: '100%',
+                    marginBottom: 20
+                });
+                
+                // 创建密码标签
+                var passwordLabel = ood.create('ood.UI.Label', {
+                    renderTo: passwordGroup,
+                    text: '密码',
+                    width: '100%',
+                    marginBottom: 5
+                });
+                
+                // 创建密码输入框
+                var passwordInput = ood.create('ood.UI.Input', {
+                    renderTo: passwordGroup,
+                    width: '100%',
+                    placeholder: '请输入密码',
+                    type: 'password'
+                });
+                
+                // 创建登录按钮
+                var loginButton = ood.create('ood.UI.Input', {
+                    renderTo: contentBlock,
+                    type: 'button',
+                    value: '登录',
+                    width: '100%',
+                    height: 40,
+                    style: 'primary',
+                    onClick: function() {
+                        // 获取输入值
+                        var username = usernameInput.getValue();
+                        var password = passwordInput.getValue();
+                        
+                        // 简单验证
+                        if (!username) {
+                            alert('请输入用户名');
+                            return;
+                        }
+                        
+                        if (!password) {
+                            alert('请输入密码');
+                            return;
+                        }
+                        
+                        // 模拟登录请求
+                        console.log('登录请求:', {
+                            username: username,
+                            password: password
+                        });
+                        
+                        // 模拟登录成功
+                        alert('登录成功！');
+                    }
+                });
+            } catch (e) {
+                console.error('组件创建错误:', e);
+            }
+        });
+    </script>
+</body>
+</html>

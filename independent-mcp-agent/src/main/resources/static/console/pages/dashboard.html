@@ -1,0 +1,833 @@
+﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仪表盘 - MCP Agent Console</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+    <style>
+        /* Ooder-Rad 风格基础样式 - 纯黑色系暗色主题 */
+        :root {
+            --ooder-primary: #3b82f6;
+            --ooder-secondary: #94a3b8;
+            --ooder-success: #22c55e;
+            --ooder-warning: #f59e0b;
+            --ooder-danger: #ef4444;
+            --ooder-light: #0f0f0f;
+            --ooder-dark: #ffffff;
+            --ooder-border: #2a2a2a;
+            --ooder-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            --ooder-radius: 8px;
+            --ooder-spacing: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #000000;
+            color: var(--ooder-dark);
+            line-height: 1.5;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            background-color: #000000;
+        }
+        
+        /* 侧边栏样式 - Ooder-Rad 风格 */
+        .sidebar {
+            width: 260px;
+            background-color: #121212;
+            border-right: 1px solid var(--ooder-border);
+            padding: 24px;
+            box-shadow: var(--ooder-shadow);
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 32px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ooder-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sidebar h2::before {
+            content: "⚡";
+            font-size: 20px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-menu li {
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu a {
+            color: var(--ooder-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--ooder-radius);
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .nav-menu a:hover {
+            background-color: var(--ooder-light);
+            color: var(--ooder-primary);
+        }
+        
+        .nav-menu a.active {
+            background-color: rgba(26, 115, 232, 0.1);
+            color: var(--ooder-primary);
+            font-weight: 600;
+        }
+        
+        /* 二级菜单样式 */
+        .nav-menu .submenu {
+            list-style: none;
+            margin-left: 16px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu .submenu li {
+            margin-bottom: 2px;
+        }
+        
+        .nav-menu .submenu a {
+            padding: 10px 16px;
+            font-size: 13px;
+            border-left: 2px solid var(--ooder-border);
+        }
+        
+        /* 三级菜单样式 */
+        .nav-menu .submenu .submenu {
+            margin-left: 32px;
+        }
+        
+        .nav-menu .submenu .submenu a {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-left: 2px solid var(--ooder-secondary);
+        }
+        
+        /* 展开/折叠图标 */
+        .nav-menu .toggle-icon {
+            margin-left: auto;
+            transition: transform 0.2s ease;
+        }
+        
+        .nav-menu .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        /* 菜单分隔线 */
+        .nav-menu .menu-divider {
+            height: 1px;
+            background-color: var(--ooder-border);
+            margin: 16px 0;
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            background-color: #000000;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--ooder-border);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ooder-dark);
+        }
+        
+        .header .subtitle {
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        /* 仪表盘卡片样式 */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .card {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+        
+        .card h3 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: var(--ooder-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--ooder-primary);
+            margin-bottom: 8px;
+        }
+        
+        .card .label {
+            font-size: 12px;
+            color: var(--ooder-secondary);
+        }
+        
+        /* 章节样式 */
+        .section {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            margin-bottom: 24px;
+        }
+        
+        .section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--ooder-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section h2::before {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background-color: var(--ooder-primary);
+            border-radius: 2px;
+        }
+        
+        /* 状态网格样式 */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        
+        .status-item {
+            padding: 16px;
+            border-radius: var(--ooder-radius);
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .status-item .key {
+            font-size: 14px;
+            color: var(--ooder-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .status-item .value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ooder-dark);
+        }
+        
+        .status-item.ok {
+            border-left: 4px solid var(--ooder-success);
+            background-color: rgba(34, 197, 94, 0.1);
+        }
+        
+        .status-item.warning {
+            border-left: 4px solid var(--ooder-warning);
+            background-color: rgba(245, 158, 11, 0.1);
+        }
+        
+        .status-item.error {
+            border-left: 4px solid var(--ooder-danger);
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+        
+        /* 网络拓扑图样式 */
+        .network-topology {
+            width: 100%;
+            height: 320px;
+            background-color: #1a1a1a;
+            border-radius: var(--ooder-radius);
+            position: relative;
+            overflow: hidden;
+            padding: 24px;
+            border: 1px solid var(--ooder-border);
+            box-shadow: var(--ooder-shadow);
+        }
+        
+        .topology-node {
+            position: absolute;
+            width: 64px;
+            height: 64px;
+            background-color: var(--ooder-primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+        
+        .topology-node:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+        }
+        
+        .topology-link {
+            position: absolute;
+            background-color: var(--ooder-secondary);
+            height: 2px;
+            transform-origin: 0 0;
+            opacity: 0.6;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--ooder-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 12px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--ooder-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background-color: #1a1a1a;
+            color: var(--ooder-secondary);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2a2a2a;
+        }
+        
+        /* 隐藏样式 */
+        .hidden {
+            display: none;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--ooder-border);
+                padding: 16px;
+            }
+            
+            .main-content {
+                padding: 16px;
+            }
+            
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> MCP Agent Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><i class="ri-dashboard-line"></i> 仪表盘 2</h1>
+                <div class="subtitle">
+                    <span class="badge" style="background-color: var(--ooder-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">v0.6.5</span>
+                    <span>Ooder Rad Style</span> | 
+                    <span id="timestamp"></span>
+                </div>
+            </div>
+            
+            <!-- 仪表盘卡片 -->
+            <div class="dashboard">
+                <div class="card">
+                    <h3>系统状态</h3>
+                    <div class="value" id="system-status">正常</div>
+                    <div class="label">运行状态</div>
+                </div>
+                <div class="card">
+                    <h3>网络连接</h3>
+                    <div class="value" id="network-count">12</div>
+                    <div class="label">活跃连接数</div>
+                </div>
+                <div class="card">
+                    <h3>CPU 使用率</h3>
+                    <div class="value" id="cpu-usage">25%</div>
+                    <div class="label">当前使用率</div>
+                </div>
+                <div class="card">
+                    <h3>内存使用率</h3>
+                    <div class="value" id="memory-usage">45%</div>
+                    <div class="label">当前使用率</div>
+                </div>
+                <div class="card">
+                    <h3>磁盘使用率</h3>
+                    <div class="value" id="disk-usage">32%</div>
+                    <div class="label">当前使用率</div>
+                </div>
+                <div class="card">
+                    <h3>系统负载</h3>
+                    <div class="value" id="system-load">0.8</div>
+                    <div class="label">1分钟平均负载</div>
+                </div>
+                <div class="card">
+                    <h3>请求处理速率</h3>
+                    <div class="value" id="request-rate">1000/秒</div>
+                    <div class="label">当前处理速率</div>
+                </div>
+                <div class="card">
+                    <h3>平均响应时间</h3>
+                    <div class="value" id="response-time">120ms</div>
+                    <div class="label">平均处理时间</div>
+                </div>
+                <div class="card">
+                    <h3>活跃任务数</h3>
+                    <div class="value" id="active-tasks">15</div>
+                    <div class="label">当前执行任务</div>
+                </div>
+                <div class="card">
+                    <h3>系统温度</h3>
+                    <div class="value" id="system-temp">45°C</div>
+                    <div class="label">CPU温度</div>
+                </div>
+                <div class="card">
+                    <h3>网络带宽</h3>
+                    <div class="value" id="network-bandwidth">2.5Gbps</div>
+                    <div class="label">当前带宽使用率</div>
+                </div>
+                <div class="card">
+                    <h3>健康评分</h3>
+                    <div class="value" id="health-score">95</div>
+                    <div class="label">系统健康度</div>
+                </div>
+            </div>
+            
+            <!-- 系统概览 -->
+            <div class="section">
+                <h2>系统概览</h2>
+                <div class="status-grid" id="system-overview">
+                    <div class="status-item ok">
+                        <div class="key">MCP Agent 状态</div>
+                        <div class="value">活跃</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">Route Agent 状态</div>
+                        <div class="value">活跃</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">End Agent 状态</div>
+                        <div class="value">活跃</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">SDK 版本</div>
+                        <div class="value">v0.6.5</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">服务端口</div>
+                        <div class="value">8080</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">运行时间</div>
+                        <div class="value">24 小时</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 网络拓扑 -->
+            <div class="section">
+                <h2>网络拓扑</h2>
+                <div id="network-topology" class="network-topology">
+                    <!-- 动态生成网络拓扑图 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 公共JS模块 -->
+    <script src="../common/api-client.js"></script>
+    <script src="../common/list-manager.js"></script>
+    <script src="../common/form-manager.js"></script>
+    <script src="../common/utils.js"></script>
+    
+    <script>
+        // 当前页面
+        let currentPage = 'dashboard';
+        
+        // 菜单配置
+        let menuConfig = null;
+        
+        // 列表管理器实例
+        let agentListManager = null;
+        
+        // 初始化页面
+        function init() {
+            updateTimestamp();
+            loadMenuConfig();
+            initListManagers();
+            loadDashboard();
+            setInterval(updateTimestamp, 60000); // 每分钟更新时间戳
+        }
+        
+        // 初始化列表管理器
+        function initListManagers() {
+            // 初始化Agent列表管理器
+            agentListManager = new ListManager({
+                resource: 'agents',
+                page: 1,
+                pageSize: 10,
+                sortBy: 'id',
+                sortOrder: 'asc',
+                onLoad: function(response) {
+                    console.log('Agent data loaded:', response);
+                },
+                onError: function(error) {
+                    console.error('Error loading agent data:', error);
+                    utils.showNotification('加载Agent数据失败', 'error');
+                }
+            });
+        }
+        
+        // 加载菜单配置
+        async function loadMenuConfig() {
+            try {
+                // 尝试从相对路径加载菜单配置
+                let response = await fetch('../menu-config.json');
+                if (!response.ok) {
+                    // 如果失败，尝试从绝对路径加载
+                    response = await fetch('/console/menu-config.json');
+                    if (!response.ok) {
+                        throw new Error('菜单配置加载失败');
+                    }
+                }
+                menuConfig = await response.json();
+                renderMenu();
+            } catch (error) {
+                console.error('加载菜单配置错误:', error);
+                // 加载失败时显示默认菜单
+                renderDefaultMenu();
+            }
+        }
+        
+        // 渲染菜单
+        function renderMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            
+            menuConfig.menu.forEach(item => {
+                // 只显示已实现的功能（status为implemented）
+                if (item.status === 'implemented' || item.id === 'dashboard') {
+                    const menuItem = createMenuItem(item);
+                    navMenu.appendChild(menuItem);
+                    // 添加菜单分隔线
+                    if (item.id !== 'dashboard') {
+                        const divider = document.createElement('div');
+                        divider.className = 'menu-divider';
+                        navMenu.appendChild(divider);
+                    }
+                }
+            });
+            
+            setupNavigation();
+        }
+        
+        // 创建菜单项
+        function createMenuItem(menuItem) {
+            const li = document.createElement('li');
+            
+            if (menuItem.children && menuItem.children.length > 0) {
+                // 有子菜单的菜单项
+                const a = document.createElement('a');
+                a.href = `#${menuItem.id}`;
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                    <span class="toggle-icon">›</span>
+                `;
+                
+                // 处理点击事件
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const toggleIcon = this.querySelector('.toggle-icon');
+                    const submenu = this.nextElementSibling;
+                    
+                    if (submenu) {
+                        submenu.classList.toggle('hidden');
+                        toggleIcon.classList.toggle('collapsed');
+                    }
+                });
+                
+                li.appendChild(a);
+                
+                // 创建子菜单
+                const submenu = document.createElement('ul');
+                submenu.className = 'submenu';
+                
+                menuItem.children.forEach(childItem => {
+                    // 只显示已实现的子功能
+                    if (childItem.status === 'implemented') {
+                        const childLi = createMenuItem(childItem);
+                        submenu.appendChild(childLi);
+                    }
+                });
+                
+                li.appendChild(submenu);
+            } else {
+                // 无子菜单的菜单项
+                const a = document.createElement('a');
+                if (menuItem.url) {
+                    a.href = menuItem.url;
+                } else {
+                    a.href = `#${menuItem.id}`;
+                    a.setAttribute('data-page', menuItem.page || menuItem.id);
+                }
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                `;
+                li.appendChild(a);
+            }
+            
+            return li;
+        }
+        
+        // 渲染默认菜单（加载失败时使用）
+        function renderDefaultMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = `
+                <li><a href="../index.html" class="active"><i class="ri-dashboard-line"></i> 仪表盘</a></li>
+                <li><a href="../pages/system/request-management.html"><i class="ri-computer-line"></i> 系统管理</a></li>
+                <li><a href="../pages/network/route-management.html"><i class="ri-network-line"></i> 网络管理</a></li>
+                <li><a href="../pages/terminal/terminal-management.html"><i class="ri-terminal-line"></i> 终端管理</a></li>
+                <li><a href="../pages/config/service-config.html"><i class="ri-settings-3-line"></i> 配置中心</a></li>
+            `;
+            setupNavigation();
+        }
+        
+        // 设置导航
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-menu a');
+            navLinks.forEach(link => {
+                // 处理带有url属性的链接
+                if (link.hasAttribute('href') && link.getAttribute('href') !== '#' && link.getAttribute('href') !== '') {
+                    // 确保链接是相对路径，并且正确指向文件
+                    const href = link.getAttribute('href');
+                    if (href.startsWith('pages/')) {
+                        // 已经是正确的相对路径
+                    } else if (!href.startsWith('http')) {
+                        // 修复相对路径
+                        link.setAttribute('href', `../${href}`);
+                    }
+                }
+                // 处理带有data-page属性的链接（即叶子节点且没有url属性）
+                else if (link.hasAttribute('data-page') && link.getAttribute('href') === '#') {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // 更新活跃状态
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                }
+            });
+        }
+        
+        // 加载仪表盘数据
+        async function loadDashboard() {
+            try {
+                // 显示加载动画
+                const loader = utils.showLoader('加载仪表盘数据...');
+                
+                // 模拟加载系统状态
+                setTimeout(() => {
+                    document.getElementById('system-status').textContent = '正常';
+                    document.getElementById('network-count').textContent = '12';
+                    document.getElementById('cpu-usage').textContent = '25%';
+                    document.getElementById('memory-usage').textContent = '45%';
+                    document.getElementById('disk-usage').textContent = '32%';
+                    document.getElementById('system-load').textContent = '0.8';
+                    document.getElementById('request-rate').textContent = '1000/秒';
+                    document.getElementById('response-time').textContent = '120ms';
+                    document.getElementById('active-tasks').textContent = '15';
+                    document.getElementById('system-temp').textContent = '45°C';
+                    document.getElementById('network-bandwidth').textContent = '2.5Gbps';
+                    document.getElementById('health-score').textContent = '95';
+                }, 500);
+                
+                // 生成网络拓扑图
+                generateNetworkTopology();
+                
+                // 加载Agent数据
+                await loadAgentData();
+                
+                // 隐藏加载动画
+                loader.hide();
+                
+                // 显示成功通知
+                utils.showNotification('仪表盘数据加载成功', 'success');
+            } catch (error) {
+                console.error('加载仪表盘数据失败:', error);
+                utils.showNotification('加载仪表盘数据失败', 'error');
+            }
+        }
+        
+        // 加载Agent数据
+        async function loadAgentData() {
+            try {
+                // 使用列表管理器加载Agent数据
+                await agentListManager.load();
+                const agentData = agentListManager.getCurrentPageData();
+                console.log('Agent data:', agentData);
+                
+                // 可以在这里处理Agent数据的显示
+            } catch (error) {
+                console.error('加载Agent数据失败:', error);
+                throw error;
+            }
+        }
+        
+        // 生成网络拓扑图
+        function generateNetworkTopology() {
+            const topologyContainer = document.getElementById('network-topology');
+            topologyContainer.innerHTML = '';
+            
+            // 定义节点
+            const nodes = [
+                { id: 'mcp', name: 'MCP', x: 100, y: 160 },
+                { id: 'route1', name: 'Route1', x: 300, y: 80 },
+                { id: 'route2', name: 'Route2', x: 300, y: 240 },
+                { id: 'end1', name: 'End1', x: 500, y: 40 },
+                { id: 'end2', name: 'End2', x: 500, y: 120 },
+                { id: 'end3', name: 'End3', x: 500, y: 200 },
+                { id: 'end4', name: 'End4', x: 500, y: 280 }
+            ];
+            
+            // 定义连接
+            const links = [
+                { source: 'mcp', target: 'route1' },
+                { source: 'mcp', target: 'route2' },
+                { source: 'route1', target: 'end1' },
+                { source: 'route1', target: 'end2' },
+                { source: 'route2', target: 'end3' },
+                { source: 'route2', target: 'end4' }
+            ];
+            
+            // 创建节点
+            nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'topology-node';
+                nodeElement.style.left = `${node.x}px`;
+                nodeElement.style.top = `${node.y}px`;
+                nodeElement.textContent = node.name;
+                topologyContainer.appendChild(nodeElement);
+            });
+            
+            // 创建连接
+            links.forEach(link => {
+                const sourceNode = nodes.find(n => n.id === link.source);
+                const targetNode = nodes.find(n => n.id === link.target);
+                
+                if (sourceNode && targetNode) {
+                    const linkElement = document.createElement('div');
+                    linkElement.className = 'topology-link';
+                    
+                    // 计算连接长度和角度
+                    const dx = targetNode.x - sourceNode.x;
+                    const dy = targetNode.y - sourceNode.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    linkElement.style.width = `${length}px`;
+                    linkElement.style.left = `${sourceNode.x + 32}px`;
+                    linkElement.style.top = `${sourceNode.y + 32}px`;
+                    linkElement.style.transform = `rotate(${angle}deg)`;
+                    
+                    topologyContainer.appendChild(linkElement);
+                }
+            });
+        }
+        
+        // 更新时间戳
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = utils.formatTimestamp(now.getTime());
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>

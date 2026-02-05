@@ -1,0 +1,347 @@
+﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全状态 - 家庭功能</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> MCP Agent Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+        <!-- 头部 -->
+        <div class="header">
+            <h1><i class="ri-shield-check-line"></i> 安全状态 2</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="toggleTheme()">
+                    <i class="ri-moon-line"></i> 切换主题
+                </button>
+                <button class="btn btn-secondary" onclick="backToDashboard()">
+                    <i class="ri-arrow-left-line"></i> 返回仪表盘
+                </button>
+            </div>
+        </div>
+        
+        <!-- 安全评分 -->
+        <div class="card">
+            <div class="security-score">
+                <div class="score-circle">
+                    <svg width="160" height="160" viewBox="0 0 160 160">
+                        <circle cx="80" cy="80" r="70" fill="none" stroke="var(--ooder-border)" stroke-width="10" />
+                        <circle cx="80" cy="80" r="70" fill="none" stroke="var(--ooder-success)" stroke-width="10" stroke-dasharray="440" stroke-dashoffset="22" stroke-linecap="round" transform="rotate(-90 80 80)" />
+                    </svg>
+                    <div class="score-value">95</div>
+                </div>
+                <div class="score-details">
+                    <h2>安全评分</h2>
+                    <p>您的家庭网络安全状态良好，评分为 95/100</p>
+                    <p>• 所有设备均已更新到最新固件</p>
+                    <p>• 网络密码强度高</p>
+                    <p>• 启用了双因素认证</p>
+                    <p>• 定期进行安全扫描</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 安全状态 -->
+        <div class="security-states">
+            <div class="state-card good">
+                <div class="state-icon">
+                    <i class="ri-shield-check-line"></i>
+                </div>
+                <h3 class="state-title">设备安全</h3>
+                <p class="state-description">所有设备安全状态良好，无异常</p>
+            </div>
+            <div class="state-card good">
+                <div class="state-icon">
+                    <i class="ri-wifi-line"></i>
+                </div>
+                <h3 class="state-title">网络安全</h3>
+                <p class="state-description">网络连接安全，无未授权访问</p>
+            </div>
+            <div class="state-card warning">
+                <div class="state-icon">
+                    <i class="ri-alert-line"></i>
+                </div>
+                <h3 class="state-title">系统安全</h3>
+                <p class="state-description">有 1 个系统需要更新</p>
+            </div>
+            <div class="state-card good">
+                <div class="state-icon">
+                    <i class="ri-lock-check-line"></i>
+                </div>
+                <h3 class="state-title">账户安全</h3>
+                <p class="state-description">所有账户均已启用安全保护</p>
+            </div>
+        </div>
+        
+        <!-- 安全事件 -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">最近安全事件</h3>
+                <button class="btn btn-secondary">
+                    <i class="ri-history-line"></i> 查看全部
+                </button>
+            </div>
+            <div class="security-events">
+                <div class="event-item">
+                    <div class="event-icon">
+                        <i class="ri-check-circle-line"></i>
+                    </div>
+                    <div class="event-info">
+                        <div class="event-title">安全扫描完成</div>
+                        <div class="event-time">2026-01-30 19:00:00</div>
+                    </div>
+                    <div class="event-status success">成功</div>
+                </div>
+                <div class="event-item">
+                    <div class="event-icon">
+                        <i class="ri-lock-unlock-line"></i>
+                    </div>
+                    <div class="event-info">
+                        <div class="event-title">智能门锁被打开</div>
+                        <div class="event-time">2026-01-30 18:30:00</div>
+                    </div>
+                    <div class="event-status success">已授权</div>
+                </div>
+                <div class="event-item">
+                    <div class="event-icon">
+                        <i class="ri-alert-line"></i>
+                    </div>
+                    <div class="event-info">
+                        <div class="event-title">系统更新提醒</div>
+                        <div class="event-time">2026-01-30 17:00:00</div>
+                    </div>
+                    <div class="event-status warning">需要注意</div>
+                </div>
+                <div class="event-item">
+                    <div class="event-icon">
+                        <i class="ri-device-line"></i>
+                    </div>
+                    <div class="event-info">
+                        <div class="event-title">新设备连接</div>
+                        <div class="event-time">2026-01-30 16:00:00</div>
+                    </div>
+                    <div class="event-status success">已授权</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 安全建议 -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">安全建议</h3>
+            </div>
+            <div class="security-suggestions">
+                <div class="suggestion-item">
+                    <div class="suggestion-icon">
+                        <i class="ri-alert-line"></i>
+                    </div>
+                    <div class="suggestion-content">
+                        <div class="suggestion-title">更新系统固件</div>
+                        <div class="suggestion-description">有 1 个系统需要更新到最新固件版本，以修复潜在的安全漏洞</div>
+                        <div class="suggestion-action" onclick="updateSystem()">立即更新</div>
+                    </div>
+                </div>
+                <div class="suggestion-item">
+                    <div class="suggestion-icon">
+                        <i class="ri-lock-line"></i>
+                    </div>
+                    <div class="suggestion-content">
+                        <div class="suggestion-title">更改网络密码</div>
+                        <div class="suggestion-description">建议每 3 个月更改一次网络密码，以提高安全性</div>
+                        <div class="suggestion-action" onclick="changePassword()">立即更改</div>
+                    </div>
+                </div>
+                <div class="suggestion-item">
+                    <div class="suggestion-icon">
+                        <i class="ri-shield-line"></i>
+                    </div>
+                    <div class="suggestion-content">
+                        <div class="suggestion-title">启用家长控制</div>
+                        <div class="suggestion-description">建议启用家长控制功能，限制孩子访问不适当的内容</div>
+                        <div class="suggestion-action" onclick="enableParentalControl()">立即设置</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 初始化页面
+        function init() {
+            // 可以添加初始化逻辑
+        }
+        
+        // 返回仪表盘
+        function backToDashboard() {
+            window.location.href = 'home-dashboard.html';
+        }
+        
+        // 切换主题
+        function toggleTheme() {
+            const body = document.body;
+            if (body.classList.contains('dark-theme')) {
+                body.classList.remove('dark-theme');
+            } else {
+                body.classList.add('dark-theme');
+            }
+        }
+        
+        // 更新系统
+        function updateSystem() {
+            alert('系统更新功能开发中...');
+        }
+        
+        // 更改密码
+        function changePassword() {
+            alert('更改密码功能开发中...');
+        }
+        
+        // 启用家长控制
+        function enableParentalControl() {
+            alert('家长控制功能开发中...');
+        }
+        
+        // 初始化
+        init();
+        
+        // 加载导航菜单
+        loadMenuConfig();
+    </script>
+    
+    <script>
+        // 菜单配置
+        let menuConfig = null;
+        
+        // 加载菜单配置
+        async function loadMenuConfig() {
+            try {
+                const response = await fetch('../../menu-config.json');
+                if (!response.ok) {
+                    throw new Error('菜单配置加载失败');
+                }
+                menuConfig = await response.json();
+                renderMenu();
+            } catch (error) {
+                console.error('加载菜单配置错误:', error);
+                // 加载失败时显示默认菜单
+                renderDefaultMenu();
+            }
+        }
+        
+        // 渲染菜单
+        function renderMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            
+            menuConfig.menu.forEach(item => {
+                // 只显示已实现的功能（status为implemented）
+                if (item.status === 'implemented' || item.id === 'dashboard') {
+                    const menuItem = createMenuItem(item);
+                    navMenu.appendChild(menuItem);
+                    // 添加菜单分隔线
+                    if (item.id !== 'dashboard') {
+                        const divider = document.createElement('div');
+                        divider.className = 'menu-divider';
+                        navMenu.appendChild(divider);
+                    }
+                }
+            });
+        }
+        
+        // 创建菜单项
+        function createMenuItem(menuItem) {
+            const li = document.createElement('li');
+            
+            if (menuItem.children && menuItem.children.length > 0) {
+                // 有子菜单的菜单项
+                const a = document.createElement('a');
+                a.href = `#${menuItem.id}`;
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                    <span class="toggle-icon">›</span>
+                `;
+                
+                // 处理点击事件
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const toggleIcon = this.querySelector('.toggle-icon');
+                    const submenu = this.nextElementSibling;
+                    
+                    if (submenu) {
+                        submenu.classList.toggle('hidden');
+                        toggleIcon.classList.toggle('collapsed');
+                    }
+                });
+                
+                li.appendChild(a);
+                
+                // 创建子菜单
+                const submenu = document.createElement('ul');
+                submenu.className = 'submenu';
+                
+                menuItem.children.forEach(childItem => {
+                    // 只显示已实现的子功能
+                    if (childItem.status === 'implemented') {
+                        const childLi = createMenuItem(childItem);
+                        submenu.appendChild(childLi);
+                    }
+                });
+                
+                // 只有当子菜单不为空时才添加
+                if (submenu.children.length > 0) {
+                    li.appendChild(submenu);
+                }
+            } else {
+                // 无子菜单的菜单项
+                const a = document.createElement('a');
+                if (menuItem.url) {
+                    // 使用绝对路径，确保从任何页面访问都正确
+                    if (menuItem.url.startsWith('pages/')) {
+                        a.href = '../../' + menuItem.url;
+                    } else {
+                        a.href = menuItem.url;
+                    }
+                } else {
+                    a.href = `#${menuItem.id}`;
+                    a.setAttribute('data-page', menuItem.page || menuItem.id);
+                }
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                `;
+                
+                // 标记当前页面为活跃状态
+                if (menuItem.url && menuItem.url.includes('security-status')) {
+                    a.classList.add('active');
+                }
+                
+                li.appendChild(a);
+            }
+            
+            return li;
+        }
+        
+        // 渲染默认菜单（加载失败时使用）
+        function renderDefaultMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = `
+                <li><a href="../../index.html"><i class="ri-dashboard-line"></i> 仪表盘</a></li>
+                <li><a href="../../pages/home/home-dashboard.html"><i class="ri-home-line"></i> 家庭功能</a></li>
+                <li><a href="../../pages/lan/lan-dashboard.html"><i class="ri-wifi-line"></i> 小局域网功能</a></li>
+                <li><a href="../../pages/enterprise/enterprise-dashboard.html"><i class="ri-building-line"></i> 企业级全功能应用</a></li>
+            `;
+        }
+    </script>
+</div>
+</body>
+</html>

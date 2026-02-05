@@ -1,0 +1,75 @@
+{
+  "id": "travel-endagent",
+  "name": "旅行社邮件发送 EndAgent",
+  "description": "旅行社邮件发送服务，支持发送集合通知邮件",
+  "version": "1.0.0",
+  "author": "阳光旅行社",
+  "createdAt": "2026-02-03",
+  "updatedAt": "2026-02-03",
+  "type": "application",
+  "category": "travel",
+  "tags": ["email", "travel", "notification", "endagent"],
+  "status": "active",
+  "priority": "high",
+  "execution": {
+    "type": "java",
+    "mainClass": "net.ooder.examples.travelagent.TravelEndAgentApplication",
+    "build": {
+      "command": "mvn clean package",
+      "workingDir": "."
+    },
+    "run": {
+      "command": "java -Xmx512m -jar target/travel-endagent-1.0.0.jar",
+      "workingDir": ".",
+      "timeout": 60000,
+      "retryCount": 3
+    }
+  },
+  "dependencies": {
+    "java": "1.8+",
+    "maven": "3.6+"
+  },
+  "environment": {
+    "variables": {
+      "JAVA_HOME": "C:\\Program Files\\Java\\jdk1.8.0_131",
+      "M2_HOME": "D:\\maven\\apache-maven-3.6.0",
+      "PATH": "%JAVA_HOME%\\bin;%M2_HOME%\\bin;%PATH%"
+    },
+    "systemProperties": {
+      "file.encoding": "UTF-8",
+      "user.language": "zh",
+      "user.country": "CN"
+    }
+  },
+  "configuration": {
+    "serverPort": 8083,
+    "apiPath": "/api/travel/send-notification",
+    "defaultMeetingTime": "今天下午2：00",
+    "defaultMeetingPlace": "故宫正门",
+    "defaultContactPerson": "李导游",
+    "defaultTourName": "故宫一日游"
+  },
+  "monitoring": {
+    "enabled": true,
+    "interval": 60000,
+    "alerts": {
+      "successThreshold": 90,
+      "failureThreshold": 10
+    }
+  },
+  "logs": {
+    "level": "info",
+    "file": "travel-endagent.log",
+    "maxSize": "10MB",
+    "maxFiles": 5
+  },
+  "security": {
+    "restricted": false,
+    "permissions": ["file:read", "network:outbound"]
+  },
+  "deployment": {
+    "target": "local",
+    "autoStart": true,
+    "autoRestart": false
+  }
+}

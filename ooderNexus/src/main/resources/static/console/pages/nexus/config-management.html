@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配置管理 - Nexus - Nexus</title>
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+    <link rel="stylesheet" href="../../css/mcpagent/common.css">
+    <script src="../../js/theme-manager.js"></script>
+    <script src="../../js/nexus/base.js"></script>
+    <script src="../../js/nexus/api.js"></script>
+    <script src="../../js/nexus/ui.js"></script>
+    <script src="../../js/nexus/utils.js"></script>
+    <script src="../../js/nexus/sdk-proxy.js"></script>
+</head>
+<body class="nexus-page">
+    <div class="nexus-container">
+        <!-- 侧边导航栏 -->
+        <div class="nexus-sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> Nexus Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="nexus-main-content">
+            <div class="nexus-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h1><i class="ri-settings-box-line"></i> 配置管理</h1>
+                    <button class="theme-toggle-btn nexus-btn nexus-btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                        <i class="ri-sun-line"></i> 浅色模式
+                    </button>
+                </div>
+                <div class="subtitle">
+                    <span class="badge dashboard-badge" style="background-color: var(--nexus-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">Nexus</span>
+                    <span>查看和管理Nexus系统配置</span>
+                </div>
+            </div>
+
+            <!-- 配置操作区 -->
+            <section class="nexus-operation-section">
+                <div class="nexus-section-header">
+                    <h3>配置操作</h3>
+                    <div class="nexus-operation-buttons">
+                        <button class="nexus-btn nexus-btn-primary" onclick="saveConfig()">
+                            <i class="ri-save-line"></i>
+                            保存配置
+                        </button>
+                        <button class="nexus-btn nexus-btn-secondary" onclick="exportConfig()">
+                            <i class="ri-download-line"></i>
+                            导出配置
+                        </button>
+                        <button class="nexus-btn nexus-btn-secondary" onclick="importConfig()">
+                            <i class="ri-upload-line"></i>
+                            导入配置
+                        </button>
+                        <button class="nexus-btn nexus-btn-secondary" onclick="resetConfig()">
+                            <i class="ri-refresh-line"></i>
+                            重置为默认
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 系统配置 -->
+            <section class="nexus-section">
+                <div class="nexus-section-header">
+                    <h3>系统配置</h3>
+                </div>
+                <div class="nexus-card">
+                    <div class="nexus-form-container">
+                        <div class="nexus-form-group">
+                            <label for="systemVersion">系统版本</label>
+                            <input type="text" id="systemVersion" value="v1.0.0" disabled>
+                        </div>
+                        <div class="nexus-form-group">
+                            <label for="systemName">系统名称</label>
+                            <input type="text" id="systemName" value="Nexus">
+                        </div>
+                        <div class="nexus-form-group">
+                            <label for="systemMode">运行模式</label>
+                            <select id="systemMode">
+                                <option value="normal">正常模式</option>
+                                <option value="debug">调试模式</option>
+                                <option value="maintenance">维护模式</option>
+                            </select>
+                        </div>
+                        <div class="nexus-form-group">
+                            <label for="logLevel">日志级别</label>
+                            <select id="logLevel">
+                                <option value="ERROR">错误</option>
+                                <option value="WARNING">警告</option>
+                                <option value="INFO" selected>信息</option>
+                                <option value="DEBUG">调试</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 网络配置 -->
+            <section class="nexus-section">
+                <div class="nexus-section-header">
+                    <h3>网络配置</h3>
+                </div>
+                <div class="nexus-card">
+                    <div class="nexus-form-container">
+                        <div class="nexus-form-group">
+                            <label for="udpPort">UDP端口</label>
+                            <input type="number" id="udpPort" value="8080">
+                        </div>
+                        <div class="nexus-form-group">
+                            <label for="heartbeatInterval">心跳间隔 (毫秒)</label>
+                            <input type="number" id="heartbeatInterval" value="30000">
+                        </div>
+                        <div class="nexus-form-group">
+                            <label for="heartbeatTimeout">心跳超时 (毫秒)</label>
+                            <input type="number" id="heartbeatTimeout" value="60000">
+                        </div>
+                        <div class="nexus-form-group">
+                            <label for="networkTimeout">网络超时 (毫秒)</label>
+                            <input type="number" id="networkTimeout" value="10000">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 终端配置 -->
+            <section class="nexus-section">
+                <div class="nexus-section-header">
+                    <h3>终端配置</h3>
+                </div>
+                <div class="nexus-card">
+                    <div class="nexus-form-container">
+                        <div class="nexus-form-group">
+                            <label for="maxTerminals">最大终端数</label>
+                            <input type="number" id="maxTerminals" value="100">
+                        </div>
+                        <div class="nexus-form-group">
+                            <label for="terminalTimeout">终端超时 (秒)</label>
+                            <input type="number" id="terminalTimeout" value="300">
+                        </div>
+                        <div class="nexus-form-group">
+                            <label for="terminalReconnectAttempts">重连尝试次数</label>
+                            <input type="number" id="terminalReconnectAttempts" value="3">
+                        </div>
+                        <div class="nexus-form-group">
+                            <label for="terminalReconnectDelay">重连延迟 (秒)</label>
+                            <input type="number" id="terminalReconnectDelay" value="5">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 服务配置 -->
+            <section class="nexus-section">
+                <div class="nexus-section-header">
+                    <h3>服务配置</h3>
+                </div>
+                <div class="nexus-card">
+                    <div class="nexus-form-container">
+                        <div class="nexus-form-group">
+                            <label for="apiPort">API端口</label>
+                            <input type="number" id="apiPort" value="8081">
+                        </div>
+                        <div class="nexus-form-group">
+                            <label for="webConsolePort">Web控制台端口</label>
+                            <input type="number" id="webConsolePort" value="8082">
+                        </div>
+                        <div class="nexus-form-group">
+                            <label for="serviceTimeout">服务超时 (秒)</label>
+                            <input type="number" id="serviceTimeout" value="60">
+                        </div>
+                        <div class="nexus-form-group">
+                            <label for="maxConnections">最大连接数</label>
+                            <input type="number" id="maxConnections" value="1000">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 配置历史 -->
+            <section class="nexus-section">
+                <div class="nexus-section-header">
+                    <h3>配置历史</h3>
+                </div>
+                <div class="nexus-card">
+                    <table class="nexus-data-table">
+                        <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>操作人</th>
+                                <th>操作</th>
+                                <th>详情</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="configHistoryTable">
+                            <!-- 配置历史将通过JS动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- 公共JS模块 -->
+    <script src="../../js/menu-loader.js"></script>
+    <script src="../../js/nexus/common.js"></script>
+    <script>
+        window.onload = function() {
+            // 初始化菜单
+            initMenu();
+            // 初始化页面
+            nexusCommon.initPage('config-management', loadConfigHistory);
+        };
+
+        // 模拟配置历史数据
+        let configHistory = [
+            {
+                id: 1,
+                timestamp: new Date(Date.now() - 3600000).toISOString(),
+                user: "admin",
+                action: "修改",
+                details: "更新网络配置：UDP端口从8080改为8081"
+            },
+            {
+                id: 2,
+                timestamp: new Date(Date.now() - 7200000).toISOString(),
+                user: "admin",
+                action: "修改",
+                details: "更新日志级别：从DEBUG改为INFO"
+            },
+            {
+                id: 3,
+                timestamp: new Date(Date.now() - 86400000).toISOString(),
+                user: "system",
+                action: "初始化",
+                details: "系统首次启动，加载默认配置"
+            }
+        ];
+
+        function loadConfigHistory() {
+            const tbody = document.getElementById('configHistoryTable');
+            tbody.innerHTML = '';
+
+            configHistory.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${nexusCommon.formatTimestamp(new Date(item.timestamp).getTime())}</td>
+                    <td>${item.user}</td>
+                    <td>${item.action}</td>
+                    <td>${item.details}</td>
+                    <td>
+                        <button class="nexus-btn nexus-btn-sm nexus-btn-primary" onclick="applyConfigHistory(${item.id})">应用</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function saveConfig() {
+            try {
+                // 模拟保存配置
+                nexusCommon.showMessage('正在保存配置...', 'info');
+                
+                // 模拟保存成功
+                setTimeout(() => {
+                    // 添加到配置历史
+                    const newHistory = {
+                        id: configHistory.length + 1,
+                        timestamp: new Date().toISOString(),
+                        user: "admin",
+                        action: "修改",
+                        details: "更新系统配置"
+                    };
+                    configHistory.unshift(newHistory);
+                    loadConfigHistory();
+                    
+                    nexusCommon.showMessage('配置保存成功', 'success');
+                }, 1000);
+            } catch (error) {
+                nexusCommon.handleApiError(error, '保存配置失败');
+            }
+        }
+
+        function exportConfig() {
+            try {
+                // 模拟导出配置
+                const configData = {
+                    system: {
+                        version: document.getElementById('systemVersion').value,
+                        name: document.getElementById('systemName').value,
+                        mode: document.getElementById('systemMode').value,
+                        logLevel: document.getElementById('logLevel').value
+                    },
+                    network: {
+                        udpPort: document.getElementById('udpPort').value,
+                        heartbeatInterval: document.getElementById('heartbeatInterval').value,
+                        heartbeatTimeout: document.getElementById('heartbeatTimeout').value,
+                        networkTimeout: document.getElementById('networkTimeout').value
+                    },
+                    terminal: {
+                        maxTerminals: document.getElementById('maxTerminals').value,
+                        terminalTimeout: document.getElementById('terminalTimeout').value,
+                        terminalReconnectAttempts: document.getElementById('terminalReconnectAttempts').value,
+                        terminalReconnectDelay: document.getElementById('terminalReconnectDelay').value
+                    },
+                    service: {
+                        apiPort: document.getElementById('apiPort').value,
+                        webConsolePort: document.getElementById('webConsolePort').value,
+                        serviceTimeout: document.getElementById('serviceTimeout').value,
+                        maxConnections: document.getElementById('maxConnections').value
+                    }
+                };
+
+                const blob = new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'nexus-config-' + new Date().toISOString().slice(0, 10) + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                nexusCommon.showMessage('配置已导出', 'success');
+            } catch (error) {
+                nexusCommon.handleApiError(error, '导出配置失败');
+            }
+        }
+
+        function importConfig() {
+            // 模拟导入配置
+            nexusCommon.showMessage('配置导入功能开发中', 'info');
+        }
+
+        function resetConfig() {
+            if (confirm('确定要重置为默认配置吗？')) {
+                // 重置表单为默认值
+                document.getElementById('systemName').value = 'Nexus';
+                document.getElementById('systemMode').value = 'normal';
+                document.getElementById('logLevel').value = 'INFO';
+                document.getElementById('udpPort').value = '8080';
+                document.getElementById('heartbeatInterval').value = '30000';
+                document.getElementById('heartbeatTimeout').value = '60000';
+                document.getElementById('networkTimeout').value = '10000';
+                document.getElementById('maxTerminals').value = '100';
+                document.getElementById('terminalTimeout').value = '300';
+                document.getElementById('terminalReconnectAttempts').value = '3';
+                document.getElementById('terminalReconnectDelay').value = '5';
+                document.getElementById('apiPort').value = '8081';
+                document.getElementById('webConsolePort').value = '8082';
+                document.getElementById('serviceTimeout').value = '60';
+                document.getElementById('maxConnections').value = '1000';
+                
+                // 添加到配置历史
+                const newHistory = {
+                    id: configHistory.length + 1,
+                    timestamp: new Date().toISOString(),
+                    user: "admin",
+                    action: "重置",
+                    details: "重置为默认配置"
+                };
+                configHistory.unshift(newHistory);
+                loadConfigHistory();
+                
+                nexusCommon.showMessage('配置已重置为默认值', 'success');
+            }
+        }
+
+        function applyConfigHistory(historyId) {
+            nexusCommon.showMessage('应用配置历史功能开发中', 'info');
+        }
+    </script>
+</body>
+</html>

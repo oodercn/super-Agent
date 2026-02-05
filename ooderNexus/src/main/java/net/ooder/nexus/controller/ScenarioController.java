@@ -1,0 +1,630 @@
+package net.ooder.nexus.controller;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+@RestController
+@RequestMapping("/api/scenario")
+public class ScenarioController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ScenarioController.class);
+
+    // 模拟场景数据存储
+    private final Map<String, Scenario> scenarioMap = new ConcurrentHashMap<>();
+
+    // 初始化模拟数据
+    public ScenarioController() {
+        initMockData();
+    }
+
+    /**
+     * 初始化模拟场景数据
+     */
+    private void initMockData() {
+        // 创建场景1的配置
+        Map<String, Object> config1 = new ConcurrentHashMap<>();
+        List<String> nodes1 = new ArrayList<>();
+        nodes1.add("mcp-agent-001");
+        nodes1.add("route-agent-001");
+        nodes1.add("end-agent-001");
+        config1.put("nodes", nodes1);
+        
+        List<Map<String, Object>> links1 = new ArrayList<>();
+        Map<String, Object> link1_1 = new ConcurrentHashMap<>();
+        link1_1.put("source", "mcp-agent-001");
+        link1_1.put("target", "route-agent-001");
+        links1.add(link1_1);
+        
+        Map<String, Object> link1_2 = new ConcurrentHashMap<>();
+        link1_2.put("source", "route-agent-001");
+        link1_2.put("target", "end-agent-001");
+        links1.add(link1_2);
+        config1.put("links", links1);
+        
+        Map<String, Object> configMap1 = new ConcurrentHashMap<>();
+        configMap1.put("timeout", 30000);
+        configMap1.put("retry", 3);
+        config1.put("config", configMap1);
+        
+        Scenario scenario1 = new Scenario(
+                "scenario-001",
+                "企业网络场景",
+                "enterprise",
+                "active",
+                new Date(),
+                new Date(),
+                "这是一个企业网络场景，用于测试场景管理功能。",
+                config1
+        );
+
+        // 创建场景2的配置
+        Map<String, Object> config2 = new ConcurrentHashMap<>();
+        List<String> nodes2 = new ArrayList<>();
+        nodes2.add("mcp-agent-002");
+        nodes2.add("end-agent-002");
+        config2.put("nodes", nodes2);
+        
+        List<Map<String, Object>> links2 = new ArrayList<>();
+        Map<String, Object> link2_1 = new ConcurrentHashMap<>();
+        link2_1.put("source", "mcp-agent-002");
+        link2_1.put("target", "end-agent-002");
+        links2.add(link2_1);
+        config2.put("links", links2);
+        
+        Map<String, Object> configMap2 = new ConcurrentHashMap<>();
+        configMap2.put("timeout", 30000);
+        configMap2.put("retry", 3);
+        config2.put("config", configMap2);
+        
+        Scenario scenario2 = new Scenario(
+                "scenario-002",
+                "个人网络场景",
+                "personal",
+                "active",
+                new Date(),
+                new Date(),
+                "这是一个个人网络场景，用于测试场景管理功能。",
+                config2
+        );
+
+        // 创建场景3的配置
+        Map<String, Object> config3 = new ConcurrentHashMap<>();
+        List<String> nodes3 = new ArrayList<>();
+        nodes3.add("mcp-agent-001");
+        nodes3.add("route-agent-001");
+        nodes3.add("end-agent-001");
+        nodes3.add("end-agent-002");
+        config3.put("nodes", nodes3);
+        
+        List<Map<String, Object>> links3 = new ArrayList<>();
+        Map<String, Object> link3_1 = new ConcurrentHashMap<>();
+        link3_1.put("source", "mcp-agent-001");
+        link3_1.put("target", "route-agent-001");
+        links3.add(link3_1);
+        
+        Map<String, Object> link3_2 = new ConcurrentHashMap<>();
+        link3_2.put("source", "route-agent-001");
+        link3_2.put("target", "end-agent-001");
+        links3.add(link3_2);
+        
+        Map<String, Object> link3_3 = new ConcurrentHashMap<>();
+        link3_3.put("source", "route-agent-001");
+        link3_3.put("target", "end-agent-002");
+        links3.add(link3_3);
+        config3.put("links", links3);
+        
+        Map<String, Object> configMap3 = new ConcurrentHashMap<>();
+        configMap3.put("timeout", 30000);
+        configMap3.put("retry", 3);
+        config3.put("config", configMap3);
+        
+        Scenario scenario3 = new Scenario(
+                "scenario-003",
+                "多网络场景",
+                "multi-network",
+                "active",
+                new Date(),
+                new Date(),
+                "这是一个多网络场景，用于测试场景管理功能。",
+                config3
+        );
+
+        // 创建场景4的配置
+        Map<String, Object> config4 = new ConcurrentHashMap<>();
+        List<String> nodes4 = new ArrayList<>();
+        nodes4.add("mcp-agent-test");
+        nodes4.add("end-agent-test");
+        config4.put("nodes", nodes4);
+        
+        List<Map<String, Object>> links4 = new ArrayList<>();
+        Map<String, Object> link4_1 = new ConcurrentHashMap<>();
+        link4_1.put("source", "mcp-agent-test");
+        link4_1.put("target", "end-agent-test");
+        links4.add(link4_1);
+        config4.put("links", links4);
+        
+        Map<String, Object> configMap4 = new ConcurrentHashMap<>();
+        configMap4.put("timeout", 30000);
+        configMap4.put("retry", 3);
+        config4.put("config", configMap4);
+        
+        Scenario scenario4 = new Scenario(
+                "scenario-004",
+                "测试网络场景",
+                "test",
+                "inactive",
+                new Date(),
+                new Date(),
+                "这是一个测试网络场景，用于测试场景管理功能。",
+                config4
+        );
+
+        // 创建场景5的配置
+        Map<String, Object> config5 = new ConcurrentHashMap<>();
+        List<String> nodes5 = new ArrayList<>();
+        nodes5.add("mcp-agent-dev");
+        nodes5.add("route-agent-dev");
+        nodes5.add("end-agent-dev");
+        config5.put("nodes", nodes5);
+        
+        List<Map<String, Object>> links5 = new ArrayList<>();
+        Map<String, Object> link5_1 = new ConcurrentHashMap<>();
+        link5_1.put("source", "mcp-agent-dev");
+        link5_1.put("target", "route-agent-dev");
+        links5.add(link5_1);
+        
+        Map<String, Object> link5_2 = new ConcurrentHashMap<>();
+        link5_2.put("source", "route-agent-dev");
+        link5_2.put("target", "end-agent-dev");
+        links5.add(link5_2);
+        config5.put("links", links5);
+        
+        Map<String, Object> configMap5 = new ConcurrentHashMap<>();
+        configMap5.put("timeout", 30000);
+        configMap5.put("retry", 3);
+        config5.put("config", configMap5);
+        
+        Scenario scenario5 = new Scenario(
+                "scenario-005",
+                "开发环境场景",
+                "development",
+                "active",
+                new Date(),
+                new Date(),
+                "这是一个开发环境场景，用于测试场景管理功能。",
+                config5
+        );
+
+        scenarioMap.put(scenario1.getId(), scenario1);
+        scenarioMap.put(scenario2.getId(), scenario2);
+        scenarioMap.put(scenario3.getId(), scenario3);
+        scenarioMap.put(scenario4.getId(), scenario4);
+        scenarioMap.put(scenario5.getId(), scenario5);
+    }
+
+    /**
+     * 获取场景列表
+     * @return 场景列表
+     */
+    @GetMapping("/list")
+    public ApiResponse<List<Scenario>> getScenarioList() {
+        try {
+            logger.info("获取场景列表请求");
+            List<Scenario> scenarios = new ArrayList<>(scenarioMap.values());
+            logger.info("获取场景列表成功，共 {} 个场景", scenarios.size());
+            return ApiResponse.success(scenarios, "获取场景列表成功");
+        } catch (Exception e) {
+            logger.error("获取场景列表失败", e);
+            return ApiResponse.error("获取场景列表失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取场景详情
+     * @param scenarioId 场景ID
+     * @return 场景详情
+     */
+    @GetMapping("/detail/{scenarioId}")
+    public ApiResponse<Scenario> getScenarioDetail(@PathVariable String scenarioId) {
+        try {
+            logger.info("获取场景详情请求，场景ID: {}", scenarioId);
+            Scenario scenario = scenarioMap.get(scenarioId);
+            if (scenario == null) {
+                logger.warn("场景不存在，场景ID: {}", scenarioId);
+                return ApiResponse.error("场景不存在");
+            }
+            logger.info("获取场景详情成功，场景ID: {}", scenarioId);
+            return ApiResponse.success(scenario, "获取场景详情成功");
+        } catch (Exception e) {
+            logger.error("获取场景详情失败，场景ID: {}", scenarioId, e);
+            return ApiResponse.error("获取场景详情失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 创建场景
+     * @param scenario 场景信息
+     * @return 创建结果
+     */
+    @PostMapping("/create")
+    public ApiResponse<Scenario> createScenario(@RequestBody Scenario scenario) {
+        try {
+            logger.info("创建场景请求");
+            // 生成场景ID
+            String scenarioId = "scenario-" + String.format("%03d", scenarioMap.size() + 1);
+            scenario.setId(scenarioId);
+            scenario.setCreateTime(new Date());
+            scenario.setUpdateTime(new Date());
+            
+            // 保存场景
+            scenarioMap.put(scenarioId, scenario);
+            logger.info("创建场景成功，场景ID: {}", scenarioId);
+            return ApiResponse.success(scenario, "创建场景成功");
+        } catch (Exception e) {
+            logger.error("创建场景失败", e);
+            return ApiResponse.error("创建场景失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新场景
+     * @param scenarioId 场景ID
+     * @param scenario 场景信息
+     * @return 更新结果
+     */
+    @PutMapping("/update/{scenarioId}")
+    public ApiResponse<Scenario> updateScenario(@PathVariable String scenarioId, @RequestBody Scenario scenario) {
+        try {
+            logger.info("更新场景请求，场景ID: {}", scenarioId);
+            if (!scenarioMap.containsKey(scenarioId)) {
+                logger.warn("场景不存在，场景ID: {}", scenarioId);
+                return ApiResponse.error("场景不存在");
+            }
+            
+            // 更新场景信息
+            Scenario existingScenario = scenarioMap.get(scenarioId);
+            existingScenario.setName(scenario.getName());
+            existingScenario.setType(scenario.getType());
+            existingScenario.setStatus(scenario.getStatus());
+            existingScenario.setDescription(scenario.getDescription());
+            existingScenario.setConfig(scenario.getConfig());
+            existingScenario.setUpdateTime(new Date());
+            
+            logger.info("更新场景成功，场景ID: {}", scenarioId);
+            return ApiResponse.success(existingScenario, "更新场景成功");
+        } catch (Exception e) {
+            logger.error("更新场景失败，场景ID: {}", scenarioId, e);
+            return ApiResponse.error("更新场景失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 删除场景
+     * @param scenarioId 场景ID
+     * @return 删除结果
+     */
+    @DeleteMapping("/delete/{scenarioId}")
+    public ApiResponse<Void> deleteScenario(@PathVariable String scenarioId) {
+        try {
+            logger.info("删除场景请求，场景ID: {}", scenarioId);
+            if (!scenarioMap.containsKey(scenarioId)) {
+                logger.warn("场景不存在，场景ID: {}", scenarioId);
+                return ApiResponse.error("场景不存在");
+            }
+            
+            // 删除场景
+            scenarioMap.remove(scenarioId);
+            logger.info("删除场景成功，场景ID: {}", scenarioId);
+            return ApiResponse.success(null, "删除场景成功");
+        } catch (Exception e) {
+            logger.error("删除场景失败，场景ID: {}", scenarioId, e);
+            return ApiResponse.error("删除场景失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 导入场景
+     * @param importData 导入数据
+     * @return 导入结果
+     */
+    @PostMapping("/import")
+    public ApiResponse<Map<String, Object>> importScenario(@RequestBody Map<String, Object> importData) {
+        try {
+            logger.info("导入场景请求，数据: {}", importData);
+            
+            if (importData == null || importData.isEmpty()) {
+                logger.warn("导入数据为空");
+                return ApiResponse.error("导入数据为空");
+            }
+            
+            List<Scenario> importedScenarios = new ArrayList<>();
+            int successCount = 0;
+            int failCount = 0;
+            List<String> errorMessages = new ArrayList<>();
+            
+            List<Scenario> scenariosToImport = null;
+            
+            if (importData.containsKey("scenarios")) {
+                Object scenariosObj = importData.get("scenarios");
+                if (scenariosObj instanceof List) {
+                    scenariosToImport = (List<Scenario>) scenariosObj;
+                }
+            } else if (importData.size() > 0 && importData.values().iterator().next() instanceof Scenario) {
+                scenariosToImport = new ArrayList<>();
+                for (Object value : importData.values()) {
+                    if (value instanceof Scenario) {
+                        scenariosToImport.add((Scenario) value);
+                    }
+                }
+            }
+            
+            if (scenariosToImport == null || scenariosToImport.isEmpty()) {
+                logger.warn("未找到有效的场景数据");
+                return ApiResponse.error("未找到有效的场景数据");
+            }
+            
+            for (Scenario scenario : scenariosToImport) {
+                try {
+                    if (scenario.getId() == null || scenario.getId().isEmpty()) {
+                        String newId = "scenario-" + String.format("%03d", scenarioMap.size() + 1);
+                        scenario.setId(newId);
+                    }
+                    
+                    if (scenario.getName() == null || scenario.getName().isEmpty()) {
+                        errorMessages.add("场景名称不能为空");
+                        failCount++;
+                        continue;
+                    }
+                    
+                    if (scenario.getType() == null || scenario.getType().isEmpty()) {
+                        errorMessages.add("场景类型不能为空");
+                        failCount++;
+                        continue;
+                    }
+                    
+                    if (scenario.getStatus() == null || scenario.getStatus().isEmpty()) {
+                        scenario.setStatus("active");
+                    }
+                    
+                    if (scenario.getCreateTime() == null) {
+                        scenario.setCreateTime(new Date());
+                    }
+                    
+                    if (scenario.getUpdateTime() == null) {
+                        scenario.setUpdateTime(new Date());
+                    }
+                    
+                    if (scenario.getConfig() == null) {
+                        scenario.setConfig(new ConcurrentHashMap<>());
+                    }
+                    
+                    scenarioMap.put(scenario.getId(), scenario);
+                    importedScenarios.add(scenario);
+                    successCount++;
+                    
+                } catch (Exception e) {
+                    String errorMsg = "导入场景失败: " + scenario.getName() + " - " + e.getMessage();
+                    logger.error(errorMsg, e);
+                    errorMessages.add(errorMsg);
+                    failCount++;
+                }
+            }
+            
+            Map<String, Object> result = new ConcurrentHashMap<>();
+            result.put("imported", importedScenarios);
+            result.put("successCount", successCount);
+            result.put("failCount", failCount);
+            result.put("errorMessages", errorMessages);
+            
+            logger.info("场景导入完成，成功: {}, 失败: {}", successCount, failCount);
+            return ApiResponse.success(result, "成功导入 " + successCount + " 个场景，失败 " + failCount + " 个");
+        } catch (Exception e) {
+            logger.error("导入场景失败", e);
+            return ApiResponse.error("导入场景失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 导出场景
+     * @param scenarioId 场景ID（可选，不提供则导出所有场景）
+     * @return 导出结果
+     */
+    @GetMapping("/export")
+    public ApiResponse<Map<String, Object>> exportScenario(@RequestParam(required = false) String scenarioId) {
+        try {
+            logger.info("导出场景请求，场景ID: {}", scenarioId);
+            Map<String, Object> exportData = new ConcurrentHashMap<>();
+            
+            if (scenarioId != null) {
+                // 导出单个场景
+                Scenario scenario = scenarioMap.get(scenarioId);
+                if (scenario == null) {
+                    logger.warn("场景不存在，场景ID: {}", scenarioId);
+                    return ApiResponse.error("场景不存在");
+                }
+                exportData.put("scenario", scenario);
+            } else {
+                // 导出所有场景
+                exportData.put("scenarios", new ArrayList<>(scenarioMap.values()));
+            }
+            
+            logger.info("导出场景成功");
+            return ApiResponse.success(exportData, "导出场景成功");
+        } catch (Exception e) {
+            logger.error("导出场景失败", e);
+            return ApiResponse.error("导出场景失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取场景统计信息
+     * @return 场景统计信息
+     */
+    @GetMapping("/stats")
+    public ApiResponse<Map<String, Object>> getScenarioStats() {
+        try {
+            logger.info("获取场景统计信息请求");
+            
+            int totalScenarios = scenarioMap.size();
+            int activeScenarios = (int) scenarioMap.values().stream().filter(s -> "active".equals(s.getStatus())).count();
+            long scenarioTypes = scenarioMap.values().stream().map(Scenario::getType).distinct().count();
+            Date lastUpdate = scenarioMap.values().stream()
+                    .map(Scenario::getUpdateTime)
+                    .max(Date::compareTo)
+                    .orElse(new Date());
+            
+            Map<String, Object> stats = new ConcurrentHashMap<>();
+            stats.put("totalScenarios", totalScenarios);
+            stats.put("activeScenarios", activeScenarios);
+            stats.put("scenarioTypes", scenarioTypes);
+            stats.put("lastUpdate", lastUpdate);
+            
+            logger.info("获取场景统计信息成功");
+            return ApiResponse.success(stats, "获取场景统计信息成功");
+        } catch (Exception e) {
+            logger.error("获取场景统计信息失败", e);
+            return ApiResponse.error("获取场景统计信息失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 场景模型类
+     */
+    public static class Scenario {
+        private String id;
+        private String name;
+        private String type;
+        private String status;
+        private Date createTime;
+        private Date updateTime;
+        private String description;
+        private Map<String, Object> config;
+
+        // 构造方法
+        public Scenario(String id, String name, String type, String status, Date createTime, Date updateTime, String description, Map<String, Object> config) {
+            this.id = id;
+            this.name = name;
+            this.type = type;
+            this.status = status;
+            this.createTime = createTime;
+            this.updateTime = updateTime;
+            this.description = description;
+            this.config = config;
+        }
+
+        // 无参构造方法
+        public Scenario() {
+        }
+
+        // Getter和Setter方法
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
+
+        public Date getCreateTime() {
+            return createTime;
+        }
+
+        public void setCreateTime(Date createTime) {
+            this.createTime = createTime;
+        }
+
+        public Date getUpdateTime() {
+            return updateTime;
+        }
+
+        public void setUpdateTime(Date updateTime) {
+            this.updateTime = updateTime;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public Map<String, Object> getConfig() {
+            return config;
+        }
+
+        public void setConfig(Map<String, Object> config) {
+            this.config = config;
+        }
+    }
+
+    /**
+     * API响应模型类
+     */
+    public static class ApiResponse<T> {
+        private int code;
+        private String message;
+        private T data;
+
+        // 构造方法
+        private ApiResponse(int code, String message, T data) {
+            this.code = code;
+            this.message = message;
+            this.data = data;
+        }
+
+        // 成功响应
+        public static <T> ApiResponse<T> success(T data, String message) {
+            return new ApiResponse<>(200, message, data);
+        }
+
+        // 错误响应
+        public static <T> ApiResponse<T> error(String message) {
+            return new ApiResponse<>(500, message, null);
+        }
+
+        // Getter方法
+        public int getCode() {
+            return code;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public T getData() {
+            return data;
+        }
+    }
+}

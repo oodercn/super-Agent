@@ -1,0 +1,2136 @@
+/* ==========================================================================
+ * CodeBuddy亮色主题核心样式系统
+ * 采用清新明亮的色系，提供舒适的用户体验和开发体验
+ * ========================================================================== */
+
+:root {
+  /* ==================== 基础颜色系统 ==================== */
+
+  /* 主色调 - 品牌蓝色系 */
+  --ood-primary: #0078d4;           /* 主品牌蓝色 */
+  --ood-primary-hover: #106ebe;     /* 悬停状态蓝色 */
+  --ood-primary-active: #005a9e;    /* 激活状态蓝色 */
+  --ood-primary-light: #4fc3f7;     /* 浅色品牌蓝色 */
+
+  /* 功能状态颜色 */
+  --ood-success: #107c10;           /* 成功状态绿色 */
+  --ood-warning: #d83b01;           /* 警告状态橙色 */
+  --ood-error: #e81123;             /* 错误状态红色 */
+  --ood-info: #0078d4;              /* 信息状态蓝色 */
+
+  /* 中性灰色调 */
+  --ood-gray-50: #f8fafc;           /* 最浅灰色 */
+  --ood-gray-100: #f0f0f0;          /* 浅灰色背景 */
+  --ood-gray-200: #e6e6e6;          /* 次浅灰色 */
+  --ood-gray-300: #d0d0d0;          /* 边框灰色 */
+  --ood-gray-400: #a0a0a0;          /* 禁用状态灰色 */
+  --ood-gray-500: #707070;          /* 次要文本灰色 */
+  --ood-gray-600: #505050;          /* 中等文本灰色 */
+  --ood-gray-700: #333333;          /* 主要文本灰色 */
+  --ood-gray-800: #1a1a1a;          /* 标题文本灰色 */
+  --ood-gray-900: #0a0a0a;          /* 最深灰色 */
+
+  /* ==================== 语义颜色映射 ==================== */
+
+  /* 文本颜色 */
+  --ood-text-primary: var(--ood-gray-800);
+  --ood-text-secondary: var(--ood-gray-600);
+  --ood-text-muted: var(--ood-gray-500);
+  --ood-text-disabled: var(--ood-gray-400);
+  --ood-text-on-primary: #ffffff;
+
+  /* 背景颜色 */
+  --ood-bg-primary: #ffffff;        /* 主背景色 - 白色 */
+  --ood-bg-secondary: #f5f5f5;      /* 次级背景 - 浅灰色面板和卡片 */
+  --ood-bg-card: #ffffff;           /* 卡片背景 */
+  --ood-bg-surface: #fafafa;        /* 表面背景 */
+  --ood-bg-input: #ffffff;          /* 输入框背景 */
+  --ood-bg-hover: #f0f0f0;          /* 悬停背景 */
+  --ood-bg-active: #e6e6e6;         /* 激活背景 */
+
+  /* 边框颜色 */
+  --ood-border-color: #e0e0e0;      /* 边框颜色 */
+  --ood-border-light: #eeeeee;      /* 浅色边框 */
+  --ood-border-focus: #0078d4;      /* 焦点边框 */
+
+  /* 图标颜色 */
+  --ood-icon-color: #666666;        /* 图标颜色 */
+  --ood-icon-hover: var(--ood-primary); /* 图标悬停颜色 */
+
+  /* ==================== 设计系统变量 ==================== */
+
+  /* 阴影系统 */
+  --ood-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --ood-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --ood-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --ood-shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+
+  /* 圆角系统 */
+  --ood-radius-sm: 4px;
+  --ood-radius-md: 6px;
+  --ood-radius-lg: 8px;
+  --ood-radius-xl: 12px;
+
+  /* 间距系统 */
+  --ood-spacing-xs: 0.25rem;
+  --ood-spacing-sm: 0.5rem;
+  --ood-spacing-md: 1rem;
+  --ood-spacing-lg: 1.5rem;
+  --ood-spacing-xl: 2rem;
+
+  /* 过渡动画 */
+  --ood-transition-fast: 0.15s ease;
+  --ood-transition-normal: 0.25s ease;
+  --ood-transition-slow: 0.4s ease;
+
+  /* 字体系统 */
+  --ood-font-size-xs: 0.75rem;
+  --ood-font-size-sm: 0.875rem;
+  --ood-font-size-base: 1rem;
+  --ood-font-size-lg: 1.125rem;
+  --ood-font-size-xl: 1.25rem;
+  --ood-font-size-2xl: 1.5rem;
+
+  /* 响应式断点 */
+  --ood-breakpoint-sm: 576px;
+  --ood-breakpoint-md: 768px;
+  --ood-breakpoint-lg: 992px;
+  --ood-breakpoint-xl: 1200px;
+
+  /* ==================== 向后兼容变量 ==================== */
+
+  /* 保持与旧系统的兼容性 */
+  --light-text: var(--ood-text-primary);
+  --light-text-light: var(--ood-text-secondary);
+  --light-text-muted: var(--ood-text-muted);
+  --light-text-disabled: var(--ood-text-disabled);
+  --light-text-inverse: #000000;
+  --light-text-on-primary: var(--ood-text-on-primary);
+  --light-text-secondary: var(--ood-text-secondary);
+
+  --light-bg: var(--ood-bg-primary);
+  --light-bg-secondary: var(--ood-bg-secondary);
+  --light-bg-card: var(--ood-bg-card);
+  --light-bg-light: var(--ood-gray-50);
+  --light-bg-lighter: var(--ood-gray-100);
+  --light-bg-hover: var(--ood-bg-hover);
+  --light-bg-active: var(--ood-bg-active);
+  --light-bg-input: var(--ood-bg-input);
+
+  --light-border: var(--ood-border-color);
+  --light-border-light: var(--ood-border-light);
+  --light-border-focus: var(--ood-border-focus);
+
+  --light-primary: var(--ood-primary);
+  --light-primary-hover: var(--ood-primary-hover);
+  --light-primary-active: var(--ood-primary-active);
+  --light-success: var(--ood-success);
+  --light-warning: var(--ood-warning);
+  --light-error: var(--ood-error);
+  --light-info: var(--ood-info);
+
+  --light-icon-color: var(--ood-icon-color);
+  --light-shadow: rgba(0, 0, 0, 0.1);
+  --light-shadow-light: rgba(0, 0, 0, 0.05);
+
+  /* 透明度 */
+  --light-opacity-light: 0.1;
+  --light-opacity-medium: 0.2;
+  --light-opacity-heavy: 0.3;
+
+  /* 其他兼容变量 */
+  --primary-color: var(--ood-bg-primary);
+  --primary-hover: var(--ood-bg-secondary);
+  --primary-active: var(--ood-primary-active);
+  --secondary-color: #2c2d30;
+  --success-color: var(--ood-success);
+  --warning-color: var(--ood-warning);
+  --error-color: var(--ood-error);
+  --info-color: var(--ood-primary-light);
+
+  --text-primary: var(--ood-text-primary);
+  --text-secondary: var(--ood-text-secondary);
+  --text-muted: var(--ood-text-muted);
+  --text-input: var(--ood-text-muted);
+  --text-input-readonly: var(--ood-text-secondary);
+
+  --bg-primary: var(--ood-bg-primary);
+  --bg-secondary: var(--ood-bg-secondary);
+  --bg-tertiary: var(--ood-bg-hover);
+  --bg-surface: var(--ood-bg-primary);
+  --bg-input: var(--ood-bg-input);
+
+  --border-color: var(--ood-border-color);
+  --border-light: var(--ood-border-light);
+
+  --shadow-sm: var(--ood-shadow-sm);
+  --shadow-md: var(--ood-shadow-md);
+  --shadow-lg: var(--ood-shadow-lg);
+  --shadow-inner: var(--ood-shadow-inner);
+
+  --radius-sm: var(--ood-radius-sm);
+  --radius-md: var(--ood-radius-md);
+  --radius-lg: var(--ood-radius-lg);
+  --radius-xl: var(--ood-radius-xl);
+
+  --spacing-xs: var(--ood-spacing-xs);
+  --spacing-sm: var(--ood-spacing-sm);
+  --spacing-md: var(--ood-spacing-md);
+  --spacing-lg: var(--ood-spacing-lg);
+  --spacing-xl: var(--ood-spacing-xl);
+
+  --transition-fast: var(--ood-transition-fast);
+  --transition-normal: var(--ood-transition-normal);
+  --transition-slow: var(--ood-transition-slow);
+
+  /* 高对比度主题兼容 */
+  --hc-primary: #0078d4;
+  --hc-text-inverse: #ffffff;
+  --hc-bg-card: #ffffff;
+  --hc-text: #000000;
+  --hc-border: #0078d4;
+  --hc-bg-hover: #f0f0f0;
+  --hc-icon-color: #666666;
+  --ood-hc-bg: #ffffff;
+  --ood-hc-text: #000000;
+  --ood-hc-primary: #0078d4;
+  --ood-hc-border: #e0e0e0;
+  --ood-hc-bg-secondary: #f5f5f5;
+
+  /* 其他OOD兼容变量 */
+  --ood-light-image-filter: brightness(1) contrast(1);
+  --ood-light-text: var(--ood-text-primary);
+  --ood-light-text-inverse: #000000;
+  --ood-light-text-on-primary: #ffffff;
+  --ood-light-icon-color: var(--ood-icon-color);
+  --ood-light-text-secondary: var(--ood-text-secondary);
+  --ood-light-text-disabled: var(--ood-text-disabled);
+  --ood-light-bg: var(--ood-bg-surface);
+  --ood-light-bg-secondary: var(--ood-bg-secondary);
+  --ood-light-bg-card: var(--ood-bg-card);
+  --ood-light-bg-light: var(--ood-gray-100);
+  --ood-light-bg-lighter: var(--ood-gray-200);
+  --ood-light-bg-hover: var(--ood-bg-hover);
+  --ood-primary: var(--ood-primary);
+  --ood-primary-light: var(--ood-primary-light);
+  --ood-text-secondary: var(--ood-text-secondary);
+
+  /* 组件特定变量 */
+  --component-responsive-breakpoint: 600px;
+  --component-sm-responsive-breakpoint: 400px;
+  --component-vertical-item-radius: var(--ood-radius-md);
+  --component-vertical-item-margin: 4px 0;
+  --component-sm-font-size: 0.9em;
+  --component-light-item-bg: #ffffff;
+  --component-light-item-color: #333333;
+  --component-light-item-border: 1px solid #e0e0e0;
+  --component-light-panel-bg: #f5f5f5;
+  --component-light-panel-color: #333333;
+}
+
+/* ==========================================================================
+ * 全局样式重置与基础设置
+ * ========================================================================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body, html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: var(--ood-text-primary);
+  background-color: var(--ood-bg-primary);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+/* 基础字体设置 */
+.ood-ui-ctrl, .ood-ui-reset {
+  color: var(--ood-text-primary);
+  font-size: 1rem;
+  font-family: 'SF Mono', SFMono-Regular, ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* 标题样式 */
+.ood-title-node {
+  font-weight: 600;
+  color: var(--ood-text-primary);
+  margin-bottom: var(--ood-spacing-sm);
+}
+
+.ood-dialog-tbar-focus {
+  color: var(--ood-text-primary);
+}
+
+.ood-group-caption {
+  color: var(--ood-text-primary);
+  font-weight: 500;
+}
+
+/* 图标字体样式 */
+.oodfont, .oodcon {
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.oodfont-active, .oodcon-active {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--ood-primary-active);
+}
+
+/* 高亮状态 */
+.ood-highlight,
+.ood-ui-ctrl-highlight,
+.ood-node-highlight,
+.ood-tabs-caption-checked,
+.ood-uibar-checked,
+.ood-uibar-expand,
+.ood-uimenu-hover,
+.ood-uimenu-active {
+  color: var(--ood-info);
+  font-weight: 500;
+}
+
+/* 背景样式 */
+.ood-bgcolor {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-text-primary);
+}
+
+.ood-uibase {
+  background-color: var(--ood-bg-secondary);
+  border-color: var(--ood-border-color);
+  color: var(--ood-text-primary);
+  border-radius: var(--ood-radius-md);
+  transition: all var(--ood-transition-fast);
+}
+
+.ood-foldingtabs-caption {
+  color: var(--ood-text-primary);
+}
+
+/* UI Bar 样式 */
+.ood-uibar {
+  background-color: var(--ood-bg-surface);
+  border-radius: var(--ood-radius-md);
+  transition: all var(--ood-transition-fast);
+  color: var(--ood-text-primary);
+}
+
+.ood-uibar .ood-layout-move {
+  background-color: var(--ood-bg-primary);
+}
+
+.ood-uibar-hover {
+  background-color: var(--ood-bg-hover);
+  border-color: var(--ood-border-light);
+}
+
+.ood-uibar-active,
+.ood-uibar-checked,
+.ood-uibar-expand,
+.ood-uimenu-hover,
+.ood-uimenu-active {
+  background-color: var(--ood-bg-active);
+  border-color: var(--ood-info);
+  color: var(--ood-info);
+  box-shadow: var(--ood-shadow-sm);
+  transform: translateY(-1px);
+}
+
+.ood-uibar-focus,
+.ood-uibar-top-focus .ood-uibar-tdl,
+.ood-uibar-top-focus .ood-uibar-tdm,
+.ood-uibar-top-focus .ood-uibar-tdr {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-text-primary);
+  box-shadow: var(--ood-shadow-sm);
+}
+
+/* 边框样式 */
+.ood-uiborder, .ood-uiborder-flat {
+  border-color: var(--ood-border-color);
+}
+
+.ood-uiborder-box {
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--ood-border-color);
+  border-radius: var(--ood-radius-md);
+  transition: border-color var(--ood-transition-fast);
+}
+
+.ood-uiborder-l {
+  border-left-style: solid;
+  border-left-width: 1px;
+  border-left-color: var(--ood-border-color);
+}
+
+.ood-uiborder-t {
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: var(--ood-border-light);
+}
+
+.ood-uiborder-r {
+  border-right-style: solid;
+  border-right-width: 1px;
+  border-right-color: var(--ood-border-color);
+}
+
+.ood-uiborder-b, .ood-uitem-split {
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  border-bottom-color: var(--ood-border-color);
+}
+
+.ood-uiborder-outset {
+  border-color: var(--ood-border-light) var(--ood-border-color) var(--ood-border-color) var(--ood-border-light);
+}
+
+.ood-uiborder-inset, .ood-uiborder-hidden-active, .ood-uiborder-hidden-checked {
+  border-color: var(--ood-border-color) var(--ood-border-light) var(--ood-border-light) var(--ood-border-color);
+}
+
+.ood-uiborder-hidden-active, .ood-uiborder-hidden-checked {
+  background: var(--ood-bg-hover);
+}
+
+.ood-uiborder-light, .ood-uiborder-flat-hover, .ood-tabs-item {
+  border-color: var(--ood-border-color);
+}
+
+.ood-uiborder-light, .ood-uiborder-hidden-hover {
+  border-color: var(--ood-border-color);
+}
+
+.ood-uiborder-hover {
+  border-color: var(--ood-border-light);
+}
+
+/* 项目背景样式 */
+.ood-uitembg-hover, .ood-uitembg-active, .ood-uitembg-checked {
+  background-color: var(--ood-bg-hover);
+  border-color: var(--ood-border-color);
+  border-radius: var(--ood-radius-md);
+  transition: all var(--ood-transition-fast);
+  background-image: none;
+}
+
+.ood-uitembg-hover {
+  background-color: var(--ood-bg-hover);
+  transform: translateY(-1px);
+}
+
+.ood-uitembg-active {
+  background-color: var(--ood-bg-active);
+  color: var(--ood-text-primary);
+  box-shadow: var(--ood-shadow-sm);
+}
+
+.ood-uitembg-checked {
+  background-color: var(--ood-bg-active);
+  color: var(--ood-info);
+  box-shadow: var(--ood-shadow-sm);
+  border-left: solid 3px var(--ood-info);
+}
+
+.ood-block-fold .ood-block-sidebar {
+  background-color: var(--ood-bg-primary);
+}
+
+/* 渐变样式 */
+.ood-uigradient {
+  color: var(--ood-text-primary);
+  background: var(--ood-bg-primary);
+  border-color: var(--ood-border-color);
+  box-shadow: var(--ood-shadow-inner);
+  border-radius: var(--ood-radius-md);
+  filter: none;
+  -ms-filter: none;
+}
+
+.ood-uigradient-hover, .ood-uigradient:hover {
+  border-color: var(--ood-info);
+  background: var(--ood-bg-hover);
+  transform: translateY(-1px);
+  background-image: linear-gradient(to bottom, var(--ood-bg-hover) 0%, var(--ood-bg-secondary) 100%);
+}
+
+.ood-uigradient-active, .ood-uigradient-checked, .ood-uigradient-expand,
+.ood-uigradient:active {
+  background: var(--ood-bg-active);
+  color: var(--ood-info);
+  box-shadow: var(--ood-shadow-sm);
+  background-image: linear-gradient(to bottom, var(--ood-bg-primary) 0%, var(--ood-bg-active) 100%);
+}
+
+/* 容器样式 */
+.ood-uicon-main, .ood-uicon-maini {
+  background-color: var(--ood-bg-primary);
+  border-color: var(--ood-border-color);
+  border-radius: var(--ood-radius-md);
+  background-image: none;
+}
+
+.ood-uibar-top .ood-uibar-tdlt,
+.ood-uibar-top .ood-uibar-tdmt,
+.ood-uibar-top .ood-uibar-tdrt,
+.ood-uibar-top-s .ood-uibar-tdl,
+.ood-uibar-top-s .ood-uibar-tdm,
+.ood-uibar-top-s .ood-uibar-tdr,
+.ood-uibar-bottom .ood-uibar-tdl,
+.ood-uibar-bottom .ood-uibar-tdm,
+.ood-uibar-bottom .ood-uibar-tdr,
+.ood-uibar-bottom-s .ood-uibar-tdl,
+.ood-uibar-bottom-s .ood-uibar-tdm,
+.ood-uibar-bottom-s .ood-uibar-tdr {
+  background-image: none;
+  background-color: var(--ood-bg-primary);
+}
+
+.ood-uibar-top .ood-uibar-tdl,
+.ood-uibar-top .ood-uibar-tdm,
+.ood-uibar-top .ood-uibar-tdr {
+  background-image: none;
+  background-color: var(--ood-bg-primary);
+}
+
+/* 表格样式 */
+.ood-uicell,
+.ood-treegrid-cells1, .ood-treegrid-cells2 {
+  background-color: var(--ood-bg-secondary);
+  color: var(--ood-text-primary);
+}
+
+.ood-treegrid-trbody {
+  background-color: var(--ood-bg-secondary);
+  color: var(--ood-text-secondary) !important;
+}
+
+.ood-uicell-alt,
+.ood-treegrid-cells1-alt, .ood-treegrid-cells2-alt {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-text-primary);
+}
+
+.ood-treegrid-cells1-hover, .ood-treegrid-cells2-hover {
+  background-color: var(--ood-bg-hover);
+}
+
+.ood-treegrid-cells1-active, .ood-treegrid-cells2-active,
+.ood-treegrid-cell-active, .ood-treegrid-cell-active .ood-treegrid-cella {
+  background-color: var(--ood-bg-active);
+}
+
+.ood-treegrid-cells1-hot, .ood-treegrid-cells2-hot {
+  background-color: var(--ood-warning);
+}
+
+.ood-uicell-checked,
+.ood-treegrid-cell-checked,
+.ood-treegrid-cells1-checked,
+.ood-treegrid-cells2-checked {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-info);
+}
+
+.ood-uicell-hover,
+.ood-treegrid-cell-hover {
+  background-color: var(--ood-bg-hover) !important;
+}
+
+/* ==========================================================================
+ * 滚动条样式
+ * ========================================================================== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ood-bg-secondary);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ood-border-color);
+  border-radius: 5px;
+  transition: background var(--ood-transition-fast);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ood-info);
+}
+
+/* ==========================================================================
+ * 表单控件样式
+ * ========================================================================== */
+
+/* 输入框样式 */
+.ood-textbox, .ood-textarea, .ood-combobox {
+  background-color: var(--ood-bg-surface);
+  border-color: var(--ood-border-color);
+  color: var(--ood-text-primary);
+  border-radius: var(--ood-radius-md);
+  transition: all var(--ood-transition-fast);
+  padding: 0.375rem 0.75rem;
+}
+
+.ood-textbox:focus, .ood-textarea:focus, .ood-combobox:focus {
+  border-color: var(--ood-info);
+  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3);
+  outline: none;
+}
+
+/* 按钮样式 */
+.ood-button {
+  background-color: var(--ood-bg-secondary);
+  border-color: var(--ood-border-color);
+  color: var(--ood-text-primary);
+  border-radius: var(--ood-radius-md);
+  transition: all var(--ood-transition-fast);
+  padding: 0.375rem 0.75rem;
+  font-weight: 500;
+}
+
+.ood-button:hover {
+  background-color: var(--ood-bg-hover);
+  border-color: var(--ood-info);
+  transform: translateY(-1px);
+}
+
+.ood-button:active {
+  background-color: var(--ood-bg-active);
+  color: var(--ood-info);
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+ * 对话框样式
+ * ========================================================================== */
+.dialog-light BORDER {
+  background-color: var(--ood-bg-primary) !important;
+  border-color: var(--ood-border-color) !important;
+  color: var(--ood-text-primary) !important;
+  box-shadow: var(--ood-shadow-lg) !important;
+  border-radius: var(--ood-radius-lg) !important;
+}
+
+.dialog-light PANEL {
+  background-color: var(--ood-bg-secondary) !important;
+  color: var(--ood-text-primary) !important;
+}
+
+.dialog-light TBAR {
+  background: linear-gradient(135deg, var(--ood-bg-primary) 0%, var(--ood-bg-secondary) 100%) !important;
+  border-bottom: 1px solid var(--ood-border-color) !important;
+}
+
+.dialog-light CAPTION {
+  color: var(--ood-text-primary) !important;
+  font-weight: 600 !important;
+}
+
+/* ==========================================================================
+ * 标签页样式
+ * ========================================================================== */
+.ood-tabs-item {
+  background-image: none;
+  background-color: var(--ood-bg-primary);
+  border-bottom: 2px solid transparent;
+  transition: all var(--ood-transition-fast);
+  border-radius: var(--ood-radius-sm) var(--ood-radius-sm) 0 0;
+}
+
+.ood-tabs-item-hover {
+  background-color: var(--ood-bg-hover);
+  background-image: none;
+}
+
+.ood-tabs-item-active {
+  background-color: var(--ood-bg-active);
+  background-image: none;
+}
+
+.ood-tabs-item-checked {
+  background-color: var(--ood-bg-secondary);
+  background-image: none;
+  border-bottom: 2px solid var(--ood-info);
+}
+
+/* ==========================================================================
+ * 列表项样式
+ * ========================================================================== */
+.ood-list-item {
+  border-left: 3px solid transparent;
+  transition: all var(--ood-transition-fast);
+}
+
+.ood-list-item-checked {
+  border-left: 3px solid var(--ood-info);
+  background-color: var(--ood-bg-secondary);
+}
+
+/* ==========================================================================
+ * 代码相关样式
+ * ========================================================================== */
+.code-block {
+  background-color: var(--ood-bg-secondary);
+  border: 1px solid var(--ood-border-color);
+  border-radius: var(--ood-radius-md);
+  padding: var(--ood-spacing-md);
+  margin: var(--ood-spacing-md) 0;
+  font-family: 'SF Mono', SFMono-Regular, ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace;
+  overflow-x: auto;
+}
+
+.ood-popmenu {
+  background-color: var(--ood-bg-primary);
+}
+
+.code-line {
+  color: var(--ood-text-primary);
+}
+
+.code-comment {
+  color: var(--ood-text-muted);
+}
+
+.code-keyword {
+  color: #ff7b72;
+}
+
+.code-string {
+  color: #a5d6ff;
+}
+
+.code-number {
+  color: #f0883e;
+}
+
+.code-function {
+  color: #d2a8ff;
+}
+
+/* ColorPicker 组件样式 - 来自ood/js/UI/ColorPicker.js */
+.colorpicker-light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+.colorpicker-light .ood-colorpicker-border {
+  background-color: var(--light-bg);
+  border-color: var(--light-border);
+}
+
+.colorpicker-light .ood-colorpicker-bar {
+  background: linear-gradient(to bottom, var(--light-bg-lighter) 0%, var(--light-bg) 100%);
+  border-color: var(--light-border-light);
+}
+
+.colorpicker-light .ood-colorpicker-main {
+  background-color: var(--light-bg-light);
+  border-color: var(--light-border);
+}
+
+.colorpicker-light .ood-colorpicker-tail {
+  background-color: var(--light-bg-light);
+  border-color: var(--light-border);
+}
+
+.colorpicker-light .ood-colorpicker-adv {
+  background-color: var(--light-bg-light);
+  border-color: var(--light-border);
+}
+
+.colorpicker-light .ood-colorpicker-toggle {
+  background-color: var(--light-bg-input);
+  border-color: var(--light-border);
+  color: var(--light-text);
+}
+
+/* TreeView 组件样式 - 来自ood/js/UI/TreeView.js */
+.treeview-light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+}
+
+.treeview-light .ood-treeview-box {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+}
+
+.treeview-light .ood-treeview-bar {
+  background: var(--light-bg);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+.treeview-light .ood-treeview-bar.ood-ui-item-hover,
+.treeview-light .ood-treeview-bar.ood-ui-item-checked {
+  background: var(--light-primary);
+  color: var(--light-text);
+}
+
+.treeview-light .ood-treeview-caption {
+  color: var(--light-text);
+}
+
+.treeview-light .ood-treeview-itemicon {
+  color: var(--light-text-light);
+}
+
+.treeview-light .ood-treeview-image {
+  filter: brightness(1);
+}
+
+/* ButtonViews 组件样式 - 来自ood/js/UI/ButtonViews.js */
+.cb-btn-container {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.cb-btn {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  user-select: none;
+  font-weight: 500;
+}
+
+.cb-btn:hover {
+  background-color: var(--primary-hover);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.cb-btn:active {
+  background-color: var(--bg-primary);
+  transform: translateY(1px);
+  color: var(--primary-active);
+  box-shadow: var(--shadow-sm);
+}
+
+.cb-btn-primary {
+  background-color: var(--primary-color);
+  color: var(--text-primary);
+}
+
+.cb-btn-secondary {
+  background-color: var(--secondary-color);
+  color: var(--text-primary);
+}
+
+.cb-btn-outline {
+  background-color: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
+.cb-btn-small {
+  padding: 0.25em 0.5em;
+  font-size: 0.875em;
+}
+
+.cb-btn-medium {
+  padding: 0.5em 1em;
+  font-size: 1em;
+}
+
+.cb-btn-large {
+  padding: 0.75em 1.5em;
+  font-size: 1.25em;
+}
+
+/* Input 组件样式 - 来自ood/js/UI/Input.js */
+.input-light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+}
+
+.input-light .ood-input-frame,
+.input-light .ood-input-border {
+  background-color: var(--light-bg);
+  border-color: var(--light-border);
+}
+
+.input-light .ood-input-box,
+.input-light .ood-input-wrap {
+  background-color: var(--light-bg-input);
+  border-color: var(--light-border);
+}
+
+.input-light .ood-input-input {
+  background-color: var(--light-bg-input);
+  border-color: var(--light-border);
+  color: var(--light-text);
+  caret-color: var(--light-text);
+}
+
+.input-light .ood-input-label {
+  color: var(--light-text);
+}
+
+.input-light .ood-input-error {
+  color: var(--light-error);
+}
+
+.input-light:focus-within .ood-input-box,
+.input-light:focus-within .ood-input-wrap {
+  border-color: var(--light-border-focus);
+  box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.2);
+}
+
+.input-light.ood-ui-readonly .ood-input-input {
+  background-color: var(--light-bg-light);
+  color: var(--light-text-muted);
+}
+
+.input-light.ood-ui-disabled .ood-input-input {
+  background-color: var(--light-bg-light);
+  color: var(--light-text-disabled);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ComboInput 组件样式 - 来自ood/js/UI/ComboInput.js */
+.combo-input-light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+}
+
+.combo-input-light .ood-comboinput-frame,
+.combo-input-light .ood-comboinput-border {
+  background-color: var(--light-bg);
+  border-color: var(--light-border);
+}
+
+.combo-input-light .ood-comboinput-box,
+.combo-input-light .ood-comboinput-wrap {
+  background-color: var(--light-bg-input);
+  border-color: var(--light-border);
+}
+
+.combo-input-light .ood-comboinput-input {
+  background-color: var(--light-bg-input);
+  border-color: var(--light-border);
+  color: var(--light-text);
+  caret-color: var(--light-text);
+}
+
+.combo-input-light .ood-comboinput-arrow {
+  color: var(--light-text);
+  border-top-color: var(--light-text);
+}
+
+.combo-input-light .ood-comboinput-label {
+  color: var(--light-text);
+}
+
+.combo-input-light .ood-comboinput-error {
+  color: var(--light-error);
+}
+
+.combo-input-light:focus-within .ood-comboinput-box,
+.combo-input-light:focus-within .ood-comboinput-wrap {
+  border-color: var(--light-border-focus);
+  box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.2);
+}
+
+.combo-input-light .ood-comboinput-drop {
+  background-color: var(--light-bg);
+  border-color: var(--light-border);
+  color: var(--light-text);
+  box-shadow: 0 2px 8px var(--light-shadow);
+}
+
+.combo-input-light .ood-comboinput-item {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+}
+
+.combo-input-light .ood-comboinput-item:hover {
+  background-color: var(--light-bg-hover);
+}
+
+.combo-input-light .ood-comboinput-item.ood-ui-item-checked {
+  background-color: var(--light-primary);
+  color: var(--light-text);
+}
+
+/* DatePicker 组件样式 - 来自ood/js/UI/DatePicker.js */
+.datepicker-light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+}
+
+.datepicker-light .ood-datepicker-border {
+  background-color: var(--light-bg);
+  border-color: var(--light-border);
+  color: var(--light-text);
+}
+
+.datepicker-light .ood-datepicker-bar {
+  background: linear-gradient(to bottom, var(--light-bg-lighter) 0%, var(--light-bg) 100%);
+  border-color: var(--light-border-light);
+}
+
+.datepicker-light .ood-datepicker-main {
+  background-color: var(--light-bg-light);
+  border-color: var(--light-border);
+}
+
+.datepicker-light .ood-datepicker-tail {
+  background-color: var(--light-bg-light);
+  border-color: var(--light-border);
+}
+
+/* ==========================================================================
+ * 日期选择器组件样式
+ * ========================================================================== */
+.datepicker-light .ood-datepicker-body {
+  background-color: var(--ood-bg-surface);
+  border-color: var(--ood-border-color);
+}
+
+.datepicker-light .ood-node-th {
+  background-color: var(--ood-bg-secondary);
+  border-color: var(--ood-border-color-light);
+  color: var(--ood-text-secondary);
+}
+
+.datepicker-light .ood-node-td {
+  background-color: var(--ood-bg-surface);
+  border-color: var(--ood-border-color);
+  color: var(--ood-text-primary);
+}
+
+.datepicker-light .ood-node-td:hover {
+  background-color: var(--ood-bg-hover);
+}
+
+.datepicker-light .ood-node-td.ood-ui-cell-checked {
+  background-color: var(--ood-primary);
+  color: var(--ood-text-on-primary);
+}
+
+.datepicker-light .ood-node-td.ood-ui-cell-disabled {
+  color: var(--ood-text-disabled);
+  opacity: 0.6;
+}
+
+.datepicker-light .oodfont {
+  color: var(--ood-text-primary);
+}
+
+.datepicker-light .ood-ui-draggable {
+  background-color: var(--ood-bg-input);
+  border-color: var(--ood-border-color-light);
+  color: var(--ood-text-primary);
+}
+
+/* ==========================================================================
+ * Tabs 组件样式
+ * ========================================================================== */
+.ui-light.ood-tabs {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-text-primary);
+}
+
+.ui-light .ood-tabs-list {
+  background-color: var(--ood-bg-secondary);
+  border: 1px solid var(--ood-border-color);
+  color: var(--ood-text-primary);
+}
+
+.ui-light .ood-tabs-item {
+  background-color: var(--ood-bg-secondary);
+  color: var(--ood-text-primary);
+  border: 1px solid transparent;
+  border-bottom: 1px solid var(--ood-border-color);
+}
+
+.ui-light .ood-tabs-item:hover {
+  background-color: var(--ood-bg-hover);
+}
+
+.ui-light .ood-tabs-item.\-checked {
+  background-color: var(--ood-bg-primary);
+  border: 1px solid var(--ood-border-color);
+  border-bottom: 1px solid var(--ood-bg-primary);
+  color: var(--ood-info);
+}
+
+.ui-light .ood-tabs-handle {
+  background-color: var(--ood-bg-secondary);
+  color: var(--ood-text-primary);
+}
+
+.ui-light .ood-tabs-caption {
+  color: var(--ood-text-primary);
+}
+
+.ui-light .ood-tabs-panel {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-text-primary);
+  border: 1px solid var(--ood-border-color);
+  border-top: none;
+}
+
+/* ==========================================================================
+ * FoldingTabs 组件样式
+ * ========================================================================== */
+.ui-light.ood-foldingtabs {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-text-primary);
+}
+
+.ui-light .ood-foldingtabs-list {
+  background-color: var(--ood-bg-secondary);
+  border-color: var(--ood-border-color);
+}
+
+.ui-light .ood-foldingtabs-item {
+  background-color: var(--ood-bg-secondary);
+  border-color: var(--ood-border-color);
+  color: var(--ood-text-primary);
+}
+
+.ui-light .ood-foldingtabs-item:hover {
+  background-color: var(--ood-bg-hover);
+}
+
+.ui-light .ood-foldingtabs-item.\-checked {
+  background-color: var(--ood-bg-primary);
+  border-color: var(--ood-border-color);
+  color: var(--ood-info);
+}
+
+.ui-light .ood-foldingtabs-caption {
+  color: var(--ood-text-primary);
+}
+
+.ui-light .ood-foldingtabs-panel {
+  background-color: var(--ood-bg-primary);
+  border-color: var(--ood-border-color);
+  color: var(--ood-text-primary);
+}
+
+/* ==========================================================================
+ * Dialog 组件样式
+ * ========================================================================== */
+.dialog-light {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-text-primary);
+  box-shadow: var(--ood-shadow-lg);
+}
+
+.dialog-light .ood-dialog-border {
+  background-color: var(--ood-bg-primary) !important;
+  border-color: var(--ood-border-color) !important;
+  color: var(--ood-text-primary) !important;
+  box-shadow: var(--ood-shadow-lg) !important;
+  border-radius: var(--ood-radius-lg) !important;
+}
+
+.dialog-light .ood-dialog-panel {
+  background-color: var(--ood-bg-secondary) !important;
+  color: var(--ood-text-primary) !important;
+}
+
+.dialog-light .ood-dialog-tbar {
+  background: linear-gradient(135deg, var(--ood-bg-primary) 0%, var(--ood-bg-secondary) 100%) !important;
+  border-bottom: 1px solid var(--ood-border-color) !important;
+}
+
+.dialog-light .ood-dialog-caption {
+  color: var(--ood-text-primary) !important;
+  font-weight: 600 !important;
+}
+
+.dialog-light .ood-dialog-close,
+.dialog-light .ood-dialog-max,
+.dialog-light .ood-dialog-min,
+.dialog-light .ood-dialog-restore {
+  color: var(--ood-text-secondary) !important;
+}
+
+.dialog-light .ood-dialog-close:hover,
+.dialog-light .ood-dialog-max:hover,
+.dialog-light .ood-dialog-min:hover,
+.dialog-light .ood-dialog-restore:hover {
+  color: var(--ood-text-primary) !important;
+  background-color: var(--ood-bg-hover) !important;
+}
+
+/* ==========================================================================
+ * Panel 组件样式
+ * ========================================================================== */
+.panel-light {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-text-primary);
+}
+
+.panel-light .ood-panel-border {
+  background-color: var(--ood-bg-surface);
+  border-color: var(--ood-border-color);
+  color: var(--ood-text-primary);
+}
+
+.panel-light .ood-panel-panel {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-text-primary);
+  border-color: var(--ood-border-color);
+}
+
+.panel-light .ood-panel-tbar {
+  background: linear-gradient(to bottom, var(--ood-bg-secondary) 0%, var(--ood-bg-primary) 100%);
+  border-bottom: 1px solid var(--ood-border-color);
+}
+
+.panel-light .ood-panel-caption {
+  color: var(--ood-text-primary);
+}
+
+/* ==========================================================================
+ * List 组件样式
+ * ========================================================================== */
+.ood-list-light {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-text-primary);
+  border-color: var(--ood-border-color);
+}
+
+.ood-list-light .ood-list-item {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-text-primary);
+  border-color: var(--ood-border-color);
+}
+
+.ood-list-light .ood-list-item:hover {
+  background-color: var(--ood-bg-hover);
+}
+
+.ood-list-light .ood-list-item-checked {
+  background-color: var(--ood-primary);
+  color: var(--ood-text-on-primary);
+  border-left: 3px solid var(--ood-primary-active);
+}
+
+/* ==========================================================================
+ * Menu 组件样式
+ * ========================================================================== */
+.ood-menu-light {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-text-primary);
+  border-color: var(--ood-border-color);
+  box-shadow: var(--ood-shadow-md);
+}
+
+.ood-menu-light .ood-menu-item {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-text-primary);
+}
+
+.ood-menu-light .ood-menu-item:hover {
+  background-color: var(--ood-bg-hover);
+}
+
+.ood-menu-light .ood-menu-item-checked {
+  background-color: var(--ood-primary);
+  color: var(--ood-text-on-primary);
+}
+
+.ood-menu-light .ood-menu-separator {
+  border-top: 1px solid var(--ood-border-color);
+}
+
+/* ==========================================================================
+ * ToolBar 组件样式
+ * ========================================================================== */
+.ood-toolbar-light {
+  background-color: var(--ood-bg-surface);
+  border-color: var(--ood-border-color);
+}
+
+.ood-toolbar-light .ood-toolbar-item {
+  color: var(--ood-text-primary);
+}
+
+.ood-toolbar-light .ood-toolbar-item:hover {
+  background-color: var(--ood-bg-hover);
+}
+
+.ood-toolbar-light .ood-toolbar-item-checked {
+  background-color: var(--ood-primary);
+  color: var(--ood-text-on-primary);
+}
+
+.ood-toolbar-light .ood-toolbar-separator {
+  border-left: 1px solid var(--ood-border-color);
+}
+
+/* ==========================================================================
+ * CheckBox 和 RadioBox 组件样式
+ * ========================================================================== */
+.ood-checkbox-light,
+.ood-radiobox-light {
+  color: var(--ood-text-primary);
+}
+
+.ood-checkbox-light .ood-checkbox-box,
+.ood-radiobox-light .ood-radiobox-box {
+  background-color: var(--ood-bg-input);
+  border-color: var(--ood-border-color);
+}
+
+.ood-checkbox-light .ood-checkbox-box-checked,
+.ood-radiobox-light .ood-radiobox-box-checked {
+  background-color: var(--ood-primary);
+  border-color: var(--ood-primary);
+}
+
+.ood-checkbox-light .ood-checkbox-caption,
+.ood-radiobox-light .ood-radiobox-caption {
+  color: var(--ood-text-primary);
+}
+
+.ood-checkbox-light.ood-ui-disabled,
+.ood-radiobox-light.ood-ui-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+ * TreeGrid 组件样式
+ * ========================================================================== */
+.ood-treegrid-light {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-text-primary);
+  border-color: var(--ood-border-color);
+}
+
+.ood-treegrid-light .ood-treegrid-header {
+  background-color: var(--ood-bg-secondary);
+  border-color: var(--ood-border-color);
+  color: var(--ood-text-secondary);
+}
+
+.ood-treegrid-light .ood-treegrid-hcell {
+  background-color: var(--ood-bg-secondary);
+  border-color: var(--ood-border-color);
+  color: var(--ood-text-secondary);
+}
+
+.ood-treegrid-light .ood-treegrid-hcell:hover {
+  background-color: var(--ood-bg-hover);
+}
+
+.ood-treegrid-light .ood-treegrid-hcell-checked {
+  background-color: var(--ood-primary);
+  color: var(--ood-text-on-primary);
+}
+
+.ood-treegrid-light .ood-treegrid-rows {
+  background-color: var(--ood-bg-primary);
+  border-color: var(--ood-border-color);
+}
+
+.ood-treegrid-light .ood-treegrid-cells1,
+.ood-treegrid-light .ood-treegrid-cells2 {
+  background-color: var(--ood-bg-primary);
+  color: var(--ood-text-primary);
+  border-color: var(--ood-border-color);
+}
+
+.ood-treegrid-light .ood-treegrid-cells1-alt,
+.ood-treegrid-light .ood-treegrid-cells2-alt {
+  background-color: var(--ood-bg-surface);
+  color: var(--ood-text-primary);
+}
+
+.ood-treegrid-light .ood-treegrid-cells1-hover,
+.ood-treegrid-light .ood-treegrid-cells2-hover {
+  background-color: var(--ood-bg-hover);
+}
+
+.ood-treegrid-light .ood-treegrid-cells1-active,
+.ood-treegrid-light .ood-treegrid-cells2-active,
+.ood-treegrid-light .ood-treegrid-cell-active {
+  background-color: var(--ood-primary);
+  color: var(--ood-text-on-primary);
+}
+
+.ood-treegrid-light .ood-treegrid-cells1-checked,
+.ood-treegrid-light .ood-treegrid-cells2-checked,
+.ood-treegrid-light .ood-treegrid-cell-checked {
+  background-color: var(--ood-primary);
+  color: var(--ood-text-on-primary);
+}
+
+.ood-treegrid-light .ood-treegrid-fcell {
+  border-color: var(--ood-border-color);
+}
+
+.ood-treegrid-light .ood-treegrid-fcellcaption {
+  color: var(--ood-text-primary);
+}
+
+.ood-treegrid-light .ood-treegrid-fhcell {
+  background-color: var(--ood-bg-secondary);
+  border-color: var(--ood-border-color);
+  color: var(--ood-text-secondary);
+}
+
+/* RichEditor 组件样式 */
+.ood-richeditor-light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+.ood-richeditor-light .ood-richeditor-toolbar {
+  background-color: var(--light-bg-light);
+border-color:极抱歉，我还没有学会回答这个问题。如果你有其他问题，我非常乐意为你提供帮助。
+
+  /* Slider 组件样式 */
+.ood-slider-light {
+  background-color: var(--light-bg);
+}
+
+.ood-slider-light .ood-slider-track {
+  background-color: var(--light-bg-light);
+  border-color: var(--light-border);
+}
+
+.ood-slider-light .ood-slider-thumb {
+  background-color: var(--light-primary);
+  border-color: var(--light-border-light);
+}
+
+.ood-slider-light .ood-slider-thumb:hover {
+  background-color: var(--light-primary-hover);
+}
+
+.ood-slider-light .ood-slider-progress {
+  background-color: var(--light-primary);
+}
+
+/* ProgressBar 组件样式 */
+.ood-progressbar-light {
+  background-color: var(--light-bg-light);
+  border-color: var(--light-border);
+}
+
+.ood-progressbar-light .ood-progressbar-fill {
+  background-color: var(--light-primary);
+}
+
+.ood-progressbar-light .ood-progressbar-caption {
+  color: var(--light-text);
+}
+
+/* PopMenu 组件样式 */
+.ood-popmenu-light {
+  background-color: var(--light-bg);
+  border-color: var(--light-border);
+  box-shadow: var(--shadow-md);
+}
+
+.ood-popmenu-light .ood-popmenu-item {
+  color: var(--light-text);
+}
+
+.ood-popmenu-light .ood-popmenu-item:hover {
+  background-color: var(--light-bg-hover);
+}
+
+.ood-popmenu-light .ood-popmenu-item-checked {
+  background-color: var(--light-primary);
+  color: var(--light-text);
+}
+
+.ood-popmenu-light .ood-popmenu-separator {
+  border-top: 1px solid var(--light-border);
+}
+
+/* Layout 组件样式 */
+.ood-layout-light {
+  background-color: var(--light-bg);
+}
+
+.ood-layout-light .ood-layout-move {
+  background-color: var(--light-border);
+}
+
+.ood-layout-light .ood-layout-move:hover {
+  background-color: var(--light-primary);
+}
+
+.ood-layout-light .ood-layout-cmd {
+  background-color: var(--light-bg-light);
+  color: var(--light-text);
+}
+
+.ood-layout-light .ood-layout-cmd:hover {
+  background-color: var(--light-bg-hover);
+}
+
+/* Resizer 组件样式 - 来自ood/js/UI/Resizer.js */
+.ood-resizer-light {
+  background-color: transparent;
+}
+
+.ood-resizer-light .ood-resizer-handler {
+  background-color: var(--light-primary);
+  opacity: 0.6;
+}
+
+.ood-resizer-light .ood-resizer-handler:hover {
+  background-color: var(--light-primary-hover);
+  opacity: 0.8;
+}
+
+.ood-resizer-light .ood-resizer-move {
+  background-color: var(--light-primary);
+  opacity: 0.3;
+}
+
+.ood-resizer-light .ood-resizer-move:hover {
+  opacity: 0.5;
+}
+
+.ood-resizer-light .ood-resizer-region {
+  border: 1px dashed var(--light-primary);
+  background-color: rgba(var(--light-primary-rgb), 0.1);
+}
+
+/* Tooltip 组件样式 */
+.ood-tooltip-light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+  border-color: var(--light-border);
+  box-shadow: var(--shadow-md);
+}
+
+.ood-tooltip-light .ood-tooltip-arrow {
+  border-color: var(--light-border);
+}
+
+.ood-tooltip-light .ood-tooltip-content {
+  color: var(--light-text);
+}
+
+/* Notification 组件样式 */
+.ood-notification-light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+  border-color: var(--light-border);
+  box-shadow: var(--shadow-md);
+}
+
+.ood-notification-light .ood-notification-title {
+  color: var(--light-text);
+  border-bottom: 1px solid var(--light-border);
+}
+
+.ood-notification-light .ood-notification-content {
+  color: var(--light-text);
+}
+
+.ood-notification-light .ood-notification-close {
+  color: var(--light-text-light);
+}
+
+.ood-notification-light .ood-notification-close:hover {
+  color: var(--light-text);
+  background-color: var(--light-bg-hover);
+}
+
+/* Splitter 组件样式 */
+.ood-splitter-light {
+  background-color: var(--light-bg);
+}
+
+.ood-splitter-light .ood-splitter-handler {
+  background-color: var(--light-border);
+}
+
+.ood-splitter-light .ood-splitter-handler:hover {
+  background-color: var(--light-primary);
+}
+
+.ood-splitter-light .ood-splitter-panel {
+  background-color: var(--light-bg);
+  border-color: var(--light-border);
+}
+
+/* FileUploader 组件样式 */
+.ood-fileuploader-light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+.ood-fileuploader-light .ood-fileuploader-btn {
+  background-color: var(--light-bg-light);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+.ood-fileuploader-light .ood-fileuploader-btn:hover {
+  background-color: var(--light-bg-hover);
+}
+
+/* TimePicker 组件样式 */
+.ood-timepicker-light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+.ood-timepicker-light .ood-timepicker-con {
+  background-color: var(--light-bg);
+  border-color: var(--light-border);
+}
+
+.ood-timepicker-light .ood-timepicker-btn {
+  background-color: var(--light-bg-light);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+.ood-timepicker-light .ood-timepicker-btn:hover {
+  background-color: var(--light-bg-hover);
+}
+
+.ood-timepicker-light .ood-timepicker-item {
+  color: var(--light-text);
+}
+
+.ood-timepicker-light .ood-timepicker-item:hover {
+  background-color: var(--light-bg-hover);
+}
+
+.ood-timepicker-light .ood-timepicker-item-selected {
+  background-color: var(--light-primary);
+  color: var(--light-text);
+}
+
+/* Calendar 组件样式 */
+.ood-calendar-light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+.ood-calendar-light .ood-calendar-header {
+  background-color: var(--light-bg-light);
+  border-color: var(--light-border);
+}
+
+.ood-calendar-light .ood-calendar-prev,
+.ood-calendar-light .ood-calendar-next {
+  color: var(--light-text-light);
+}
+
+.ood-calendar-light .ood-calendar-prev:hover,
+.ood-calendar-light .ood-calendar-next:hover {
+  color: var(--light-text);
+  background-color: var(--light-bg-hover);
+}
+
+.ood-calendar-light .ood-calendar-title {
+  color: var(--light-text);
+}
+
+.ood-calendar-light .ood-calendar-weekday {
+  color: var(--light-text-light);
+  background-color: var(--light-bg-light);
+}
+
+.ood-calendar-light .ood-calendar-day {
+  color: var(--light-text);
+}
+
+.ood-calendar-light .ood-calendar-day:hover {
+  background-color: var(--light-bg-hover);
+}
+
+.ood-calendar-light .ood-calendar-day-today {
+  border-color: var(--light-primary);
+  color: var(--light-primary);
+}
+
+.ood-calendar-light .ood-calendar-day-selected {
+  background-color: var(--light-primary);
+  color: var(--light-text);
+}
+
+.ood-calendar-light .ood-calendar-day-disabled {
+  color: var(--light-text-disabled);
+}
+
+/* Accordion 组件样式 */
+.ood-accordion-light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+.ood-accordion-light .ood-accordion-header {
+  background-color: var(--light-bg-light);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+.ood-accordion-light .ood-accordion-header:hover {
+  background-color: var(--light-bg-hover);
+}
+
+.ood-accordion-light .ood-accordion-header-active {
+  background-color: var(--light-primary);
+  color: var(--light-text);
+}
+
+.ood-accordion-light .ood-accordion-content {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+/* Carousel 组件样式 */
+.ood-carousel-light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+}
+
+.ood-carousel-light .ood-carousel-item {
+  background-color: var(--light-bg);
+}
+
+.ood-carousel-light .ood-carousel-nav {
+  background-color: rgba(var(--light-bg-rgb), 0.5);
+}
+
+.ood-carousel-light .ood-carousel-dot {
+  background-color: var(--light-text-light);
+}
+
+.ood-carousel-light .ood-carousel-dot-active {
+  background-color: var(--light-primary);
+}
+
+.ood-carousel-light .ood-carousel-prev,
+.ood-carousel-light .ood-carousel-next {
+  color: var(--light-text);
+  background-color: rgba(var(--light-bg-rgb), 0.5);
+}
+
+.ood-carousel-light .ood-carousel-prev:hover,
+.ood-carousel-light .ood-carousel-next:hover {
+  background-color: rgba(var(--light-bg-hover-rgb), 0.7);
+}
+
+/* 补充其他可能的组件样式 */
+/* Card 组件样式 */
+.ood-card-light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+  border-color: var(--light-border);
+  box-shadow: var(--shadow-md);
+}
+
+.ood-card-light .ood-card-header {
+  background-color: var(--light-bg-light);
+  border-color: var(--light-border);
+}
+
+.ood-card-light .ood-card-title {
+  color: var(--light-text);
+}
+
+.ood-card-light .ood-card-content {
+  color: var(--light-text);
+}
+
+.ood-card-light .ood-card-footer {
+  background-color: var(--light-bg-light);
+  border-color: var(--light-border);
+}
+
+/* 确保所有组件都有亮色主题支持的通用样式 */
+.ood-ui-light {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+.ood-ui-light .ood-ui-header {
+  background-color: var(--light-bg-light);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+.ood-ui-light .ood-ui-content {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+}
+
+.ood-ui-light .ood-ui-footer {
+  background-color: var(--light-bg-light);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+.ood-ui-light .ood-ui-btn {
+  background-color: var(--light-bg-light);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+.ood-ui-light .ood-ui-btn:hover {
+  background-color: var(--light-bg-hover);
+}
+
+.ood-ui-light .ood-ui-btn-primary {
+  background-color: var(--light-primary);
+  color: var(--light-text);
+  border-color: var(--light-primary);
+}
+
+.ood-ui-light .ood-ui-btn-primary:hover {
+  background-color: var(--light-primary-hover);
+  border-color: var(--light-primary-hover);
+}
+
+/* 确保所有组件的禁用状态有一致的样式 */
+.ood-ui-light .ood-ui-disabled,
+.ood-ui-light.ood-ui-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .ood-title-node {
+    font-size: 1.3rem;
+  }
+
+  .oodfont, .oodcon {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .ood-ui-ctrl, .ood-ui-reset {
+    font-size: 0.9rem;
+  }
+
+  .ood-title-node {
+    font-size: 1.2rem;
+  }
+
+  .oodfont, .oodcon {
+    font-size: 1rem;
+  }
+}
+
+/** important => the last one: this theme's name */
+.setting-uikey {
+  font-family: light;
+}
+
+/* 亮色模式下的通用样式 */
+body.light-theme {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+}
+
+/* 输入组件亮色模式样式类 */
+.input-light .ood-ui-shadow,
+.combo-input-light .ood-ui-shadow {
+  box-shadow: 0 2px 8px var(--light-shadow);
+}
+
+.input-light:focus-within,
+.combo-input-light:focus-within {
+  border-color: var(--light-border-focus);
+  box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.2);
+}
+
+/* 禁用状态 */
+.input-light:disabled,
+.combo-input-light:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.input-light:disabled .ood-ui-input,
+.combo-input-light:disabled .ood-ui-input {
+  background-color: var(--light-bg-light);
+  color: var(--light-text-disabled);
+  border-color: var(--light-success);
+}
+
+.input-light.ood-ui-invalid .ood-ui-input,
+.combo-input-light.ood-ui-invalid .ood-ui-input {
+  border-color: var(--light-error);
+}
+
+/* 通用按钮暗黑模式支持 */
+.ood-ui-button.light-theme {
+  background-color: var(--light-bg-light);
+  color: var(--light-text);
+  border-color: var(--light-border);
+}
+
+.ood-ui-button.light-theme:hover {
+  background-color: var(--light-bg-hover);
+  border-color: var(--light-border-light);
+}
+
+.ood-ui-button.light-theme:active {
+  background-color: var(--light-bg-active);
+}
+
+/* 面板亮色模式 */
+.ood-ui-panel.light-theme {
+  background-color: var(--light-bg-light);
+  border-color: var(--light-border);
+}
+
+.ood-ui-panel.light-theme .ood-ui-panel-header {
+  background-color: var(--light-bg-lighter);
+  border-bottom-color: var(--light-border);
+  color: var(--light-text);
+}
+
+.ood-ui-panel.light-theme .ood-ui-panel-body {
+  background-color: var(--light-bg-light);
+  color: var(--light-text);
+}
+
+/* 滚动条亮色模式 */
+.light-theme ::-webkit-scrollbar {
+  background-color: var(--light-bg);
+}
+
+.light-theme ::-webkit-scrollbar-thumb {
+  background-color: var(--light-border);
+  border-radius: 4px;
+}
+
+.light-theme ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--light-border-light);
+}
+
+/* FoldingTabs组件样式 - 亮色主题 */
+.ood-foldingtabs-item {
+  margin-bottom: var(--spacing-md);
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+  background-color: var(--light-bg-card);
+}
+
+.ood-foldingtabs-item:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.ood-foldingtabs-header {
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--ood-radius-md) var(--ood-radius-md) 0 0;
+  transition: all var(--ood-transition-fast);
+  background-color: var(--ood-bg-surface);
+  border-bottom: 1px solid var(--ood-border-color);
+}
+
+.ood-foldingtabs-header:hover {
+  background-color: var(--ood-bg-hover);
+}
+
+.ood-foldingtabs-title {
+  display: flex;
+  align-items: center;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  padding: var(--ood-spacing-md);
+}
+
+.ood-foldingtabs-caption {
+  white-space: nowrap;
+  flex: 1;
+  font-size: var(--ood-font-size-lg);
+  font-weight: 500;
+  color: var(--ood-text-primary);
+  transition: color var(--ood-transition-fast);
+  padding: var(--ood-spacing-xs);
+}
+
+.ood-foldingtabs-header:hover .ood-foldingtabs-caption {
+  color: var(--ood-info);
+}
+
+.ood-foldingtabs-message {
+  font-size: var(--ood-font-size-base);
+  color: var(--ood-text-muted);
+  padding: var(--ood-spacing-xs);
+}
+
+.ood-foldingtabs-toggle {
+  font-size: 1.25rem;
+  margin-right: 0.75rem;
+  transition: transform var(--ood-transition-normal);
+  color: var(--ood-text-muted);
+}
+
+.ood-foldingtabs-toggle.-checked {
+  transform: rotate(90deg);
+  color: var(--ood-info);
+}
+
+.ood-foldingtabs-icon {
+  font-size: 1.25rem;
+  margin-right: 0.75rem;
+  transition: color var(--ood-transition-fast);
+  color: var(--ood-text-muted);
+}
+
+.ood-foldingtabs-header:hover .ood-foldingtabs-icon {
+  color: var(--ood-info);
+}
+
+.ood-foldingtabs-body {
+  display: none;
+  position: relative;
+  max-height: 0;
+  opacity: 0;
+  transition: all var(--ood-transition-normal);
+  border-radius: 0 0 var(--ood-radius-md) var(--ood-radius-md);
+}
+
+.ood-foldingtabs-body-open {
+  animation: ood-foldingtabs-open 0.3s ease-out;
+}
+
+.ood-foldingtabs-panel {
+  overflow: auto;
+  padding: 1rem;
+  border-radius: 0 0 var(--ood-radius-md) var(--ood-radius-md);
+  border-top: none;
+}
+
+.ood-foldingtabs-tleft {
+  display: flex;
+  align-items: center;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  flex: 1;
+}
+
+.ood-foldingtabs-tright {
+  display: flex;
+  align-items: center;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  margin-left: auto;
+}
+
+.ood-foldingtabs-commands {
+  padding: 0.25em 0 0 0.25em;
+  vertical-align: middle;
+  position: relative;
+}
+
+.ood-foldingtabs-tag-commands {
+  padding: 0;
+  margin: 0;
+  vertical-align: middle;
+}
+
+.ood-foldingtabs-commands .oodfont {
+  font-size: 1.1rem;
+  margin-left: 0.5rem;
+  color: var(--ood-text-muted);
+  transition: color var(--ood-transition-fast);
+}
+
+
+.ood-foldingtabs-commands .oodfont:hover {
+  color: var(--ood-info);
+}
+
+.ood-foldingtabs-icon:hover {
+  color: var(--ood-info);
+}
+
+.ood-title-node {
+  font-weight: 500;
+  color: var(--ood-text-primary);
+}
+
+.ood-foldingtabs-body-inner {
+  padding: 0 .25em;
+}
+
+.ood-foldingtabs-item.-checked .ood-foldingtabs-caption {
+  font-weight: 600;
+  color: var(--ood-info);
+}
+
+.ood-foldingtabs-item.-checked .ood-foldingtabs-body {
+  display: block;
+  max-height: 800px;
+  opacity: 1;
+}
+
+.foldingtabs-mobile .ood-foldingtabs-title {
+  padding: var(--ood-spacing-sm);
+}
+
+.foldingtabs-mobile .ood-foldingtabs-caption {
+  font-size: var(--ood-font-size-base);
+}
+
+.foldingtabs-tiny .ood-foldingtabs-title {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.foldingtabs-tiny .ood-foldingtabs-tright {
+  margin-left: 0;
+  margin-top: var(--ood-spacing-xs);
+}
+
+@keyframes ood-foldingtabs-open {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

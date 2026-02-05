@@ -1,0 +1,1252 @@
+﻿﻿﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>终端管理 - MCP Agent Console</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <style>
+        /* Ooder-Rad 风格基础样式 - 纯黑色系暗色主题 */
+        :root {
+            --ooder-primary: #3b82f6;
+            --ooder-secondary: #94a3b8;
+            --ooder-success: #22c55e;
+            --ooder-warning: #f59e0b;
+            --ooder-danger: #ef4444;
+            --ooder-light: #0f0f0f;
+            --ooder-dark: #ffffff;
+            --ooder-border: #2a2a2a;
+            --ooder-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            --ooder-radius: 8px;
+            --ooder-spacing: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #000000;
+            color: var(--ooder-dark);
+            line-height: 1.5;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            background-color: #000000;
+        }
+        
+        /* 侧边栏样式 - Ooder-Rad 风格 */
+        .sidebar {
+            width: 260px;
+            background-color: #121212;
+            border-right: 1px solid var(--ooder-border);
+            padding: 24px;
+            box-shadow: var(--ooder-shadow);
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 32px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ooder-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sidebar h2::before {
+            content: "⚡";
+            font-size: 20px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-menu li {
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu a {
+            color: var(--ooder-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--ooder-radius);
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .nav-menu a:hover {
+            background-color: var(--ooder-light);
+            color: var(--ooder-primary);
+        }
+        
+        .nav-menu a.active {
+            background-color: rgba(26, 115, 232, 0.1);
+            color: var(--ooder-primary);
+            font-weight: 600;
+        }
+        
+        /* 二级菜单样式 */
+        .nav-menu .submenu {
+            list-style: none;
+            margin-left: 16px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu .submenu li {
+            margin-bottom: 2px;
+        }
+        
+        .nav-menu .submenu a {
+            padding: 10px 16px;
+            font-size: 13px;
+            border-left: 2px solid var(--ooder-border);
+        }
+        
+        /* 三级菜单样式 */
+        .nav-menu .submenu .submenu {
+            margin-left: 32px;
+        }
+        
+        .nav-menu .submenu .submenu a {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-left: 2px solid var(--ooder-secondary);
+        }
+        
+        /* 展开/折叠图标 */
+        .nav-menu .toggle-icon {
+            margin-left: auto;
+            transition: transform 0.2s ease;
+        }
+        
+        .nav-menu .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        /* 菜单分隔线 */
+        .nav-menu .menu-divider {
+            height: 1px;
+            background-color: var(--ooder-border);
+            margin: 16px 0;
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            background-color: #000000;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--ooder-border);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ooder-dark);
+        }
+        
+        .header .subtitle {
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        /* 章节样式 */
+        .section {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            margin-bottom: 24px;
+        }
+        
+        .section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--ooder-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section h2::before {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background-color: var(--ooder-primary);
+            border-radius: 2px;
+        }
+        
+        /* 状态网格样式 */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        
+        .status-item {
+            padding: 16px;
+            border-radius: var(--ooder-radius);
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .status-item .key {
+            font-size: 14px;
+            color: var(--ooder-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .status-item .value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ooder-dark);
+        }
+        
+        .status-item.ok {
+            border-left: 4px solid var(--ooder-success);
+            background-color: rgba(34, 197, 94, 0.1);
+        }
+        
+        .status-item.warning {
+            border-left: 4px solid var(--ooder-warning);
+            background-color: rgba(245, 158, 11, 0.1);
+        }
+        
+        .status-item.error {
+            border-left: 4px solid var(--ooder-danger);
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+        
+        /* 表格样式 */
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--ooder-radius);
+            border: 1px solid var(--ooder-border);
+            background-color: #1a1a1a;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ooder-border);
+            color: var(--ooder-dark);
+        }
+        
+        th {
+            background-color: #121212;
+            font-weight: 600;
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        tr:hover {
+            background-color: #1a1a1a;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--ooder-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 12px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--ooder-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background-color: #1a1a1a;
+            color: var(--ooder-secondary);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2a2a2a;
+        }
+        
+        .btn-success {
+            background-color: var(--ooder-success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #16a34a;
+            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.4);
+        }
+        
+        .btn-danger {
+            background-color: var(--ooder-danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+        }
+        
+        /* 搜索框样式 */
+        .search-box {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 48px 12px 16px;
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            color: var(--ooder-dark);
+            font-size: 14px;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--ooder-primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .search-box i {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--ooder-secondary);
+        }
+        
+        /* 筛选器样式 */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-item label {
+            color: var(--ooder-secondary);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .filter-item select {
+            padding: 8px 12px;
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            color: var(--ooder-dark);
+            font-size: 14px;
+        }
+        
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+        
+        .pagination button {
+            padding: 8px 12px;
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            color: var(--ooder-dark);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .pagination button:hover {
+            background-color: #2a2a2a;
+            border-color: var(--ooder-primary);
+        }
+        
+        .pagination button.active {
+            background-color: var(--ooder-primary);
+            color: white;
+            border-color: var(--ooder-primary);
+        }
+        
+        /* 终端详情样式 */
+        .terminal-detail {
+            background-color: #1a1a1a;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            border: 1px solid var(--ooder-border);
+            margin-top: 24px;
+        }
+        
+        .terminal-detail h3 {
+            margin-bottom: 16px;
+            color: var(--ooder-dark);
+        }
+        
+        /* 隐藏样式 */
+        .hidden {
+            display: none;
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: #121212;
+            padding: 32px;
+            border-radius: var(--ooder-radius);
+            border: 1px solid var(--ooder-border);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .modal-header h3 {
+            color: var(--ooder-dark);
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .modal-header .close-btn {
+            background: none;
+            border: none;
+            color: var(--ooder-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        
+        .modal-header .close-btn:hover {
+            color: var(--ooder-dark);
+        }
+        
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--ooder-secondary);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            color: var(--ooder-dark);
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--ooder-primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 32px;
+        }
+        
+        /* 操作按钮组 */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        /* 终端状态样式 */
+        .terminal-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+        
+        .terminal-status.online {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: var(--ooder-success);
+        }
+        
+        .terminal-status.offline {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--ooder-danger);
+        }
+        
+        .terminal-status.busy {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: var(--ooder-warning);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--ooder-border);
+                padding: 16px;
+            }
+            
+            .main-content {
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .filter-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .pagination {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> MCP Agent Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><i class="ri-smartphone-line"></i> 终端管理</h1>
+                <div class="subtitle">End Agent 终端管理与监控</div>
+            </div>
+            
+            <!-- 终端管理概览 -->
+            <div class="section">
+                <h2>终端管理概览</h2>
+                <div class="status-grid">
+                    <div class="status-item ok">
+                        <div class="key">总终端数</div>
+                        <div class="value">156</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">在线终端</div>
+                        <div class="value">148</div>
+                    </div>
+                    <div class="status-item error">
+                        <div class="key">离线终端</div>
+                        <div class="value">8</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">终端发现间隔</div>
+                        <div class="value">120秒</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">终端心跳间隔</div>
+                        <div class="value">30秒</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">最大终端数</div>
+                        <div class="value">200</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 24px;">
+                    <button class="btn btn-primary" onclick="discoverTerminals()">
+                        <i class="ri-refresh-line"></i> 发现终端
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshTerminals()">
+                        <i class="ri-arrow-refresh-line"></i> 刷新终端
+                    </button>
+                    <button class="btn btn-danger" onclick="clearInactiveTerminals()">
+                        <i class="ri-delete-bin-line"></i> 清除不活跃终端
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 终端列表 -->
+            <div class="section">
+                <h2>终端列表</h2>
+                
+                <!-- 搜索和筛选 -->
+                <div class="search-box">
+                    <input type="text" placeholder="搜索终端ID或名称...">
+                    <i class="ri-search-line"></i>
+                </div>
+                
+                <div class="filter-bar">
+                    <div class="filter-item">
+                        <label>状态:</label>
+                        <select>
+                            <option value="all">全部</option>
+                            <option value="online">在线</option>
+                            <option value="offline">离线</option>
+                            <option value="busy">忙碌</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>类型:</label>
+                        <select>
+                            <option value="all">全部</option>
+                            <option value="desktop">桌面</option>
+                            <option value="mobile">移动</option>
+                            <option value="server">服务器</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>系统:</label>
+                        <select>
+                            <option value="all">全部</option>
+                            <option value="windows">Windows</option>
+                            <option value="linux">Linux</option>
+                            <option value="macos">macOS</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 终端表格 -->
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>终端ID</th>
+                                <th>终端名称</th>
+                                <th>类型</th>
+                                <th>系统</th>
+                                <th>状态</th>
+                                <th>IP地址</th>
+                                <th>最后在线</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="terminal-table-body">
+                            <!-- 动态生成终端列表 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 -->
+                <div class="pagination">
+                    <button>上一页</button>
+                    <button class="active">1</button>
+                    <button>2</button>
+                    <button>3</button>
+                    <button>4</button>
+                    <button>5</button>
+                    <button>下一页</button>
+                </div>
+            </div>
+            
+            <!-- 终端详情 -->
+            <div class="section" id="terminal-detail" class="hidden">
+                <h2>终端详情</h2>
+                <div id="terminal-detail-content">
+                    <!-- 动态生成终端详情 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 编辑终端模态框 -->
+    <div id="edit-terminal-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-edit-line"></i> 编辑终端</h3>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="edit-terminal-form">
+                <div class="form-group">
+                    <label for="terminal-id">终端ID</label>
+                    <input type="text" id="terminal-id" name="terminalId" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="terminal-name">终端名称</label>
+                    <input type="text" id="terminal-name" name="terminalName" required>
+                </div>
+                <div class="form-group">
+                    <label for="terminal-type">类型</label>
+                    <select id="terminal-type" name="terminalType" required>
+                        <option value="desktop">桌面</option>
+                        <option value="mobile">移动</option>
+                        <option value="server">服务器</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="terminal-system">系统</label>
+                    <select id="terminal-system" name="terminalSystem" required>
+                        <option value="windows">Windows</option>
+                        <option value="linux">Linux</option>
+                        <option value="macos">macOS</option>
+                        <option value="android">Android</option>
+                        <option value="ios">iOS</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="terminal-status">状态</label>
+                    <select id="terminal-status" name="terminalStatus" required>
+                        <option value="online">在线</option>
+                        <option value="offline">离线</option>
+                        <option value="busy">忙碌</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="terminal-ip">IP地址</label>
+                    <input type="text" id="terminal-ip" name="terminalIp" required>
+                </div>
+                <div class="form-group">
+                    <label for="terminal-mac">MAC地址</label>
+                    <input type="text" id="terminal-mac" name="terminalMac">
+                </div>
+                <div class="form-group">
+                    <label for="terminal-notes">备注</label>
+                    <textarea id="terminal-notes" name="terminalNotes" rows="3" placeholder="终端备注信息"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTerminal()">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 终端操作模态框 -->
+    <div id="terminal-action-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-command-line"></i> 终端操作</h3>
+                <button class="close-btn" onclick="closeActionModal()">&times;</button>
+            </div>
+            <div id="action-terminal-id" style="margin-bottom: 24px; font-size: 14px; color: var(--ooder-secondary);"></div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="pingTerminal()">
+                    <i class="ri-refresh-line"></i> Ping 终端
+                </button>
+                <button class="btn btn-secondary" onclick="rebootTerminal()">
+                    <i class="ri-restart-line"></i> 重启终端
+                </button>
+                <button class="btn btn-warning" onclick="updateTerminal()">
+                    <i class="ri-download-line"></i> 更新 Agent
+                </button>
+                <button class="btn btn-danger" onclick="shutdownTerminal()">
+                    <i class="ri-power-off-line"></i> 关闭终端
+                </button>
+            </div>
+            <div id="action-result" style="margin-top: 24px; padding: 16px; border-radius: var(--ooder-radius); border: 1px solid var(--ooder-border); display: none;"></div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        // 当前页面
+        let currentPage = 'terminal-management';
+        
+        // 菜单配置
+        let menuConfig = null;
+        
+        // 终端数据
+        let terminals = [];
+        let currentTerminal = null;
+        
+        // 初始化页面
+        function init() {
+            loadTerminalList();
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // 加载终端列表
+        function loadTerminalList() {
+            // 模拟终端数据
+            terminals = [
+                { id: 'terminal-001', name: 'Desktop-001', type: 'desktop', system: 'Windows', status: 'online', ip: '192.168.1.101', mac: '00:11:22:33:44:55', lastOnline: '2026-01-30 10:00:00' },
+                { id: 'terminal-002', name: 'Laptop-001', type: 'desktop', system: 'macOS', status: 'online', ip: '192.168.1.102', mac: '00:11:22:33:44:56', lastOnline: '2026-01-30 10:01:00' },
+                { id: 'terminal-003', name: 'Server-001', type: 'server', system: 'Linux', status: 'online', ip: '192.168.1.103', mac: '00:11:22:33:44:57', lastOnline: '2026-01-30 10:02:00' },
+                { id: 'terminal-004', name: 'Mobile-001', type: 'mobile', system: 'Android', status: 'offline', ip: '192.168.1.104', mac: '00:11:22:33:44:58', lastOnline: '2026-01-30 09:30:00' },
+                { id: 'terminal-005', name: 'Desktop-002', type: 'desktop', system: 'Windows', status: 'online', ip: '192.168.1.105', mac: '00:11:22:33:44:59', lastOnline: '2026-01-30 10:03:00' },
+                { id: 'terminal-006', name: 'Server-002', type: 'server', system: 'Linux', status: 'online', ip: '192.168.1.106', mac: '00:11:22:33:44:60', lastOnline: '2026-01-30 10:04:00' },
+                { id: 'terminal-007', name: 'Laptop-002', type: 'desktop', system: 'Windows', status: 'busy', ip: '192.168.1.107', mac: '00:11:22:33:44:61', lastOnline: '2026-01-30 10:05:00' },
+                { id: 'terminal-008', name: 'Mobile-002', type: 'mobile', system: 'iOS', status: 'offline', ip: '192.168.1.108', mac: '00:11:22:33:44:62', lastOnline: '2026-01-30 09:45:00' },
+                { id: 'terminal-009', name: 'Desktop-003', type: 'desktop', system: 'Linux', status: 'online', ip: '192.168.1.109', mac: '00:11:22:33:44:63', lastOnline: '2026-01-30 10:06:00' },
+                { id: 'terminal-010', name: 'Server-003', type: 'server', system: 'Linux', status: 'online', ip: '192.168.1.110', mac: '00:11:22:33:44:64', lastOnline: '2026-01-30 10:07:00' }
+            ];
+            
+            renderTerminalTable();
+        }
+        
+        // 渲染终端表格
+        function renderTerminalTable() {
+            const tableBody = document.getElementById('terminal-table-body');
+            tableBody.innerHTML = '';
+            
+            terminals.forEach(terminal => {
+                const row = document.createElement('tr');
+                
+                // 设置状态样式
+                let statusClass = '';
+                switch(terminal.status) {
+                    case 'online':
+                        statusClass = 'status-item ok';
+                        break;
+                    case 'offline':
+                        statusClass = 'status-item error';
+                        break;
+                    case 'busy':
+                        statusClass = 'status-item warning';
+                        break;
+                }
+                
+                row.innerHTML = `
+                    <td>${terminal.id}</td>
+                    <td>${terminal.name}</td>
+                    <td>${terminal.type}</td>
+                    <td>${terminal.system}</td>
+                    <td>
+                        <div class="${statusClass}" style="padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                            ${terminal.status}
+                        </div>
+                    </td>
+                    <td>${terminal.ip}</td>
+                    <td>${terminal.lastOnline}</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="viewTerminalDetail('${terminal.id}')">
+                            <i class="ri-eye-line"></i> 查看
+                        </button>
+                        <button class="btn btn-primary" onclick="editTerminal('${terminal.id}')">
+                            <i class="ri-edit-line"></i> 编辑
+                        </button>
+                        <button class="btn btn-success" onclick="openActionModal('${terminal.id}')">
+                            <i class="ri-command-line"></i> 操作
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteTerminal('${terminal.id}')">
+                            <i class="ri-delete-bin-line"></i> 删除
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // 查看终端详情
+        function viewTerminalDetail(terminalId) {
+            const detailSection = document.getElementById('terminal-detail');
+            const detailContent = document.getElementById('terminal-detail-content');
+            
+            // 模拟终端详情数据
+            const terminalDetail = {
+                id: terminalId,
+                name: 'Desktop-001',
+                type: 'desktop',
+                system: 'Windows',
+                status: 'online',
+                ip: '192.168.1.101',
+                mac: '00:11:22:33:44:55',
+                osVersion: 'Windows 10 Pro 22H2',
+                cpu: 'Intel Core i7-11700K',
+                memory: '16GB',
+                storage: '512GB SSD',
+                agentVersion: 'v0.6.5',
+                lastOnline: '2026-01-30 10:00:00',
+                firstSeen: '2026-01-29 08:00:00',
+                metadata: {
+                    'battery-level': '100%',
+                    'network-type': 'wifi',
+                    'signal-strength': 'excellent',
+                    'last-update': '2026-01-30 10:00:00'
+                }
+            };
+            
+            // 生成详情内容
+            detailContent.innerHTML = `
+                <div class="status-grid">
+                    <div class="status-item ok">
+                        <div class="key">终端ID</div>
+                        <div class="value">${terminalDetail.id}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">终端名称</div>
+                        <div class="value">${terminalDetail.name}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">类型</div>
+                        <div class="value">${terminalDetail.type}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">系统</div>
+                        <div class="value">${terminalDetail.system}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">状态</div>
+                        <div class="value">${terminalDetail.status}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">IP地址</div>
+                        <div class="value">${terminalDetail.ip}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">MAC地址</div>
+                        <div class="value">${terminalDetail.mac}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">系统版本</div>
+                        <div class="value">${terminalDetail.osVersion}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">CPU</div>
+                        <div class="value">${terminalDetail.cpu}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">内存</div>
+                        <div class="value">${terminalDetail.memory}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">存储</div>
+                        <div class="value">${terminalDetail.storage}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">Agent版本</div>
+                        <div class="value">${terminalDetail.agentVersion}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">最后在线</div>
+                        <div class="value">${terminalDetail.lastOnline}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">首次发现</div>
+                        <div class="value">${terminalDetail.firstSeen}</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 24px;">
+                    <h3 style="margin-bottom: 16px; color: var(--ooder-dark);">终端元数据</h3>
+                    <div style="background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); border: 1px solid var(--ooder-border); font-family: monospace; font-size: 14px;">
+                        ${Object.entries(terminalDetail.metadata).map(([key, value]) => `${key}: ${value}`).join('\n')}
+                    </div>
+                </div>
+                
+                <div style="margin-top: 24px;">
+                    <button class="btn btn-secondary" onclick="hideTerminalDetail()">
+                        <i class="ri-arrow-left-line"></i> 返回列表
+                    </button>
+                    <button class="btn btn-primary" onclick="editTerminal('${terminalDetail.id}')">
+                        <i class="ri-edit-line"></i> 编辑终端
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteTerminal('${terminalDetail.id}')">
+                        <i class="ri-delete-bin-line"></i> 删除终端
+                    </button>
+                </div>
+            `;
+            
+            // 显示详情部分
+            detailSection.classList.remove('hidden');
+        }
+        
+        // 隐藏终端详情
+        function hideTerminalDetail() {
+            const detailSection = document.getElementById('terminal-detail');
+            detailSection.classList.add('hidden');
+        }
+        
+        // 发现终端
+        function discoverTerminals() {
+            alert('开始发现终端...');
+            // 模拟终端发现过程
+            setTimeout(() => {
+                alert('终端发现完成，发现了 5 个新终端');
+                loadTerminalList();
+            }, 2000);
+        }
+        
+        // 刷新终端
+        function refreshTerminals() {
+            alert('开始刷新终端...');
+            // 模拟终端刷新过程
+            setTimeout(() => {
+                alert('终端刷新完成');
+                loadTerminalList();
+            }, 1000);
+        }
+        
+        // 清除不活跃终端
+        function clearInactiveTerminals() {
+            if (confirm('确定要清除不活跃终端吗？')) {
+                alert('不活跃终端已清除');
+                loadTerminalList();
+            }
+        }
+        
+        // 编辑终端
+        function editTerminal(terminalId) {
+            // 查找终端
+            currentTerminal = terminals.find(terminal => terminal.id === terminalId);
+            if (!currentTerminal) {
+                alert('终端不存在');
+                return;
+            }
+            
+            // 填充表单
+            document.getElementById('terminal-id').value = currentTerminal.id;
+            document.getElementById('terminal-name').value = currentTerminal.name;
+            document.getElementById('terminal-type').value = currentTerminal.type;
+            document.getElementById('terminal-system').value = currentTerminal.system.toLowerCase();
+            document.getElementById('terminal-status').value = currentTerminal.status;
+            document.getElementById('terminal-ip').value = currentTerminal.ip;
+            document.getElementById('terminal-mac').value = currentTerminal.mac || '';
+            document.getElementById('terminal-notes').value = currentTerminal.notes || '';
+            
+            // 显示模态框
+            document.getElementById('edit-terminal-modal').classList.remove('hidden');
+        }
+        
+        // 关闭编辑模态框
+        function closeEditModal() {
+            document.getElementById('edit-terminal-modal').classList.add('hidden');
+            currentTerminal = null;
+        }
+        
+        // 保存终端
+        function saveTerminal() {
+            if (!currentTerminal) return;
+            
+            // 获取表单数据
+            const formData = {
+                id: document.getElementById('terminal-id').value,
+                name: document.getElementById('terminal-name').value,
+                type: document.getElementById('terminal-type').value,
+                system: document.getElementById('terminal-system').value,
+                status: document.getElementById('terminal-status').value,
+                ip: document.getElementById('terminal-ip').value,
+                mac: document.getElementById('terminal-mac').value,
+                notes: document.getElementById('terminal-notes').value
+            };
+            
+            // 更新终端数据
+            const index = terminals.findIndex(terminal => terminal.id === formData.id);
+            if (index !== -1) {
+                terminals[index] = { ...terminals[index], ...formData };
+            }
+            
+            // 重新渲染表格
+            renderTerminalTable();
+            
+            // 关闭模态框
+            closeEditModal();
+            
+            alert('终端保存成功');
+        }
+        
+        // 打开操作模态框
+        function openActionModal(terminalId) {
+            currentTerminal = terminals.find(terminal => terminal.id === terminalId);
+            if (!currentTerminal) {
+                alert('终端不存在');
+                return;
+            }
+            
+            document.getElementById('action-terminal-id').textContent = `终端: ${currentTerminal.name} (${currentTerminal.id})`;
+            document.getElementById('terminal-action-modal').classList.remove('hidden');
+            document.getElementById('action-result').style.display = 'none';
+        }
+        
+        // 关闭操作模态框
+        function closeActionModal() {
+            document.getElementById('terminal-action-modal').classList.add('hidden');
+            currentTerminal = null;
+        }
+        
+        // Ping 终端
+        function pingTerminal() {
+            if (!currentTerminal) return;
+            
+            const resultDiv = document.getElementById('action-result');
+            resultDiv.style.display = 'block';
+            resultDiv.style.borderColor = 'var(--ooder-secondary)';
+            resultDiv.innerHTML = '<p style="color: var(--ooder-secondary);">正在 Ping 终端...</p>';
+            
+            setTimeout(() => {
+                const isSuccess = Math.random() > 0.2; // 80% 成功率
+                
+                if (isSuccess) {
+                    resultDiv.style.borderColor = 'var(--ooder-success)';
+                    resultDiv.innerHTML = `
+                        <p style="color: var(--ooder-success);"><i class="ri-check-circle-line"></i> Ping 成功</p>
+                        <p>响应时间: ${Math.floor(Math.random() * 100) + 10}ms</p>
+                        <p>终端状态: ${currentTerminal.status}</p>
+                    `;
+                } else {
+                    resultDiv.style.borderColor = 'var(--ooder-danger)';
+                    resultDiv.innerHTML = `
+                        <p style="color: var(--ooder-danger);"><i class="ri-error-warning-line"></i> Ping 失败</p>
+                        <p>错误: 请求超时</p>
+                        <p>建议: 检查终端网络连接</p>
+                    `;
+                }
+            }, 1500);
+        }
+        
+        // 重启终端
+        function rebootTerminal() {
+            if (!currentTerminal) return;
+            
+            if (confirm(`确定要重启终端 ${currentTerminal.name} 吗？`)) {
+                const resultDiv = document.getElementById('action-result');
+                resultDiv.style.display = 'block';
+                resultDiv.style.borderColor = 'var(--ooder-secondary)';
+                resultDiv.innerHTML = '<p style="color: var(--ooder-secondary);">正在重启终端...</p>';
+                
+                setTimeout(() => {
+                    resultDiv.style.borderColor = 'var(--ooder-success)';
+                    resultDiv.innerHTML = `
+                        <p style="color: var(--ooder-success);"><i class="ri-check-circle-line"></i> 重启命令已发送</p>
+                        <p>终端: ${currentTerminal.name}</p>
+                        <p>状态: 重启中</p>
+                    `;
+                }, 2000);
+            }
+        }
+        
+        // 更新 Agent
+        function updateTerminal() {
+            if (!currentTerminal) return;
+            
+            if (confirm(`确定要更新终端 ${currentTerminal.name} 的 Agent 吗？`)) {
+                const resultDiv = document.getElementById('action-result');
+                resultDiv.style.display = 'block';
+                resultDiv.style.borderColor = 'var(--ooder-secondary)';
+                resultDiv.innerHTML = '<p style="color: var(--ooder-secondary);">正在更新 Agent...</p>';
+                
+                setTimeout(() => {
+                    resultDiv.style.borderColor = 'var(--ooder-success)';
+                    resultDiv.innerHTML = `
+                        <p style="color: var(--ooder-success);"><i class="ri-check-circle-line"></i> Agent 更新成功</p>
+                        <p>终端: ${currentTerminal.name}</p>
+                        <p>版本: v0.6.5</p>
+                    `;
+                }, 3000);
+            }
+        }
+        
+        // 关闭终端
+        function shutdownTerminal() {
+            if (!currentTerminal) return;
+            
+            if (confirm(`确定要关闭终端 ${currentTerminal.name} 吗？`)) {
+                const resultDiv = document.getElementById('action-result');
+                resultDiv.style.display = 'block';
+                resultDiv.style.borderColor = 'var(--ooder-secondary)';
+                resultDiv.innerHTML = '<p style="color: var(--ooder-secondary);">正在关闭终端...</p>';
+                
+                setTimeout(() => {
+                    resultDiv.style.borderColor = 'var(--ooder-success)';
+                    resultDiv.innerHTML = `
+                        <p style="color: var(--ooder-success);"><i class="ri-check-circle-line"></i> 关闭命令已发送</p>
+                        <p>终端: ${currentTerminal.name}</p>
+                        <p>状态: 正在关闭</p>
+                    `;
+                }, 1500);
+            }
+        }
+        
+        // 删除终端
+        function deleteTerminal(terminalId) {
+            if (confirm(`确定要删除终端 ${terminalId} 吗？`)) {
+                // 从数组中删除
+                const index = terminals.findIndex(terminal => terminal.id === terminalId);
+                if (index !== -1) {
+                    terminals.splice(index, 1);
+                }
+                
+                // 重新渲染表格
+                renderTerminalTable();
+                
+                alert(`终端 ${terminalId} 已删除`);
+            }
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>

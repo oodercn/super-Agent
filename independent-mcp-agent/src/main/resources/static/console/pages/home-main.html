@@ -1,0 +1,179 @@
+﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭主页面 - MCP Agent Console</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-home-line"></i> 家庭管理中心</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><i class="ri-home-smile-line"></i> 家庭主页面</h1>
+                <div class="subtitle">
+                    <span class="badge" style="background-color: var(--ooder-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">家庭功能</span>
+                    <span>Ooder Rad Style</span> | 
+                    <span id="timestamp"></span>
+                </div>
+            </div>
+            
+            <!-- 仪表盘卡片 -->
+            <div class="dashboard">
+                <div class="card">
+                    <h3>家庭设备数</h3>
+                    <div class="value" id="home-device-count">8</div>
+                    <div class="label">已连接设备</div>
+                </div>
+                <div class="card">
+                    <h3>安全状态</h3>
+                    <div class="value" id="home-security-status">安全</div>
+                    <div class="label">家庭安全等级</div>
+                </div>
+                <div class="card">
+                    <h3>设备在线率</h3>
+                    <div class="value" id="home-device-online">75%</div>
+                    <div class="label">当前在线设备</div>
+                </div>
+                <div class="card">
+                    <h3>能源消耗</h3>
+                    <div class="value" id="home-energy-usage">3.2kWh</div>
+                    <div class="label">今日消耗</div>
+                </div>
+            </div>
+            
+            <!-- 家庭功能概览 -->
+            <div class="section">
+                <h2>家庭功能概览</h2>
+                <div class="status-grid" id="home-overview">
+                    <div class="status-item ok">
+                        <div class="key">家庭仪表盘</div>
+                        <div class="value">已启用</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">设备管理</div>
+                        <div class="value">已启用</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">家庭安全</div>
+                        <div class="value">已启用</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">设备控制</div>
+                        <div class="value">已启用</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 快速操作 -->
+            <div class="section">
+                <h2>快速操作</h2>
+                <div style="display: flex; gap: 16px;">
+                    <button class="btn btn-primary" onclick="navigateTo('pages/home/home-dashboard.html')">
+                        <i class="ri-home-smile-line"></i>
+                        家庭仪表盘
+                    </button>
+                    <button class="btn btn-primary" onclick="navigateTo('pages/home/device-list.html')">
+                        <i class="ri-device-line"></i>
+                        设备列表
+                    </button>
+                    <button class="btn btn-primary" onclick="navigateTo('pages/home/device-control.html')">
+                        <i class="ri-control-line"></i>
+                        设备控制
+                    </button>
+                    <button class="btn btn-primary" onclick="navigateTo('pages/home/security-status.html')">
+                        <i class="ri-shield-home-line"></i>
+                        安全状态
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 公共JS模块 -->
+    <script src="../common/api-client.js"></script>
+    <script src="../common/list-manager.js"></script>
+    <script src="../common/form-manager.js"></script>
+    <script src="../common/utils.js"></script>
+    
+    <script>
+        // 当前页面类型
+        let pageType = 'home';
+        
+        // 初始化页面
+        function init() {
+            updateTimestamp();
+            renderHomeMenu();
+            loadHomeDashboard();
+            setInterval(updateTimestamp, 60000); // 每分钟更新时间戳
+        }
+        
+        // 渲染家庭专用菜单
+        function renderHomeMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = `
+                <li><a href="../pages/home-main.html" class="active"><i class="ri-home-smile-line"></i> 家庭主页面</a></li>
+                <div class="menu-divider"></div>
+                <li><a href="../pages/home/home-dashboard.html"><i class="ri-home-smile-line"></i> 家庭仪表盘</a></li>
+                <li><a href="../pages/home/device-list.html"><i class="ri-list-check"></i> 设备列表</a></li>
+                <li><a href="../pages/home/device-control.html"><i class="ri-control-line"></i> 设备控制</a></li>
+                <li><a href="../pages/home/security-status.html"><i class="ri-shield-home-line"></i> 安全状态</a></li>
+                <div class="menu-divider"></div>
+                <li><a href="../index.html"><i class="ri-home-line"></i> 返回选择</a></li>
+            `;
+            setupNavigation();
+        }
+        
+        // 设置导航
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-menu a');
+            navLinks.forEach(link => {
+                if (link.hasAttribute('href') && link.getAttribute('href') !== '#') {
+                    link.addEventListener('click', function(e) {
+                        // 保存页面类型到本地存储
+                        localStorage.setItem('mcp_agent_page_type', 'home');
+                    });
+                }
+            });
+        }
+        
+        // 导航到指定页面
+        function navigateTo(page) {
+            localStorage.setItem('mcp_agent_page_type', 'home');
+            window.location.href = page;
+        }
+        
+        // 加载家庭仪表盘数据
+        async function loadHomeDashboard() {
+            try {
+                // 模拟加载家庭数据
+                setTimeout(() => {
+                    document.getElementById('home-device-count').textContent = '8';
+                    document.getElementById('home-security-status').textContent = '安全';
+                    document.getElementById('home-device-online').textContent = '75%';
+                    document.getElementById('home-energy-usage').textContent = '3.2kWh';
+                }, 500);
+            } catch (error) {
+                console.error('加载家庭数据失败:', error);
+            }
+        }
+        
+        // 更新时间戳
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = utils.formatTimestamp(now.getTime());
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>

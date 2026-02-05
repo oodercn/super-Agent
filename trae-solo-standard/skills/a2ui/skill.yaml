@@ -1,0 +1,73 @@
+name: A2UI
+version: 0.6.3
+description: 提供图生代码功能，采用ooder-a2ui格式生成前端界面，支持四分离设计原则，兼容南下协议v0.6.3
+author: OODER Team
+tags:
+  - ui
+  - frontend
+  - code-generation
+  - ai
+  - a2ui
+  - four-separation
+  - annotation-driven
+category: UI_SKILL
+tools:
+  - name: a2ui-api
+    description: 通过HTTP API调用A2UI服务
+    type: http
+    endpoint: http://localhost:8081/api/a2ui
+  - name: ooder-agent
+    description: 通过HTTP API调用ooder-agent服务
+    type: http
+    endpoint: http://localhost:8080/api/ooder-agent
+  - name: mcp-agent
+    description: 通过HTTP API调用mcpAgent服务（作为aibridge处理LLM需求）
+    type: http
+    endpoint: http://localhost:8082/api/mcp-agent
+  - name: route-agent
+    description: 通过HTTP API调用routeAgent服务（场景核心，管理endAgent）
+    type: http
+    endpoint: http://localhost:8083/api/route-agent
+functions:
+  - name: get-components
+    description: 获取A2UI组件列表
+    parameters: {}
+    return_type: array
+  - name: generate-ui
+    description: 根据图片生成UI代码
+    parameters:
+      image_url: string
+      options: object
+    return_type: object
+  - name: get-component-details
+    description: 获取组件详细信息
+    parameters:
+      component_id: string
+    return_type: object
+  - name: create-view
+    description: 创建视图
+    parameters:
+      view_name: string
+      components: array
+      layout: object
+    return_type: object
+  - name: submit-data
+    description: 提交数据到A2UI服务
+    parameters:
+      target: string
+      data: object
+      options: object
+    return_type: object
+resources:
+  - name: SKILL.md
+    type: documentation
+    path: SKILL.md
+  - name: scripts
+    type: directory
+    path: scripts
+  - name: references
+    type: directory
+    path: references
+  - name: examples
+    type: directory
+    path: examples

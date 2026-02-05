@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>执行管理 - Nexus SkillCenter</title>
+    <link rel="stylesheet" href="/console/css/styles.css">
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <script src="/console/js/menu-loader.js"></script>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="main-content">
+            <header class="header">
+                <h1>执行管理</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showExecuteModal()">
+                        <i class="ri-play-line"></i> 执行技能
+                    </button>
+                </div>
+            </header>
+            <div class="content">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('history')">执行历史</button>
+                    <button class="tab-btn" onclick="switchTab('result')">执行结果</button>
+                </div>
+                
+                <div class="tab-content" id="history-tab">
+                    <div class="execution-list" id="execution-list">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="result-tab" style="display: none;">
+                    <div class="execution-result" id="execution-result">
+                        <p>请先执行技能，然后查看执行结果</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="execute-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>执行技能</h3>
+                <button class="modal-close" onclick="closeModal('execute-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="execute-form">
+                    <div class="form-group">
+                        <label>选择技能</label>
+                        <select id="skill-select" class="form-control">
+                            <option value="">请选择技能</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>执行参数</label>
+                        <textarea id="skill-parameters" class="form-control" rows="5" placeholder="输入JSON格式的参数"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="executeSkill()">执行</button>
+                <button class="btn btn-secondary" onclick="closeModal('execute-modal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            initMenu();
+            loadExecutionHistory();
+            loadSkillOptions();
+        };
+
+        async function loadExecutionHistory() {
+            try {
+                const response = await fetch('/api/skillcenter/personal/execution/history');
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result.status === 'success') {
+                    renderExecutionHistory(result.data);
+                } else {
+                    showError('加载执行历史失败');
+                }
+            } catch (error) {
+                console.error('加载执行历史错误:', error);
+                showError('加载执行历史失败');
+            }
+        }
+
+        function renderExecutionHistory(history) {
+            const executionList = document.getElementById('execution-list');
+            executionList.innerHTML = '';
+            
+            history.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'execution-item';
+                historyItem.innerHTML = `
+                    <div class="execution-info">
+                        <div class="execution-skill">${item.skillName}</div>
+                        <div class="execution-status ${item.status === 'success' ? 'success' : 'failed'}">${item.status === 'success' ? '成功' : '失败'}</div>
+                        <div class="execution-time">${formatTime(item.timestamp)}</div>
+                    </div>
+                    <div class="execution-actions">
+                        <button class="btn btn-secondary" onclick="viewExecutionResult('${item.id}')">
+                            <i class="ri-eye-line"></i> 查看结果
+                        </button>
+                    </div>
+                `;
+                executionList.appendChild(historyItem);
+            });
+        }
+
+        async function loadSkillOptions() {
+            try {
+                const response = await fetch('/api/skillcenter/personal/skills');
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result.status === 'success') {
+                    const skillSelect = document.getElementById('skill-select');
+                    skillSelect.innerHTML = '<option value="">请选择技能</option>';
+                    result.data.forEach(skill => {
+                        const option = document.createElement('option');
+                        option.value = skill.id;
+                        option.textContent = skill.name;
+                        skillSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('加载技能列表错误:', error);
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').style.display = 'block';
+        }
+
+        function showExecuteModal() {
+            document.getElementById('execute-modal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function executeSkill() {
+            const skillId = document.getElementById('skill-select').value;
+            const parametersText = document.getElementById('skill-parameters').value;
+            
+            if (!skillId) {
+                showError('请选择技能');
+                return;
+            }
+            
+            let parameters = {};
+            if (parametersText) {
+                try {
+                    parameters = JSON.parse(parametersText);
+                } catch (e) {
+                    showError('参数格式错误，请输入有效的JSON');
+                    return;
+                }
+            }
+            
+            try {
+                const response = await fetch(`/api/skillcenter/personal/execution/execute/${skillId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(parameters)
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result.status === 'success') {
+                    closeModal('execute-modal');
+                    showSuccess('技能执行成功');
+                    loadExecutionHistory();
+                } else {
+                    showError('技能执行失败');
+                }
+            } catch (error) {
+                console.error('执行技能错误:', error);
+                showError('技能执行失败');
+            }
+        }
+
+        async function viewExecutionResult(executionId) {
+            try {
+                const response = await fetch(`/api/skillcenter/personal/execution/result/${executionId}`);
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result.status === 'success') {
+                    switchTab('result');
+                    renderExecutionResult(result.data);
+                } else {
+                    showError('加载执行结果失败');
+                }
+            } catch (error) {
+                console.error('加载执行结果错误:', error);
+                showError('加载执行结果失败');
+            }
+        }
+
+        function renderExecutionResult(result) {
+            const resultDiv = document.getElementById('execution-result');
+            resultDiv.innerHTML = `
+                <div class="result-info">
+                    <h4>执行结果</h4>
+                    <p><strong>状态:</strong> ${result.status}</p>
+                    <p><strong>输出:</strong></p>
+                    <pre>${JSON.stringify(result.output, null, 2)}</pre>
+                    ${result.error ? `<p><strong>错误:</strong> ${result.error}</p>` : ''}
+                </div>
+            `;
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function showError(message) {
+            showNotification(message, 'error');
+        }
+
+        function showSuccess(message) {
+            showNotification(message, 'success');
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

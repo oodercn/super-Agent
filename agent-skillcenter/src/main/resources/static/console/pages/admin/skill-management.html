@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理中心 - 技能管理</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
+    <link href="../../assets/css/remixicon/remixicon.css" rel="stylesheet">
+    <script src="/skillcenter/console/js/menu.js"></script>
+
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <!-- 菜单将通过menu.js动态加载 -->
+        </aside>
+        <main class="main-content">
+            <header class="header">
+                <h1>技能管理</h1>
+                <div class="user-info">
+                    <span class="user-name">管理员</span>
+                    <i class="ri-user-line"></i>
+                </div>
+            </header>
+            
+            <!-- 搜索框 -->
+            <div class="search-box">
+                <input type="text" placeholder="搜索技能名称或ID" id="skillSearch" class="form-control">
+            </div>
+            
+            <!-- 技能列表 -->
+            <div class="skills-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>技能ID</th>
+                            <th>技能名称</th>
+                            <th>分类</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="skillTableBody">
+                        <!-- 技能数据将通过JavaScript动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+    
+    <!-- 添加/编辑技能模态框 -->
+    <div id="skillModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">添加技能</h2>
+                <button class="close-btn" onclick="closeSkillModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="skillForm">
+                    <input type="hidden" id="skillId">
+                    <div class="form-group">
+                        <label for="skillName">技能名称</label>
+                        <input type="text" id="skillName" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="skillDescription">技能描述</label>
+                        <textarea id="skillDescription" required class="form-control"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="skillCategory">技能分类</label>
+                        <select id="skillCategory" required class="form-control">
+                            <option value="text-processing">文本处理</option>
+                            <option value="development">开发工具</option>
+                            <option value="deployment">部署工具</option>
+                            <option value="media">媒体处理</option>
+                            <option value="storage">存储管理</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="skillStatus">技能状态</label>
+                        <select id="skillStatus" required class="form-control">
+                            <option value="active">活跃</option>
+                            <option value="pending">待审核</option>
+                            <option value="inactive">inactive</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeSkillModal()">取消</button>
+                <button type="submit" class="btn btn-primary" form="skillForm">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 初始化菜单
+        initMenu('skill-management');
+        
+        // API基础URL
+        const API_BASE_URL = '/skillcenter/api';
+        
+        // 页面加载时渲染技能列表
+        document.addEventListener('DOMContentLoaded', function() {
+            renderSkillList();
+        });
+        
+        // 渲染技能列表
+        function renderSkillList() {
+            const tableBody = document.getElementById('skillTableBody');
+            tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">加载中...</td></tr>';
+            
+            // 调用API获取技能列表
+            fetch(`${API_BASE_URL}/skills`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.data) {
+                        const skills = data.data.items || [];
+                        tableBody.innerHTML = '';
+                        
+                        skills.forEach(skill => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${skill.id}</td>
+                                <td>${skill.name}</td>
+                                <td>${skill.category}</td>
+                                <td><span class="skill-status status-${skill.status}">${getStatusText(skill.status)}</span></td>
+                                <td>${skill.createdAt ? new Date(skill.createdAt).toLocaleString() : ''}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-secondary" onclick="editSkill('${skill.id}')">
+                                            <i class="ri-edit-line"></i> 编辑
+                                        </button>
+                                        <button class="btn btn-success" onclick="approveSkill('${skill.id}')" ${skill.status !== 'pending' ? 'disabled' : ''}>
+                                            <i class="ri-check-line"></i> 审核
+                                        </button>
+                                        <button class="btn btn-danger" onclick="deleteSkill('${skill.id}')">
+                                            <i class="ri-delete-line"></i> 删除
+                                        </button>
+                                    </div>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    } else {
+                        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: red;">获取技能列表失败</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching skills:', error);
+                    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: red;">获取技能列表失败</td></tr>';
+                });
+        }
+        
+        // 获取状态文本
+        function getStatusText(status) {
+            switch (status) {
+                case 'active': return '活跃';
+                case 'pending': return '待审核';
+                case 'inactive': return 'inactive';
+                default: return status;
+            }
+        }
+        
+        // 打开添加技能模态框
+        function openAddSkillModal() {
+            document.getElementById('modalTitle').textContent = '添加技能';
+            document.getElementById('skillId').value = '';
+            document.getElementById('skillName').value = '';
+            document.getElementById('skillDescription').value = '';
+            document.getElementById('skillCategory').value = 'text-processing';
+            document.getElementById('skillStatus').value = 'active';
+            document.getElementById('skillModal').style.display = 'block';
+        }
+        
+        // 打开编辑技能模态框
+        function editSkill(skillId) {
+            // 调用API获取技能详情
+            fetch(`${API_BASE_URL}/skills/${skillId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.data) {
+                        const skill = data.data;
+                        document.getElementById('modalTitle').textContent = '编辑技能';
+                        document.getElementById('skillId').value = skill.id;
+                        document.getElementById('skillName').value = skill.name;
+                        document.getElementById('skillDescription').value = skill.description || '';
+                        document.getElementById('skillCategory').value = skill.category || 'text-processing';
+                        document.getElementById('skillStatus').value = skill.status || 'active';
+                        document.getElementById('skillModal').style.display = 'block';
+                    } else {
+                        alert('获取技能详情失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching skill details:', error);
+                    alert('获取技能详情失败');
+                });
+        }
+        
+        // 关闭技能模态框
+        function closeSkillModal() {
+            document.getElementById('skillModal').style.display = 'none';
+        }
+        
+        // 提交技能表单
+        document.getElementById('skillForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const skillId = document.getElementById('skillId').value;
+            const skillName = document.getElementById('skillName').value;
+            const skillDescription = document.getElementById('skillDescription').value;
+            const skillCategory = document.getElementById('skillCategory').value;
+            const skillStatus = document.getElementById('skillStatus').value;
+            
+            const skillData = {
+                name: skillName,
+                description: skillDescription,
+                category: skillCategory,
+                status: skillStatus
+            };
+            
+            let url = `${API_BASE_URL}/skills`;
+            let method = 'POST';
+            
+            if (skillId) {
+                // 编辑现有技能
+                url = `${API_BASE_URL}/skills/${skillId}`;
+                method = 'PUT';
+            }
+            
+            // 调用API保存技能
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(skillData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    renderSkillList();
+                    closeSkillModal();
+                    alert('技能保存成功！');
+                } else {
+                    alert('技能保存失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving skill:', error);
+                alert('技能保存失败');
+            });
+        });
+        
+        // 审核技能
+        function approveSkill(skillId) {
+            // 调用API审核技能
+            fetch(`${API_BASE_URL}/skills/${skillId}/approve`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    renderSkillList();
+                    alert('技能审核成功！');
+                } else {
+                    alert('技能审核失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error approving skill:', error);
+                alert('技能审核失败');
+            });
+        }
+        
+        // 删除技能
+        function deleteSkill(skillId) {
+            if (confirm('确定要删除这个技能吗？')) {
+                // 调用API删除技能
+                fetch(`${API_BASE_URL}/skills/${skillId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        renderSkillList();
+                        alert('技能删除成功！');
+                    } else {
+                        alert('技能删除失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting skill:', error);
+                    alert('技能删除失败');
+                });
+            }
+        }
+        
+        // 搜索功能
+        document.getElementById('skillSearch').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#skillTableBody tr');
+            
+            rows.forEach(row => {
+                const skillId = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                const skillName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                
+                if (skillId.includes(searchTerm) || skillName.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

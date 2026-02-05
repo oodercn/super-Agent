@@ -1,0 +1,1044 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务配置 - 配置中心</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <style>
+        /* Ooder-Rad 风格基础样式 - 纯黑色系暗色主题 */
+        :root {
+            --ooder-primary: #3b82f6;
+            --ooder-secondary: #94a3b8;
+            --ooder-success: #22c55e;
+            --ooder-warning: #f59e0b;
+            --ooder-danger: #ef4444;
+            --ooder-light: #0f0f0f;
+            --ooder-dark: #ffffff;
+            --ooder-border: #2a2a2a;
+            --ooder-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            --ooder-radius: 8px;
+            --ooder-spacing: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #000000;
+            color: var(--ooder-dark);
+            line-height: 1.5;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            background-color: #000000;
+        }
+        
+        /* 侧边栏样式 - Ooder-Rad 风格 */
+        .sidebar {
+            width: 260px;
+            background-color: #121212;
+            border-right: 1px solid var(--ooder-border);
+            padding: 24px;
+            box-shadow: var(--ooder-shadow);
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 32px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ooder-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sidebar h2::before {
+            content: "⚡";
+            font-size: 20px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-menu li {
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu a {
+            color: var(--ooder-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--ooder-radius);
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .nav-menu a:hover {
+            background-color: var(--ooder-light);
+            color: var(--ooder-primary);
+        }
+        
+        .nav-menu a.active {
+            background-color: rgba(26, 115, 232, 0.1);
+            color: var(--ooder-primary);
+            font-weight: 600;
+        }
+        
+        /* 二级菜单样式 */
+        .nav-menu .submenu {
+            list-style: none;
+            margin-left: 16px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu .submenu li {
+            margin-bottom: 2px;
+        }
+        
+        .nav-menu .submenu a {
+            padding: 10px 16px;
+            font-size: 13px;
+            border-left: 2px solid var(--ooder-border);
+        }
+        
+        /* 三级菜单样式 */
+        .nav-menu .submenu .submenu {
+            margin-left: 32px;
+        }
+        
+        .nav-menu .submenu .submenu a {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-left: 2px solid var(--ooder-secondary);
+        }
+        
+        /* 展开/折叠图标 */
+        .nav-menu .toggle-icon {
+            margin-left: auto;
+            transition: transform 0.2s ease;
+        }
+        
+        .nav-menu .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        /* 菜单分隔线 */
+        .nav-menu .menu-divider {
+            height: 1px;
+            background-color: var(--ooder-border);
+            margin: 16px 0;
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            background-color: #000000;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--ooder-border);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ooder-dark);
+        }
+        
+        .header .subtitle {
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        /* 章节样式 */
+        .section {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            margin-bottom: 24px;
+        }
+        
+        .section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--ooder-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section h2::before {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background-color: var(--ooder-primary);
+            border-radius: 2px;
+        }
+        
+        /* 配置表单样式 */
+        .config-form {
+            margin-bottom: 32px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--ooder-dark);
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            color: var(--ooder-dark);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--ooder-primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        /* 配置卡片样式 */
+        .config-card {
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .config-card:hover {
+            border-color: var(--ooder-primary);
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+        }
+        
+        .config-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--ooder-primary);
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--ooder-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 12px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--ooder-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background-color: #1a1a1a;
+            color: var(--ooder-secondary);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2a2a2a;
+        }
+        
+        .btn-success {
+            background-color: var(--ooder-success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #16a34a;
+            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.4);
+        }
+        
+        .btn-danger {
+            background-color: var(--ooder-danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+        }
+        
+        /* 提示框样式 */
+        .alert {
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: var(--ooder-radius);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .alert-success {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--ooder-success);
+            border-left: 4px solid var(--ooder-success);
+        }
+        
+        .alert-error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--ooder-danger);
+            border-left: 4px solid var(--ooder-danger);
+        }
+        
+        /* 标签样式 */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+        
+        .badge-primary {
+            background-color: var(--ooder-primary);
+            color: white;
+        }
+        
+        .badge-success {
+            background-color: var(--ooder-success);
+            color: white;
+        }
+        
+        .badge-warning {
+            background-color: var(--ooder-warning);
+            color: white;
+        }
+        
+        .badge-danger {
+            background-color: var(--ooder-danger);
+            color: white;
+        }
+        
+        /* 隐藏样式 */
+        .hidden {
+            display: none;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--ooder-border);
+                padding: 16px;
+            }
+            
+            .main-content {
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> MCP Agent Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><i class="ri-settings-3-line"></i> 服务配置</h1>
+                <div class="subtitle">
+                    <span class="badge" style="background-color: var(--ooder-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">v0.6.5</span>
+                    <span>Ooder Rad Style</span> | 
+                    <span id="timestamp"></span>
+                </div>
+            </div>
+            
+            <!-- 配置管理选项卡 -->
+            <div class="section">
+                <h2>配置管理</h2>
+                <div style="margin-bottom: 24px;">
+                    <button class="btn btn-primary" onclick="showConfigTab('mcp')">
+                        <i class="ri-server-line"></i> MCP 配置
+                    </button>
+                    <button class="btn btn-secondary" onclick="showConfigTab('route')">
+                        <i class="ri-router-line"></i> Route 配置
+                    </button>
+                    <button class="btn btn-secondary" onclick="showConfigTab('end')">
+                        <i class="ri-terminal-line"></i> End 配置
+                    </button>
+                </div>
+                
+                <!-- MCP 配置 -->
+                <div id="mcp-config" class="config-tab">
+                    <div class="section">
+                        <h2>MCP Agent 配置</h2>
+                        <div class="config-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="mcp-service-port">服务端口</label>
+                                    <input type="number" id="mcp-service-port" value="8091" min="1" max="65535">
+                                </div>
+                                <div class="form-group">
+                                    <label for="mcp-heartbeat-interval">心跳间隔 (秒)</label>
+                                    <input type="number" id="mcp-heartbeat-interval" value="30" min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="mcp-log-level">日志级别</label>
+                                    <select id="mcp-log-level">
+                                        <option value="DEBUG">DEBUG</option>
+                                        <option value="INFO" selected>INFO</option>
+                                        <option value="WARN">WARN</option>
+                                        <option value="ERROR">ERROR</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mcp-max-connections">最大连接数</label>
+                                    <input type="number" id="mcp-max-connections" value="100" min="1">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="mcp-description">服务描述</label>
+                                <textarea id="mcp-description">MCP Agent 主控制节点，负责协调管理各个 Agent 组件</textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>服务功能</label>
+                                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" checked> 命令处理
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" checked> 网络管理
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" checked> 服务协调
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" checked> 结果处理
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 24px;">
+                                <button class="btn btn-primary" onclick="saveMcpConfig()">
+                                    <i class="ri-save-line"></i> 保存 MCP 配置
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetMcpConfig()">
+                                    <i class="ri-refresh-line"></i> 重置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Route 配置 -->
+                <div id="route-config" class="config-tab hidden">
+                    <div class="section">
+                        <h2>Route Agent 配置</h2>
+                        <div class="config-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="route-service-port">服务端口</label>
+                                    <input type="number" id="route-service-port" value="8092" min="1" max="65535">
+                                </div>
+                                <div class="form-group">
+                                    <label for="route-discovery-interval">发现间隔 (秒)</label>
+                                    <input type="number" id="route-discovery-interval" value="60" min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="route-topology-update-interval">拓扑更新间隔 (秒)</label>
+                                    <input type="number" id="route-topology-update-interval" value="120" min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="route-link-timeout">链路超时 (秒)</label>
+                                    <input type="number" id="route-link-timeout" value="300" min="1">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="route-llm-api-key">LLM API Key</label>
+                                <input type="text" id="route-llm-api-key" placeholder="输入 LLM API Key">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>路由功能</label>
+                                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" checked> 路由发现
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" checked> 链路管理
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" checked> 拓扑管理
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" checked> LLM 集成
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 24px;">
+                                <button class="btn btn-primary" onclick="saveRouteConfig()">
+                                    <i class="ri-save-line"></i> 保存 Route 配置
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetRouteConfig()">
+                                    <i class="ri-refresh-line"></i> 重置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- End 配置 -->
+                <div id="end-config" class="config-tab hidden">
+                    <div class="section">
+                        <h2>End Agent 配置</h2>
+                        <div class="config-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="end-service-port">服务端口</label>
+                                    <input type="number" id="end-service-port" value="8093" min="1" max="65535">
+                                </div>
+                                <div class="form-group">
+                                    <label for="end-execution-timeout">执行超时 (秒)</label>
+                                    <input type="number" id="end-execution-timeout" value="300" min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="end-max-tasks">最大并发任务数</label>
+                                    <input type="number" id="end-max-tasks" value="10" min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="end-resource-limit">资源限制 (%)</label>
+                                    <input type="number" id="end-resource-limit" value="80" min="1" max="100">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="end-skill-path">技能路径</label>
+                                <input type="text" id="end-skill-path" value="./skills">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>执行功能</label>
+                                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" checked> 命令执行
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" checked> 代码生成
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" checked> 文件操作
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" checked> 网络请求
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 24px;">
+                                <button class="btn btn-primary" onclick="saveEndConfig()">
+                                    <i class="ri-save-line"></i> 保存 End 配置
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetEndConfig()">
+                                    <i class="ri-refresh-line"></i> 重置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 配置管理 -->
+        <div class="section">
+            <h2>配置管理</h2>
+            <div style="margin-bottom: 24px;">
+                <button class="btn btn-primary" onclick="exportConfig()">
+                    <i class="ri-download-line"></i> 导出配置
+                </button>
+                <button class="btn btn-secondary" onclick="importConfig()">
+                    <i class="ri-upload-line"></i> 导入配置
+                </button>
+                <button class="btn btn-secondary" onclick="backupConfig()">
+                    <i class="ri-save-backup-line"></i> 备份配置
+                </button>
+                <button class="btn btn-danger" onclick="restoreConfig()">
+                    <i class="ri-restore-line"></i> 恢复配置
+                </button>
+            </div>
+            
+            <!-- 配置历史 -->
+            <div class="section">
+                <h2>配置历史</h2>
+                <div class="config-card">
+                    <h3>配置版本 1.0.0</h3>
+                    <div style="margin-bottom: 12px;">
+                        <span class="badge badge-success">活跃</span>
+                        <span style="color: var(--ooder-secondary); font-size: 14px;">2026-01-30 17:30:00</span>
+                    </div>
+                    <p style="color: var(--ooder-secondary); margin-bottom: 16px;">初始配置版本，包含 MCP、Route、End 三个组件的基础配置</p>
+                    <button class="btn btn-secondary" onclick="viewConfigVersion('1.0.0')">
+                        <i class="ri-eye-line"></i> 查看
+                    </button>
+                    <button class="btn btn-secondary" onclick="rollbackConfig('1.0.0')">
+                        <i class="ri-undo-line"></i> 回滚
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 服务状态 -->
+        <div class="section">
+            <h2>服务状态</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                <div class="config-card">
+                    <h3>MCP Agent</h3>
+                    <div style="font-size: 24px; font-weight: 600; color: var(--ooder-success); margin-bottom: 8px;">运行中</div>
+                    <div style="color: var(--ooder-secondary); font-size: 14px;">端口: 8091</div>
+                    <div style="color: var(--ooder-secondary); font-size: 14px;">版本: v0.6.5</div>
+                </div>
+                <div class="config-card">
+                    <h3>Route Agent</h3>
+                    <div style="font-size: 24px; font-weight: 600; color: var(--ooder-success); margin-bottom: 8px;">运行中</div>
+                    <div style="color: var(--ooder-secondary); font-size: 14px;">端口: 8092</div>
+                    <div style="color: var(--ooder-secondary); font-size: 14px;">版本: v0.6.5</div>
+                </div>
+                <div class="config-card">
+                    <h3>End Agent</h3>
+                    <div style="font-size: 24px; font-weight: 600; color: var(--ooder-success); margin-bottom: 8px;">运行中</div>
+                    <div style="color: var(--ooder-secondary); font-size: 14px;">端口: 8093</div>
+                    <div style="color: var(--ooder-secondary); font-size: 14px;">版本: v0.6.5</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 菜单配置
+        let menuConfig = null;
+        
+        // 初始化页面
+        function init() {
+            updateTimestamp();
+            loadMenuConfig();
+            setInterval(updateTimestamp, 60000); // 每分钟更新时间戳
+        }
+        
+        // 加载菜单配置
+        async function loadMenuConfig() {
+            try {
+                const response = await fetch('../../menu-config.json');
+                if (!response.ok) {
+                    throw new Error('菜单配置加载失败');
+                }
+                menuConfig = await response.json();
+                renderMenu();
+            } catch (error) {
+                console.error('加载菜单配置错误:', error);
+                // 加载失败时显示默认菜单
+                renderDefaultMenu();
+            }
+        }
+        
+        // 渲染菜单
+        function renderMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            
+            menuConfig.menu.forEach(item => {
+                const menuItem = createMenuItem(item);
+                navMenu.appendChild(menuItem);
+                // 添加菜单分隔线
+                if (item.id !== 'dashboard') {
+                    const divider = document.createElement('div');
+                    divider.className = 'menu-divider';
+                    navMenu.appendChild(divider);
+                }
+            });
+            
+            setupNavigation();
+        }
+        
+        // 创建菜单项
+        function createMenuItem(menuItem) {
+            const li = document.createElement('li');
+            
+            if (menuItem.children && menuItem.children.length > 0) {
+                // 有子菜单的菜单项
+                const a = document.createElement('a');
+                a.href = `#${menuItem.id}`;
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                    <span class="toggle-icon">›</span>
+                `;
+                
+                // 处理点击事件
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const toggleIcon = this.querySelector('.toggle-icon');
+                    const submenu = this.nextElementSibling;
+                    
+                    if (submenu) {
+                        submenu.classList.toggle('hidden');
+                        toggleIcon.classList.toggle('collapsed');
+                    }
+                });
+                
+                li.appendChild(a);
+                
+                // 创建子菜单
+                const submenu = document.createElement('ul');
+                submenu.className = 'submenu';
+                
+                menuItem.children.forEach(childItem => {
+                    const childLi = createMenuItem(childItem);
+                    submenu.appendChild(childLi);
+                });
+                
+                li.appendChild(submenu);
+            } else {
+                // 无子菜单的菜单项
+                const a = document.createElement('a');
+                if (menuItem.url) {
+                    a.href = menuItem.url;
+                } else {
+                    a.href = `#${menuItem.id}`;
+                    a.setAttribute('data-page', menuItem.page || menuItem.id);
+                }
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                `;
+                li.appendChild(a);
+            }
+            
+            return li;
+        }
+        
+        // 渲染默认菜单（加载失败时使用）
+        function renderDefaultMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = `
+                <li><a href="../../index.html"><i class="ri-dashboard-line"></i> 仪表盘</a></li>
+                <li><a href="../../pages/system/request-management.html"><i class="ri-computer-line"></i> 系统管理</a></li>
+                <li><a href="../../pages/network/route-management.html"><i class="ri-network-line"></i> 网络管理</a></li>
+                <li><a href="../../pages/terminal/terminal-management.html"><i class="ri-terminal-line"></i> 终端管理</a></li>
+                <li><a href="../../pages/config/service-config.html" class="active"><i class="ri-settings-3-line"></i> 配置中心</a></li>
+            `;
+            setupNavigation();
+        }
+        
+        // 设置导航
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-menu a');
+            navLinks.forEach(link => {
+                // 只处理带有data-page属性的链接（即叶子节点且没有url属性）
+                if (link.hasAttribute('data-page') && !link.hasAttribute('href') && link.getAttribute('href') !== '#') {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                    });
+                }
+            });
+        }
+        
+        // 更新时间戳
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = now.toLocaleString('zh-CN');
+        }
+        
+        // 显示配置选项卡
+        function showConfigTab(tab) {
+            // 隐藏所有选项卡
+            document.querySelectorAll('.config-tab').forEach(t => t.classList.add('hidden'));
+            document.querySelectorAll('.config-tab').forEach(t => t.classList.remove('config-tab'));
+            
+            // 显示选中的选项卡
+            document.getElementById(tab + '-config').classList.remove('hidden');
+            document.getElementById(tab + '-config').classList.add('config-tab');
+            
+            // 更新按钮状态
+            document.querySelectorAll('button[onclick^="showConfigTab"]').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            });
+            event.target.classList.remove('btn-secondary');
+            event.target.classList.add('btn-primary');
+        }
+        
+        // 保存 MCP 配置
+        function saveMcpConfig() {
+            const config = {
+                servicePort: document.getElementById('mcp-service-port').value,
+                heartbeatInterval: document.getElementById('mcp-heartbeat-interval').value,
+                logLevel: document.getElementById('mcp-log-level').value,
+                maxConnections: document.getElementById('mcp-max-connections').value,
+                description: document.getElementById('mcp-description').value
+            };
+            
+            console.log('保存 MCP 配置:', config);
+            showAlert('success', 'MCP 配置保存成功');
+        }
+        
+        // 重置 MCP 配置
+        function resetMcpConfig() {
+            document.getElementById('mcp-service-port').value = '8091';
+            document.getElementById('mcp-heartbeat-interval').value = '30';
+            document.getElementById('mcp-log-level').value = 'INFO';
+            document.getElementById('mcp-max-connections').value = '100';
+            document.getElementById('mcp-description').value = 'MCP Agent 主控制节点，负责协调管理各个 Agent 组件';
+            showAlert('success', 'MCP 配置已重置');
+        }
+        
+        // 保存 Route 配置
+        function saveRouteConfig() {
+            const config = {
+                servicePort: document.getElementById('route-service-port').value,
+                discoveryInterval: document.getElementById('route-discovery-interval').value,
+                topologyUpdateInterval: document.getElementById('route-topology-update-interval').value,
+                linkTimeout: document.getElementById('route-link-timeout').value,
+                llmApiKey: document.getElementById('route-llm-api-key').value
+            };
+            
+            console.log('保存 Route 配置:', config);
+            showAlert('success', 'Route 配置保存成功');
+        }
+        
+        // 重置 Route 配置
+        function resetRouteConfig() {
+            document.getElementById('route-service-port').value = '8092';
+            document.getElementById('route-discovery-interval').value = '60';
+            document.getElementById('route-topology-update-interval').value = '120';
+            document.getElementById('route-link-timeout').value = '300';
+            document.getElementById('route-llm-api-key').value = '';
+            showAlert('success', 'Route 配置已重置');
+        }
+        
+        // 保存 End 配置
+        function saveEndConfig() {
+            const config = {
+                servicePort: document.getElementById('end-service-port').value,
+                executionTimeout: document.getElementById('end-execution-timeout').value,
+                maxTasks: document.getElementById('end-max-tasks').value,
+                resourceLimit: document.getElementById('end-resource-limit').value,
+                skillPath: document.getElementById('end-skill-path').value
+            };
+            
+            console.log('保存 End 配置:', config);
+            showAlert('success', 'End 配置保存成功');
+        }
+        
+        // 重置 End 配置
+        function resetEndConfig() {
+            document.getElementById('end-service-port').value = '8093';
+            document.getElementById('end-execution-timeout').value = '300';
+            document.getElementById('end-max-tasks').value = '10';
+            document.getElementById('end-resource-limit').value = '80';
+            document.getElementById('end-skill-path').value = './skills';
+            showAlert('success', 'End 配置已重置');
+        }
+        
+        // 导出配置
+        function exportConfig() {
+            const config = {
+                mcp: {
+                    servicePort: document.getElementById('mcp-service-port').value,
+                    heartbeatInterval: document.getElementById('mcp-heartbeat-interval').value,
+                    logLevel: document.getElementById('mcp-log-level').value,
+                    maxConnections: document.getElementById('mcp-max-connections').value,
+                    description: document.getElementById('mcp-description').value
+                },
+                route: {
+                    servicePort: document.getElementById('route-service-port').value,
+                    discoveryInterval: document.getElementById('route-discovery-interval').value,
+                    topologyUpdateInterval: document.getElementById('route-topology-update-interval').value,
+                    linkTimeout: document.getElementById('route-link-timeout').value,
+                    llmApiKey: document.getElementById('route-llm-api-key').value
+                },
+                end: {
+                    servicePort: document.getElementById('end-service-port').value,
+                    executionTimeout: document.getElementById('end-execution-timeout').value,
+                    maxTasks: document.getElementById('end-max-tasks').value,
+                    resourceLimit: document.getElementById('end-resource-limit').value,
+                    skillPath: document.getElementById('end-skill-path').value
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'agent-config.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showAlert('success', '配置导出成功');
+        }
+        
+        // 导入配置
+        function importConfig() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const config = JSON.parse(e.target.result);
+                            // 导入配置
+                            if (config.mcp) {
+                                document.getElementById('mcp-service-port').value = config.mcp.servicePort;
+                                document.getElementById('mcp-heartbeat-interval').value = config.mcp.heartbeatInterval;
+                                document.getElementById('mcp-log-level').value = config.mcp.logLevel;
+                                document.getElementById('mcp-max-connections').value = config.mcp.maxConnections;
+                                document.getElementById('mcp-description').value = config.mcp.description;
+                            }
+                            if (config.route) {
+                                document.getElementById('route-service-port').value = config.route.servicePort;
+                                document.getElementById('route-discovery-interval').value = config.route.discoveryInterval;
+                                document.getElementById('route-topology-update-interval').value = config.route.topologyUpdateInterval;
+                                document.getElementById('route-link-timeout').value = config.route.linkTimeout;
+                                document.getElementById('route-llm-api-key').value = config.route.llmApiKey;
+                            }
+                            if (config.end) {
+                                document.getElementById('end-service-port').value = config.end.servicePort;
+                                document.getElementById('end-execution-timeout').value = config.end.executionTimeout;
+                                document.getElementById('end-max-tasks').value = config.end.maxTasks;
+                                document.getElementById('end-resource-limit').value = config.end.resourceLimit;
+                                document.getElementById('end-skill-path').value = config.end.skillPath;
+                            }
+                            showAlert('success', '配置导入成功');
+                        } catch (error) {
+                            showAlert('error', '配置导入失败: ' + error.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+        
+        // 备份配置
+        function backupConfig() {
+            showAlert('success', '配置备份成功');
+        }
+        
+        // 恢复配置
+        function restoreConfig() {
+            showAlert('success', '配置恢复成功');
+        }
+        
+        // 查看配置版本
+        function viewConfigVersion(version) {
+            alert(`查看配置版本 ${version} 的详情`);
+        }
+        
+        // 回滚配置
+        function rollbackConfig(version) {
+            if (confirm(`确定要回滚到配置版本 ${version} 吗？`)) {
+                showAlert('success', `配置已回滚到版本 ${version}`);
+            }
+        }
+        
+        // 显示提示信息
+        function showAlert(type, message) {
+            const alert = document.createElement('div');
+            alert.className = type === 'success' ? 'alert alert-success' : 'alert alert-error';
+            alert.textContent = message;
+            
+            const mainContent = document.querySelector('.main-content');
+            const firstSection = mainContent.querySelector('.section');
+            if (firstSection) {
+                mainContent.insertBefore(alert, firstSection);
+            }
+            
+            // 3秒后移除提示
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 3000);
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>

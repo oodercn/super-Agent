@@ -1,0 +1,41 @@
+server:
+  port: 8091
+  servlet:
+    context-path: /route-agent
+
+spring:
+  application:
+    name: route-agent-hierarchy
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+# Agent SDK configuration
+agent:
+  sdk:
+    enabled: true
+    logLevel: info
+    debug: false
+
+# Network configuration
+network:
+  udp:
+    port: 9011
+    bufferSize: 65536
+    timeout: 5000
+
+# Logging configuration
+logging:
+  level:
+    root: info
+    net.ooder: debug
+  file:
+    name: logs/route-agent-hierarchy.log
+    max-size: 10MB
+    max-history: 7

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理中心 - 远程托管</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
+    <link href="../../assets/css/remixicon/remixicon.css" rel="stylesheet">
+    <script src="/skillcenter/console/js/menu.js"></script>
+
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <!-- 菜单将通过menu.js动态加载 -->
+        </aside>
+        <main class="main-content">
+            <header class="header">
+                <h1>远程托管管理</h1>
+                <div class="user-info">
+                    <span class="user-name">管理员</span>
+                    <i class="ri-user-line"></i>
+                </div>
+            </header>
+            <div class="admin-dashboard-content">
+                <div class="page-header">
+                    <button class="btn btn-primary" onclick="openAddHostingModal()">
+                        <i class="ri-server-add-line"></i> 添加托管
+                    </button>
+                </div>
+        
+        <!-- 统计卡片 -->
+        <div class="admin-stats-grid">
+            <div class="system-info-card">
+                <div class="value">12</div>
+                <div class="label">总托管实例</div>
+            </div>
+            <div class="system-info-card">
+                <div class="value">8</div>
+                <div class="label">运行中实例</div>
+            </div>
+            <div class="system-info-card">
+                <div class="value">4</div>
+                <div class="label">已停止实例</div>
+            </div>
+            <div class="system-info-card">
+                <div class="value">98%</div>
+                <div class="label">服务可用性</div>
+            </div>
+        </div>
+        
+        <!-- 搜索框 -->
+        <div class="search-box">
+            <input type="text" class="form-control" placeholder="搜索托管实例名称或ID" id="hostingSearch">
+        </div>
+        
+        <!-- 托管实例列表 -->
+        <div class="hosting-list">
+            <table class="skills-table">
+                <thead>
+                    <tr>
+                        <th>实例ID</th>
+                        <th>实例名称</th>
+                        <th>技能ID</th>
+                        <th>状态</th>
+                        <th>部署时间</th>
+                        <th>运行时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="hostingTableBody">
+                    <!-- 托管实例数据将通过JavaScript动态填充 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 添加/编辑托管模态框 -->
+    <div id="hostingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">添加托管实例</h3>
+                <span class="close" onclick="closeHostingModal()">&times;</span>
+            </div>
+            <form id="hostingForm">
+                <input type="hidden" id="hostingId">
+                <div class="form-group">
+                    <label for="hostingName">实例名称</label>
+                    <input type="text" class="form-control" id="hostingName" required>
+                </div>
+                <div class="form-group">
+                    <label for="skillId">技能ID</label>
+                    <input type="text" class="form-control" id="skillId" required>
+                </div>
+                <div class="form-group">
+                    <label for="hostingDescription">描述</label>
+                    <textarea class="form-control" id="hostingDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="hostingStatus">初始状态</label>
+                    <select class="form-control" id="hostingStatus" required>
+                        <option value="running">运行中</option>
+                        <option value="stopped">已停止</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeHostingModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // 模拟托管实例数据
+        const hostingInstances = [
+            {
+                id: "hosting-001",
+                name: "Text to Uppercase Service",
+                skillId: "text-to-uppercase-skill",
+                status: "running",
+                deployedAt: "2026-01-31 10:00:00",
+                uptime: "10h 30m"
+            },
+            {
+                id: "hosting-002",
+                name: "Code Generator Service",
+                skillId: "code-generation-skill",
+                status: "running",
+                deployedAt: "2026-01-30 15:30:00",
+                uptime: "25h"
+            },
+            {
+                id: "hosting-003",
+                name: "Local Deployment Service",
+                skillId: "local-deployment-skill",
+                status: "stopped",
+                deployedAt: "2026-01-29 09:15:00",
+                uptime: "0h"
+            },
+            {
+                id: "hosting-004",
+                name: "Weather API Service",
+                skillId: "weather-api-skill",
+                status: "running",
+                deployedAt: "2026-01-28 14:45:00",
+                uptime: "72h"
+            },
+            {
+                id: "hosting-005",
+                name: "Stock API Service",
+                skillId: "stock-api-skill",
+                status: "running",
+                deployedAt: "2026-01-27 11:20:00",
+                uptime: "96h"
+            },
+            {
+                id: "hosting-006",
+                name: "Image Resizer Service",
+                skillId: "image-resizer-skill",
+                status: "stopped",
+                deployedAt: "2026-01-26 16:50:00",
+                uptime: "0h"
+            }
+        ];
+        
+        // 页面加载时渲染托管实例列表
+        document.addEventListener('DOMContentLoaded', function() {
+            renderHostingList();
+        });
+        
+        // 渲染托管实例列表
+        function renderHostingList() {
+            const tableBody = document.getElementById('hostingTableBody');
+            tableBody.innerHTML = '';
+            
+            const searchTerm = document.getElementById('hostingSearch').value.toLowerCase();
+            
+            const filteredInstances = hostingInstances.filter(instance => 
+                instance.name.toLowerCase().includes(searchTerm) || 
+                instance.id.toLowerCase().includes(searchTerm)
+            );
+            
+            filteredInstances.forEach(instance => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${instance.id}</td>
+                    <td>${instance.name}</td>
+                    <td>${instance.skillId}</td>
+                    <td><span class="hosting-status status-${instance.status}">${getStatusText(instance.status)}</span></td>
+                    <td>${instance.deployedAt}</td>
+                    <td>${instance.uptime}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-success" onclick="startHosting('${instance.id}')" ${instance.status === 'running' ? 'disabled' : ''}>
+                                <i class="ri-play-line"></i> 启动
+                            </button>
+                            <button class="btn btn-danger" onclick="stopHosting('${instance.id}')" ${instance.status === 'stopped' ? 'disabled' : ''}>
+                                <i class="ri-stop-line"></i> 停止
+                            </button>
+                            <button class="btn btn-secondary" onclick="editHosting('${instance.id}')">
+                                <i class="ri-edit-line"></i> 编辑
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteHosting('${instance.id}')">
+                                <i class="ri-delete-line"></i> 删除
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // 获取状态文本
+        function getStatusText(status) {
+            switch (status) {
+                case 'running': return '运行中';
+                case 'stopped': return '已停止';
+                case 'pending': return '待处理';
+                default: return status;
+            }
+        }
+        
+        // 打开添加托管模态框
+        function openAddHostingModal() {
+            document.getElementById('modalTitle').textContent = '添加托管实例';
+            document.getElementById('hostingId').value = '';
+            document.getElementById('hostingName').value = '';
+            document.getElementById('skillId').value = '';
+            document.getElementById('hostingDescription').value = '';
+            document.getElementById('hostingStatus').value = 'running';
+            document.getElementById('hostingModal').style.display = 'block';
+        }
+        
+        // 打开编辑托管模态框
+        function editHosting(hostingId) {
+            const instance = hostingInstances.find(h => h.id === hostingId);
+            if (instance) {
+                document.getElementById('modalTitle').textContent = '编辑托管实例';
+                document.getElementById('hostingId').value = instance.id;
+                document.getElementById('hostingName').value = instance.name;
+                document.getElementById('skillId').value = instance.skillId;
+                document.getElementById('hostingDescription').value = instance.description || '';
+                document.getElementById('hostingStatus').value = instance.status;
+                document.getElementById('hostingModal').style.display = 'block';
+            }
+        }
+        
+        // 关闭托管模态框
+        function closeHostingModal() {
+            document.getElementById('hostingModal').style.display = 'none';
+        }
+        
+        // 启动托管实例
+        function startHosting(hostingId) {
+            const instanceIndex = hostingInstances.findIndex(h => h.id === hostingId);
+            if (instanceIndex !== -1) {
+                hostingInstances[instanceIndex].status = 'running';
+                hostingInstances[instanceIndex].uptime = '0h 1m';
+                renderHostingList();
+            }
+        }
+        
+        // 停止托管实例
+        function stopHosting(hostingId) {
+            const instanceIndex = hostingInstances.findIndex(h => h.id === hostingId);
+            if (instanceIndex !== -1) {
+                hostingInstances[instanceIndex].status = 'stopped';
+                hostingInstances[instanceIndex].uptime = '0h';
+                renderHostingList();
+            }
+        }
+        
+        // 删除托管实例
+        function deleteHosting(hostingId) {
+            if (confirm('确定要删除这个托管实例吗？')) {
+                const instanceIndex = hostingInstances.findIndex(h => h.id === hostingId);
+                if (instanceIndex !== -1) {
+                    hostingInstances.splice(instanceIndex, 1);
+                    renderHostingList();
+                }
+            }
+        }
+        
+        // 提交托管表单
+        document.getElementById('hostingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const hostingId = document.getElementById('hostingId').value;
+            const hostingName = document.getElementById('hostingName').value;
+            const skillId = document.getElementById('skillId').value;
+            const hostingDescription = document.getElementById('hostingDescription').value;
+            const hostingStatus = document.getElementById('hostingStatus').value;
+            
+            if (hostingId) {
+                // 编辑现有托管实例
+                const instanceIndex = hostingInstances.findIndex(h => h.id === hostingId);
+                if (instanceIndex !== -1) {
+                    hostingInstances[instanceIndex] = {
+                        ...hostingInstances[instanceIndex],
+                        name: hostingName,
+                        skillId: skillId,
+                        description: hostingDescription,
+                        status: hostingStatus
+                    };
+                }
+            } else {
+                // 添加新托管实例
+                const newInstance = {
+                    id: `hosting-${Date.now()}`,
+                    name: hostingName,
+                    skillId: skillId,
+                    description: hostingDescription,
+                    status: hostingStatus,
+                    deployedAt: new Date().toLocaleString(),
+                    uptime: hostingStatus === 'running' ? '0h 1m' : '0h'
+                };
+                hostingInstances.push(newInstance);
+            }
+            
+            renderHostingList();
+            closeHostingModal();
+        });
+        
+        // 搜索事件
+        document.getElementById('hostingSearch').addEventListener('input', renderHostingList);
+        
+        // 初始化菜单
+        initMenu('remote-hosting');
+    </script>
+        </main>
+    </div>
+</body>
+</html>

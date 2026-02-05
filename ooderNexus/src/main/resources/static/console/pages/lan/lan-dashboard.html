@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>局域网仪表盘 - Nexus</title>
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> Nexus Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+        <!-- 头部 -->
+        <div class="header">
+            <h1><i class="ri-wifi-line"></i> 局域网仪表盘 2</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="toggleTheme()">
+                    <i class="ri-moon-line"></i> 切换主题
+                </button>
+                <button id="refresh-btn" class="btn btn-primary" onclick="refreshData()">
+                    <i class="ri-refresh-line"></i> 刷新数据
+                </button>
+            </div>
+        </div>
+        
+        <!-- 状态概览 -->
+        <div class="grid">
+            <div class="card status-card">
+                <div class="status-icon">
+                    <i class="ri-router-wireless-line"></i>
+                </div>
+                <div class="status-value" id="totalDevices">0</div>
+                <div class="status-label">网络设备数</div>
+            </div>
+            
+            <div class="card status-card">
+                <div class="status-icon">
+                    <i class="ri-signal-line"></i>
+                </div>
+                <div class="status-value" id="networkStatus">-</div>
+                <div class="status-label">网络状态</div>
+            </div>
+            
+            <div class="card status-card">
+                <div class="status-icon">
+                    <i class="ri-data-line"></i>
+                </div>
+                <div class="status-value" id="bandwidthUsage">0</div>
+                <div class="status-label">带宽使用率</div>
+            </div>
+            
+            <div class="card status-card">
+                <div class="status-icon">
+                    <i class="ri-ip-line"></i>
+                </div>
+                <div class="status-value" id="ipUsage">0</div>
+                <div class="status-label">IP使用率</div>
+            </div>
+        </div>
+        
+        <!-- 网络拓扑 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">网络拓扑</h2>
+                <button class="btn btn-secondary" onclick="viewTopology()">
+                    <i class="ri-fullscreen-line"></i> 查看完整拓扑
+                </button>
+            </div>
+            <div class="network-topology">
+                <div class="topology-diagram">
+                    <svg width="100%" height="100%" viewBox="0 0 800 250">
+                        <!-- 路由器 -->
+                        <circle cx="400" cy="50" r="30" fill="var(--ooder-primary)" stroke="var(--ooder-dark)" stroke-width="2" />
+                        <text x="400" y="55" text-anchor="middle" fill="white" font-size="14" font-weight="600">路由器</text>
+                        
+                        <!-- 交换机 -->
+                        <rect x="300" y="120" width="200" height="40" rx="5" fill="var(--ooder-secondary)" stroke="var(--ooder-dark)" stroke-width="2" />
+                        <text x="400" y="145" text-anchor="middle" fill="white" font-size="14" font-weight="600">交换机</text>
+                        
+                        <!-- 设备1 -->
+                        <rect x="150" y="200" width="100" height="30" rx="5" fill="var(--ooder-success)" stroke="var(--ooder-dark)" stroke-width="2" />
+                        <text x="200" y="220" text-anchor="middle" fill="white" font-size="12">PC 1</text>
+                        
+                        <!-- 设备2 -->
+                        <rect x="300" y="200" width="100" height="30" rx="5" fill="var(--ooder-success)" stroke="var(--ooder-dark)" stroke-width="2" />
+                        <text x="350" y="220" text-anchor="middle" fill="white" font-size="12">PC 2</text>
+                        
+                        <!-- 设备3 -->
+                        <rect x="450" y="200" width="100" height="30" rx="5" fill="var(--ooder-warning)" stroke="var(--ooder-dark)" stroke-width="2" />
+                        <text x="500" y="220" text-anchor="middle" fill="white" font-size="12">打印机</text>
+                        
+                        <!-- 设备4 -->
+                        <rect x="600" y="200" width="100" height="30" rx="5" fill="var(--ooder-danger)" stroke="var(--ooder-dark)" stroke-width="2" />
+                        <text x="650" y="220" text-anchor="middle" fill="white" font-size="12">NAS</text>
+                        
+                        <!-- 连接线 -->
+                        <line x1="400" y1="80" x2="400" y2="120" stroke="var(--ooder-dark)" stroke-width="2" />
+                        <line x1="300" y1="160" x2="200" y2="200" stroke="var(--ooder-dark)" stroke-width="2" />
+                        <line x1="350" y1="160" x2="350" y2="200" stroke="var(--ooder-dark)" stroke-width="2" />
+                        <line x1="450" y1="160" x2="500" y2="200" stroke="var(--ooder-dark)" stroke-width="2" />
+                        <line x1="500" y1="160" x2="650" y2="200" stroke="var(--ooder-dark)" stroke-width="2" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 带宽监控 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">带宽监控</h2>
+                <button class="btn btn-secondary" onclick="viewBandwidthDetails()">
+                    <i class="ri-bar-chart-2-line"></i> 详细监控
+                </button>
+            </div>
+            <div class="bandwidth-chart">
+                <div class="chart-container">
+                    <svg width="100%" height="100%" viewBox="0 0 800 180">
+                        <!-- 网格 -->
+                        <defs>
+                            <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
+                                <path d="M 40 0 L 0 0 0 20" fill="none" stroke="var(--ooder-border)" stroke-width="0.5"/>
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#grid)" />
+                        
+                        <!-- 上传带宽 -->
+                        <path d="M 0,150 L 100,140 L 200,120 L 300,130 L 400,110 L 500,90 L 600,100 L 700,80 L 800,70" fill="none" stroke="var(--ooder-primary)" stroke-width="2" />
+                        
+                        <!-- 下载带宽 -->
+                        <path d="M 0,130 L 100,120 L 200,100 L 300,110 L 400,90 L 500,70 L 600,80 L 700,60 L 800,50" fill="none" stroke="var(--ooder-success)" stroke-width="2" />
+                        
+                        <!-- 图例 -->
+                        <rect x="20" y="10" width="12" height="12" fill="var(--ooder-primary)" />
+                        <text x="40" y="20" fill="var(--ooder-text)" font-size="12">上传</text>
+                        <rect x="100" y="10" width="12" height="12" fill="var(--ooder-success)" />
+                        <text x="120" y="20" fill="var(--ooder-text)" font-size="12">下载</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 网络设备 -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">网络设备</h2>
+                <button class="btn btn-secondary" onclick="viewAllDevices()">
+                    <i class="ri-list-check"></i> 查看全部设备
+                </button>
+            </div>
+            <div class="device-list" id="deviceList">
+                <!-- 设备列表将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 统一菜单加载脚本 -->
+    <script src="/console/js/menu-loader.js"></script>
+    <script src="/console/common/button-manager.js"></script>
+    <script src="/console/common/utils.js"></script>
+    <script src="/console/js/lan-dashboard.js"></script>
+    <script>
+        window.onload = function() {
+            init();
+            initMenu();
+        };
+    </script>
+</div>
+</body>
+</html>

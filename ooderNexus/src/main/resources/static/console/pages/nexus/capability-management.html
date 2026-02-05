@@ -1,0 +1,312 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能力管理 - Nexus - Nexus</title>
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+    <script src="../../js/theme-manager.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> Nexus Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h1><i class="ri-lightbulb-line"></i> 能力管理</h1>
+                    <button class="theme-toggle-btn btn btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                        <i class="ri-sun-line"></i> 浅色模式
+                    </button>
+                </div>
+                <div class="subtitle">
+                    <span class="badge dashboard-badge" style="background-color: var(--nexus-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">Nexus</span>
+                    <span>管理和调用Nexus系统能力</span>
+                </div>
+            </div>
+
+            <!-- 能力操作区 -->
+            <section class="operation-section">
+                <div class="section-header">
+                    <h3>能力操作</h3>
+                    <button class="btn-primary" onclick="showAddCapabilityModal()">
+                        <i class="ri-add-circle-line"></i>
+                        注册能力
+                    </button>
+                </div>
+                <div class="operation-card">
+                    <div class="form-group">
+                        <label for="capabilityId">能力ID</label>
+                        <input type="text" id="capabilityId" placeholder="输入能力ID">
+                    </div>
+                    <div class="form-group">
+                        <label for="capabilityName">能力名称</label>
+                        <input type="text" id="capabilityName" placeholder="输入能力名称">
+                    </div>
+                    <div class="form-group">
+                        <label for="capabilityDescription">能力描述</label>
+                        <textarea id="capabilityDescription" placeholder="输入能力描述"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-primary" onclick="registerCapability()">注册能力</button>
+                        <button class="btn-secondary" onclick="removeCapability()">移除能力</button>
+                        <button class="btn-secondary" onclick="invokeCapability()">调用能力</button>
+                        <button class="btn-secondary" onclick="refreshCapabilities()">刷新列表</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 能力列表 -->
+            <section class="capability-list">
+                <div class="section-header">
+                    <h3>能力列表</h3>
+                    <div class="search-box">
+                        <input type="text" id="capabilitySearch" placeholder="搜索能力...">
+                        <button onclick="searchCapabilities()"><i class="ri-search-line"></i></button>
+                    </div>
+                </div>
+                <div class="card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>能力ID</th>
+                                <th>能力名称</th>
+                                <th>能力描述</th>
+                                <th>注册时间</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="capabilityTableBody">
+                            <!-- 能力数据将通过JS动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 能力调用结果 -->
+            <section class="capability-result">
+                <div class="section-header">
+                    <h3>能力调用结果</h3>
+                </div>
+                <div class="card">
+                    <pre id="capabilityResult">调用能力以查看结果...</pre>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- 公共JS模块 -->
+    <script src="../../js/menu-loader.js"></script>
+    <script src="../../common/api-client.js"></script>
+    <script src="../../common/utils.js"></script>
+    <script>
+        window.onload = function() {
+            initMenu();
+            loadCapabilities();
+        };
+
+        // 模拟能力数据
+        let capabilities = [];
+
+        function loadCapabilities() {
+            // 模拟加载能力数据
+            capabilities = [
+                {
+                    id: "network-topology",
+                    name: "网络拓扑分析",
+                    description: "分析网络拓扑结构，生成网络地图",
+                    registeredTime: new Date().toISOString(),
+                    status: "active"
+                },
+                {
+                    id: "link-management",
+                    name: "链路管理",
+                    description: "管理网络链路的创建和断开",
+                    registeredTime: new Date().toISOString(),
+                    status: "active"
+                },
+                {
+                    id: "endagent-discovery",
+                    name: "终端发现",
+                    description: "发现网络中的终端设备",
+                    registeredTime: new Date().toISOString(),
+                    status: "active"
+                },
+                {
+                    id: "route-discovery",
+                    name: "路由发现",
+                    description: "发现网络中的路由路径",
+                    registeredTime: new Date().toISOString(),
+                    status: "active"
+                }
+            ];
+            renderCapabilities();
+        }
+
+        function renderCapabilities() {
+            const tbody = document.getElementById('capabilityTableBody');
+            tbody.innerHTML = '';
+
+            capabilities.forEach(capability => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${capability.id}</td>
+                    <td>${capability.name}</td>
+                    <td>${capability.description}</td>
+                    <td>${new Date(capability.registeredTime).toLocaleString()}</td>
+                    <td><span class="status-badge ${capability.status}">${capability.status === 'active' ? '活跃' : '禁用'}</span></td>
+                    <td>
+                        <button class="btn-sm btn-primary" onclick="selectCapability('${capability.id}')">选择</button>
+                        <button class="btn-sm btn-danger" onclick="removeCapabilityById('${capability.id}')">移除</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function registerCapability() {
+            const id = document.getElementById('capabilityId').value;
+            const name = document.getElementById('capabilityName').value;
+            const description = document.getElementById('capabilityDescription').value;
+
+            if (!id) {
+                alert('请输入能力ID');
+                return;
+            }
+
+            // 检查能力是否已存在
+            const existingCapability = capabilities.find(c => c.id === id);
+            if (existingCapability) {
+                alert('能力ID已存在');
+                return;
+            }
+
+            // 添加新能力
+            const newCapability = {
+                id: id,
+                name: name || id,
+                description: description || '无描述',
+                registeredTime: new Date().toISOString(),
+                status: 'active'
+            };
+
+            capabilities.push(newCapability);
+            renderCapabilities();
+            clearCapabilityForm();
+            showMessage('能力注册成功');
+        }
+
+        function removeCapability() {
+            const id = document.getElementById('capabilityId').value;
+            if (!id) {
+                alert('请输入能力ID');
+                return;
+            }
+            removeCapabilityById(id);
+        }
+
+        function removeCapabilityById(id) {
+            const index = capabilities.findIndex(c => c.id === id);
+            if (index === -1) {
+                alert('能力不存在');
+                return;
+            }
+
+            capabilities.splice(index, 1);
+            renderCapabilities();
+            showMessage('能力移除成功');
+        }
+
+        function invokeCapability() {
+            const id = document.getElementById('capabilityId').value;
+            if (!id) {
+                alert('请输入能力ID');
+                return;
+            }
+
+            const capability = capabilities.find(c => c.id === id);
+            if (!capability) {
+                alert('能力不存在');
+                return;
+            }
+
+            // 模拟能力调用
+            const result = {
+                status: 'success',
+                capabilityId: id,
+                params: {},
+                result: `能力 ${capability.name} 调用成功`,
+                timestamp: new Date().toISOString()
+            };
+
+            document.getElementById('capabilityResult').textContent = JSON.stringify(result, null, 2);
+            showMessage('能力调用成功');
+        }
+
+        function selectCapability(id) {
+            const capability = capabilities.find(c => c.id === id);
+            if (capability) {
+                document.getElementById('capabilityId').value = capability.id;
+                document.getElementById('capabilityName').value = capability.name;
+                document.getElementById('capabilityDescription').value = capability.description;
+            }
+        }
+
+        function refreshCapabilities() {
+            loadCapabilities();
+            showMessage('能力列表已刷新');
+        }
+
+        function searchCapabilities() {
+            const searchTerm = document.getElementById('capabilitySearch').value.toLowerCase();
+            const filteredCapabilities = capabilities.filter(c => 
+                c.id.toLowerCase().includes(searchTerm) ||
+                c.name.toLowerCase().includes(searchTerm) ||
+                c.description.toLowerCase().includes(searchTerm)
+            );
+
+            const tbody = document.getElementById('capabilityTableBody');
+            tbody.innerHTML = '';
+
+            filteredCapabilities.forEach(capability => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${capability.id}</td>
+                    <td>${capability.name}</td>
+                    <td>${capability.description}</td>
+                    <td>${new Date(capability.registeredTime).toLocaleString()}</td>
+                    <td><span class="status-badge ${capability.status}">${capability.status === 'active' ? '活跃' : '禁用'}</span></td>
+                    <td>
+                        <button class="btn-sm btn-primary" onclick="selectCapability('${capability.id}')">选择</button>
+                        <button class="btn-sm btn-danger" onclick="removeCapabilityById('${capability.id}')">移除</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function clearCapabilityForm() {
+            document.getElementById('capabilityId').value = '';
+            document.getElementById('capabilityName').value = '';
+            document.getElementById('capabilityDescription').value = '';
+        }
+
+        function showAddCapabilityModal() {
+            // 这里可以实现模态框逻辑
+            alert('注册能力功能');
+        }
+
+        function showMessage(message) {
+            // 简单的消息提示
+            alert(message);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络设备管理 - Nexus</title>
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> Nexus Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+        <!-- 头部 -->
+        <div class="header">
+            <h1><i class="ri-list-check"></i> 网络设备列表 2</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="toggleTheme()">
+                    <i class="ri-moon-line"></i> 切换主题
+                </button>
+                <button class="btn btn-primary" onclick="addDevice()">
+                    <i class="ri-add-line"></i> 添加设备
+                </button>
+            </div>
+        </div>
+        
+        <!-- 搜索和过滤 -->
+        <div class="search-filter">
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="搜索设备名称、IP、MAC..." id="searchInput">
+                <button class="btn btn-secondary" onclick="searchDevices()">
+                    <i class="ri-search-line"></i> 搜索
+                </button>
+            </div>
+            <div>
+                <select class="filter-select" id="statusFilter">
+                    <option value="all">所有状态</option>
+                    <option value="online">在线</option>
+                    <option value="offline">离线</option>
+                    <option value="warning">警告</option>
+                </select>
+                <select class="filter-select" id="typeFilter">
+                    <option value="all">所有类型</option>
+                    <option value="router">路由器</option>
+                    <option value="switch">交换机</option>
+                    <option value="pc">电脑</option>
+                    <option value="printer">打印机</option>
+                    <option value="nas">NAS</option>
+                    <option value="other">其他</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- 设备表格 -->
+        <div class="card">
+            <div class="table-container">
+                <table id="deviceTable">
+                    <thead>
+                        <tr>
+                            <th>设备名称</th>
+                            <th>类型</th>
+                            <th>IP地址</th>
+                            <th>MAC地址</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deviceTableBody">
+                        <!-- 设备数据将通过JavaScript动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 分页 -->
+            <div class="pagination">
+                <button class="page-btn" onclick="changePage(1)">首页</button>
+                <button class="page-btn" onclick="changePage(currentPage - 1)">上一页</button>
+                <button class="page-btn active" id="page1">1</button>
+                <button class="page-btn" id="page2">2</button>
+                <button class="page-btn" id="page3">3</button>
+                <button class="page-btn" onclick="changePage(currentPage + 1)">下一页</button>
+                <button class="page-btn" onclick="changePage(3)">末页</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 模拟设备数据
+        const mockDevices = [
+            {
+                id: 1,
+                name: "主路由器",
+                type: "router",
+                ip: "192.168.1.1",
+                mac: "AA:BB:CC:DD:EE:FF",
+                status: "online",
+                description: "主网络路由器"
+            },
+            {
+                id: 2,
+                name: "交换机",
+                type: "switch",
+                ip: "192.168.1.2",
+                mac: "AA:BB:CC:DD:EE:GG",
+                status: "online",
+                description: "网络交换机"
+            },
+            {
+                id: 3,
+                name: "PC 1",
+                type: "pc",
+                ip: "192.168.1.100",
+                mac: "AA:BB:CC:DD:EE:HH",
+                status: "online",
+                description: "办公电脑"
+            },
+            {
+                id: 4,
+                name: "PC 2",
+                type: "pc",
+                ip: "192.168.1.101",
+                mac: "AA:BB:CC:DD:EE:II",
+                status: "online",
+                description: "家用电脑"
+            },
+            {
+                id: 5,
+                name: "打印机",
+                type: "printer",
+                ip: "192.168.1.102",
+                mac: "AA:BB:CC:DD:EE:JJ",
+                status: "warning",
+                description: "网络打印机"
+            },
+            {
+                id: 6,
+                name: "NAS",
+                type: "nas",
+                ip: "192.168.1.103",
+                mac: "AA:BB:CC:DD:EE:KK",
+                status: "offline",
+                description: "网络存储服务器"
+            },
+            {
+                id: 7,
+                name: "智能电视",
+                type: "other",
+                ip: "192.168.1.104",
+                mac: "AA:BB:CC:DD:EE:LL",
+                status: "online",
+                description: "智能电视"
+            },
+            {
+                id: 8,
+                name: "摄像头",
+                type: "other",
+                ip: "192.168.1.105",
+                mac: "AA:BB:CC:DD:EE:MM",
+                status: "online",
+                description: "网络摄像头"
+            },
+            {
+                id: 9,
+                name: "平板电脑",
+                type: "other",
+                ip: "192.168.1.106",
+                mac: "AA:BB:CC:DD:EE:NN",
+                status: "online",
+                description: "平板电脑"
+            }
+        ];
+        
+        let currentPage = 1;
+        const pageSize = 3;
+        let filteredDevices = [...mockDevices];
+        
+        // 初始化页面
+        function init() {
+            loadDevices();
+        }
+        
+        // 加载设备数据
+        function loadDevices() {
+            const tableBody = document.getElementById('deviceTableBody');
+            tableBody.innerHTML = '';
+            
+            // 计算分页数据
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageDevices = filteredDevices.slice(startIndex, endIndex);
+            
+            pageDevices.forEach(device => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>
+                        <i class="ri-${getDeviceIcon(device.type)} device-icon"></i>
+                        ${device.name}
+                    </td>
+                    <td>${getDeviceTypeName(device.type)}</td>
+                    <td>${device.ip}</td>
+                    <td>${device.mac}</td>
+                    <td>
+                        <span class="status-indicator status-${device.status}"></span>
+                        ${getStatusText(device.status)}
+                    </td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="viewDevice(${device.id})"><i class="ri-eye-line"></i></button>
+                        <button class="btn btn-primary" onclick="editDevice(${device.id})"><i class="ri-edit-line"></i></button>
+                        <button class="btn btn-danger" onclick="deleteDevice(${device.id})"><i class="ri-delete-line"></i></button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // 更新分页按钮
+            updatePagination();
+        }
+        
+        // 获取设备图标
+        function getDeviceIcon(type) {
+            const iconMap = {
+                router: 'router-wireless-line',
+                switch: 'exchange-line',
+                pc: 'computer-line',
+                printer: 'printer-line',
+                nas: 'hard-drive-line',
+                other: 'device-line'
+            };
+            return iconMap[type] || 'device-line';
+        }
+        
+        // 获取设备类型名称
+        function getDeviceTypeName(type) {
+            const typeMap = {
+                router: '路由器',
+                switch: '交换机',
+                pc: '电脑',
+                printer: '打印机',
+                nas: 'NAS',
+                other: '其他'
+            };
+            return typeMap[type] || '其他';
+        }
+        
+        // 获取状态文本
+        function getStatusText(status) {
+            const statusMap = {
+                online: '在线',
+                offline: '离线',
+                warning: '警告'
+            };
+            return statusMap[status] || '未知';
+        }
+        
+        // 更新分页
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredDevices.length / pageSize);
+            
+            // 隐藏/显示分页按钮
+            for (let i = 1; i <= 3; i++) {
+                const pageBtn = document.getElementById(`page${i}`);
+                if (pageBtn) {
+                    if (i <= totalPages) {
+                        pageBtn.style.display = 'inline-block';
+                        pageBtn.textContent = i;
+                        pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                    } else {
+                        pageBtn.style.display = 'none';
+                    }
+                }
+            }
+        }
+        
+        // 搜索设备
+        function searchDevices() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            
+            filteredDevices = mockDevices.filter(device => {
+                const matchesSearch = device.name.toLowerCase().includes(searchTerm) || 
+                                     device.ip.toLowerCase().includes(searchTerm) ||
+                                     device.mac.toLowerCase().includes(searchTerm) ||
+                                     device.description.toLowerCase().includes(searchTerm);
+                const matchesStatus = statusFilter === 'all' || device.status === statusFilter;
+                const matchesType = typeFilter === 'all' || device.type === typeFilter;
+                
+                return matchesSearch && matchesStatus && matchesType;
+            });
+            
+            currentPage = 1;
+            loadDevices();
+        }
+        
+        // 切换页面
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredDevices.length / pageSize);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                loadDevices();
+            }
+        }
+        
+        // 添加设备
+        function addDevice() {
+            alert('添加设备功能开发中...');
+        }
+        
+        // 查看设备
+        function viewDevice(id) {
+            window.location.href = `device-details.html?id=${id}`;
+        }
+        
+        // 编辑设备
+        function editDevice(id) {
+            alert(`编辑设备 ID: ${id}`);
+        }
+        
+        // 删除设备
+        function deleteDevice(id) {
+            if (confirm('确定要删除此设备吗？')) {
+                alert(`删除设备 ID: ${id}`);
+            }
+        }
+        
+        // 切换主题
+        function toggleTheme() {
+            const body = document.body;
+            if (body.classList.contains('dark-theme')) {
+                body.classList.remove('dark-theme');
+            } else {
+                body.classList.add('dark-theme');
+            }
+        }
+        
+        // 初始化
+        init();
+        
+        // 绑定事件
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                searchDevices();
+            }
+        });
+        
+        document.getElementById('statusFilter').addEventListener('change', searchDevices);
+        document.getElementById('typeFilter').addEventListener('change', searchDevices);
+    </script>
+    
+    <!-- 统一菜单加载脚本 -->
+    <script src="/console/js/menu-loader.js"></script>
+    <script>
+        // 初始化菜单和页面
+        window.onload = function() {
+            init();
+            initMenu();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,459 @@
+﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备列表 - 家庭功能</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> MCP Agent Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+        <!-- 头部 -->
+        <div class="header">
+            <h1><i class="ri-list-check"></i> 设备列表 2</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="toggleTheme()">
+                    <i class="ri-moon-line"></i> 切换主题
+                </button>
+                <button class="btn btn-primary" onclick="addDevice()">
+                    <i class="ri-add-line"></i> 添加设备
+                </button>
+            </div>
+        </div>
+        
+        <!-- 搜索和过滤 -->
+        <div class="search-filter">
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="搜索设备名称、位置..." id="searchInput">
+                <button class="btn btn-secondary" onclick="searchDevices()">
+                    <i class="ri-search-line"></i> 搜索
+                </button>
+            </div>
+            <div>
+                <select class="filter-select" id="statusFilter">
+                    <option value="all">所有状态</option>
+                    <option value="online">在线</option>
+                    <option value="offline">离线</option>
+                    <option value="warning">警告</option>
+                </select>
+                <select class="filter-select" id="typeFilter">
+                    <option value="all">所有类型</option>
+                    <option value="light">灯光</option>
+                    <option value="socket">插座</option>
+                    <option value="lock">门锁</option>
+                    <option value="camera">摄像头</option>
+                    <option value="other">其他</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- 设备表格 -->
+        <div class="card">
+            <div class="table-container">
+                <table id="deviceTable">
+                    <thead>
+                        <tr>
+                            <th>设备名称</th>
+                            <th>类型</th>
+                            <th>位置</th>
+                            <th>状态</th>
+                            <th>最后活动</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deviceTableBody">
+                        <!-- 设备数据将通过JavaScript动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 分页 -->
+            <div class="pagination">
+                <button class="page-btn" onclick="changePage(1)">首页</button>
+                <button class="page-btn" onclick="changePage(currentPage - 1)">上一页</button>
+                <button class="page-btn active" id="page1">1</button>
+                <button class="page-btn" id="page2">2</button>
+                <button class="page-btn" id="page3">3</button>
+                <button class="page-btn" onclick="changePage(currentPage + 1)">下一页</button>
+                <button class="page-btn" onclick="changePage(3)">末页</button>
+            </div>
+        </div>
+    
+    <script>
+        // 菜单配置
+        let menuConfig = null;
+        
+        // 加载菜单配置
+        async function loadMenuConfig() {
+            try {
+                const response = await fetch('../../menu-config.json');
+                if (!response.ok) {
+                    throw new Error('菜单配置加载失败');
+                }
+                menuConfig = await response.json();
+                renderMenu();
+            } catch (error) {
+                console.error('加载菜单配置错误:', error);
+                // 加载失败时显示默认菜单
+                renderDefaultMenu();
+            }
+        }
+        
+        // 渲染菜单
+        function renderMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            
+            menuConfig.menu.forEach(item => {
+                // 只显示已实现的功能（status为implemented）
+                if (item.status === 'implemented' || item.id === 'dashboard') {
+                    const menuItem = createMenuItem(item);
+                    navMenu.appendChild(menuItem);
+                    // 添加菜单分隔线
+                    if (item.id !== 'dashboard') {
+                        const divider = document.createElement('div');
+                        divider.className = 'menu-divider';
+                        navMenu.appendChild(divider);
+                    }
+                }
+            });
+        }
+        
+        // 创建菜单项
+        function createMenuItem(menuItem) {
+            const li = document.createElement('li');
+            
+            if (menuItem.children && menuItem.children.length > 0) {
+                // 有子菜单的菜单项
+                const a = document.createElement('a');
+                a.href = `#${menuItem.id}`;
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                    <span class="toggle-icon">›</span>
+                `;
+                
+                // 处理点击事件
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const toggleIcon = this.querySelector('.toggle-icon');
+                    const submenu = this.nextElementSibling;
+                    
+                    if (submenu) {
+                        if (submenu.style.display === 'block') {
+                            submenu.style.display = 'none';
+                        } else {
+                            submenu.style.display = 'block';
+                        }
+                        toggleIcon.classList.toggle('collapsed');
+                    }
+                });
+                
+                li.appendChild(a);
+                
+                // 创建子菜单
+                const submenu = document.createElement('ul');
+                submenu.className = 'submenu';
+                
+                menuItem.children.forEach(childItem => {
+                    // 只显示已实现的子功能
+                    if (childItem.status === 'implemented') {
+                        const childLi = createMenuItem(childItem);
+                        submenu.appendChild(childLi);
+                    }
+                });
+                
+                // 只有当子菜单不为空时才添加
+                if (submenu.children.length > 0) {
+                    li.appendChild(submenu);
+                }
+            } else {
+                // 无子菜单的菜单项
+                const a = document.createElement('a');
+                if (menuItem.url) {
+                    // 使用绝对路径，确保从任何页面访问都正确
+                    if (menuItem.url.startsWith('pages/')) {
+                        a.href = '../../' + menuItem.url;
+                    } else {
+                        a.href = menuItem.url;
+                    }
+                } else {
+                    a.href = `#${menuItem.id}`;
+                    a.setAttribute('data-page', menuItem.page || menuItem.id);
+                }
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                `;
+                
+                // 标记当前页面为活跃状态
+                if (menuItem.url && menuItem.url.includes('device-list')) {
+                    a.classList.add('active');
+                }
+                
+                li.appendChild(a);
+            }
+            
+            return li;
+        }
+        
+        // 渲染默认菜单（加载失败时使用）
+        function renderDefaultMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = `
+                <li><a href="../../index.html"><i class="ri-dashboard-line"></i> 仪表盘</a></li>
+                <li><a href="../../pages/home/home-dashboard.html"><i class="ri-home-line"></i> 家庭功能</a></li>
+                <li><a href="../../pages/lan/lan-dashboard.html"><i class="ri-wifi-line"></i> 小局域网功能</a></li>
+                <li><a href="../../pages/enterprise/enterprise-dashboard.html"><i class="ri-building-line"></i> 企业级全功能应用</a></li>
+            `;
+        }
+    </script>
+    
+    <script>
+        let currentPage = 1;
+        const pageSize = 3;
+        let allDevices = [];
+        let filteredDevices = [];
+        
+        // 初始化页面
+        function init() {
+            loadDevices();
+            loadMenuConfig();
+        }
+        
+        // 加载设备数据
+        async function loadDevices() {
+            try {
+                const statusFilter = document.getElementById('statusFilter').value;
+                const typeFilter = document.getElementById('typeFilter').value;
+                const searchTerm = document.getElementById('searchInput').value;
+                
+                // 构建查询参数
+                let url = '/api/home/devices';
+                const params = new URLSearchParams();
+                
+                if (statusFilter && statusFilter !== 'all') {
+                    params.append('status', statusFilter);
+                }
+                
+                if (typeFilter && typeFilter !== 'all') {
+                    params.append('type', typeFilter);
+                }
+                
+                if (searchTerm) {
+                    params.append('search', searchTerm);
+                }
+                
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    allDevices = data.devices;
+                    filteredDevices = data.devices;
+                    
+                    renderDevices();
+                }
+            } catch (error) {
+                console.error('加载设备数据错误:', error);
+            }
+        }
+        
+        // 渲染设备数据
+        function renderDevices() {
+            const tableBody = document.getElementById('deviceTableBody');
+            tableBody.innerHTML = '';
+            
+            // 计算分页数据
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageDevices = filteredDevices.slice(startIndex, endIndex);
+            
+            pageDevices.forEach(device => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>
+                        <i class="ri-${getDeviceIcon(device.type)} device-icon"></i>
+                        ${device.name}
+                    </td>
+                    <td>${getDeviceTypeName(device.type)}</td>
+                    <td>${device.location}</td>
+                    <td>
+                        <span class="status-indicator status-${device.status}"></span>
+                        ${getStatusText(device.status)}
+                    </td>
+                    <td>${device.lastActive}</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="viewDevice(${device.id})"><i class="ri-eye-line"></i></button>
+                        <button class="btn btn-primary" onclick="controlDevice(${device.id})"><i class="ri-control-line"></i></button>
+                        <button class="btn btn-danger" onclick="deleteDevice(${device.id})"><i class="ri-delete-line"></i></button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // 更新分页按钮
+            updatePagination();
+        }
+        
+        // 获取设备图标
+        function getDeviceIcon(type) {
+            const iconMap = {
+                light: 'lightbulb-line',
+                socket: 'power-plug-line',
+                lock: 'lock-line',
+                camera: 'video-line',
+                other: 'device-line'
+            };
+            return iconMap[type] || 'device-line';
+        }
+        
+        // 获取设备类型名称
+        function getDeviceTypeName(type) {
+            const typeMap = {
+                light: '灯光',
+                socket: '插座',
+                lock: '门锁',
+                camera: '摄像头',
+                other: '其他'
+            };
+            return typeMap[type] || '其他';
+        }
+        
+        // 获取状态文本
+        function getStatusText(status) {
+            const statusMap = {
+                online: '在线',
+                offline: '离线',
+                warning: '警告'
+            };
+            return statusMap[status] || '未知';
+        }
+        
+        // 更新分页
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredDevices.length / pageSize);
+            
+            // 隐藏/显示分页按钮
+            for (let i = 1; i <= 3; i++) {
+                const pageBtn = document.getElementById(`page${i}`);
+                if (pageBtn) {
+                    if (i <= totalPages) {
+                        pageBtn.style.display = 'inline-block';
+                        pageBtn.textContent = i;
+                        pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                    } else {
+                        pageBtn.style.display = 'none';
+                    }
+                }
+            }
+        }
+        
+        // 搜索设备
+        function searchDevices() {
+            currentPage = 1;
+            loadDevices();
+        }
+        
+        // 切换页面
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredDevices.length / pageSize);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderDevices();
+            }
+        }
+        
+        // 添加设备
+        async function addDevice() {
+            try {
+                // 这里可以实现添加设备的逻辑
+                alert('添加设备功能开发中...');
+            } catch (error) {
+                console.error('添加设备错误:', error);
+            }
+        }
+        
+        // 查看设备
+        async function viewDevice(id) {
+            try {
+                const response = await fetch(`/api/home/devices/${id}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const device = data.device;
+                    alert(`设备详情:\n名称: ${device.name}\n类型: ${getDeviceTypeName(device.type)}\n位置: ${device.location}\n状态: ${getStatusText(device.status)}\nIP: ${device.ip}\n最后活动: ${device.lastActive}`);
+                } else {
+                    alert('设备不存在');
+                }
+            } catch (error) {
+                console.error('查看设备错误:', error);
+            }
+        }
+        
+        // 控制设备
+        function controlDevice(id) {
+            window.location.href = `device-control.html?id=${id}`;
+        }
+        
+        // 删除设备
+        async function deleteDevice(id) {
+            if (confirm('确定要删除此设备吗？')) {
+                try {
+                    const response = await fetch(`/api/home/devices/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        alert('设备删除成功');
+                        loadDevices();
+                    } else {
+                        alert('设备删除失败: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('删除设备错误:', error);
+                    alert('删除设备失败');
+                }
+            }
+        }
+        
+        // 切换主题
+        function toggleTheme() {
+            const body = document.body;
+            if (body.classList.contains('dark-theme')) {
+                body.classList.remove('dark-theme');
+            } else {
+                body.classList.add('dark-theme');
+            }
+        }
+        
+        // 初始化
+        init();
+        
+        // 绑定事件
+        document.getElementById('searchInput').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                searchDevices();
+            }
+        });
+        
+        document.getElementById('statusFilter').addEventListener('change', searchDevices);
+        document.getElementById('typeFilter').addEventListener('change', searchDevices);
+    </script>
+</div>
+</body>
+</html>

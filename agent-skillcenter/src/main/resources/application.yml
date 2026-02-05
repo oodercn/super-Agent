@@ -1,0 +1,42 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /skillcenter
+
+spring:
+  application:
+    name: agent-skillcenter
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+# 管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    net.ooder.skillcenter: DEBUG
+  file:
+    name: logs/skillcenter.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# 技能中心配置
+skillcenter:
+  # 技能执行超时时间（毫秒）
+  execution-timeout: 30000
+  # 最大技能并发数
+  max-concurrent-executions: 100

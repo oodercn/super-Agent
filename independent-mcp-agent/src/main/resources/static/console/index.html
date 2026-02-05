@@ -1,0 +1,267 @@
+﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="OoderAgent Console - 主控节点管理控制台">
+    <meta name="theme-color" content="#000000">
+    <title>OoderAgent Console - 选择页面类型</title>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css"></noscript>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .page-type-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+            margin-top: 48px;
+        }
+        .page-type-card {
+            background-color: #121212;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .page-type-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            border-color: #3b82f6;
+        }
+        .page-type-card .icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+            color: #3b82f6;
+        }
+        .page-type-card h3 {
+            font-size: 20px;
+            margin-bottom: 16px;
+            color: #ffffff;
+        }
+        .page-type-card p {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 24px;
+        }
+        .page-type-card .btn {
+            margin-top: 16px;
+        }
+        .welcome-section {
+            text-align: center;
+            padding: 64px 0;
+        }
+        .welcome-section h1 {
+            font-size: 32px;
+            margin-bottom: 16px;
+            color: #ffffff;
+        }
+        .welcome-section p {
+            font-size: 16px;
+            color: #94a3b8;
+            margin-bottom: 32px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="welcome-section">
+                <h1><i class="ri-server-line"></i> OoderAgent 控制台</h1>
+                <p>请选择您要使用的页面类型</p>
+                
+                <!-- 页面类型选择 -->
+                <div class="page-type-selection">
+                    <!-- 家庭页面 -->
+                    <div class="page-type-card" onclick="selectPageType('home')">
+                        <div class="icon"><i class="ri-home-smile-line"></i></div>
+                        <h3>家庭管理中心</h3>
+                        <p>适用于家庭环境的设备管理和监控功能，包括设备控制、安全状态等</p>
+                        <button class="btn btn-primary">选择家庭页面</button>
+                    </div>
+                    
+                    <!-- 局域网页面 -->
+                    <div class="page-type-card" onclick="selectPageType('lan')">
+                        <div class="icon"><i class="ri-network-line"></i></div>
+                        <h3>局域网管理中心</h3>
+                        <p>适用于小型局域网的网络设备管理和网络设置功能，包括网络监控、带宽管理等</p>
+                        <button class="btn btn-primary">选择局域网页面</button>
+                    </div>
+                    
+                    <!-- 企业网页面 -->
+                    <div class="page-type-card" onclick="selectPageType('enterprise')">
+                        <div class="icon"><i class="ri-building-line"></i></div>
+                        <h3>企业网管理中心</h3>
+                        <p>适用于企业环境的系统管理和服务监控功能，包括命令体系管理、配置中心等</p>
+                        <button class="btn btn-primary">选择企业网页面</button>
+                    </div>
+                </div>
+                
+                <!-- 最近访问记录 -->
+                <div style="margin-top: 64px;">
+                    <h3>最近访问</h3>
+                    <div id="recent-access" style="margin-top: 16px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script defer>
+        // 页面加载时检查本地存储中的页面类型
+        window.onload = function() {
+            checkSavedPageType();
+            loadRecentAccess();
+        };
+        
+        // 检查本地存储中的页面类型
+        function checkSavedPageType() {
+            const savedPageType = localStorage.getItem('mcp_agent_page_type');
+            if (savedPageType) {
+                // 根据页面类型设置角色
+                let role = 'home';
+                switch(savedPageType) {
+                    case 'home':
+                    case 'lan':
+                        role = 'home';
+                        break;
+                    case 'enterprise':
+                        role = 'enterprise';
+                        break;
+                }
+                localStorage.setItem('currentRole', role);
+                
+                // 如果有保存的页面类型，提示用户是否直接进入
+                if (confirm(`检测到您上次使用的是${getPageTypeName(savedPageType)}页面，是否直接进入？`)) {
+                    navigateToPage(savedPageType);
+                }
+            }
+        }
+        
+        // 加载最近访问记录
+        function loadRecentAccess() {
+            const recentAccess = localStorage.getItem('mcp_agent_recent_access');
+            const recentAccessEl = document.getElementById('recent-access');
+            
+            if (recentAccess) {
+                const recentPages = JSON.parse(recentAccess);
+                let html = '<div style="display: flex; gap: 16px; justify-content: center;">';
+                
+                recentPages.forEach(page => {
+                    html += `
+                        <div style="padding: 8px 16px; background-color: #1a1a1a; border-radius: 20px; font-size: 14px; color: #94a3b8;">
+                            <i class="${getPageTypeIcon(page.type)}"></i> ${getPageTypeName(page.type)} (${page.time})
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                recentAccessEl.innerHTML = html;
+            } else {
+                recentAccessEl.innerHTML = '<p style="color: #94a3b8;">暂无最近访问记录</p>';
+            }
+        }
+        
+        // 选择页面类型
+        function selectPageType(pageType) {
+            // 保存页面类型到本地存储
+            localStorage.setItem('mcp_agent_page_type', pageType);
+            
+            // 根据页面类型设置角色
+            let role = 'home';
+            switch(pageType) {
+                case 'home':
+                case 'lan':
+                    role = 'home';
+                    break;
+                case 'enterprise':
+                    role = 'enterprise';
+                    break;
+            }
+            localStorage.setItem('currentRole', role);
+            
+            // 更新最近访问记录
+            updateRecentAccess(pageType);
+            
+            // 导航到对应页面
+            navigateToPage(pageType);
+        }
+        
+        // 更新最近访问记录
+        function updateRecentAccess(pageType) {
+            const recentAccess = localStorage.getItem('mcp_agent_recent_access');
+            let recentPages = [];
+            
+            if (recentAccess) {
+                recentPages = JSON.parse(recentAccess);
+            }
+            
+            // 添加新的访问记录
+            const now = new Date();
+            const timeStr = now.toLocaleString('zh-CN', {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            recentPages.unshift({
+                type: pageType,
+                time: timeStr
+            });
+            
+            // 只保留最近3条记录
+            recentPages = recentPages.slice(0, 3);
+            
+            // 保存到本地存储
+            localStorage.setItem('mcp_agent_recent_access', JSON.stringify(recentPages));
+        }
+        
+        // 导航到对应页面
+        function navigateToPage(pageType) {
+            switch(pageType) {
+                case 'home':
+                    window.location.href = 'pages/home-main.html';
+                    break;
+                case 'lan':
+                    window.location.href = 'pages/lan-main.html';
+                    break;
+                case 'enterprise':
+                    window.location.href = 'pages/enterprise-main.html';
+                    break;
+            }
+        }
+        
+        // 获取页面类型名称
+        function getPageTypeName(pageType) {
+            switch(pageType) {
+                case 'home':
+                    return '家庭';
+                case 'lan':
+                    return '局域网';
+                case 'enterprise':
+                    return '企业网';
+                default:
+                    return '未知';
+            }
+        }
+        
+        // 获取页面类型图标
+        function getPageTypeIcon(pageType) {
+            switch(pageType) {
+                case 'home':
+                    return 'ri-home-smile-line';
+                case 'lan':
+                    return 'ri-network-line';
+                case 'enterprise':
+                    return 'ri-building-line';
+                default:
+                    return 'ri-server-line';
+            }
+        }
+    </script>
+</body>
+</html>

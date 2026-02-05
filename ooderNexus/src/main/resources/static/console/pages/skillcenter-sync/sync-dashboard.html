@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>同步仪表盘 - Nexus</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/styles.css">
+    <link rel="stylesheet" href="/console/css/llm-integration.css">
+    <script src="/console/js/menu-loader.js"></script>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="main-content">
+            <div class="content-header">
+                <h1>Nexus SkillCenter 同步仪表盘</h1>
+                <div class="content-actions">
+                    <button class="btn btn-primary" onclick="showBatchSyncModal()">
+                        <i class="ri-upload-cloud-line"></i>
+                        批量同步
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshSyncStatus()">
+                        <i class="ri-refresh-line"></i>
+                        刷新状态
+                    </button>
+                </div>
+            </div>
+            <div class="sync-dashboard">
+                <div class="sync-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon ri-cloud-line"></div>
+                        <div class="stat-info">
+                            <h3>已同步技能</h3>
+                            <p class="stat-value" id="synced-count">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon ri-time-line"></div>
+                        <div class="stat-info">
+                            <h3>最后同步时间</h3>
+                            <p class="stat-value" id="last-sync-time">从未同步</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon ri-error-warning-line"></div>
+                        <div class="stat-info">
+                            <h3>同步失败</h3>
+                            <p class="stat-value" id="sync-failed-count">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="sync-tasks">
+                    <h3>同步任务</h3>
+                    <div class="task-list" id="sync-task-list">
+                        <div class="empty-state">暂无同步任务</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/common/ApiClient.js"></script>
+    <script src="/console/js/skillcenter-sync-api.js"></script>
+    <script src="/console/js/sync-dashboard.js"></script>
+    <script>
+        window.onload = function() {
+            initMenu();
+        };
+    </script>
+</body>
+</html>

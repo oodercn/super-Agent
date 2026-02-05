@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>移动端OA办公组件演示（重构版本）</title>
+    <link rel="stylesheet" href="../../mobile.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .demo-container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 10px;
+        }
+        
+        .demo-section {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .demo-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .component-container {
+            min-height: 200px;
+        }
+        
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+        }
+        
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            background: #f8f8f8;
+        }
+        
+        .tab.active {
+            background: #007AFF;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .link-section {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .demo-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007AFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+            margin: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        .demo-link:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <!-- 引入OA移动端组件样式 -->
+    <link rel="stylesheet" href="../../css/mobile/oa-mobile.css">
+</head>
+<body>
+    <div class="demo-container">
+        <h1 style="text-align: center; color: #333; padding: 20px 0;">移动端OA办公组件演示（重构版本）</h1>
+        
+        <!-- 通知公告组件 -->
+        <div class="demo-section">
+            <div class="demo-title">通知公告组件</div>
+            <div id="notice-container" class="component-container"></div>
+        </div>
+        
+        <!-- 待办事项组件 -->
+        <div class="demo-section">
+            <div class="demo-title">待办事项组件</div>
+            <div id="todo-container" class="component-container"></div>
+        </div>
+        
+        <!-- 通知公告组件（设计器版本） -->
+        <div class="demo-section">
+            <div class="demo-title">通知公告组件（设计器版本）</div>
+            <div id="notice-designer-container" class="component-container"></div>
+        </div>
+        
+        <!-- APICaller示例 -->
+        <div class="demo-section">
+            <div class="demo-title">APICaller示例</div>
+            <div id="api-caller-container" class="component-container"></div>
+        </div>
+    </div>
+
+    <!-- 引入依赖 -->
+    <script src="../../../../ood.js"></script>
+    <script src="../../index.js"></script>
+    
+    <!-- 引入重构后的OA组件 -->
+    <script src="./index.js"></script>
+    <script src="./Notice.js"></script>
+    <script src="./TodoList.js"></script>
+    <script src="./NoticeDesigner.js"></script>
+    <script src="./APICallerExample.js"></script>
+    
+    <script>
+        // 等待框架加载完成
+        document.addEventListener('ood-ready', function() {
+            // 创建通知公告组件
+            var notice = new (ood.Class.getInstance('ood.Mobile.OA.refactored.Notice'))({
+                notices: [
+                    {
+                        id: '1',
+                        title: '关于五一假期安排的通知',
+                        time: '2025-04-25',
+                        summary: '根据国家规定，结合公司实际情况，现将2025年五一劳动节放假安排通知如下...',
+                        important: true,
+                        read: false,
+                        disabled: false
+                    },
+                    {
+                        id: '2',
+                        title: '新员工入职培训安排',
+                        time: '2025-04-20',
+                        summary: '欢迎新员工加入公司，现将入职培训相关安排通知如下...',
+                        important: false,
+                        read: true,
+                        disabled: false
+                    }
+                ],
+                onNoticeClick: function(profile, index, notice) {
+                    alert('点击了通知: ' + notice.title);
+                }
+            });
+            notice.render(document.getElementById('notice-container'));
+            
+            // 创建待办事项组件
+            var todoList = new (ood.Class.getInstance('ood.Mobile.OA.refactored.TodoList'))({
+                todos: [
+                    {
+                        id: '1',
+                        title: '完成季度报告',
+                        dueDate: '2025-09-20',
+                        priority: 'high',
+                        completed: false,
+                        disabled: false
+                    },
+                    {
+                        id: '2',
+                        title: '准备会议材料',
+                        dueDate: '2025-09-18',
+                        priority: 'medium',
+                        completed: true,
+                        disabled: false
+                    },
+                    {
+                        id: '3',
+                        title: '回复客户邮件',
+                        dueDate: '2025-09-15',
+                        priority: 'low',
+                        completed: false,
+                        disabled: false
+                    }
+                ],
+                onTodoClick: function(profile, index, todo) {
+                    alert('点击了待办事项: ' + todo.title);
+                },
+                onTodoCompleteChange: function(profile, index, todo) {
+                    console.log('待办事项状态改变:', todo);
+                }
+            });
+            todoList.render(document.getElementById('todo-container'));
+            
+            // 创建通知公告组件（设计器版本）
+            var noticeDesigner = new (ood.Class.getInstance('ood.Mobile.OA.refactored.NoticeDesigner'))({
+                width: '100%',
+                height: 'auto'
+            });
+            noticeDesigner.render(document.getElementById('notice-designer-container'));
+            
+            // 创建APICaller示例
+            var apiCallerExample = new (ood.Class.getInstance('ood.Mobile.OA.refactored.APICallerExample'))({
+                width: '100%',
+                height: 'auto'
+            });
+            apiCallerExample.render(document.getElementById('api-caller-container'));
+        });
+    </script>
+</body>
+</html>

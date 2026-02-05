@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人仪表盘 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
+    <link href="../../assets/css/remixicon/remixicon.css" rel="stylesheet">
+    <script src="/skillcenter/console/js/menu.js"></script>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <!-- 菜单将通过menu.js动态加载 -->
+        </aside>
+        <main class="main-content">
+            <header class="header">
+                <h1>个人仪表盘</h1>
+                <div class="user-info">
+                    <span class="user-name">用户</span>
+                    <i class="ri-user-line"></i>
+                </div>
+            </header>
+            <div class="dashboard-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon ri-lightbulb-line"></div>
+                        <div class="stat-info">
+                            <h3>我的技能</h3>
+                            <p class="stat-value" id="skill-count">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon ri-play-circle-line"></div>
+                        <div class="stat-info">
+                            <h3>执行次数</h3>
+                            <p class="stat-value" id="execution-count">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon ri-share-line"></div>
+                        <div class="stat-info">
+                            <h3>分享技能</h3>
+                            <p class="stat-value" id="shared-count">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon ri-group-line"></div>
+                        <div class="stat-info">
+                            <h3>我的群组</h3>
+                            <p class="stat-value" id="group-count">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="recent-activities">
+                    <h2>最近活动</h2>
+                    <div class="activity-list" id="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon ri-clock-line"></div>
+                            <div class="activity-content">
+                                <p>暂无活动记录</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="skill-progress">
+                    <h2>技能执行统计</h2>
+                    <canvas id="execution-chart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        // 初始化菜单
+        initMenu('dashboard');
+        
+        // 模拟数据
+        document.addEventListener('DOMContentLoaded', function() {
+            // 更新统计数据
+            document.getElementById('skill-count').textContent = '5';
+            document.getElementById('execution-count').textContent = '12';
+            document.getElementById('shared-count').textContent = '2';
+            document.getElementById('group-count').textContent = '3';
+            
+            // 更新最近活动
+            const activityList = document.getElementById('activity-list');
+            activityList.innerHTML = `
+                <div class="activity-item">
+                    <div class="activity-icon ri-play-line"></div>
+                    <div class="activity-content">
+                        <p>执行了技能 <span class="activity-skill">文本转大写</span></p>
+                        <span class="activity-time">10分钟前</span>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon ri-share-line"></div>
+                    <div class="activity-content">
+                        <p>分享了技能 <span class="activity-skill">代码生成</span> 到群组 <span class="activity-group">开发团队</span></p>
+                        <span class="activity-time">2小时前</span>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon ri-upload-line"></div>
+                    <div class="activity-content">
+                        <p>发布了新技能 <span class="activity-skill">JSON格式化</span></p>
+                        <span class="activity-time">1天前</span>
+                    </div>
+                </div>
+            `;
+            
+            // 简单的执行统计图表
+            const canvas = document.getElementById('execution-chart');
+            const ctx = canvas.getContext('2d');
+            
+            // 绘制柱状图
+            const data = [5, 8, 3, 7, 4, 9];
+            const labels = ['周一', '周二', '周三', '周四', '周五', '周六'];
+            const barWidth = 30;
+            const barSpacing = 10;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制坐标轴
+            ctx.beginPath();
+            ctx.moveTo(50, 10);
+            ctx.lineTo(50, 190);
+            ctx.lineTo(390, 190);
+            ctx.strokeStyle = '#333';
+            ctx.stroke();
+            
+            // 绘制柱状图
+            data.forEach((value, index) => {
+                const x = 50 + (barWidth + barSpacing) * index + barSpacing;
+                const height = value * 15;
+                const y = 190 - height;
+                
+                ctx.fillStyle = '#4CAF50';
+                ctx.fillRect(x, y, barWidth, height);
+                
+                // 绘制标签
+                ctx.fillStyle = '#e0e0e0';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(labels[index], x + barWidth / 2, 205);
+            });
+        });
+    </script>
+</body>
+</html>

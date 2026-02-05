@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络拓扑 - Nexus - Nexus</title>
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/mcpagent/common.css">
+    <script src="../../js/theme-manager.js"></script>
+    <script src="../../js/nexus/base.js"></script>
+    <script src="../../js/nexus/api.js"></script>
+    <script src="../../js/nexus/ui.js"></script>
+    <script src="../../js/nexus/utils.js"></script>
+    <script src="../../js/nexus/sdk-proxy.js"></script>
+</head>
+<body class="nexus-page">
+    <div class="nexus-container">
+        <!-- 侧边导航栏 -->
+        <div class="nexus-sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> Nexus Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="nexus-main-content">
+            <div class="nexus-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h1><i class="ri-network-line"></i> 网络拓扑</h1>
+                    <button class="theme-toggle-btn nexus-btn nexus-btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                        <i class="ri-sun-line"></i> 浅色模式
+                    </button>
+                </div>
+                <div class="subtitle">
+                    <span class="badge nexus-badge">Nexus</span>
+                    <span>可视化展示Nexus网络拓扑结构</span>
+                </div>
+            </div>
+
+            <!-- 拓扑操作区 -->
+            <section class="nexus-operation-section">
+                <div class="nexus-section-header">
+                    <h3>拓扑操作</h3>
+                    <div class="nexus-operation-buttons">
+                        <button class="nexus-btn nexus-btn-primary" onclick="refreshNetworkTopology()">
+                            <i class="ri-refresh-line"></i>
+                            刷新拓扑
+                        </button>
+                        <button class="nexus-btn nexus-btn-secondary" onclick="exportTopology()">
+                            <i class="ri-download-line"></i>
+                            导出拓扑
+                        </button>
+                        <button class="nexus-btn nexus-btn-secondary" onclick="analyzeTopology()">
+                            <i class="ri-bar-chart-2-line"></i>
+                            分析拓扑
+                        </button>
+                    </div>
+                </div>
+                <div class="nexus-operation-card">
+                    <div class="nexus-form-group">
+                        <label for="topologyView">拓扑视图</label>
+                        <select id="topologyView" onchange="changeTopologyView()">
+                            <option value="force">力导向图</option>
+                            <option value="hierarchical">层次图</option>
+                            <option value="circular">环形图</option>
+                            <option value="grid">网格图</option>
+                        </select>
+                    </div>
+                    <div class="nexus-form-group">
+                        <label for="nodeFilter">节点过滤</label>
+                        <select id="nodeFilter" onchange="filterTopology()">
+                            <option value="all">所有节点</option>
+                            <option value="mcp">仅Nexus</option>
+                            <option value="route">仅Route Agent</option>
+                            <option value="end">仅End Agent</option>
+                            <option value="gateway">仅Gateway</option>
+                        </select>
+                    </div>
+                    <div class="nexus-form-group">
+                        <label for="connectionFilter">连接过滤</label>
+                        <select id="connectionFilter" onchange="filterTopology()">
+                            <option value="all">所有连接</option>
+                            <option value="direct">仅直接连接</option>
+                            <option value="indirect">仅间接连接</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 拓扑可视化区 -->
+            <section class="nexus-operation-section">
+                <div class="nexus-section-header">
+                    <h3>拓扑可视化</h3>
+                </div>
+                <div class="nexus-card">
+                    <div class="nexus-topology-container">
+                        <!-- 拓扑图将通过JS动态生成 -->
+                        <div id="topologyGraph" style="width: 100%; height: 600px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: var(--nexus-background-light);">
+                            <div style="display: flex; justify-content: center; align-items: center; height: 100%; color: var(--nexus-text-secondary);">
+                                <div>
+                                    <i class="ri-network-line" style="font-size: 48px; margin-bottom: 16px; display: block; text-align: center;"></i>
+                                    <p>加载网络拓扑中...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 网络状态概览 -->
+            <section class="nexus-operation-section">
+                <div class="nexus-section-header">
+                    <h3>网络状态概览</h3>
+                </div>
+                <div class="nexus-status-overview">
+                    <div class="nexus-status-card">
+                        <div class="nexus-status-icon">
+                            <i class="ri-node-tree-line"></i>
+                        </div>
+                        <div class="nexus-status-info">
+                            <h3>节点总数</h3>
+                            <p class="nexus-status-value" id="totalNodes">0</p>
+                        </div>
+                    </div>
+                    <div class="nexus-status-card">
+                        <div class="nexus-status-icon">
+                            <i class="ri-link-line"></i>
+                        </div>
+                        <div class="nexus-status-info">
+                            <h3>连接总数</h3>
+                            <p class="nexus-status-value" id="totalConnections">0</p>
+                        </div>
+                    </div>
+                    <div class="nexus-status-card">
+                        <div class="nexus-status-icon">
+                            <i class="ri-router-wireless-line"></i>
+                        </div>
+                        <div class="nexus-status-info">
+                            <h3>活跃节点</h3>
+                            <p class="nexus-status-value" id="activeNodes">0</p>
+                        </div>
+                    </div>
+                    <div class="nexus-status-card">
+                        <div class="nexus-status-icon">
+                            <i class="ri-signal-line"></i>
+                        </div>
+                        <div class="nexus-status-info">
+                            <h3>网络状态</h3>
+                            <p class="nexus-status-value" id="networkStatus">正常</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 拓扑分析结果 -->
+            <section class="nexus-operation-section">
+                <div class="nexus-section-header">
+                    <h3>拓扑分析</h3>
+                </div>
+                <div class="nexus-card">
+                    <div id="analysisResult">
+                        <p>点击"分析拓扑"按钮进行分析...</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- 公共JS模块 -->
+    <script src="../../js/menu-loader.js"></script>
+    <script src="../../js/nexus/common.js"></script>
+    <script>
+        window.onload = function() {
+            // 初始化菜单
+            initMenu();
+            // 初始化页面
+            nexusCommon.initPage('network-topology', loadNetworkTopology);
+        };
+
+        // 模拟网络拓扑数据
+        let networkTopology = {
+            nodes: [],
+            connections: []
+        };
+
+        async function loadNetworkTopology() {
+            try {
+                // 模拟API请求
+                const mockResponse = {
+                    status: 'success',
+                    message: '获取网络拓扑数据成功',
+                    data: {
+                        nodes: [
+                            {
+                                id: "mcp-agent-001",
+                                name: "主Nexus",
+                                type: "mcp",
+                                status: "active",
+                                x: 200,
+                                y: 200
+                            },
+                            {
+                                id: "route-agent-001",
+                                name: "路由代理1",
+                                type: "route",
+                                status: "active",
+                                x: 400,
+                                y: 100
+                            },
+                            {
+                                id: "route-agent-002",
+                                name: "路由代理2",
+                                type: "route",
+                                status: "active",
+                                x: 400,
+                                y: 300
+                            },
+                            {
+                                id: "end-agent-001",
+                                name: "智能灯泡",
+                                type: "end",
+                                status: "active",
+                                x: 600,
+                                y: 50
+                            },
+                            {
+                                id: "end-agent-002",
+                                name: "智能插座",
+                                type: "end",
+                                status: "active",
+                                x: 600,
+                                y: 150
+                            },
+                            {
+                                id: "end-agent-003",
+                                name: "摄像头",
+                                type: "end",
+                                status: "inactive",
+                                x: 600,
+                                y: 250
+                            },
+                            {
+                                id: "end-agent-004",
+                                name: "智能音箱",
+                                type: "end",
+                                status: "active",
+                                x: 600,
+                                y: 350
+                            },
+                            {
+                                id: "gateway-001",
+                                name: "网关",
+                                type: "gateway",
+                                status: "active",
+                                x: 100,
+                                y: 200
+                            }
+                        ],
+                        connections: [
+                            {
+                                id: "conn-001",
+                                source: "mcp-agent-001",
+                                target: "route-agent-001",
+                                type: "direct",
+                                status: "active"
+                            },
+                            {
+                                id: "conn-002",
+                                source: "mcp-agent-001",
+                                target: "route-agent-002",
+                                type: "direct",
+                                status: "active"
+                            },
+                            {
+                                id: "conn-003",
+                                source: "route-agent-001",
+                                target: "end-agent-001",
+                                type: "direct",
+                                status: "active"
+                            },
+                            {
+                                id: "conn-004",
+                                source: "route-agent-001",
+                                target: "end-agent-002",
+                                type: "direct",
+                                status: "active"
+                            },
+                            {
+                                id: "conn-005",
+                                source: "route-agent-002",
+                                target: "end-agent-003",
+                                type: "direct",
+                                status: "inactive"
+                            },
+                            {
+                                id: "conn-006",
+                                source: "route-agent-002",
+                                target: "end-agent-004",
+                                type: "direct",
+                                status: "active"
+                            },
+                            {
+                                id: "conn-007",
+                                source: "mcp-agent-001",
+                                target: "gateway-001",
+                                type: "direct",
+                                status: "active"
+                            },
+                            {
+                                id: "conn-008",
+                                source: "route-agent-001",
+                                target: "route-agent-002",
+                                type: "direct",
+                                status: "active"
+                            }
+                        ]
+                    },
+                    timestamp: new Date().getTime()
+                };
+
+                // 验证API返回格式
+                const validatedResponse = nexusCommon.validateApiResponse(mockResponse);
+
+                if (validatedResponse.status === 'success' && validatedResponse.data) {
+                    networkTopology = validatedResponse.data;
+                    renderNetworkTopology();
+                    updateStatusOverview();
+                }
+            } catch (error) {
+                console.error('加载网络拓扑失败:', error);
+                nexusCommon.handleApiError(error, '加载网络拓扑失败');
+            }
+        }
+
+        function renderNetworkTopology() {
+            const topologyGraph = document.getElementById('topologyGraph');
+            
+            // 清空现有内容
+            topologyGraph.innerHTML = '';
+            
+            // 创建简化的拓扑图
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            svg.style.backgroundColor = 'var(--nexus-background-light)';
+            svg.style.borderRadius = '8px';
+            
+            // 绘制连接
+            networkTopology.connections.forEach(connection => {
+                const sourceNode = networkTopology.nodes.find(n => n.id === connection.source);
+                const targetNode = networkTopology.nodes.find(n => n.id === connection.target);
+                
+                if (sourceNode && targetNode) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', sourceNode.x);
+                    line.setAttribute('y1', sourceNode.y);
+                    line.setAttribute('x2', targetNode.x);
+                    line.setAttribute('y2', targetNode.y);
+                    line.setAttribute('stroke', connection.status === 'active' ? '#4CAF50' : '#F44336');
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('stroke-dasharray', connection.type === 'direct' ? 'none' : '5,5');
+                    svg.appendChild(line);
+                }
+            });
+            
+            // 绘制节点
+            networkTopology.nodes.forEach(node => {
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                
+                // 节点圆圈
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', node.x);
+                circle.setAttribute('cy', node.y);
+                circle.setAttribute('r', '20');
+                circle.setAttribute('fill', getNodeColor(node.type));
+                circle.setAttribute('stroke', node.status === 'active' ? '#4CAF50' : '#F44336');
+                circle.setAttribute('stroke-width', '3');
+                
+                // 节点文本
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', node.x);
+                text.setAttribute('y', node.y + 5);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', 'white');
+                text.setAttribute('font-size', '12');
+                text.textContent = node.name.substring(0, 4);
+                
+                // 节点标签
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', node.x);
+                label.setAttribute('y', node.y + 40);
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('fill', 'var(--nexus-text-primary)');
+                label.setAttribute('font-size', '10');
+                label.textContent = node.name;
+                
+                group.appendChild(circle);
+                group.appendChild(text);
+                group.appendChild(label);
+                svg.appendChild(group);
+            });
+            
+            topologyGraph.appendChild(svg);
+        }
+
+        async function refreshNetworkTopology() {
+            try {
+                await loadNetworkTopology();
+                nexusCommon.showMessage('网络拓扑已刷新', 'success');
+            } catch (error) {
+                console.error('刷新网络拓扑失败:', error);
+                nexusCommon.handleApiError(error, '刷新网络拓扑失败');
+            }
+        }
+
+        async function exportTopology() {
+            try {
+                // 模拟导出拓扑
+                const topologyData = JSON.stringify(networkTopology, null, 2);
+                const blob = new Blob([topologyData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'network-topology-' + new Date().toISOString().slice(0, 10) + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                nexusCommon.showMessage('拓扑已导出', 'success');
+            } catch (error) {
+                console.error('导出拓扑失败:', error);
+                nexusCommon.handleApiError(error, '导出拓扑失败');
+            }
+        }
+
+        async function analyzeTopology() {
+            try {
+                // 模拟拓扑分析
+                const analysisResult = document.getElementById('analysisResult');
+                
+                const analysis = {
+                    totalNodes: networkTopology.nodes.length,
+                    activeNodes: networkTopology.nodes.filter(n => n.status === 'active').length,
+                    totalConnections: networkTopology.connections.length,
+                    activeConnections: networkTopology.connections.filter(c => c.status === 'active').length,
+                    nodeTypes: {
+                        mcp: networkTopology.nodes.filter(n => n.type === 'mcp').length,
+                        route: networkTopology.nodes.filter(n => n.type === 'route').length,
+                        end: networkTopology.nodes.filter(n => n.type === 'end').length,
+                        gateway: networkTopology.nodes.filter(n => n.type === 'gateway').length
+                    },
+                    connectionTypes: {
+                        direct: networkTopology.connections.filter(c => c.type === 'direct').length,
+                        indirect: networkTopology.connections.filter(c => c.type === 'indirect').length
+                    },
+                    recommendations: [
+                        "网络拓扑结构合理，节点分布均匀",
+                        "建议增加备用网关以提高网络可靠性",
+                        "终端设备连接状态良好",
+                        "路由代理负载均衡合理"
+                    ]
+                };
+                
+                let html = `
+                    <div class="nexus-stats-grid">
+                        <div class="nexus-stats-card">
+                            <h4>节点统计</h4>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">总节点数:</span>
+                                <span class="nexus-stat-value">${analysis.totalNodes}</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">活跃节点:</span>
+                                <span class="nexus-stat-value">${analysis.activeNodes}</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">非活跃节点:</span>
+                                <span class="nexus-stat-value">${analysis.totalNodes - analysis.activeNodes}</span>
+                            </div>
+                        </div>
+                        <div class="nexus-stats-card">
+                            <h4>连接统计</h4>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">总连接数:</span>
+                                <span class="nexus-stat-value">${analysis.totalConnections}</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">活跃连接:</span>
+                                <span class="nexus-stat-value">${analysis.activeConnections}</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">非活跃连接:</span>
+                                <span class="nexus-stat-value">${analysis.totalConnections - analysis.activeConnections}</span>
+                            </div>
+                        </div>
+                        <div class="nexus-stats-card">
+                            <h4>节点类型分布</h4>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">Nexus:</span>
+                                <span class="nexus-stat-value">${analysis.nodeTypes.mcp}</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">Route Agent:</span>
+                                <span class="nexus-stat-value">${analysis.nodeTypes.route}</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">End Agent:</span>
+                                <span class="nexus-stat-value">${analysis.nodeTypes.end}</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">Gateway:</span>
+                                <span class="nexus-stat-value">${analysis.nodeTypes.gateway}</span>
+                            </div>
+                        </div>
+                        <div class="nexus-stats-card">
+                            <h4>连接类型分布</h4>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">直接连接:</span>
+                                <span class="nexus-stat-value">${analysis.connectionTypes.direct}</span>
+                            </div>
+                            <div class="nexus-stat-item">
+                                <span class="nexus-stat-label">间接连接:</span>
+                                <span class="nexus-stat-value">${analysis.connectionTypes.indirect}</span>
+                            </div>
+                        </div>
+                        <div class="nexus-stats-card">
+                            <h4>建议</h4>
+                            <ul style="margin: 0; padding-left: 20px;">
+                                ${analysis.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                
+                analysisResult.innerHTML = html;
+                nexusCommon.showMessage('拓扑分析完成', 'success');
+            } catch (error) {
+                console.error('分析拓扑失败:', error);
+                nexusCommon.handleApiError(error, '分析拓扑失败');
+            }
+        }
+
+        function changeTopologyView() {
+            // 模拟切换拓扑视图
+            const view = document.getElementById('topologyView').value;
+            nexusCommon.showMessage(`拓扑视图已切换为: ${getViewName(view)}`, 'info');
+        }
+
+        function filterTopology() {
+            // 模拟过滤拓扑
+            const nodeFilter = document.getElementById('nodeFilter').value;
+            const connectionFilter = document.getElementById('connectionFilter').value;
+            nexusCommon.showMessage(`拓扑已过滤: 节点=${getNodeFilterName(nodeFilter)}, 连接=${getConnectionFilterName(connectionFilter)}`, 'info');
+        }
+
+        function updateStatusOverview() {
+            document.getElementById('totalNodes').textContent = networkTopology.nodes.length;
+            document.getElementById('totalConnections').textContent = networkTopology.connections.length;
+            document.getElementById('activeNodes').textContent = networkTopology.nodes.filter(n => n.status === 'active').length;
+            
+            const activeConnections = networkTopology.connections.filter(c => c.status === 'active').length;
+            const connectionRate = activeConnections / networkTopology.connections.length;
+            
+            if (connectionRate >= 0.8) {
+                document.getElementById('networkStatus').textContent = '正常';
+            } else if (connectionRate >= 0.5) {
+                document.getElementById('networkStatus').textContent = '警告';
+            } else {
+                document.getElementById('networkStatus').textContent = '异常';
+            }
+        }
+
+        function getNodeColor(nodeType) {
+            const colorMap = {
+                'mcp': '#2196F3',
+                'route': '#4CAF50',
+                'end': '#FF9800',
+                'gateway': '#9C27B0'
+            };
+            return colorMap[nodeType] || '#607D8B';
+        }
+
+        function getViewName(viewType) {
+            const viewMap = {
+                'force': '力导向图',
+                'hierarchical': '层次图',
+                'circular': '环形图',
+                'grid': '网格图'
+            };
+            return viewMap[viewType] || viewType;
+        }
+
+        function getNodeFilterName(filterType) {
+            const filterMap = {
+                'all': '所有节点',
+                'mcp': '仅Nexus',
+                'route': '仅Route Agent',
+                'end': '仅End Agent',
+                'gateway': '仅Gateway'
+            };
+            return filterMap[filterType] || filterType;
+        }
+
+        function getConnectionFilterName(filterType) {
+            const filterMap = {
+                'all': '所有连接',
+                'direct': '仅直接连接'
+            };
+            return filterMap[filterType] || filterType;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P管理 - Nexus</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/dashboard.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> Nexus Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><i class="ri-wifi-line"></i> P2P管理</h1>
+                <div class="subtitle">
+                    <span class="badge dashboard-badge" style="background-color: var(--nexus-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">Nexus</span>
+                    <span>管理点对点连接和网络拓扑</span>
+                </div>
+            </div>
+            <!-- 状态概览 -->
+            <section class="status-overview">
+                <div class="status-card">
+                    <div class="status-icon">
+                        <i class="ri-wifi-line"></i>
+                    </div>
+                    <div class="status-info">
+                        <h3>P2P连接数</h3>
+                        <p class="status-value" id="p2pConnectionCount">0</p>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">
+                        <i class="ri-node-tree-line"></i>
+                    </div>
+                    <div class="status-info">
+                        <h3>节点总数</h3>
+                        <p class="status-value" id="nodeCount">0</p>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon">
+                        <i class="ri-wifi-line"></i>
+                    </div>
+                    <div class="status-info">
+                        <h3>网络状态</h3>
+                        <p class="status-value" id="networkStatus">正常</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- P2P连接管理 -->
+            <section class="p2p-management">
+                <div class="section-header">
+                    <h3>P2P连接列表</h3>
+                    <div class="section-actions">
+                        <button class="btn-primary" id="addP2PBtn">
+                            <i class="ri-add-line"></i>
+                            添加P2P连接
+                        </button>
+                        <button class="btn-secondary" id="refreshP2PBtns">
+                            <i class="ri-refresh-line"></i>
+                            刷新
+                        </button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>连接ID</th>
+                                <th>本地节点</th>
+                                <th>远程节点</th>
+                                <th>连接类型</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>最后活动</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="p2pConnectionsTableBody">
+                            <!-- P2P连接数据将通过JavaScript动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 网络拓扑 -->
+            <section class="network-topology">
+                <div class="section-header">
+                    <h3>网络拓扑</h3>
+                </div>
+                <div class="topology-visualization">
+                    <div id="topologyGraph" class="graph-container">
+                        <!-- 网络拓扑图将通过JavaScript动态生成 -->
+                        <div class="placeholder">
+                            <i class="ri-wifi-line"></i>
+                            <p>网络拓扑图将在这里显示</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <div class="modal" id="addP2PModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加P2P连接</h3>
+                <button class="close-btn" id="closeAddP2PModal">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addP2PForm">
+                    <div class="form-group">
+                        <label for="connectionId">连接ID</label>
+                        <input type="text" id="connectionId" name="connectionId" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="localNodeId">本地节点ID</label>
+                        <input type="text" id="localNodeId" name="localNodeId" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="remoteNodeId">远程节点ID</label>
+                        <input type="text" id="remoteNodeId" name="remoteNodeId" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="connectionType">连接类型</label>
+                        <select id="connectionType" name="connectionType">
+                            <option value="direct">直连</option>
+                            <option value="relay">中继</option>
+                            <option value="holepunch">打洞</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelAddP2PBtn">取消</button>
+                <button class="btn-primary" id="submitAddP2PBtn">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 公共JS模块 -->
+    <script src="/console/js/menu-loader.js"></script>
+    <script src="/console/common/api-client.js"></script>
+    <script src="/console/common/list-manager.js"></script>
+    <script src="/console/common/form-manager.js"></script>
+    <script src="/console/common/utils.js"></script>
+    <script src="/console/js/nexus/p2p-management.js"></script>
+    <script>
+        window.onload = function() {
+            initMenu();
+        };
+    </script>
+</body>
+</html>

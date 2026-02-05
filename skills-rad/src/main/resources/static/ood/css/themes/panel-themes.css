@@ -1,0 +1,137 @@
+/* Panel组件主题样式 */
+
+/* 基础样式 */
+.ood-ui-panel {
+    --panel-bg: var(--bg-card, var(--ood-bg-default));
+    --panel-border: var(--border-color, var(--ood-border-color));
+    --panel-text: var(--text-primary, var(--ood-text-primary));
+    --panel-header-bg: var(--bg-header, var(--ood-bg-header));
+    --panel-header-text: var(--text-header, var(--ood-text-header));
+    --panel-icon-color: var(--icon-color, var(--ood-icon-color));
+    --panel-shadow: var(--shadow-card, var(--ood-shadow-card));
+    
+    /* 交互状态 */
+    --panel-hover-bg: var(--hover-bg, var(--ood-hover-bg));
+    --panel-active-bg: var(--active-bg, var(--ood-active-bg));
+    
+    /* 尺寸变量 */
+    --panel-border-radius: var(--border-radius-lg, 4px);
+    --panel-header-height: var(--header-height, 40px);
+    --panel-padding: var(--spacing-md, 16px);
+    --panel-icon-size: var(--icon-size-md, 16px);
+    
+    /* 应用基础样式 */
+    background-color: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--panel-border-radius);
+    color: var(--panel-text);
+    box-shadow: var(--panel-shadow);
+    transition: all 0.3s ease;
+}
+
+/* 面板头部 */
+.ood-ui-panel .ood-uibar-top {
+    background-color: var(--panel-header-bg);
+    border-bottom: 1px solid var(--panel-border);
+    min-height: var(--panel-header-height);
+    border-radius: var(--panel-border-radius) var(--panel-border-radius) 0 0;
+}
+
+/* 标题样式 */
+.ood-ui-panel .ood-title-node {
+    color: var(--panel-header-text);
+    font-weight: 500;
+    padding: 0 var(--panel-padding);
+}
+
+/* 图标样式 */
+.ood-ui-panel .oodcon {
+    color: var(--panel-icon-color);
+    font-size: var(--panel-icon-size);
+    transition: color 0.2s ease;
+}
+
+/* 按钮悬停效果 */
+.ood-ui-panel .ood-uibar-cmdr .oodcon:hover {
+    color: var(--primary-color, var(--ood-primary));
+    background-color: var(--panel-hover-bg);
+    border-radius: var(--border-radius-sm, 2px);
+}
+
+/* 按钮激活效果 */
+.ood-ui-panel .ood-uibar-cmdr .oodcon:active {
+    background-color: var(--panel-active-bg);
+}
+
+/* 面板内容区域 */
+.ood-ui-panel .ood-uibase {
+    background-color: var(--panel-bg);
+    padding: var(--panel-padding);
+}
+
+/* 暗黑主题 */
+.panel-dark {
+    --panel-bg: var(--bg-card, var(--ood-dark-bg-card));
+    --panel-border: var(--border-color, var(--ood-dark-border-color));
+    --panel-text: var(--text-primary, var(--ood-dark-text-primary));
+    --panel-header-bg: var(--bg-header, var(--ood-dark-bg-header));
+    --panel-header-text: var(--text-header, var(--ood-dark-text-header));
+    --panel-icon-color: var(--icon-color, var(--ood-dark-icon-color));
+    --panel-shadow: var(--shadow-card, var(--ood-dark-shadow-card));
+    --panel-hover-bg: var(--hover-bg, var(--ood-dark-hover-bg));
+    --panel-active-bg: var(--active-bg, var(--ood-dark-active-bg));
+}
+
+/* 高对比度主题 */
+.panel-hc {
+    --panel-bg: var(--bg-card, var(--ood-hc-bg-card));
+    --panel-border: var(--border-color, var(--ood-hc-border-color));
+    --panel-text: var(--text-primary, var(--ood-hc-text-primary));
+    --panel-header-bg: var(--bg-header, var(--ood-hc-bg-header));
+    --panel-header-text: var(--text-header, var(--ood-hc-text-header));
+    --panel-icon-color: var(--icon-color, var(--ood-hc-icon-color));
+    --panel-shadow: var(--shadow-card, var(--ood-hc-shadow-card));
+    --panel-hover-bg: var(--hover-bg, var(--ood-hc-hover-bg));
+    --panel-active-bg: var(--active-bg, var(--ood-hc-active-bg));
+    
+    /* 高对比度特有样式 */
+    border-width: 2px;
+    outline: 1px solid var(--ood-hc-focus-outline);
+}
+
+/* 响应式布局 - 移动设备 */
+.panel-mobile .ood-uibar-cmdl {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.panel-mobile .ood-uibar-cmdr {
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.panel-mobile .ood-title-node {
+    font-size: 0.9em;
+    padding: 8px var(--panel-padding);
+}
+
+/* 响应式布局 - 超小屏幕 */
+.panel-tiny .ood-title-node {
+    font-size: 0.8em;
+    padding: 4px var(--panel-padding);
+}
+
+.panel-tiny .ood-uibar-cmdr {
+    gap: 2px;
+}
+
+.panel-tiny .ood-uibar-cmdr .oodcon {
+    font-size: calc(var(--panel-icon-size) * 0.9);
+}
+
+/* 无障碍焦点样式 */
+.ood-ui-panel .ood-title-node:focus,
+.ood-ui-panel .oodcon:focus {
+    outline: 2px solid var(--focus-outline, var(--ood-focus-outline));
+    outline-offset: 2px;
+}

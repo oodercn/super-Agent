@@ -1,0 +1,1056 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>请求管理 - MCP Agent Console</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <style>
+        /* Ooder-Rad 风格基础样式 - 纯黑色系暗色主题 */
+        :root {
+            --ooder-primary: #3b82f6;
+            --ooder-secondary: #94a3b8;
+            --ooder-success: #22c55e;
+            --ooder-warning: #f59e0b;
+            --ooder-danger: #ef4444;
+            --ooder-light: #0f0f0f;
+            --ooder-dark: #ffffff;
+            --ooder-border: #2a2a2a;
+            --ooder-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            --ooder-radius: 8px;
+            --ooder-spacing: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #000000;
+            color: var(--ooder-dark);
+            line-height: 1.5;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            background-color: #000000;
+        }
+        
+        /* 侧边栏样式 - Ooder-Rad 风格 */
+        .sidebar {
+            width: 260px;
+            background-color: #121212;
+            border-right: 1px solid var(--ooder-border);
+            padding: 24px;
+            box-shadow: var(--ooder-shadow);
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 32px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ooder-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sidebar h2::before {
+            content: "⚡";
+            font-size: 20px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-menu li {
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu a {
+            color: var(--ooder-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--ooder-radius);
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .nav-menu a:hover {
+            background-color: var(--ooder-light);
+            color: var(--ooder-primary);
+        }
+        
+        .nav-menu a.active {
+            background-color: rgba(26, 115, 232, 0.1);
+            color: var(--ooder-primary);
+            font-weight: 600;
+        }
+        
+        /* 二级菜单样式 */
+        .nav-menu .submenu {
+            list-style: none;
+            margin-left: 16px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu .submenu li {
+            margin-bottom: 2px;
+        }
+        
+        .nav-menu .submenu a {
+            padding: 10px 16px;
+            font-size: 13px;
+            border-left: 2px solid var(--ooder-border);
+        }
+        
+        /* 三级菜单样式 */
+        .nav-menu .submenu .submenu {
+            margin-left: 32px;
+        }
+        
+        .nav-menu .submenu .submenu a {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-left: 2px solid var(--ooder-secondary);
+        }
+        
+        /* 展开/折叠图标 */
+        .nav-menu .toggle-icon {
+            margin-left: auto;
+            transition: transform 0.2s ease;
+        }
+        
+        .nav-menu .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        /* 菜单分隔线 */
+        .nav-menu .menu-divider {
+            height: 1px;
+            background-color: var(--ooder-border);
+            margin: 16px 0;
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            background-color: #000000;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--ooder-border);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ooder-dark);
+        }
+        
+        .header .subtitle {
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        /* 章节样式 */
+        .section {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            margin-bottom: 24px;
+        }
+        
+        .section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--ooder-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section h2::before {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background-color: var(--ooder-primary);
+            border-radius: 2px;
+        }
+        
+        /* 状态网格样式 */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        
+        .status-item {
+            padding: 16px;
+            border-radius: var(--ooder-radius);
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .status-item .key {
+            font-size: 14px;
+            color: var(--ooder-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .status-item .value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ooder-dark);
+        }
+        
+        .status-item.ok {
+            border-left: 4px solid var(--ooder-success);
+            background-color: rgba(34, 197, 94, 0.1);
+        }
+        
+        .status-item.warning {
+            border-left: 4px solid var(--ooder-warning);
+            background-color: rgba(245, 158, 11, 0.1);
+        }
+        
+        .status-item.error {
+            border-left: 4px solid var(--ooder-danger);
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+        
+        /* 表格样式 */
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--ooder-radius);
+            border: 1px solid var(--ooder-border);
+            background-color: #1a1a1a;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ooder-border);
+            color: var(--ooder-dark);
+        }
+        
+        th {
+            background-color: #121212;
+            font-weight: 600;
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        tr:hover {
+            background-color: #1a1a1a;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--ooder-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 12px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--ooder-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background-color: #1a1a1a;
+            color: var(--ooder-secondary);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2a2a2a;
+        }
+        
+        .btn-success {
+            background-color: var(--ooder-success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #16a34a;
+            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.4);
+        }
+        
+        .btn-danger {
+            background-color: var(--ooder-danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+        }
+        
+        /* 搜索框样式 */
+        .search-box {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 48px 12px 16px;
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            color: var(--ooder-dark);
+            font-size: 14px;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--ooder-primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .search-box i {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--ooder-secondary);
+        }
+        
+        /* 筛选器样式 */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-item label {
+            color: var(--ooder-secondary);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .filter-item select {
+            padding: 8px 12px;
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            color: var(--ooder-dark);
+            font-size: 14px;
+        }
+        
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+        
+        .pagination button {
+            padding: 8px 12px;
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            color: var(--ooder-dark);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .pagination button:hover {
+            background-color: #2a2a2a;
+            border-color: var(--ooder-primary);
+        }
+        
+        .pagination button.active {
+            background-color: var(--ooder-primary);
+            color: white;
+            border-color: var(--ooder-primary);
+        }
+        
+        /* 隐藏样式 */
+        .hidden {
+            display: none;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--ooder-border);
+                padding: 16px;
+            }
+            
+            .main-content {
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .filter-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .pagination {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> MCP Agent Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><i class="ri-mail-line"></i> 请求管理</h1>
+                <div class="subtitle">MCP Agent 请求接收与处理管理</div>
+            </div>
+            
+            <!-- 请求管理概览 -->
+            <div class="section">
+                <h2>请求管理概览</h2>
+                <div class="status-grid">
+                    <div class="status-item ok">
+                        <div class="key">总请求数</div>
+                        <div class="value">1,248</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">成功请求</div>
+                        <div class="value">1,196</div>
+                    </div>
+                    <div class="status-item error">
+                        <div class="key">失败请求</div>
+                        <div class="value">52</div>
+                    </div>
+                    <div class="status-item warning">
+                        <div class="key">处理中请求</div>
+                        <div class="value">12</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">请求处理速率</div>
+                        <div class="value">1000/秒</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">平均处理时间</div>
+                        <div class="value">120ms</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 请求列表 -->
+            <div class="section">
+                <h2>请求列表</h2>
+                
+                <!-- 搜索和筛选 -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div class="search-box" style="flex: 1; max-width: 400px;">
+                        <input type="text" placeholder="搜索请求ID或内容...">
+                        <i class="ri-search-line"></i>
+                    </div>
+                    <button class="btn btn-danger" onclick="batchDeleteRequests()">
+                        <i class="ri-delete-bin-2-line"></i> 批量删除
+                    </button>
+                </div>
+                
+                <div class="filter-bar">
+                    <div class="filter-item">
+                        <label>状态:</label>
+                        <select>
+                            <option value="all">全部</option>
+                            <option value="success">成功</option>
+                            <option value="failed">失败</option>
+                            <option value="processing">处理中</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>时间范围:</label>
+                        <select>
+                            <option value="today">今天</option>
+                            <option value="yesterday">昨天</option>
+                            <option value="week">最近一周</option>
+                            <option value="month">最近一个月</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>请求类型:</label>
+                        <select>
+                            <option value="all">全部</option>
+                            <option value="api">API请求</option>
+                            <option value="skill">Skill请求</option>
+                            <option value="system">系统请求</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 请求表格 -->
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="select-all"></th>
+                                <th onclick="sortTable(0)">请求ID <i class="ri-sort-2-asc"></i></th>
+                                <th onclick="sortTable(1)">请求类型 <i class="ri-sort-2-asc"></i></th>
+                                <th onclick="sortTable(2)">请求内容 <i class="ri-sort-2-asc"></i></th>
+                                <th onclick="sortTable(3)">状态 <i class="ri-sort-2-asc"></i></th>
+                                <th onclick="sortTable(4)">创建时间 <i class="ri-sort-2-asc"></i></th>
+                                <th onclick="sortTable(5)">处理时间 <i class="ri-sort-2-asc"></i></th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="request-table-body">
+                            <!-- 动态生成请求列表 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 -->
+                <div class="pagination">
+                    <button>上一页</button>
+                    <button class="active">1</button>
+                    <button>2</button>
+                    <button>3</button>
+                    <button>4</button>
+                    <button>5</button>
+                    <button>下一页</button>
+                </div>
+            </div>
+            
+            <!-- 请求详情 -->
+            <div class="section" id="request-detail" class="hidden">
+                <h2>请求详情</h2>
+                <div id="request-detail-content">
+                    <!-- 动态生成请求详情 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 当前页面
+        let currentPage = 'request-management';
+        
+        // 菜单配置
+        let menuConfig = null;
+        
+        // 初始化页面
+        function init() {
+            loadMenuConfig();
+            loadRequestList();
+        }
+        
+        // 加载菜单配置
+        async function loadMenuConfig() {
+            try {
+                const response = await fetch('../../menu-config.json');
+                if (!response.ok) {
+                    throw new Error('菜单配置加载失败');
+                }
+                menuConfig = await response.json();
+                renderMenu();
+            } catch (error) {
+                console.error('加载菜单配置错误:', error);
+                // 加载失败时显示默认菜单
+                renderDefaultMenu();
+            }
+        }
+        
+        // 渲染菜单
+        function renderMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            
+            menuConfig.menu.forEach(item => {
+                const menuItem = createMenuItem(item);
+                navMenu.appendChild(menuItem);
+                // 添加菜单分隔线
+                if (item.id !== 'dashboard') {
+                    const divider = document.createElement('div');
+                    divider.className = 'menu-divider';
+                    navMenu.appendChild(divider);
+                }
+            });
+            
+            setupNavigation();
+        }
+        
+        // 创建菜单项
+        function createMenuItem(menuItem) {
+            const li = document.createElement('li');
+            
+            if (menuItem.children && menuItem.children.length > 0) {
+                // 有子菜单的菜单项
+                const a = document.createElement('a');
+                a.href = `#${menuItem.id}`;
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                    <span class="toggle-icon">›</span>
+                `;
+                
+                // 处理点击事件
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const toggleIcon = this.querySelector('.toggle-icon');
+                    const submenu = this.nextElementSibling;
+                    
+                    if (submenu) {
+                        submenu.classList.toggle('hidden');
+                        toggleIcon.classList.toggle('collapsed');
+                    }
+                });
+                
+                li.appendChild(a);
+                
+                // 创建子菜单
+                const submenu = document.createElement('ul');
+                submenu.className = 'submenu';
+                
+                menuItem.children.forEach(childItem => {
+                    const childLi = createMenuItem(childItem);
+                    submenu.appendChild(childLi);
+                });
+                
+                li.appendChild(submenu);
+            } else {
+                // 无子菜单的菜单项
+                const a = document.createElement('a');
+                if (menuItem.url) {
+                    a.href = menuItem.url;
+                } else {
+                    a.href = `#${menuItem.id}`;
+                    a.setAttribute('data-page', menuItem.page || menuItem.id);
+                }
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                `;
+                li.appendChild(a);
+            }
+            
+            return li;
+        }
+        
+        // 渲染默认菜单（加载失败时使用）
+        function renderDefaultMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = `
+                <li><a href="../../index.html"><i class="ri-dashboard-line"></i> 仪表盘</a></li>
+                <li><a href="../../pages/system/request-management.html" class="active"><i class="ri-computer-line"></i> 系统管理</a></li>
+                <li><a href="../../pages/network/route-management.html"><i class="ri-network-line"></i> 网络管理</a></li>
+                <li><a href="../../pages/terminal/terminal-management.html"><i class="ri-terminal-line"></i> 终端管理</a></li>
+                <li><a href="../../pages/config/service-config.html"><i class="ri-settings-3-line"></i> 配置中心</a></li>
+            `;
+            setupNavigation();
+        }
+        
+        // 设置导航
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-menu a');
+            navLinks.forEach(link => {
+                // 只处理带有data-page属性的链接（即叶子节点且没有url属性）
+                if (link.hasAttribute('data-page') && !link.hasAttribute('href') && link.getAttribute('href') !== '#') {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // 更新活跃状态
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                }
+            });
+        }
+        
+        // 全局变量
+        let requests = [];
+        let filteredRequests = [];
+        let sortColumn = -1;
+        let sortDirection = 1;
+        
+        // 加载请求列表
+        function loadRequestList() {
+            // 模拟请求数据
+            requests = [
+                { id: 'req-001', type: 'API', content: '获取系统状态', status: 'success', created: '2026-01-30 10:00:00', processing: '120ms' },
+                { id: 'req-002', type: 'Skill', content: '执行测试用例', status: 'success', created: '2026-01-30 10:01:00', processing: '250ms' },
+                { id: 'req-003', type: 'System', content: '系统监控检查', status: 'success', created: '2026-01-30 10:02:00', processing: '80ms' },
+                { id: 'req-004', type: 'API', content: '获取网络拓扑', status: 'failed', created: '2026-01-30 10:03:00', processing: '300ms' },
+                { id: 'req-005', type: 'Skill', content: '生成代码', status: 'processing', created: '2026-01-30 10:04:00', processing: '500ms' },
+                { id: 'req-006', type: 'API', content: '更新配置', status: 'success', created: '2026-01-30 10:05:00', processing: '150ms' },
+                { id: 'req-007', type: 'System', content: '服务健康检查', status: 'success', created: '2026-01-30 10:06:00', processing: '60ms' },
+                { id: 'req-008', type: 'API', content: '获取终端列表', status: 'success', created: '2026-01-30 10:07:00', processing: '180ms' },
+                { id: 'req-009', type: 'Skill', content: '执行部署', status: 'failed', created: '2026-01-30 10:08:00', processing: '450ms' },
+                { id: 'req-010', type: 'API', content: '获取日志', status: 'success', created: '2026-01-30 10:09:00', processing: '220ms' }
+            ];
+            
+            applyFilters();
+        }
+        
+        // 应用过滤
+        function applyFilters() {
+            // 获取过滤值
+            const statusFilter = document.querySelector('select[onchange="applyFilters()"]');
+            const typeFilter = document.querySelector('select[onchange="applyFilters()"]');
+            const searchValue = document.querySelector('input[type="text"]').value.toLowerCase();
+            
+            // 过滤数据
+            filteredRequests = requests.filter(request => {
+                const matchesStatus = !statusFilter || statusFilter.value === 'all' || request.status === statusFilter.value;
+                const matchesType = !typeFilter || typeFilter.value === 'all' || request.type === typeFilter.value;
+                const matchesSearch = !searchValue || 
+                    request.id.toLowerCase().includes(searchValue) ||
+                    request.content.toLowerCase().includes(searchValue);
+                
+                return matchesStatus && matchesType && matchesSearch;
+            });
+            
+            // 应用排序
+            if (sortColumn >= 0) {
+                sortRequests(sortColumn, sortDirection);
+            }
+            
+            // 渲染表格
+            renderRequestTable();
+        }
+        
+        // 排序表格
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection *= -1;
+            } else {
+                sortColumn = column;
+                sortDirection = 1;
+            }
+            
+            sortRequests(column, sortDirection);
+            renderRequestTable();
+            
+            // 更新排序图标
+            updateSortIcons();
+        }
+        
+        // 排序请求
+        function sortRequests(column, direction) {
+            filteredRequests.sort((a, b) => {
+                let aValue, bValue;
+                
+                switch(column) {
+                    case 0: // 请求ID
+                        aValue = a.id;
+                        bValue = b.id;
+                        break;
+                    case 1: // 请求类型
+                        aValue = a.type;
+                        bValue = b.type;
+                        break;
+                    case 2: // 请求内容
+                        aValue = a.content;
+                        bValue = b.content;
+                        break;
+                    case 3: // 状态
+                        aValue = a.status;
+                        bValue = b.status;
+                        break;
+                    case 4: // 创建时间
+                        aValue = new Date(a.created);
+                        bValue = new Date(b.created);
+                        break;
+                    case 5: // 处理时间
+                        aValue = parseInt(a.processing);
+                        bValue = parseInt(b.processing);
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                if (aValue < bValue) return -1 * direction;
+                if (aValue > bValue) return 1 * direction;
+                return 0;
+            });
+        }
+        
+        // 更新排序图标
+        function updateSortIcons() {
+            const headers = document.querySelectorAll('th i');
+            headers.forEach((icon, index) => {
+                if (index < headers.length - 1) { // 排除操作列
+                    if (index === sortColumn) {
+                        icon.className = sortDirection === 1 ? 'ri-sort-asc' : 'ri-sort-desc';
+                    } else {
+                        icon.className = 'ri-sort-2-asc';
+                    }
+                }
+            });
+        }
+        
+        // 渲染请求表格
+        function renderRequestTable() {
+            const tableBody = document.getElementById('request-table-body');
+            tableBody.innerHTML = '';
+            
+            filteredRequests.forEach(request => {
+                const row = document.createElement('tr');
+                
+                // 设置状态样式
+                let statusClass = '';
+                switch(request.status) {
+                    case 'success':
+                        statusClass = 'status-item ok';
+                        break;
+                    case 'failed':
+                        statusClass = 'status-item error';
+                        break;
+                    case 'processing':
+                        statusClass = 'status-item warning';
+                        break;
+                }
+                
+                row.innerHTML = `
+                    <td><input type="checkbox" class="request-checkbox" value="${request.id}"></td>
+                    <td>${request.id}</td>
+                    <td>${request.type}</td>
+                    <td>${request.content}</td>
+                    <td>
+                        <div class="${statusClass}" style="padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                            ${request.status}
+                        </div>
+                    </td>
+                    <td>${request.created}</td>
+                    <td>${request.processing}</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="viewRequestDetail('${request.id}')">
+                            <i class="ri-eye-line"></i> 查看
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteRequest('${request.id}')">
+                            <i class="ri-delete-bin-line"></i> 删除
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // 全选/取消全选
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAll = document.getElementById('select-all');
+            if (selectAll) {
+                selectAll.addEventListener('change', function() {
+                    const checkboxes = document.querySelectorAll('.request-checkbox');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = this.checked;
+                    });
+                });
+            }
+            
+            // 添加过滤事件监听器
+            const filters = document.querySelectorAll('.filter-item select');
+            filters.forEach(filter => {
+                filter.addEventListener('change', applyFilters);
+            });
+            
+            // 添加搜索事件监听器
+            const searchInput = document.querySelector('input[type="text"]');
+            if (searchInput) {
+                searchInput.addEventListener('input', applyFilters);
+            }
+        });
+        
+        // 查看请求详情
+        function viewRequestDetail(requestId) {
+            const detailSection = document.getElementById('request-detail');
+            const detailContent = document.getElementById('request-detail-content');
+            
+            // 模拟请求详情数据
+            const requestDetail = {
+                id: requestId,
+                type: 'API',
+                content: '获取系统状态',
+                status: 'success',
+                created: '2026-01-30 10:00:00',
+                processing: '120ms',
+                response: '{"status": "ok", "data": {"system": "healthy", "version": "v0.6.5"}}',
+                error: '',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer token123',
+                    'User-Agent': 'MCP Agent Client'
+                },
+                metadata: {
+                    'client_ip': '192.168.1.100',
+                    'user_id': 'user-001',
+                    'correlation_id': 'corr-001'
+                }
+            };
+            
+            // 生成详情内容
+            detailContent.innerHTML = `
+                <div class="status-grid">
+                    <div class="status-item ok">
+                        <div class="key">请求ID</div>
+                        <div class="value">${requestDetail.id}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">请求类型</div>
+                        <div class="value">${requestDetail.type}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">状态</div>
+                        <div class="value">${requestDetail.status}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">创建时间</div>
+                        <div class="value">${requestDetail.created}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">处理时间</div>
+                        <div class="value">${requestDetail.processing}</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 24px;">
+                    <h3 style="margin-bottom: 16px; color: var(--ooder-dark);">请求内容</h3>
+                    <div style="background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); border: 1px solid var(--ooder-border); font-family: monospace; font-size: 14px;">
+                        ${requestDetail.content}
+                    </div>
+                </div>
+                
+                <div style="margin-top: 24px;">
+                    <h3 style="margin-bottom: 16px; color: var(--ooder-dark);">响应内容</h3>
+                    <div style="background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); border: 1px solid var(--ooder-border); font-family: monospace; font-size: 14px;">
+                        ${requestDetail.response}
+                    </div>
+                </div>
+                
+                <div style="margin-top: 24px;">
+                    <h3 style="margin-bottom: 16px; color: var(--ooder-dark);">请求头</h3>
+                    <div style="background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); border: 1px solid var(--ooder-border); font-family: monospace; font-size: 14px;">
+                        ${Object.entries(requestDetail.headers).map(([key, value]) => `${key}: ${value}`).join('\n')}
+                    </div>
+                </div>
+                
+                <div style="margin-top: 24px;">
+                    <h3 style="margin-bottom: 16px; color: var(--ooder-dark);">元数据</h3>
+                    <div style="background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); border: 1px solid var(--ooder-border); font-family: monospace; font-size: 14px;">
+                        ${Object.entries(requestDetail.metadata).map(([key, value]) => `${key}: ${value}`).join('\n')}
+                    </div>
+                </div>
+                
+                <div style="margin-top: 24px;">
+                    <button class="btn btn-secondary" onclick="hideRequestDetail()">
+                        <i class="ri-arrow-left-line"></i> 返回列表
+                    </button>
+                </div>
+            `;
+            
+            // 显示详情部分
+            detailSection.classList.remove('hidden');
+        }
+        
+        // 隐藏请求详情
+        function hideRequestDetail() {
+            const detailSection = document.getElementById('request-detail');
+            detailSection.classList.add('hidden');
+        }
+        
+        // 删除请求
+        function deleteRequest(requestId) {
+            if (confirm(`确定要删除请求 ${requestId} 吗？`)) {
+                // 从原始数据中删除
+                const index = requests.findIndex(req => req.id === requestId);
+                if (index !== -1) {
+                    requests.splice(index, 1);
+                }
+                
+                // 重新应用过滤
+                applyFilters();
+                
+                console.log(`删除请求: ${requestId}`);
+            }
+        }
+        
+        // 批量删除请求
+        function batchDeleteRequests() {
+            const selectedCheckboxes = document.querySelectorAll('.request-checkbox:checked');
+            const selectedIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+            
+            if (selectedIds.length === 0) {
+                alert('请先选择要删除的请求');
+                return;
+            }
+            
+            if (confirm(`确定要删除选定的 ${selectedIds.length} 个请求吗？`)) {
+                // 从原始数据中删除
+                requests = requests.filter(req => !selectedIds.includes(req.id));
+                
+                // 重新应用过滤
+                applyFilters();
+                
+                console.log(`批量删除请求: ${selectedIds.join(', ')}`);
+            }
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>

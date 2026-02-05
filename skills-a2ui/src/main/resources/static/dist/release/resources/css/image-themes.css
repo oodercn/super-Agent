@@ -1,0 +1,143 @@
+/* Image组件主题系统 - 支持暗色、亮色、高对比度主题 */
+:root {
+  /* 基础图片样式变量 */
+  --ood-image-border: #ddd;
+  --ood-image-bg: transparent;
+  --ood-image-filter: none;
+  --ood-image-hover-filter: brightness(0.95);
+  --ood-image-active-filter: brightness(0.9);
+  
+  /* 暗色主题变量 */
+  --ood-dark-image-border: #555;
+  --ood-dark-image-bg: transparent;
+  --ood-dark-image-filter: brightness(0.8) contrast(1.2);
+  --ood-dark-image-hover-filter: brightness(0.85);
+  --ood-dark-image-active-filter: brightness(0.75);
+  
+  /* 高对比度主题变量 */
+  --ood-highcontrast-image-border: #fff;
+  --ood-highcontrast-image-bg: #000;
+  --ood-highcontrast-image-filter: contrast(2) brightness(1.3);
+  --ood-highcontrast-image-hover-filter: contrast(2.2);
+  --ood-highcontrast-image-active-filter: contrast(2.5);
+  
+  /* 响应式断点 */
+  --ood-breakpoint-sm: 480px;
+  --ood-breakpoint-md: 768px;
+  --ood-breakpoint-lg: 1024px;
+  --ood-breakpoint-xl: 1280px;
+}
+
+/* 基础图片样式 */
+.ood-image {
+  border: 1px solid var(--ood-image-border);
+  background-color: var(--ood-image-bg);
+  filter: var(--ood-image-filter);
+  transition: all 0.3s ease;
+  max-width: 100%;
+  height: auto;
+}
+
+.ood-image:hover {
+  filter: var(--ood-image-hover-filter);
+}
+
+.ood-image:active {
+  filter: var(--ood-image-active-filter);
+}
+
+/* 暗色主题 */
+[data-theme="dark"] .ood-image,
+.image-dark {
+  border-color: var(--ood-dark-image-border) !important;
+  background-color: var(--ood-dark-image-bg) !important;
+  filter: var(--ood-dark-image-filter) !important;
+}
+
+[data-theme="dark"] .ood-image:hover,
+.image-dark:hover {
+  filter: var(--ood-dark-image-hover-filter) !important;
+}
+
+[data-theme="dark"] .ood-image:active,
+.image-dark:active {
+  filter: var(--ood-dark-image-active-filter) !important;
+}
+
+/* 高对比度主题 */
+[data-theme="highcontrast"] .ood-image,
+.image-highcontrast {
+  border-color: var(--ood-highcontrast-image-border) !important;
+  background-color: var(--ood-highcontrast-image-bg) !important;
+  filter: var(--ood-highcontrast-image-filter) !important;
+  border-width: 2px !important;
+}
+
+[data-theme="highcontrast"] .ood-image:hover,
+.image-highcontrast:hover {
+  filter: var(--ood-highcontrast-image-hover-filter) !important;
+}
+
+[data-theme="highcontrast"] .ood-image:active,
+.image-highcontrast:active {
+  filter: var(--ood-highcontrast-image-active-filter) !important;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .ood-image.image-mobile {
+    max-width: calc(100vw - 40px) !important;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .ood-image.image-tiny {
+    max-height: 75vw !important;
+  }
+}
+
+/* 可访问性支持 */
+.ood-image[tabindex="0"]:focus {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+.ood-image[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(0.8) !important;
+}
+
+/* 屏幕阅读器专用样式 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 键盘导航焦点样式 */
+.ood-image:focus-visible {
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.5);
+}
+
+/* 高对比度模式的焦点增强 */
+@media (prefers-contrast: high) {
+  .ood-image:focus-visible {
+    outline: 3px solid windowText;
+    outline-offset: 1px;
+  }
+}
+
+/* 减少动画（可访问性） */
+@media (prefers-reduced-motion: reduce) {
+  .ood-image {
+    transition: none;
+  }
+}

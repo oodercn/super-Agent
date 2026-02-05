@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人仪表盘 - Nexus SkillCenter</title>
+    <link rel="stylesheet" href="/console/css/styles.css">
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <script src="/console/js/menu-loader.js"></script>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="main-content">
+            <header class="header">
+                <h1>个人仪表盘</h1>
+                <div class="user-info">
+                    <span class="user-name">用户</span>
+                    <i class="ri-user-line"></i>
+                </div>
+            </header>
+            <div class="dashboard-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon ri-lightbulb-line"></div>
+                        <div class="stat-info">
+                            <h3>我的技能</h3>
+                            <p class="stat-value" id="skill-count">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon ri-play-circle-line"></div>
+                        <div class="stat-info">
+                            <h3>执行次数</h3>
+                            <p class="stat-value" id="execution-count">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon ri-share-line"></div>
+                        <div class="stat-info">
+                            <h3>分享技能</h3>
+                            <p class="stat-value" id="shared-count">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon ri-group-line"></div>
+                        <div class="stat-info">
+                            <h3>我的群组</h3>
+                            <p class="stat-value" id="group-count">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="recent-activities">
+                    <h2>最近活动</h2>
+                    <div class="activity-list" id="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon ri-clock-line"></div>
+                            <div class="activity-content">
+                                <p>暂无活动记录</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="skill-progress">
+                    <h2>技能执行统计</h2>
+                    <canvas id="execution-chart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        window.onload = function() {
+            initMenu();
+            loadDashboardData();
+        };
+
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/personal/dashboard/stats');
+                
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`非JSON响应: ${text.substring(0, 100)}...`);
+                }
+                
+                if (result.status === 'success') {
+                    const data = result.data;
+                    document.getElementById('skill-count').textContent = data.totalSkills || 0;
+                    document.getElementById('execution-count').textContent = data.totalExecutions || 0;
+                    document.getElementById('shared-count').textContent = data.sharedSkills || 0;
+                    document.getElementById('group-count').textContent = data.myGroups ? data.myGroups.length : 0;
+                    
+                    if (data.recentActivities) {
+                        updateActivityList(data.recentActivities);
+                    }
+                }
+            } catch (error) {
+                console.error('加载仪表盘数据失败:', error);
+            }
+        }
+
+        function updateActivityList(activities) {
+            const activityList = document.getElementById('activity-list');
+            activityList.innerHTML = '';
+            
+            activities.forEach(activity => {
+                const item = document.createElement('div');
+                item.className = 'activity-item';
+                item.innerHTML = `
+                    <div class="activity-icon ${getActivityIcon(activity.type)}"></div>
+                    <div class="activity-content">
+                        <p>${activity.description}</p>
+                        <span class="activity-time">${formatTime(activity.timestamp)}</span>
+                    </div>
+                `;
+                activityList.appendChild(item);
+            });
+        }
+
+        function getActivityIcon(type) {
+            const iconMap = {
+                'execution': 'ri-play-line',
+                'publish': 'ri-upload-line',
+                'share': 'ri-share-line'
+            };
+            return iconMap[type] || 'ri-information-line';
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) {
+                return Math.floor(diff / 1000) + '分钟前';
+            } else if (diff < 3600000) {
+                return Math.floor(diff / 3600000) + '小时前';
+            } else {
+                return Math.floor(diff / 86400000) + '天前';
+            }
+        }
+    </script>
+</body>
+</html>

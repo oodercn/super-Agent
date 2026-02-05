@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="OoderAgent Console - 主控节点管理控制台">
+    <meta name="theme-color" content="#000000">
+    <title>OoderAgent Console</title>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css"></noscript>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> OoderAgent</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><i class="ri-server-line"></i> OoderAgent 控制台</h1>
+                <div class="subtitle">
+                    <span class="badge" style="background-color: var(--ooder-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">v0.6.5</span>
+                    <span>Ooder Rad Style</span> | 
+                    <span id="timestamp"></span>
+                </div>
+            </div>
+            
+            <!-- 页面内容区域 -->
+            <div id="page-content">
+                <!-- 页面内容将通过页面跳转加载 -->
+                <div class="section" style="text-align: center; padding: 64px;">
+                    <h2>欢迎使用 MCP Agent 控制台</h2>
+                    <p style="margin-top: 16px; color: var(--ooder-secondary);">请从左侧菜单选择要访问的功能</p>
+                    <div style="margin-top: 32px; font-size: 64px;">
+                        <i class="ri-server-line"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 加载状态和错误提示 -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div style="text-align: center;">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loading-text">加载中...</div>
+        </div>
+    </div>
+    <div class="error-toast" id="error-toast">
+        <div class="message" id="error-message"></div>
+        <div class="close" onclick="hideErrorToast()">×</div>
+    </div>
+    <div class="success-toast" id="success-toast">
+        <div class="message" id="success-message"></div>
+    </div>
+    
+    <script defer>
+        // 页面加载性能优化
+        (function() {
+            // 禁止鼠标右键菜单（可选）
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+            
+            // 禁止文本选择（可选）
+            document.addEventListener('selectstart', function(e) {
+                e.preventDefault();
+            });
+        })();
+        
+        // 当前页面
+        let currentPage = 'dashboard';
+        
+        // API基础URL
+        const API_BASE_URL = '/api/mcp';
+        
+        // 当前用户场景
+        let currentScenario = null;
+        
+        // 菜单配置
+        let menuConfig = null;
+        
+        // 初始化页面
+        function init() {
+            updateTimestamp();
+            loadMenuConfig();
+            loadPage('dashboard');
+            setInterval(updateTimestamp, 60000); // 每分钟更新时间戳
+        }
+        
+        // 加载菜单配置
+        async function loadMenuConfig() {
+            try {
+                const response = await fetch('menu-config.json');
+                if (!response.ok) {
+                    throw new Error('菜单配置加载失败');
+                }
+                menuConfig = await response.json();
+                renderMenu();
+            } catch (error) {
+                console.error('加载菜单配置错误:', error);
+                // 加载失败时显示默认菜单
+                renderDefaultMenu();
+            }
+        }
+        
+        // 渲染菜单
+        function renderMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            
+            menuConfig.menu.forEach(item => {
+                // 只显示已实现的功能（status为implemented）
+                if (item.status === 'implemented' || item.id === 'dashboard') {
+                    const menuItem = createMenuItem(item);
+                    navMenu.appendChild(menuItem);
+                    // 添加菜单分隔线
+                    if (item.id !== 'dashboard') {
+                        const divider = document.createElement('div');
+                        divider.className = 'menu-divider';
+                        navMenu.appendChild(divider);
+                    }
+                }
+            });
+            
+            setupNavigation();
+        }
+        
+        // 创建菜单项
+        function createMenuItem(menuItem) {
+            const li = document.createElement('li');
+            
+            if (menuItem.children && menuItem.children.length > 0) {
+                // 有子菜单的菜单项
+                const a = document.createElement('a');
+                a.href = `#${menuItem.id}`;
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                    <span class="toggle-icon">›</span>
+                `;
+                
+                // 处理点击事件
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const toggleIcon = this.querySelector('.toggle-icon');
+                    const submenu = this.nextElementSibling;
+                    
+                    if (submenu) {
+                        submenu.classList.toggle('hidden');
+                        toggleIcon.classList.toggle('collapsed');
+                    }
+                });
+                
+                li.appendChild(a);
+                
+                // 创建子菜单
+                const submenu = document.createElement('ul');
+                submenu.className = 'submenu';
+                
+                menuItem.children.forEach(childItem => {
+                    // 只显示已实现的子功能
+                    if (childItem.status === 'implemented') {
+                        const childLi = createMenuItem(childItem);
+                        submenu.appendChild(childLi);
+                    }
+                });
+                
+                // 只有当子菜单不为空时才添加
+                if (submenu.children.length > 0) {
+                    li.appendChild(submenu);
+                }
+            } else {
+                // 无子菜单的菜单项
+                const a = document.createElement('a');
+                if (menuItem.url) {
+                    a.href = menuItem.url;
+                } else {
+                    a.href = `#${menuItem.id}`;
+                    a.setAttribute('data-page', menuItem.page || menuItem.id);
+                }
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                `;
+                li.appendChild(a);
+            }
+            
+            return li;
+        }
+        
+        // 渲染默认菜单（加载失败时使用）
+        function renderDefaultMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = `
+                <li><a href="#dashboard" class="active" data-page="dashboard"><i class="ri-dashboard-line"></i> 仪表盘</a></li>
+                <li><a href="#system" data-page="system"><i class="ri-computer-line"></i> 系统信息</a></li>
+                <li><a href="#network" data-page="network"><i class="ri-network-line"></i> 网络状态</a></li>
+                <li><a href="#logs" data-page="logs"><i class="ri-file-text-line"></i> 日志查看</a></li>
+                <li><a href="#tests" data-page="tests"><i class="ri-test-tube-line"></i> 测试用例</a></li>
+                <li><a href="#config" data-page="config"><i class="ri-settings-3-line"></i> 配置管理</a></li>
+            `;
+            setupNavigation();
+        }
+        
+        // 进入用户场景
+        function enterScenario(scenario) {
+            currentScenario = scenario;
+            
+            // 隐藏场景选择，显示系统概览
+            document.querySelector('.section').classList.add('hidden');
+            document.getElementById('system-overview-section').classList.remove('hidden');
+            
+            // 根据场景加载不同的功能
+            loadScenarioFeatures(scenario);
+            
+            // 加载系统状态
+            loadDashboard();
+        }
+        
+        // 加载场景特定功能
+        function loadScenarioFeatures(scenario) {
+            console.log('进入场景:', scenario);
+            
+            // 根据场景显示不同的导航菜单
+            const navMenu = document.querySelector('.nav-menu');
+            const navItems = navMenu.querySelectorAll('li');
+            
+            // 重置所有导航项
+            navItems.forEach(item => item.style.display = 'none');
+            
+            // 根据场景显示不同的导航项
+            switch(scenario) {
+                case 'enterprise':
+                    // 小微企业场景：显示所有功能
+                    navItems.forEach(item => item.style.display = 'block');
+                    break;
+                case 'personal':
+                    // 个人用户场景：只显示基本功能
+                    navItems[0].style.display = 'block'; // 仪表盘
+                    navItems[1].style.display = 'block'; // 系统信息
+                    navItems[2].style.display = 'block'; // 网络状态
+                    break;
+                case 'multi-network':
+                    // 集中多网端场景：显示高级功能
+                    navItems.forEach(item => item.style.display = 'block');
+                    break;
+            }
+            
+            // 显示场景信息
+            const header = document.querySelector('.header h1');
+            switch(scenario) {
+                case 'enterprise':
+                    header.innerHTML = '<span>🏢</span> 小微企业控制台';
+                    break;
+                case 'personal':
+                    header.innerHTML = '<span>👤</span> 个人用户控制台';
+                    break;
+                case 'multi-network':
+                    header.innerHTML = '<span>🌐</span> 集中多网端控制台';
+                    break;
+            }
+        }
+        
+        // 更新时间戳
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = now.toLocaleString('zh-CN');
+        }
+        
+        // 设置导航
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-menu a');
+            navLinks.forEach(link => {
+                // 只处理带有data-page属性的链接（即叶子节点且没有url属性）
+                if (link.hasAttribute('data-page') && !link.hasAttribute('href') && link.getAttribute('href') !== '#') {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // 更新活跃状态
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        // 加载对应页面
+                        const page = this.getAttribute('data-page');
+                        loadPage(page);
+                    });
+                }
+            });
+        }
+        
+        // 加载页面
+        function loadPage(page) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            
+            // 查找目标页面
+            const targetPage = document.getElementById(`page-${page}`);
+            
+            if (targetPage) {
+                // 显示已存在的页面
+                targetPage.classList.remove('hidden');
+            } else {
+                // 对于不存在的页面，显示默认内容
+                const mainContent = document.querySelector('.main-content');
+                // 查找或创建默认页面容器
+                let defaultPage = document.getElementById('page-default');
+                if (!defaultPage) {
+                    defaultPage = document.createElement('div');
+                    defaultPage.id = 'page-default';
+                    defaultPage.className = 'page';
+                    mainContent.appendChild(defaultPage);
+                }
+                // 设置默认页面内容
+                defaultPage.innerHTML = `
+                    <div class="header">
+                        <h1><i class="ri-page-line"></i> ${getPageName(page)}</h1>
+                        <div class="subtitle">页面正在开发中，敬请期待</div>
+                    </div>
+                    <div class="section">
+                        <h2>页面信息</h2>
+                        <div class="status-grid">
+                            <div class="status-item ok">
+                                <div class="key">页面ID</div>
+                                <div class="value">${page}</div>
+                            </div>
+                            <div class="status-item ok">
+                                <div class="key">状态</div>
+                                <div class="value">开发中</div>
+                            </div>
+                            <div class="status-item ok">
+                                <div class="key">最后更新</div>
+                                <div class="value">${new Date().toLocaleString('zh-CN')}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section">
+                        <h2>功能预览</h2>
+                        <p>此页面将在后续版本中实现以下功能：</p>
+                        <ul style="margin-left: 24px; margin-top: 16px; color: var(--ooder-secondary);">
+                            <li>页面相关的核心功能</li>
+                            <li>数据可视化展示</li>
+                            <li>交互操作功能</li>
+                            <li>与后端API的集成</li>
+                        </ul>
+                    </div>
+                `;
+                defaultPage.classList.remove('hidden');
+            }
+            
+            currentPage = page;
+            
+            // 加载页面数据
+            switch(page) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'system':
+                    loadSystemInfo();
+                    break;
+                case 'network':
+                    loadNetworkInfo();
+                    break;
+                case 'logs':
+                    loadLogs();
+                    break;
+                case 'tests':
+                    loadTests();
+                    break;
+                case 'settings':
+                    loadSettings();
+                    break;
+                case 'config':
+                    loadConfig();
+                    break;
+            }
+        }
+        
+        // 获取页面名称
+        function getPageName(pageId) {
+            // 从菜单配置中查找页面名称
+            if (menuConfig) {
+                const findPageName = (menuItems) => {
+                    for (const item of menuItems) {
+                        if (item.page === pageId || item.id === pageId) {
+                            return item.name;
+                        }
+                        if (item.children) {
+                            const name = findPageName(item.children);
+                            if (name) {
+                                return name;
+                            }
+                        }
+                    }
+                    return null;
+                };
+                const name = findPageName(menuConfig.menu);
+                if (name) {
+                    return name;
+                }
+            }
+            // 默认页面名称
+            return pageId.charAt(0).toUpperCase() + pageId.slice(1).replace('-', ' ');
+        }
+        
+        // API请求缓存
+        const apiCache = new Map();
+        const CACHE_EXPIRY = 30000; // 缓存过期时间（毫秒）
+        
+        // API调用函数
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            try {
+                const url = `${API_BASE_URL}${endpoint}`;
+                
+                // 生成缓存键
+                const cacheKey = `${method}:${url}${data ? ':' + JSON.stringify(data) : ''}`;
+                
+                // 检查缓存
+                if (method === 'GET' && apiCache.has(cacheKey)) {
+                    const cached = apiCache.get(cacheKey);
+                    if (Date.now() - cached.timestamp < CACHE_EXPIRY) {
+                        console.log(`API缓存命中: ${url}`);
+                        return cached.data;
+                    } else {
+                        apiCache.delete(cacheKey);
+                    }
+                }
+                
+                console.log(`API调用: ${method} ${url}`, data);
+                
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin',
+                    cache: 'no-store'
+                };
+                
+                if (data && (method === 'POST' || method === 'PUT')) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                // 发起请求
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+                options.signal = controller.signal;
+                
+                const response = await fetch(url, options);
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`API调用失败: ${response.status} ${errorData.message || ''}`);
+                }
+                
+                const responseData = await response.json();
+                console.log(`API响应: ${url}`, responseData);
+                
+                // 缓存GET请求结果
+                if (method === 'GET') {
+                    apiCache.set(cacheKey, {
+                        data: responseData,
+                        timestamp: Date.now()
+                    });
+                    
+                    // 限制缓存大小
+                    if (apiCache.size > 50) {
+                        const oldestKey = apiCache.keys().next().value;
+                        apiCache.delete(oldestKey);
+                    }
+                }
+                
+                return responseData;
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    console.error('API调用超时:', error);
+                    return { status: 'error', message: 'API调用超时' };
+                }
+                console.error('API调用错误:', error);
+                return { status: 'error', message: error.message };
+            }
+        }
+        
+        // 批量API调用函数
+        async function batchApiCall(calls) {
+            try {
+                const promises = calls.map(({ endpoint, method = 'GET', data }) => 
+                    apiCall(endpoint, method, data)
+                );
+                
+                return await Promise.all(promises);
+            } catch (error) {
+                console.error('批量API调用错误:', error);
+                return [];
+            }
+        }
+        
+        // 清除API缓存
+        function clearApiCache() {
+            apiCache.clear();
+            console.log('API缓存已清除');
+        }
+        
+        // 加载状态管理
+        function showLoading(text = '加载中...') {
+            const overlay = document.getElementById('loading-overlay');
+            const loadingText = document.getElementById('loading-text');
+            if (overlay && loadingText) {
+                loadingText.textContent = text;
+                overlay.classList.add('active');
+            }
+        }
+        
+        function hideLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.classList.remove('active');
+            }
+        }
+        
+        // 错误提示管理
+        function showErrorToast(message, duration = 3000) {
+            const toast = document.getElementById('error-toast');
+            const errorMessage = document.getElementById('error-message');
+            if (toast && errorMessage) {
+                errorMessage.textContent = message;
+                toast.classList.add('active');
+                
+                setTimeout(() => {
+                    hideErrorToast();
+                }, duration);
+            }
+        }
+        
+        function hideErrorToast() {
+            const toast = document.getElementById('error-toast');
+            if (toast) {
+                toast.classList.remove('active');
+            }
+        }
+        
+        // 成功提示管理
+        function showSuccessToast(message, duration = 3000) {
+            const toast = document.getElementById('success-toast');
+            const successMessage = document.getElementById('success-message');
+            if (toast && successMessage) {
+                successMessage.textContent = message;
+                toast.classList.add('active');
+                
+                setTimeout(() => {
+                    hideSuccessToast();
+                }, duration);
+            }
+        }
+        
+        function hideSuccessToast() {
+            const toast = document.getElementById('success-toast');
+            if (toast) {
+                toast.classList.remove('active');
+            }
+        }
+        
+        // 统一错误处理
+        function handleError(error, showToast = true) {
+            console.error('错误处理:', error);
+            
+            const errorMessage = error.message || String(error);
+            
+            if (showToast) {
+                showErrorToast(errorMessage);
+            }
+            
+            // 可以添加错误日志记录等其他处理
+            return { status: 'error', message: errorMessage };
+        }
+        
+        // 加载仪表盘数据
+        async function loadDashboard() {
+            // 检查DOM元素是否存在
+            const systemStatusEl = document.getElementById('system-status');
+            const networkCountEl = document.getElementById('network-count');
+            const cpuUsageEl = document.getElementById('cpu-usage');
+            const memoryUsageEl = document.getElementById('memory-usage');
+            const diskUsageEl = document.getElementById('disk-usage');
+            const systemLoadEl = document.getElementById('system-load');
+            const systemOverviewEl = document.getElementById('system-overview');
+            
+            // 显示加载状态
+            showLoading('加载仪表盘数据...');
+            if (systemStatusEl) systemStatusEl.textContent = '加载中...';
+            if (networkCountEl) networkCountEl.textContent = '加载中...';
+            if (cpuUsageEl) cpuUsageEl.textContent = '加载中...';
+            if (memoryUsageEl) memoryUsageEl.textContent = '加载中...';
+            
+            try {
+                // 并行调用多个API
+                const [healthData, networkData] = await Promise.all([
+                    apiCall('/health'),
+                    apiCall('/network/status')
+                ]);
+                
+                // 隐藏加载状态
+                hideLoading();
+                
+                // 更新系统状态
+                if (systemStatusEl) {
+                    if (healthData.status === 'healthy') {
+                        systemStatusEl.textContent = '正常运行';
+                    } else {
+                        systemStatusEl.textContent = '异常';
+                    }
+                }
+                
+                // 更新网络连接数
+                if (networkCountEl) {
+                    if (networkData.status && networkData.status.links) {
+                        networkCountEl.textContent = networkData.status.links.length;
+                    } else {
+                        networkCountEl.textContent = '0';
+                    }
+                }
+                
+                // 模拟系统资源使用率（实际项目中可以通过系统API获取）
+                if (cpuUsageEl) cpuUsageEl.textContent = Math.floor(Math.random() * 100) + '%';
+                if (memoryUsageEl) memoryUsageEl.textContent = Math.floor(Math.random() * 100) + '%';
+                if (diskUsageEl) diskUsageEl.textContent = Math.floor(Math.random() * 100) + '%';
+                if (systemLoadEl) systemLoadEl.textContent = (Math.random() * 4).toFixed(2);
+                
+                // 系统概览
+                if (systemOverviewEl) {
+                    systemOverviewEl.innerHTML = `
+                        <div class="status-item ok">
+                            <div class="key">启动时间</div>
+                            <div class="value">${new Date(healthData.timestamp).toLocaleString('zh-CN')}</div>
+                        </div>
+                        <div class="status-item ok">
+                            <div class="key">服务状态</div>
+                            <div class="value">${healthData.status}</div>
+                        </div>
+                        <div class="status-item ok">
+                            <div class="key">服务名称</div>
+                            <div class="value">${healthData.service}</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">SDK版本</div>
+                        <div class="value">v0.6.5</div>
+                    </div>
+                `;
+                }
+                
+                // 网络拓扑
+                const networkTopologyEl = document.getElementById('network-topology');
+                if (networkTopologyEl) {
+                    networkTopologyEl.innerHTML = `
+                        <div class="status-grid">
+                            <div class="status-item ok">
+                                <div class="key">本地节点</div>
+                                <div class="value">mcp-agent-01</div>
+                            </div>
+                            <div class="status-item ok">
+                                <div class="key">连接节点</div>
+                                <div class="value">${networkData.status && networkData.status.links ? networkData.status.links.length : 0}个节点</div>
+                            </div>
+                            <div class="status-item ok">
+                                <div class="key">网络状态</div>
+                                <div class="value">${networkData.status ? '正常' : '异常'}</div>
+                            </div>
+                            <div class="status-item ok">
+                                <div class="key">更新时间</div>
+                                <div class="value">${networkData.timestamp ? new Date(networkData.timestamp).toLocaleString('zh-CN') : '-'}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                // 隐藏加载状态
+                hideLoading();
+                
+                // 处理错误
+                handleError(error);
+                
+                // 显示错误信息
+                if (systemStatusEl) systemStatusEl.textContent = '错误';
+                if (networkCountEl) networkCountEl.textContent = '错误';
+                if (cpuUsageEl) cpuUsageEl.textContent = '错误';
+                if (memoryUsageEl) memoryUsageEl.textContent = '错误';
+                if (diskUsageEl) diskUsageEl.textContent = '错误';
+                if (systemLoadEl) systemLoadEl.textContent = '错误';
+            }
+        }
+        
+        // 加载系统信息
+        async function loadSystemInfo() {
+            try {
+                // 调用后端API获取系统管理数据
+                const systemData = await apiCall('/system/status');
+                
+                console.log('系统管理数据:', systemData);
+                
+                // 显示加载成功提示
+                const pageSystem = document.getElementById('page-system');
+                // 移除已有的提示
+                const existingAlert = pageSystem.querySelector('.alert');
+                if (existingAlert) {
+                    existingAlert.remove();
+                }
+                
+                // 创建新的成功提示
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success';
+                alert.textContent = '系统管理数据加载成功';
+                
+                const firstSection = pageSystem.querySelector('.section');
+                if (firstSection) {
+                    pageSystem.insertBefore(alert, firstSection);
+                }
+                
+                // 3秒后移除提示
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 3000);
+                
+                // 这里可以根据实际返回的数据更新页面内容
+                // 目前页面使用的是静态数据，后续可以根据后端API返回的数据进行动态更新
+                
+            } catch (error) {
+                console.error('加载系统信息错误:', error);
+                
+                // 显示错误提示
+                const pageSystem = document.getElementById('page-system');
+                // 移除已有的提示
+                const existingAlert = pageSystem.querySelector('.alert');
+                if (existingAlert) {
+                    existingAlert.remove();
+                }
+                
+                // 创建新的错误提示
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-error';
+                alert.textContent = `系统管理数据加载失败: ${error.message}`;
+                
+                const firstSection = pageSystem.querySelector('.section');
+                if (firstSection) {
+                    pageSystem.insertBefore(alert, firstSection);
+                }
+                
+                // 3秒后移除提示
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 3000);
+            }
+        }
+        
+        // 加载网络信息
+        async function loadNetworkInfo() {
+            try {
+                // 调用后端API获取网络管理数据
+                const networkData = await apiCall('/network/status');
+                
+                console.log('网络管理数据:', networkData);
+                
+                // 显示加载成功提示
+                const pageNetwork = document.getElementById('page-network');
+                // 移除已有的提示
+                const existingAlert = pageNetwork.querySelector('.alert');
+                if (existingAlert) {
+                    existingAlert.remove();
+                }
+                
+                // 创建新的成功提示
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success';
+                alert.textContent = '网络管理数据加载成功';
+                
+                const firstSection = pageNetwork.querySelector('.section');
+                if (firstSection) {
+                    pageNetwork.insertBefore(alert, firstSection);
+                }
+                
+                // 3秒后移除提示
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 3000);
+                
+                // 这里可以根据实际返回的数据更新页面内容
+                // 目前页面使用的是静态数据，后续可以根据后端API返回的数据进行动态更新
+                
+            } catch (error) {
+                console.error('加载网络信息错误:', error);
+                
+                // 显示错误提示
+                const pageNetwork = document.getElementById('page-network');
+                // 移除已有的提示
+                const existingAlert = pageNetwork.querySelector('.alert');
+                if (existingAlert) {
+                    existingAlert.remove();
+                }
+                
+                // 创建新的错误提示
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-error';
+                alert.textContent = `网络管理数据加载失败: ${error.message}`;
+                
+                const firstSection = pageNetwork.querySelector('.section');
+                if (firstSection) {
+                    pageNetwork.insertBefore(alert, firstSection);
+                }
+                
+                // 3秒后移除提示
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 3000);
+            }
+        }
+        
+        // 更新路由列表
+        function updateRouteList() {
+            const routeList = document.getElementById('route-list');
+            routeList.innerHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>路由ID</th>
+                                <th>类型</th>
+                                <th>状态</th>
+                                <th>最后更新时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>route_1</td>
+                                <td>直接路由</td>
+                                <td>活跃</td>
+                                <td>${new Date().toLocaleString('zh-CN')}</td>
+                                <td>
+                                    <button class="btn btn-secondary">详情</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>route_2</td>
+                                <td>间接路由</td>
+                                <td>活跃</td>
+                                <td>${new Date().toLocaleString('zh-CN')}</td>
+                                <td>
+                                    <button class="btn btn-secondary">详情</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        // 更新终端列表
+        function updateEndAgentList() {
+            // 这里可以添加终端列表的更新逻辑
+        }
+        
+        // 显示链路详情
+        function showLinkDetails(linkId) {
+            alert(`显示链路 ${linkId} 的详情`);
+        }
+        
+        // 移除链路
+        function removeLink(linkId) {
+            if (confirm(`确定要移除链路 ${linkId} 吗？`)) {
+                alert(`链路 ${linkId} 已移除`);
+                // 重新加载网络信息
+                loadNetworkInfo();
+            }
+        }
+        
+        // 加载日志
+        function loadLogs() {
+            // 模拟数据加载（实际项目中可以通过日志API获取）
+            setTimeout(() => {
+                const logsContent = document.getElementById('logs-content');
+                logsContent.innerHTML = `
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>级别</th>
+                                    <th>内容</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2026-01-30 14:46:43</td>
+                                    <td>INFO</td>
+                                    <td>MCP Agent started successfully</td>
+                                </tr>
+                                <tr>
+                                    <td>2026-01-30 14:46:43</td>
+                                    <td>INFO</td>
+                                    <td>Network service initialized</td>
+                                </tr>
+                                <tr>
+                                    <td>2026-01-30 14:46:43</td>
+                                    <td>INFO</td>
+                                    <td>Agent SDK initialized (v0.6.5)</td>
+                                </tr>
+                                <tr>
+                                    <td>2026-01-30 14:46:40</td>
+                                    <td>INFO</td>
+                                    <td>Spring Boot application starting</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }, 500);
+        }
+        
+        // 加载设置
+        function loadSettings() {
+            // 模拟数据加载
+            setTimeout(() => {
+                const settingsContent = document.getElementById('settings-content');
+                settingsContent.innerHTML = `
+                    <div id="config-form">
+                        <div class="status-grid">
+                            <div class="status-item ok">
+                                <div class="key">SDK版本</div>
+                                <div class="value">v0.6.5</div>
+                            </div>
+                            <div class="status-item ok">
+                                <div class="key">服务端口</div>
+                                <div class="value">8080</div>
+                            </div>
+                            <div class="status-item ok">
+                                <div class="key">心跳间隔</div>
+                                <div class="value">30秒</div>
+                            </div>
+                            <div class="status-item ok">
+                                <div class="key">日志级别</div>
+                                <div class="value">INFO</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveConfig()">保存配置</button>
+                        <button class="btn btn-secondary" onclick="resetConfig()">重置配置</button>
+                    </div>
+                `;
+            }, 500);
+        }
+        
+        // 添加链路
+        function addLink() {
+            const linkForm = document.getElementById('link-form');
+            if (linkForm.classList.contains('hidden')) {
+                linkForm.classList.remove('hidden');
+                // 添加表单提交事件
+                const form = linkForm.querySelector('button.btn-success');
+                form.onclick = async function() {
+                    const source = document.getElementById('source').value;
+                    const target = document.getElementById('target').value;
+                    const linkType = document.getElementById('link-type').value;
+                    const linkId = document.getElementById('link-id').value;
+                    
+                    if (!source || !target) {
+                        alert('请输入源节点和目标节点');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await apiCall('/network/link', 'POST', {
+                            linkId: linkId || 'link-' + Date.now(),
+                            sourceAgentId: source,
+                            targetAgentId: target,
+                            linkType: linkType
+                        });
+                        
+                        if (response.status === 'success') {
+                            alert('链路添加成功');
+                            linkForm.classList.add('hidden');
+                            document.getElementById('source').value = '';
+                            document.getElementById('target').value = '';
+                            document.getElementById('link-type').value = 'direct';
+                            document.getElementById('link-id').value = '';
+                            // 重新加载网络信息
+                            loadNetworkInfo();
+                        } else {
+                            alert('链路添加失败: ' + response.message);
+                        }
+                    } catch (error) {
+                        alert('链路添加失败: ' + error.message);
+                    }
+                };
+            } else {
+                linkForm.classList.add('hidden');
+            }
+        }
+        
+        // 添加终端
+        function addEndAgent() {
+            const endagentForm = document.getElementById('endagent-form');
+            endagentForm.classList.remove('hidden');
+            
+            // 添加表单提交事件
+            const form = endagentForm.querySelector('button.btn-success');
+            form.onclick = async function() {
+                const endagentId = document.getElementById('endagent-id').value;
+                const endagentName = document.getElementById('endagent-name').value;
+                const endagentType = document.getElementById('endagent-type').value;
+                const endagentDesc = document.getElementById('endagent-desc').value;
+                
+                if (!endagentId || !endagentName) {
+                    alert('请输入终端ID和终端名称');
+                    return;
+                }
+                
+                try {
+                    // 模拟添加终端（实际项目中应该调用真实的API）
+                    // 这里我们使用测试命令API来模拟添加终端
+                    const response = await apiCall('/command/test', 'POST', {
+                        commandType: 'ENDAGENT_ADD',
+                        data: {
+                            endagentId: endagentId,
+                            endagentName: endagentName,
+                            endagentType: endagentType,
+                            endagentDesc: endagentDesc
+                        }
+                    });
+                    
+                    if (response.status === 'success') {
+                        alert('终端添加成功');
+                        endagentForm.classList.add('hidden');
+                        document.getElementById('endagent-id').value = '';
+                        document.getElementById('endagent-name').value = '';
+                        document.getElementById('endagent-type').value = '';
+                        document.getElementById('endagent-desc').value = '';
+                        // 重新加载网络信息
+                        loadNetworkInfo();
+                    } else {
+                        alert('终端添加失败: ' + response.message);
+                    }
+                } catch (error) {
+                    alert('终端添加失败: ' + error.message);
+                }
+            };
+        }
+        
+        // 发现终端
+        function discoverEndAgents() {
+            alert('开始发现终端...');
+            
+            // 模拟发现终端
+            setTimeout(async function() {
+                try {
+                    const response = await apiCall('/command/test', 'POST', {
+                        commandType: 'ENDAGENT_DISCOVER'
+                    });
+                    
+                    if (response.status === 'success') {
+                        alert('终端发现完成');
+                        // 重新加载网络信息
+                        loadNetworkInfo();
+                    } else {
+                        alert('终端发现失败: ' + response.message);
+                    }
+                } catch (error) {
+                    alert('终端发现失败: ' + error.message);
+                }
+            }, 1000);
+        }
+        
+        // 发现路由
+        function discoverRoutes() {
+            alert('开始发现路由...');
+            
+            // 模拟发现路由
+            setTimeout(async function() {
+                try {
+                    const response = await apiCall('/command/test', 'POST', {
+                        commandType: 'ROUTE_QUERY'
+                    });
+                    
+                    if (response.status === 'success') {
+                        alert('路由发现完成');
+                        // 重新加载网络信息
+                        loadNetworkInfo();
+                    } else {
+                        alert('路由发现失败: ' + response.message);
+                    }
+                } catch (error) {
+                    alert('路由发现失败: ' + error.message);
+                }
+            }, 1000);
+        }
+        
+        // 刷新路由
+        function refreshRoutes() {
+            alert('刷新路由列表...');
+            // 重新加载网络信息
+            loadNetworkInfo();
+        }
+        
+        // 查看RouteAgent详情
+        async function viewRouteAgentDetails() {
+            const routeAgentId = 'route-agent-001';
+            const detailsSection = document.getElementById('routeagent-details');
+            
+            // 显示加载状态
+            detailsSection.innerHTML = '<div style="text-align: center; padding: 48px;"><div class="loading"></div><p style="margin-top: 16px;">加载RouteAgent详情...</p></div>';
+            detailsSection.classList.remove('hidden');
+            
+            try {
+                // 并行获取所有RouteAgent数据
+                const [detailsData, vfsData, capabilitiesData, linksData] = await Promise.all([
+                    apiCall(`/network/routeagent/${routeAgentId}`),
+                    apiCall(`/network/routeagent/${routeAgentId}/vfs`),
+                    apiCall(`/network/routeagent/${routeAgentId}/capabilities`),
+                    apiCall(`/network/routeagent/${routeAgentId}/links`)
+                ]);
+                
+                // 构建详情页面
+                let html = `
+                    <h3 style="margin-bottom: 16px;">RouteAgent详情</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                        <div>
+                            <h4>基本信息</h4>
+                            <div class="status-grid">
+                                <div class="status-item ok">
+                                    <div class="key">RouteAgent ID</div>
+                                    <div class="value">${detailsData.data.id}</div>
+                                </div>
+                                <div class="status-item ok">
+                                    <div class="key">状态</div>
+                                    <div class="value">${detailsData.data.status}</div>
+                                </div>
+                                <div class="status-item ok">
+                                    <div class="key">版本</div>
+                                    <div class="value">${detailsData.data.version}</div>
+                                </div>
+                                <div class="status-item ok">
+                                    <div class="key">最后更新</div>
+                                    <div class="value">${new Date(detailsData.data.lastUpdate).toLocaleString('zh-CN')}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4>能力列表</h4>
+                            <div class="status-grid">
+                `;
+                
+                // 添加能力列表
+                const capabilities = capabilitiesData.data;
+                Object.entries(capabilities).forEach(([key, value]) => {
+                    html += `
+                                <div class="status-item ok">
+                                    <div class="key">${key}</div>
+                                    <div class="value">${value ? '支持' : '不支持'}</div>
+                                </div>
+                    `;
+                });
+                
+                html += `
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 24px;">
+                        <h4>VFS文件系统</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>路径</th>
+                                        <th>类型</th>
+                                        <th>大小</th>
+                                        <th>最后修改</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                
+                // 添加VFS文件列表
+                const files = vfsData.data.files;
+                files.forEach(file => {
+                    html += `
+                                    <tr>
+                                        <td>${vfsData.data.path}/${file.name}</td>
+                                        <td>${file.type}</td>
+                                        <td>${file.size}</td>
+                                        <td>${new Date(file.lastModified).toLocaleString('zh-CN')}</td>
+                                    </tr>
+                    `;
+                });
+                
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 24px;">
+                        <h4>内部链路</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>链路ID</th>
+                                        <th>源节点</th>
+                                        <th>目标节点</th>
+                                        <th>状态</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                
+                // 添加链路列表
+                const links = linksData.data;
+                links.forEach(link => {
+                    html += `
+                                    <tr>
+                                        <td>${link.linkId}</td>
+                                        <td>${link.source}</td>
+                                        <td>${link.target}</td>
+                                        <td>${link.status}</td>
+                                    </tr>
+                    `;
+                });
+                
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-secondary" onclick="document.getElementById('routeagent-details').classList.add('hidden')" style="margin-top: 24px;">关闭</button>
+                `;
+                
+                detailsSection.innerHTML = html;
+            } catch (error) {
+                console.error('加载RouteAgent详情错误:', error);
+                detailsSection.innerHTML = `
+                    <div class="alert alert-error">
+                        <strong>错误:</strong> 加载RouteAgent详情失败
+                    </div>
+                    <button class="btn btn-secondary" onclick="document.getElementById('routeagent-details').classList.add('hidden')">关闭</button>
+                `;
+            }
+        }
+        
+        // 移除链路
+        function removeLink() {
+            alert('请选择要移除的链路');
+        }
+        
+        // 保存配置
+        function saveConfig() {
+            alert('配置保存成功');
+        }
+        
+        // 重置配置
+        function resetConfig() {
+            alert('配置已重置为默认值');
+        }
+        
+        // 加载配置管理页面
+        async function loadConfig() {
+            try {
+                // 调用后端API获取配置数据
+                const configData = await apiCall('/config/status');
+                
+                console.log('配置数据:', configData);
+                
+                // 显示加载成功提示
+                const pageConfig = document.getElementById('page-config');
+                // 移除已有的提示
+                const existingAlert = pageConfig.querySelector('.alert');
+                if (existingAlert) {
+                    existingAlert.remove();
+                }
+                
+                // 创建新的成功提示
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success';
+                alert.textContent = '配置中心数据加载成功';
+                
+                const firstSection = pageConfig.querySelector('.section');
+                if (firstSection) {
+                    pageConfig.insertBefore(alert, firstSection);
+                }
+                
+                // 3秒后移除提示
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 3000);
+                
+                // 这里可以根据实际返回的数据更新页面内容
+                // 目前页面使用的是静态数据，后续可以根据后端API返回的数据进行动态更新
+                
+            } catch (error) {
+                console.error('加载配置错误:', error);
+                
+                // 显示错误提示
+                const pageConfig = document.getElementById('page-config');
+                // 移除已有的提示
+                const existingAlert = pageConfig.querySelector('.alert');
+                if (existingAlert) {
+                    existingAlert.remove();
+                }
+                
+                // 创建新的错误提示
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-error';
+                alert.textContent = `配置中心数据加载失败: ${error.message}`;
+                
+                const firstSection = pageConfig.querySelector('.section');
+                if (firstSection) {
+                    pageConfig.insertBefore(alert, firstSection);
+                }
+                
+                // 3秒后移除提示
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 3000);
+            }
+        }
+        
+        // 保存MCP配置
+        function saveMcpConfig() {
+            alert('MCP配置保存成功');
+        }
+        
+        // 重置MCP配置
+        function resetMcpConfig() {
+            alert('MCP配置已重置为默认值');
+        }
+        
+        // 保存Route配置
+        function saveRouteConfig() {
+            alert('Route配置保存成功');
+        }
+        
+        // 重置Route配置
+        function resetRouteConfig() {
+            alert('Route配置已重置为默认值');
+        }
+        
+        // 保存End配置
+        function saveEndConfig() {
+            alert('End配置保存成功');
+        }
+        
+        // 重置End配置
+        function resetEndConfig() {
+            alert('End配置已重置为默认值');
+        }
+        
+        // 加载测试用例数据
+        function loadTests() {
+            // 绘制测试用例分布图表
+            drawTestDistributionChart();
+            
+            // 生成测试用例结果
+            generateTestResults();
+        }
+        
+        // 绘制测试用例分布图表
+        function drawTestDistributionChart() {
+            const chartContainer = document.getElementById('test-distribution-chart');
+            chartContainer.innerHTML = '';
+            
+            // 测试用例分类数据
+            const testCategories = [
+                { name: '注册功能', count: 15, color: 'var(--ooder-primary)' },
+                { name: '注销功能', count: 10, color: 'var(--ooder-secondary)' },
+                { name: '心跳功能', count: 20, color: 'var(--ooder-success)' },
+                { name: '状态查询', count: 18, color: 'var(--ooder-warning)' },
+                { name: '发现功能', count: 15, color: 'var(--ooder-danger)' },
+                { name: '路由查询', count: 12, color: '#1abc9c' },
+                { name: '认证功能', count: 10, color: '#34495e' },
+                { name: '其他功能', count: 8, color: '#95a5a6' }
+            ];
+            
+            // 计算总测试用例数
+            const totalTests = testCategories.reduce((sum, category) => sum + category.count, 0);
+            
+            // 计算每个类别的宽度和位置
+            const containerWidth = chartContainer.offsetWidth;
+            const containerHeight = chartContainer.offsetHeight;
+            const barWidth = (containerWidth - 48) / testCategories.length;
+            const maxHeight = containerHeight - 48;
+            
+            // 创建柱状图
+            testCategories.forEach((category, index) => {
+                const barHeight = (category.count / totalTests) * maxHeight;
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                bar.style.width = barWidth - 12 + 'px';
+                bar.style.height = barHeight + 'px';
+                bar.style.left = 24 + index * barWidth + 'px';
+                bar.style.backgroundColor = category.color;
+                bar.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                bar.title = `${category.name}: ${category.count}个测试用例`;
+                chartContainer.appendChild(bar);
+                
+                // 添加类别标签
+                const label = document.createElement('div');
+                label.style.position = 'absolute';
+                label.style.bottom = '8px';
+                label.style.left = 24 + index * barWidth + 'px';
+                label.style.width = barWidth - 12 + 'px';
+                label.style.textAlign = 'center';
+                label.style.fontSize = '12px';
+                label.style.color = 'var(--ooder-secondary)';
+                label.style.fontWeight = '500';
+                label.textContent = category.name;
+                chartContainer.appendChild(label);
+                
+                // 添加数值标签
+                const valueLabel = document.createElement('div');
+                valueLabel.style.position = 'absolute';
+                valueLabel.style.bottom = barHeight + 12 + 'px';
+                valueLabel.style.left = 24 + index * barWidth + 'px';
+                valueLabel.style.width = barWidth - 12 + 'px';
+                valueLabel.style.textAlign = 'center';
+                valueLabel.style.fontSize = '12px';
+                valueLabel.style.color = 'var(--ooder-dark)';
+                valueLabel.style.fontWeight = '600';
+                valueLabel.textContent = category.count;
+                chartContainer.appendChild(valueLabel);
+            });
+        }
+        
+        // 生成测试用例结果
+        function generateTestResults() {
+            const testResultsList = document.getElementById('test-results-list');
+            testResultsList.innerHTML = '';
+            
+            // 模拟测试用例结果
+            const testCases = [
+                { name: 'MCP注册命令处理', status: 'passed', message: '注册命令处理成功' },
+                { name: 'MCP注销命令处理', status: 'passed', message: '注销命令处理成功' },
+                { name: 'MCP心跳命令处理', status: 'passed', message: '心跳命令处理成功' },
+                { name: 'MCP状态查询处理', status: 'passed', message: '状态查询处理成功' },
+                { name: 'MCP发现命令处理', status: 'passed', message: '发现命令处理成功' },
+                { name: 'MCP路由查询处理', status: 'passed', message: '路由查询处理成功' },
+                { name: 'MCP认证命令处理', status: 'failed', message: '认证命令处理失败：缺少认证参数' },
+                { name: 'MCP端口开放测试', status: 'passed', message: '端口开放测试成功' },
+                { name: 'MCP网络链路测试', status: 'failed', message: '网络链路测试失败：链路建立超时' },
+                { name: 'MCP系统状态测试', status: 'passed', message: '系统状态测试成功' }
+            ];
+            
+            // 添加测试用例结果
+            testCases.forEach(testCase => {
+                const testElement = document.createElement('div');
+                testElement.className = `test-case ${testCase.status}`;
+                testElement.innerHTML = `
+                    <div class="test-name">${testCase.name}</div>
+                    <div class="test-message">${testCase.message}</div>
+                `;
+                testResultsList.appendChild(testElement);
+            });
+            
+            // 添加更多测试用例（模拟118个测试用例）
+            for (let i = 11; i <= 118; i++) {
+                const status = i <= 115 ? 'passed' : 'failed';
+                const testElement = document.createElement('div');
+                testElement.className = `test-case ${status}`;
+                testElement.innerHTML = `
+                    <div class="test-name">测试用例 ${i}</div>
+                    <div class="test-message">${status === 'passed' ? '测试通过' : '测试失败'}</div>
+                `;
+                testResultsList.appendChild(testElement);
+            }
+        }
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

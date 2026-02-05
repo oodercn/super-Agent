@@ -1,0 +1,879 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务流管理 - MCP Agent Console</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <style>
+        /* Ooder-Rad 风格基础样式 - 纯黑色系暗色主题 */
+        :root {
+            --ooder-primary: #3b82f6;
+            --ooder-secondary: #94a3b8;
+            --ooder-success: #22c55e;
+            --ooder-warning: #f59e0b;
+            --ooder-danger: #ef4444;
+            --ooder-light: #0f0f0f;
+            --ooder-dark: #ffffff;
+            --ooder-border: #2a2a2a;
+            --ooder-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            --ooder-radius: 8px;
+            --ooder-spacing: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #000000;
+            color: var(--ooder-dark);
+            line-height: 1.5;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+            background-color: #000000;
+        }
+        
+        /* 侧边栏样式 - Ooder-Rad 风格 */
+        .sidebar {
+            width: 260px;
+            background-color: #121212;
+            border-right: 1px solid var(--ooder-border);
+            padding: 24px;
+            box-shadow: var(--ooder-shadow);
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 32px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ooder-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sidebar h2::before {
+            content: "⚡";
+            font-size: 20px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-menu li {
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu a {
+            color: var(--ooder-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--ooder-radius);
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .nav-menu a:hover {
+            background-color: var(--ooder-light);
+            color: var(--ooder-primary);
+        }
+        
+        .nav-menu a.active {
+            background-color: rgba(26, 115, 232, 0.1);
+            color: var(--ooder-primary);
+            font-weight: 600;
+        }
+        
+        /* 二级菜单样式 */
+        .nav-menu .submenu {
+            list-style: none;
+            margin-left: 16px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-menu .submenu li {
+            margin-bottom: 2px;
+        }
+        
+        .nav-menu .submenu a {
+            padding: 10px 16px;
+            font-size: 13px;
+            border-left: 2px solid var(--ooder-border);
+        }
+        
+        /* 三级菜单样式 */
+        .nav-menu .submenu .submenu {
+            margin-left: 32px;
+        }
+        
+        .nav-menu .submenu .submenu a {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-left: 2px solid var(--ooder-secondary);
+        }
+        
+        /* 展开/折叠图标 */
+        .nav-menu .toggle-icon {
+            margin-left: auto;
+            transition: transform 0.2s ease;
+        }
+        
+        .nav-menu .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        /* 菜单分隔线 */
+        .nav-menu .menu-divider {
+            height: 1px;
+            background-color: var(--ooder-border);
+            margin: 16px 0;
+        }
+        
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            background-color: #000000;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--ooder-border);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ooder-dark);
+        }
+        
+        .header .subtitle {
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        /* 章节样式 */
+        .section {
+            background-color: #121212;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            box-shadow: var(--ooder-shadow);
+            border: 1px solid var(--ooder-border);
+            margin-bottom: 24px;
+        }
+        
+        .section h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--ooder-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section h2::before {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background-color: var(--ooder-primary);
+            border-radius: 2px;
+        }
+        
+        /* 状态网格样式 */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        
+        .status-item {
+            padding: 16px;
+            border-radius: var(--ooder-radius);
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .status-item .key {
+            font-size: 14px;
+            color: var(--ooder-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .status-item .value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ooder-dark);
+        }
+        
+        .status-item.ok {
+            border-left: 4px solid var(--ooder-success);
+            background-color: rgba(34, 197, 94, 0.1);
+        }
+        
+        .status-item.warning {
+            border-left: 4px solid var(--ooder-warning);
+            background-color: rgba(245, 158, 11, 0.1);
+        }
+        
+        .status-item.error {
+            border-left: 4px solid var(--ooder-danger);
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+        
+        /* 表格样式 */
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--ooder-radius);
+            border: 1px solid var(--ooder-border);
+            background-color: #1a1a1a;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ooder-border);
+            color: var(--ooder-dark);
+        }
+        
+        th {
+            background-color: #121212;
+            font-weight: 600;
+            color: var(--ooder-secondary);
+            font-size: 14px;
+        }
+        
+        tr:hover {
+            background-color: #1a1a1a;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--ooder-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 12px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--ooder-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background-color: #1a1a1a;
+            color: var(--ooder-secondary);
+            border: 1px solid var(--ooder-border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2a2a2a;
+        }
+        
+        .btn-success {
+            background-color: var(--ooder-success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #16a34a;
+            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.4);
+        }
+        
+        .btn-danger {
+            background-color: var(--ooder-danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+        }
+        
+        /* 搜索框样式 */
+        .search-box {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 48px 12px 16px;
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            color: var(--ooder-dark);
+            font-size: 14px;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--ooder-primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .search-box i {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--ooder-secondary);
+        }
+        
+        /* 筛选器样式 */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-item label {
+            color: var(--ooder-secondary);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .filter-item select {
+            padding: 8px 12px;
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            color: var(--ooder-dark);
+            font-size: 14px;
+        }
+        
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+        
+        .pagination button {
+            padding: 8px 12px;
+            background-color: #1a1a1a;
+            border: 1px solid var(--ooder-border);
+            border-radius: var(--ooder-radius);
+            color: var(--ooder-dark);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .pagination button:hover {
+            background-color: #2a2a2a;
+            border-color: var(--ooder-primary);
+        }
+        
+        .pagination button.active {
+            background-color: var(--ooder-primary);
+            color: white;
+            border-color: var(--ooder-primary);
+        }
+        
+        /* 服务流图表样式 */
+        .flow-diagram {
+            background-color: #1a1a1a;
+            padding: 24px;
+            border-radius: var(--ooder-radius);
+            border: 1px solid var(--ooder-border);
+            margin-top: 24px;
+            min-height: 400px;
+            position: relative;
+        }
+        
+        .flow-node {
+            position: absolute;
+            padding: 16px;
+            border-radius: var(--ooder-radius);
+            background-color: #121212;
+            border: 1px solid var(--ooder-border);
+            min-width: 120px;
+            text-align: center;
+            cursor: move;
+        }
+        
+        .flow-node:hover {
+            border-color: var(--ooder-primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .flow-arrow {
+            position: absolute;
+            height: 2px;
+            background-color: var(--ooder-secondary);
+            transform-origin: left center;
+        }
+        
+        /* 隐藏样式 */
+        .hidden {
+            display: none;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--ooder-border);
+                padding: 16px;
+            }
+            
+            .main-content {
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .filter-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .pagination {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <div class="sidebar">
+            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-server-line"></i> MCP Agent Console</h2>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="header">
+                <h1><i class="ri-flow-line"></i> 服务流管理</h1>
+                <div class="subtitle">MCP Agent 服务流定义与管理</div>
+            </div>
+            
+            <!-- 服务流管理概览 -->
+            <div class="section">
+                <h2>服务流管理概览</h2>
+                <div class="status-grid">
+                    <div class="status-item ok">
+                        <div class="key">总服务流数</div>
+                        <div class="value">24</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">活跃服务流</div>
+                        <div class="value">20</div>
+                    </div>
+                    <div class="status-item error">
+                        <div class="key">故障服务流</div>
+                        <div class="value">2</div>
+                    </div>
+                    <div class="status-item warning">
+                        <div class="key">暂停服务流</div>
+                        <div class="value">2</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">服务流执行次数</div>
+                        <div class="value">1,248</div>
+                    </div>
+                    <div class="status-item ok">
+                        <div class="key">平均执行时间</div>
+                        <div class="value">15.2秒</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 24px;">
+                    <button class="btn btn-primary" onclick="createServiceFlow()">
+                        <i class="ri-add-line"></i> 创建服务流
+                    </button>
+                    <button class="btn btn-secondary" onclick="importServiceFlow()">
+                        <i class="ri-upload-line"></i> 导入服务流
+                    </button>
+                    <button class="btn btn-success" onclick="exportServiceFlow()">
+                        <i class="ri-download-line"></i> 导出服务流
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 服务流列表 -->
+            <div class="section">
+                <h2>服务流列表</h2>
+                
+                <!-- 搜索和筛选 -->
+                <div class="search-box">
+                    <input type="text" placeholder="搜索服务流名称或ID...">
+                    <i class="ri-search-line"></i>
+                </div>
+                
+                <div class="filter-bar">
+                    <div class="filter-item">
+                        <label>状态:</label>
+                        <select>
+                            <option value="all">全部</option>
+                            <option value="active">活跃</option>
+                            <option value="failed">故障</option>
+                            <option value="paused">暂停</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>类型:</label>
+                        <select>
+                            <option value="all">全部</option>
+                            <option value="api">API服务流</option>
+                            <option value="skill">Skill服务流</option>
+                            <option value="system">系统服务流</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>执行模式:</label>
+                        <select>
+                            <option value="all">全部</option>
+                            <option value="sync">同步</option>
+                            <option value="async">异步</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 服务流表格 -->
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>服务流ID</th>
+                                <th>名称</th>
+                                <th>类型</th>
+                                <th>状态</th>
+                                <th>执行模式</th>
+                                <th>创建时间</th>
+                                <th>最后执行</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="service-flow-table-body">
+                            <!-- 动态生成服务流列表 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 -->
+                <div class="pagination">
+                    <button>上一页</button>
+                    <button class="active">1</button>
+                    <button>2</button>
+                    <button>3</button>
+                    <button>下一页</button>
+                </div>
+            </div>
+            
+            <!-- 服务流详情 -->
+            <div class="section" id="service-flow-detail" class="hidden">
+                <h2>服务流详情</h2>
+                <div id="service-flow-detail-content">
+                    <!-- 动态生成服务流详情 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 当前页面
+        let currentPage = 'service-flow';
+        
+        // 菜单配置
+        let menuConfig = null;
+        
+        // 服务流数据
+        let serviceFlows = [];
+        
+        // 初始化页面
+        function init() {
+            loadMenuConfig();
+            loadServiceFlowList();
+        }
+        
+        // 加载菜单配置
+        async function loadMenuConfig() {
+            try {
+                const response = await fetch('../../menu-config.json');
+                if (!response.ok) {
+                    throw new Error('菜单配置加载失败');
+                }
+                menuConfig = await response.json();
+                renderMenu();
+            } catch (error) {
+                console.error('加载菜单配置错误:', error);
+                // 加载失败时显示默认菜单
+                renderDefaultMenu();
+            }
+        }
+        
+        // 渲染菜单
+        function renderMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            
+            menuConfig.menu.forEach(item => {
+                const menuItem = createMenuItem(item);
+                navMenu.appendChild(menuItem);
+                // 添加菜单分隔线
+                if (item.id !== 'dashboard') {
+                    const divider = document.createElement('div');
+                    divider.className = 'menu-divider';
+                    navMenu.appendChild(divider);
+                }
+            });
+            
+            setupNavigation();
+        }
+        
+        // 创建菜单项
+        function createMenuItem(menuItem) {
+            const li = document.createElement('li');
+            
+            if (menuItem.children && menuItem.children.length > 0) {
+                // 有子菜单的菜单项
+                const a = document.createElement('a');
+                a.href = `#${menuItem.id}`;
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                    <span class="toggle-icon">›</span>
+                `;
+                
+                // 处理点击事件
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const toggleIcon = this.querySelector('.toggle-icon');
+                    const submenu = this.nextElementSibling;
+                    
+                    if (submenu) {
+                        submenu.classList.toggle('hidden');
+                        toggleIcon.classList.toggle('collapsed');
+                    }
+                });
+                
+                li.appendChild(a);
+                
+                // 创建子菜单
+                const submenu = document.createElement('ul');
+                submenu.className = 'submenu';
+                
+                menuItem.children.forEach(childItem => {
+                    const childLi = createMenuItem(childItem);
+                    submenu.appendChild(childLi);
+                });
+                
+                li.appendChild(submenu);
+            } else {
+                // 无子菜单的菜单项
+                const a = document.createElement('a');
+                if (menuItem.url) {
+                    a.href = menuItem.url;
+                } else {
+                    a.href = `#${menuItem.id}`;
+                    a.setAttribute('data-page', menuItem.page || menuItem.id);
+                }
+                a.innerHTML = `
+                    <i class="${menuItem.icon}"></i>
+                    ${menuItem.name}
+                `;
+                li.appendChild(a);
+            }
+            
+            return li;
+        }
+        
+        // 渲染默认菜单（加载失败时使用）
+        function renderDefaultMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = `
+                <li><a href="../../index.html"><i class="ri-dashboard-line"></i> 仪表盘</a></li>
+                <li><a href="../../pages/system/request-management.html"><i class="ri-computer-line"></i> 系统管理</a></li>
+                <li><a href="../../pages/network/route-management.html"><i class="ri-network-line"></i> 网络管理</a></li>
+                <li><a href="../../pages/terminal/terminal-management.html"><i class="ri-terminal-line"></i> 终端管理</a></li>
+                <li><a href="../../pages/config/service-config.html"><i class="ri-settings-3-line"></i> 配置中心</a></li>
+            `;
+            setupNavigation();
+        }
+        
+        // 设置导航
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-menu a');
+            navLinks.forEach(link => {
+                // 只处理带有data-page属性的链接（即叶子节点且没有url属性）
+                if (link.hasAttribute('data-page') && !link.hasAttribute('href') && link.getAttribute('href') !== '#') {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // 更新活跃状态
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                }
+            });
+        }
+        
+        // 加载服务流列表
+        function loadServiceFlowList() {
+            // 模拟服务流数据
+            serviceFlows = [
+                { id: 'flow-001', name: '用户认证服务流', type: 'api', status: 'active', mode: 'sync', created: '2026-01-30 10:00:00', lastExecuted: '2026-01-30 14:30:00' },
+                { id: 'flow-002', name: '数据处理服务流', type: 'skill', status: 'active', mode: 'async', created: '2026-01-30 10:01:00', lastExecuted: '2026-01-30 14:25:00' },
+                { id: 'flow-003', name: '系统监控服务流', type: 'system', status: 'active', mode: 'async', created: '2026-01-30 10:02:00', lastExecuted: '2026-01-30 14:20:00' },
+                { id: 'flow-004', name: '文件处理服务流', type: 'skill', status: 'failed', mode: 'async', created: '2026-01-30 10:03:00', lastExecuted: '2026-01-30 14:15:00' },
+                { id: 'flow-005', name: '消息通知服务流', type: 'api', status: 'active', mode: 'sync', created: '2026-01-30 10:04:00', lastExecuted: '2026-01-30 14:10:00' },
+                { id: 'flow-006', name: '数据同步服务流', type: 'system', status: 'paused', mode: 'async', created: '2026-01-30 10:05:00', lastExecuted: '2026-01-30 14:05:00' },
+                { id: 'flow-007', name: '报表生成服务流', type: 'skill', status: 'active', mode: 'async', created: '2026-01-30 10:06:00', lastExecuted: '2026-01-30 14:00:00' },
+                { id: 'flow-008', name: '备份服务流', type: 'system', status: 'active', mode: 'async', created: '2026-01-30 10:07:00', lastExecuted: '2026-01-30 13:55:00' },
+                { id: 'flow-009', name: 'API集成服务流', type: 'api', status: 'failed', mode: 'sync', created: '2026-01-30 10:08:00', lastExecuted: '2026-01-30 13:50:00' },
+                { id: 'flow-010', name: '日志分析服务流', type: 'skill', status: 'paused', mode: 'async', created: '2026-01-30 10:09:00', lastExecuted: '2026-01-30 13:45:00' }
+            ];
+            
+            renderServiceFlowTable();
+        }
+        
+        // 渲染服务流表格
+        function renderServiceFlowTable() {
+            const tableBody = document.getElementById('service-flow-table-body');
+            tableBody.innerHTML = '';
+            
+            serviceFlows.forEach(flow => {
+                const row = document.createElement('tr');
+                
+                // 设置状态样式
+                let statusClass = '';
+                switch(flow.status) {
+                    case 'active':
+                        statusClass = 'status-item ok';
+                        break;
+                    case 'failed':
+                        statusClass = 'status-item error';
+                        break;
+                    case 'paused':
+                        statusClass = 'status-item warning';
+                        break;
+                }
+                
+                row.innerHTML = `
+                    <td>${flow.id}</td>
+                    <td>${flow.name}</td>
+                    <td>${flow.type}</td>
+                    <td>
+                        <div class="${statusClass}" style="padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                            ${flow.status}
+                        </div>
+                    </td>
+                    <td>${flow.mode}</td>
+                    <td>${flow.created}</td>
+                    <td>${flow.lastExecuted}</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="viewServiceFlow('${flow.id}')">
+                            <i class="ri-eye-line"></i> 查看
+                        </button>
+                        <button class="btn btn-primary" onclick="editServiceFlow('${flow.id}')">
+                            <i class="ri-edit-line"></i> 编辑
+                        </button>
+                        <button class="btn btn-success" onclick="executeServiceFlow('${flow.id}')">
+                            <i class="ri-play-circle-line"></i> 执行
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteServiceFlow('${flow.id}')">
+                            <i class="ri-delete-bin-line"></i> 删除
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // 创建服务流
+        function createServiceFlow() {
+            alert('创建服务流');
+        }
+        
+        // 导入服务流
+        function importServiceFlow() {
+            alert('导入服务流');
+        }
+        
+        // 导出服务流
+        function exportServiceFlow() {
+            alert('导出服务流');
+        }
+        
+        // 查看服务流
+        function viewServiceFlow(flowId) {
+            alert(`查看服务流: ${flowId}`);
+        }
+        
+        // 编辑服务流
+        function editServiceFlow(flowId) {
+            alert(`编辑服务流: ${flowId}`);
+        }
+        
+        // 执行服务流
+        function executeServiceFlow(flowId) {
+            alert(`执行服务流: ${flowId}`);
+        }
+        
+        // 删除服务流
+        function deleteServiceFlow(flowId) {
+            if (confirm(`确定要删除服务流 ${flowId} 吗？`)) {
+                alert(`服务流 ${flowId} 已删除`);
+                loadServiceFlowList();
+            }
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>
