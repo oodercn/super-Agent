@@ -68,7 +68,8 @@ public class SkillHistoryCommand extends AbstractCommand {
         }
         
         if (statusFilter != null) {
-            records.removeIf(record -> !record.getStatus().equalsIgnoreCase(statusFilter));
+            final String finalStatusFilter = statusFilter;
+            records.removeIf(record -> !record.getStatus().equalsIgnoreCase(finalStatusFilter));
         }
         
         if (records.size() > limit) {

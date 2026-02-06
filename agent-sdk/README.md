@@ -313,9 +313,9 @@ System.out.println("Decrypted: " + decrypted);
 1. **添加依赖**
    ```xml
    <dependency>
-       <groupId>net.ooder</groupId>
+       <groupId>com.github.ooderCN</groupId>
        <artifactId>agent-sdk</artifactId>
-       <version>1.0.0</version>
+       <version>0.6.6</version>
    </dependency>
    ```
 

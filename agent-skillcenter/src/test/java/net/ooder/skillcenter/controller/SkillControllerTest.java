@@ -67,7 +67,7 @@ public class SkillControllerTest {
         assertEquals(2, pageResponse.getPage());
         assertEquals(10, pageResponse.getSize());
         assertEquals(25, pageResponse.getTotalElements());
-        assertEquals(10, pageResponse.getData().size());
+        assertEquals(10, pageResponse.getContent().size());
     }
 
     @Test
@@ -107,7 +107,7 @@ public class SkillControllerTest {
     }
 
     @Test
-    public void testExecuteSkill_Success() {
+    public void testExecuteSkill_Success() throws SkillException {
         SkillResult mockResult = new SkillResult(SkillResult.Status.SUCCESS, "Execution successful");
         mockResult.addData("output", "test output");
 
@@ -129,7 +129,7 @@ public class SkillControllerTest {
     }
 
     @Test
-    public void testExecuteSkill_Failure() {
+    public void testExecuteSkill_Failure() throws SkillException {
         when(skillManager.executeSkill(eq("skill-1"), any(SkillContext.class)))
             .thenThrow(new SkillException("skill-1", "Execution failed", 500));
 
@@ -258,7 +258,7 @@ public class SkillControllerTest {
         assertEquals(2, pageResponse.getPage());
         assertEquals(5, pageResponse.getSize());
         assertEquals(20, pageResponse.getTotalElements());
-        assertEquals(5, pageResponse.getData().size());
+        assertEquals(5, pageResponse.getContent().size());
     }
 
     @Test
