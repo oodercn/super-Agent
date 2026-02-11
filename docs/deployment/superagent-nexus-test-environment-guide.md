@@ -4,6 +4,8 @@
 
 本文档旨在详细说明如何搭建和配置 SuperAgent 的 Nexus 测试环境，确保开发和测试过程中依赖管理的一致性和可靠性。Nexus 作为 Maven 仓库管理器，为 SuperAgent 项目提供了本地依赖缓存和私有仓库功能。
 
+> **注意**：从 v0.6.6 版本开始，SuperAgent 项目的核心依赖已迁移到 Maven Central 仓库，使用 `net.ooder` 作为 groupId。
+
 ## 2. Nexus 环境需求
 
 ### 2.1 硬件需求

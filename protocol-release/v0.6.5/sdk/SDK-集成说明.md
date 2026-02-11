@@ -6,7 +6,7 @@ Ooder Agent SDK 是一个用于开发和集成技能模块的Java SDK，提供�
 
 ## 2. 版本信息
 
-- 当前版本：0.6.0
+- 当前版本：0.6.6
 - 支持的Java版本：1.8及以上
 - 支持的Spring Boot版本：2.7.0及以上
 
@@ -20,7 +20,7 @@ Ooder Agent SDK 是一个用于开发和集成技能模块的Java SDK，提供�
 <dependency>
     <groupId>net.ooder</groupId>
     <artifactId>agent-sdk</artifactId>
-    <version>0.6.0</version>
+    <version>0.6.6</version>
 </dependency>
 ```
 
