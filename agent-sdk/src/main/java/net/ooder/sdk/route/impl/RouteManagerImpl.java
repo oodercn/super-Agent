@@ -7,6 +7,9 @@ import net.ooder.sdk.route.discovery.impl.NetworkRouteDiscoverer;
 import net.ooder.sdk.route.calculator.RouteCalculator;
 import net.ooder.sdk.route.calculator.impl.ShortestPathCalculator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -16,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class RouteManagerImpl implements RouteManager {
+    private static final Logger log = LoggerFactory.getLogger(RouteManagerImpl.class);
     private final Map<String, Route> routes = new ConcurrentHashMap<>();
     private final List<Consumer<RouteEvent>> eventHandlers = new CopyOnWriteArrayList<>();
     private final List<RouteEvent> recentEvents = new CopyOnWriteArrayList<>();
@@ -199,10 +203,61 @@ public class RouteManagerImpl implements RouteManager {
     
     @Override
     public void syncRouteStatus(String routeId) {
-        // 实现路由状态同步逻辑
         Route route = routes.get(routeId);
-        if (route != null) {
-            // 这里可以添加与网络设备通信获取最新路由状态的逻辑
+        if (route == null) {
+            log.warn("Route not found for status sync: {}", routeId);
+            return;
+        }
+        
+        try {
+            RouteMetrics metrics = route.getMetrics();
+            if (metrics == null) {
+                metrics = new RouteMetrics();
+                route.setMetrics(metrics);
+            }
+            
+            RouteStatus currentStatus = route.getStatus();
+            RouteStatus newStatus = currentStatus;
+            
+            if (route.getPath() == null || route.getPath().isEmpty()) {
+                newStatus = RouteStatus.UNAVAILABLE;
+            } else {
+                double latency = metrics.getLatency();
+                double packetLoss = metrics.getPacketLoss();
+                
+                if (packetLoss > 0.5 || latency > 5000) {
+                    newStatus = RouteStatus.UNAVAILABLE;
+                } else if (packetLoss > 0.2 || latency > 2000) {
+                    newStatus = RouteStatus.DEGRADED;
+                } else {
+                    newStatus = RouteStatus.AVAILABLE;
+                }
+            }
+            
+            if (currentStatus != newStatus) {
+                route.setStatus(newStatus);
+                metrics.setLastUpdated(System.currentTimeMillis());
+                
+                final RouteStatus finalOldStatus = currentStatus;
+                final RouteStatus finalNewStatus = newStatus;
+                RouteEvent event = new RouteEvent(
+                    RouteEventType.ROUTE_STATUS_CHANGED,
+                    routeId,
+                    new HashMap<String, Object>() {{
+                        put("oldStatus", finalOldStatus);
+                        put("newStatus", finalNewStatus);
+                        put("syncTime", System.currentTimeMillis());
+                    }}
+                );
+                publishRouteEvent(event);
+                
+                log.info("Route status synced: {} -> {} for route {}", currentStatus, newStatus, routeId);
+            }
+            
+            route.setMetrics(metrics);
+            
+        } catch (Exception e) {
+            log.error("Failed to sync route status for {}: {}", routeId, e.getMessage());
         }
     }
     
@@ -307,23 +362,109 @@ public class RouteManagerImpl implements RouteManager {
     
     @Override
     public void rebuildRoutes() {
-        // 实现路由重建逻辑
-        // 这里可以重新计算所有路由
+        log.info("Rebuilding all routes");
+        
+        List<Route> oldRoutes = new ArrayList<>(routes.values());
+        routes.clear();
+        
+        for (Route oldRoute : oldRoutes) {
+            try {
+                Route newRoute = routeCalculator.calculateBestRoute(
+                    oldRoute.getSourceId(), 
+                    oldRoute.getDestinationId()
+                );
+                if (newRoute != null) {
+                    routes.put(newRoute.getRouteId(), newRoute);
+                    
+                    RouteEvent event = new RouteEvent(
+                        RouteEventType.ROUTE_UPDATED,
+                        newRoute.getRouteId(),
+                        Collections.singletonMap("route", newRoute)
+                    );
+                    publishRouteEvent(event);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to rebuild route from {} to {}: {}", 
+                    oldRoute.getSourceId(), oldRoute.getDestinationId(), e.getMessage());
+            }
+        }
+        
+        log.info("Route rebuild completed: {} routes rebuilt", routes.size());
     }
     
-    // 内部方法：检查路由状态
     private void checkRouteStatus() {
+        log.debug("Checking route status for {} routes", routes.size());
+        
         for (Map.Entry<String, Route> entry : routes.entrySet()) {
             Route route = entry.getValue();
-            // 这里可以添加路由状态检查逻辑
+            try {
+                RouteStatus currentStatus = route.getStatus();
+                
+                if (route.getPath() == null || route.getPath().isEmpty()) {
+                    if (currentStatus != RouteStatus.UNAVAILABLE) {
+                        route.setStatus(RouteStatus.UNAVAILABLE);
+                        publishRouteEvent(new RouteEvent(
+                            RouteEventType.ROUTE_STATUS_CHANGED,
+                            route.getRouteId(),
+                            new HashMap<String, Object>() {{
+                                put("oldStatus", currentStatus);
+                                put("newStatus", RouteStatus.UNAVAILABLE);
+                            }}
+                        ));
+                    }
+                    continue;
+                }
+                
+                RouteMetrics metrics = route.getMetrics();
+                if (metrics != null) {
+                    double latency = metrics.getLatency();
+                    double lossRate = metrics.getPacketLoss();
+                    
+                    RouteStatus newStatus;
+                    if (lossRate > 0.5 || latency > 5000) {
+                        newStatus = RouteStatus.UNAVAILABLE;
+                    } else if (lossRate > 0.2 || latency > 2000) {
+                        newStatus = RouteStatus.DEGRADED;
+                    } else {
+                        newStatus = RouteStatus.AVAILABLE;
+                    }
+                    
+                    if (currentStatus != newStatus) {
+                        route.setStatus(newStatus);
+                        publishRouteEvent(new RouteEvent(
+                            RouteEventType.ROUTE_STATUS_CHANGED,
+                            route.getRouteId(),
+                            new HashMap<String, Object>() {{
+                                put("oldStatus", currentStatus);
+                                put("newStatus", newStatus);
+                            }}
+                        ));
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Error checking status for route {}: {}", route.getRouteId(), e.getMessage());
+            }
         }
     }
     
-    // 内部方法：更新路由度量
     private void updateRouteMetrics() {
+        log.debug("Updating route metrics for {} routes", routes.size());
+        
         for (Map.Entry<String, Route> entry : routes.entrySet()) {
             Route route = entry.getValue();
-            // 这里可以添加路由度量更新逻辑
+            try {
+                RouteMetrics metrics = route.getMetrics();
+                if (metrics == null) {
+                    metrics = new RouteMetrics();
+                    route.setMetrics(metrics);
+                }
+                
+                metrics.setLastUpdated(System.currentTimeMillis());
+                route.setMetrics(metrics);
+                
+            } catch (Exception e) {
+                log.warn("Error updating metrics for route {}: {}", route.getRouteId(), e.getMessage());
+            }
         }
     }
     

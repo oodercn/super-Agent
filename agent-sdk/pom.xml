@@ -5,14 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>net.ooder</groupId>
-        <artifactId>ooder-common-all</artifactId>
-        <version>2.1</version>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.0</version>
+        <relativePath/>
     </parent>
 
     <groupId>net.ooder</groupId>
     <artifactId>agent-sdk</artifactId>
-    <version>0.7.0</version>
+    <version>0.7.3</version>
     <packaging>jar</packaging>
 
     <name>Ooder Agent SDK</name>
@@ -61,7 +62,7 @@
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
         <maven.javadoc.skip>false</maven.javadoc.skip>
         <maven.source.skip>false</maven.source.skip>
-        <gpg.skip>false</gpg.skip>
+        <gpg.skip>true</gpg.skip>
     </properties>
 
     <dependencies>
@@ -129,39 +130,19 @@
         </dependency>
         
         <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>3.12.4</version>
             <scope>test</scope>
         </dependency>
         
-        <!-- Ooder VFS Web Client -->
-        <dependency>
-            <groupId>net.ooder</groupId>
-            <artifactId>ooder-vfs-web</artifactId>
-            <version>2.1</version>
-        </dependency>
-        
-        <!-- Ooder Server -->
-        <dependency>
-            <groupId>net.ooder</groupId>
-            <artifactId>ooder-server</artifactId>
-            <version>2.1</version>
-        </dependency>
-        
-        <!-- Ooder Common Client -->
-        <dependency>
-            <groupId>net.ooder</groupId>
-            <artifactId>ooder-common-client</artifactId>
-            <version>2.1</version>
-        </dependency>
-        
-        <!-- Ooder Annotation -->
-        <dependency>
-            <groupId>net.ooder</groupId>
-            <artifactId>ooder-annotation</artifactId>
-            <version>2.1</version>
-        </dependency>
     </dependencies>
 
     <repositories>
@@ -351,9 +332,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.2</version>
+                <version>3.2.5</version>
                 <configuration>
                     <skipTests>true</skipTests>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                    </includes>
                 </configuration>
             </plugin>
         </plugins>

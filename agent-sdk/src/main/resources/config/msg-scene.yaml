@@ -1,0 +1,58 @@
+msg:
+  sceneId: msg-default
+  sceneName: Default Message Scene
+  
+  client:
+    enabled: true
+    cacheEnabled: true
+    cacheMaxSize: 10485760
+    cacheExpireTime: 86400000
+    connectionTimeout: 5000
+    retryCount: 3
+    retryInterval: 1000
+    
+  capabilities:
+    p2p-message:
+      enabled: true
+      description: Point-to-point messaging
+    topic-subscribe:
+      enabled: true
+      description: Topic subscription
+    offline-message:
+      enabled: true
+      description: Offline message support
+    mass-message:
+      enabled: true
+      description: Mass messaging
+    
+  transport:
+    primary: mqtt
+    fallback: websocket
+    
+    mqtt:
+      broker: tcp://localhost:1883
+      clientId: msg-client-${agentId}
+      qos: 1
+      cleanSession: true
+      keepAliveInterval: 60
+      connectionTimeout: 30
+      
+    websocket:
+      url: ws://localhost:8080/ws/msg
+      reconnectInterval: 5000
+      maxReconnectAttempts: 5
+      
+  storage:
+    type: memory
+    offline:
+      enabled: true
+      expireTime: 604800000
+      maxCount: 1000
+      
+  listeners:
+    onMessageReceived:
+      enabled: true
+    onMessageSent:
+      enabled: true
+    onMessageDeleted:
+      enabled: true
