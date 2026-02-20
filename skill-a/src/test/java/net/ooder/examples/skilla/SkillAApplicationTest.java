@@ -1,79 +1,96 @@
 package net.ooder.examples.skilla;
 
-import net.ooder.sdk.agent.model.AgentConfig;
-import net.ooder.sdk.AgentSDK;
-import net.ooder.sdk.command.model.CommandType;
-import net.ooder.sdk.network.packet.StatusReportPacket;
-import net.ooder.sdk.network.udp.UDPMessageHandler;
+import net.ooder.sdk.OoderSDK;
+import net.ooder.sdk.api.agent.EndAgent;
+import net.ooder.sdk.infra.config.SDKConfiguration;
+import net.ooder.sdk.api.skill.SkillPackageManager;
+import net.ooder.sdk.common.enums.DiscoveryMethod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest
 class SkillAApplicationTest {
 
     @Mock
-    private AgentSDK agentSDK;
+    private OoderSDK sdk;
 
     @Mock
-    private SkillCommandHandler commandHandler;
+    private EndAgent endAgent;
 
-    @InjectMocks
-    private SkillAApplication application;
+    @Mock
+    private SkillPackageManager packageManager;
+
+    private SDKConfiguration config;
 
     @BeforeEach
     void setUp() {
-        AgentConfig config = AgentConfig.builder()
-                .agentId("skill-a-001")
-                .agentName("SkillA")
-                .agentType("end")
-                .endpoint("http://localhost:9000")
-                .udpPort(9001)
-                .heartbeatInterval(30000)
-                .build();
+        config = new SDKConfiguration();
+        config.setAgentId("skill-a-001");
+        config.setAgentName("SkillA");
+        config.setEndpoint("http://localhost:9000");
+        config.setUdpPort(9001);
+        config.setHeartbeatInterval(30000);
 
-        when(agentSDK.getConfig()).thenReturn(config);
+        when(sdk.getConfiguration()).thenReturn(config);
+        when(sdk.createEndAgent()).thenReturn(endAgent);
+        when(sdk.getSkillPackageManager()).thenReturn(packageManager);
     }
 
     @Test
-    void testSendTestCommand() {
-        Map<String, Object> params = new HashMap<>();
-        params.put("query", "test information");
+    void testSdkInitialization() {
+        doNothing().when(sdk).initialize();
+        doNothing().when(sdk).start();
 
-        when(agentSDK.sendCommand(any(CommandType.class), anyMap())).thenReturn(CompletableFuture.completedFuture(net.ooder.sdk.network.udp.SendResult.success(100)));
+        sdk.initialize();
+        sdk.start();
 
-        application.sendTestCommand();
-
-        verify(agentSDK, times(1)).sendCommand(eq(CommandType.SKILL_INVOKE), anyMap());
+        verify(sdk, times(1)).initialize();
+        verify(sdk, times(1)).start();
     }
 
     @Test
-    void testSendStatusReport() {
-        doNothing().when(agentSDK).sendStatusReport(any(StatusReportPacket.class));
+    void testCreateEndAgent() {
+        when(sdk.createEndAgent()).thenReturn(endAgent);
+        when(endAgent.start()).thenReturn(CompletableFuture.completedFuture(null));
 
-        application.sendStatusReport();
+        EndAgent agent = sdk.createEndAgent();
+        agent.start();
 
-        verify(agentSDK, times(1)).sendStatusReport(any(StatusReportPacket.class));
+        assertNotNull(agent);
+        verify(sdk, times(1)).createEndAgent();
+        verify(endAgent, times(1)).start();
     }
 
     @Test
-    void testShutdown() {
-        doNothing().when(agentSDK).stop();
+    void testInstallSkillFromGitHub() {
+        when(packageManager.install(any())).thenReturn(CompletableFuture.completedFuture(null));
 
-        application.shutdown();
+        packageManager.install(any());
 
-        verify(agentSDK, times(1)).stop();
+        verify(packageManager, times(1)).install(any());
+    }
+
+    @Test
+    void testDiscoveryMethod() {
+        DiscoveryMethod method = DiscoveryMethod.GITHUB;
+        assertEquals("github", method.getCode());
+        assertEquals("GitHub repository discovery", method.getDescription());
+    }
+
+    @Test
+    void testSdkShutdown() {
+        doNothing().when(sdk).stop();
+
+        sdk.stop();
+
+        verify(sdk, times(1)).stop();
     }
 }

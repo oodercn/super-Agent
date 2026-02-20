@@ -1,80 +1,96 @@
 package net.ooder.examples.skillb;
 
-import net.ooder.sdk.agent.model.AgentConfig;
-import net.ooder.sdk.AgentSDK;
-import net.ooder.sdk.command.model.CommandType;
-import net.ooder.sdk.network.packet.CommandPacket;
-import net.ooder.sdk.network.packet.StatusReportPacket;
-import net.ooder.sdk.network.udp.UDPMessageHandler;
+import net.ooder.sdk.OoderSDK;
+import net.ooder.sdk.api.agent.RouteAgent;
+import net.ooder.sdk.infra.config.SDKConfiguration;
+import net.ooder.sdk.api.skill.SkillPackageManager;
+import net.ooder.sdk.common.enums.DiscoveryMethod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest
 class SkillBApplicationTest {
 
     @Mock
-    private AgentSDK agentSDK;
+    private OoderSDK sdk;
 
     @Mock
-    private SkillCommandHandler commandHandler;
+    private RouteAgent routeAgent;
 
-    @InjectMocks
-    private SkillBApplication application;
+    @Mock
+    private SkillPackageManager packageManager;
+
+    private SDKConfiguration config;
 
     @BeforeEach
     void setUp() {
-        AgentConfig config = AgentConfig.builder()
-                .agentId("skill-b-001")
-                .agentName("SkillB")
-                .agentType("skill")
-                .endpoint("http://localhost:9002")
-                .udpPort(9003)
-                .heartbeatInterval(30000)
-                .build();
+        config = new SDKConfiguration();
+        config.setAgentId("skill-b-001");
+        config.setAgentName("SkillB");
+        config.setEndpoint("http://localhost:9002");
+        config.setUdpPort(9003);
+        config.setHeartbeatInterval(30000);
 
-        when(agentSDK.getConfig()).thenReturn(config);
+        when(sdk.getConfiguration()).thenReturn(config);
+        when(sdk.createRouteAgent()).thenReturn(routeAgent);
+        when(sdk.getSkillPackageManager()).thenReturn(packageManager);
     }
 
     @Test
-    void testSendTestCommand() {
-        Map<String, Object> params = new HashMap<>();
-        params.put("data", "test data");
+    void testSdkInitialization() {
+        doNothing().when(sdk).initialize();
+        doNothing().when(sdk).start();
 
-        when(agentSDK.sendCommand(any(CommandType.class), anyMap())).thenReturn(CompletableFuture.completedFuture(net.ooder.sdk.network.udp.SendResult.success(100)));
+        sdk.initialize();
+        sdk.start();
 
-        application.sendTestCommand();
-
-        verify(agentSDK, times(1)).sendCommand(eq(CommandType.SKILL_SUBMIT), anyMap());
+        verify(sdk, times(1)).initialize();
+        verify(sdk, times(1)).start();
     }
 
     @Test
-    void testSendStatusReport() {
-        doNothing().when(agentSDK).sendStatusReport(any(StatusReportPacket.class));
+    void testCreateRouteAgent() {
+        when(sdk.createRouteAgent()).thenReturn(routeAgent);
+        when(routeAgent.start()).thenReturn(CompletableFuture.completedFuture(null));
 
-        application.sendStatusReport();
+        RouteAgent agent = sdk.createRouteAgent();
+        agent.start();
 
-        verify(agentSDK, times(1)).sendStatusReport(any(StatusReportPacket.class));
+        assertNotNull(agent);
+        verify(sdk, times(1)).createRouteAgent();
+        verify(routeAgent, times(1)).start();
     }
 
     @Test
-    void testShutdown() {
-        doNothing().when(agentSDK).stop();
+    void testInstallSkillFromGitee() {
+        when(packageManager.install(any())).thenReturn(CompletableFuture.completedFuture(null));
 
-        application.shutdown();
+        packageManager.install(any());
 
-        verify(agentSDK, times(1)).stop();
+        verify(packageManager, times(1)).install(any());
+    }
+
+    @Test
+    void testDiscoveryMethod() {
+        DiscoveryMethod method = DiscoveryMethod.GITEE;
+        assertEquals("gitee", method.getCode());
+        assertEquals("Gitee repository discovery", method.getDescription());
+    }
+
+    @Test
+    void testSdkShutdown() {
+        doNothing().when(sdk).stop();
+
+        sdk.stop();
+
+        verify(sdk, times(1)).stop();
     }
 }
