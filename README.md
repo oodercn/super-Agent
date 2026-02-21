@@ -64,17 +64,17 @@ public enum DiscoveryMethod {
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │                    super-Agent (本仓库)                   │   │
-│  │  ├── agent-sdk        SDK 核心                           │   │
 │  │  ├── agent-skillcenter 技能中心                          │   │
-│  │  └── skills-*          技能实现                           │   │
+│  │  ├── skills-a2ui        A2UI 技能                        │   │
+│  │  └── skills-rad         RAD 技能                         │   │
 │  └─────────────────────────────────────────────────────────┘   │
 │                              │                                   │
 │              ┌───────────────┼───────────────┐                  │
 │              │               │               │                  │
 │              ▼               ▼               ▼                  │
 │     ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
-│     │ ooder-Nexus │  │   skills    │  │sceneEngine  │          │
-│     │ (分发枢纽)  │  │ (能力库)    │  │ (场景引擎)  │          │
+│     │ ooder-sdk   │  │ ooder-skills│  │ ooder-Nexus │          │
+│     │ (SDK核心)   │  │ (能力库)    │  │ (分发枢纽)  │          │
 │     └─────────────┘  └─────────────┘  └─────────────┘          │
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
@@ -195,15 +195,6 @@ packageManager.install(request).join();
 
 ```
 super-Agent/
-├── agent-sdk/                    # Agent SDK 核心
-│   ├── src/main/java/net/ooder/sdk/
-│   │   ├── api/                  # API 接口
-│   │   ├── common/               # 公共模块
-│   │   ├── infra/                # 基础设施
-│   │   ├── southbound/           # 南向协议
-│   │   └── northbound/           # 北向协议
-│   └── pom.xml
-│
 ├── agent-skillcenter/            # 技能中心
 │   ├── src/main/java/net/ooder/skillcenter/
 │   │   ├── sdk/                  # SDK 服务
@@ -212,10 +203,8 @@ super-Agent/
 │
 ├── skills-a2ui/                  # A2UI 技能
 ├── skills-rad/                   # RAD 技能
-├── skill-org-feishu/             # 飞书组织技能
-├── skill-org-dingding/           # 钉钉组织技能
-├── skill-user-auth/              # 用户认证技能
 │
+├── independent-mcp-agent/        # 独立 MCP Agent 示例
 ├── examples/                     # 示例代码
 │   ├── end-agent/
 │   ├── mcp-agent/
@@ -225,8 +214,12 @@ super-Agent/
 │   ├── overview/
 │   └── skills/
 │
+├── protocol-release/             # 协议发布文档
+│
 └── README.md
 ```
+
+> **注意**: agent-sdk 已迁移到独立仓库 [ooder-sdk](https://github.com/oodercn/ooder-sdk)
 
 ## 协议文档
 
@@ -254,10 +247,10 @@ super-Agent/
 
 | 项目 | 说明 | 地址 |
 |------|------|------|
-| **ooder-Nexus** | P2P AI 能力分发枢纽 | [github.com/ooderCN/ooder-Nexus](https://github.com/ooderCN/ooder-Nexus) |
-| **skills** | 共享能力库 | [github.com/ooderCN/skills](https://github.com/ooderCN/skills) |
-| **common** | 企业开发套包 | [github.com/ooderCN/common](https://github.com/ooderCN/common) |
-| **sceneEngine** | 场景引擎服务 | 本地工程 northbound-services |
+| **ooder-sdk** | Agent SDK 核心 | [github.com/oodercn/ooder-sdk](https://github.com/oodercn/ooder-sdk) |
+| **ooder-skills** | 共享能力库 | [github.com/oodercn/ooder-skills](https://github.com/oodercn/ooder-skills) |
+| **ooder-Nexus** | P2P AI 能力分发枢纽 | [github.com/oodercn/ooder-Nexus](https://github.com/oodercn/ooder-Nexus) |
+| **common** | 企业开发套包 | [github.com/oodercn/common](https://github.com/oodercn/common) |
 
 ## 文档资源
 
