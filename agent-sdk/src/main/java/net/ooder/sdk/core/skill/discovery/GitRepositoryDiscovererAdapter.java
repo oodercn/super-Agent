@@ -95,6 +95,29 @@ public class GitRepositoryDiscovererAdapter implements SkillDiscoverer {
     }
     
     @Override
+    public CompletableFuture<List<SkillPackage>> discoverByCategory(String category) {
+        return discoverByCategory(category, null);
+    }
+    
+    @Override
+    public CompletableFuture<List<SkillPackage>> discoverByCategory(String category, String subCategory) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<SkillPackage> packages = new ArrayList<SkillPackage>();
+            log.info("Discovering skills by category from Git repository: {}/{}", category, subCategory);
+            return packages;
+        });
+    }
+    
+    @Override
+    public CompletableFuture<List<SkillPackage>> searchByTags(List<String> tags) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<SkillPackage> packages = new ArrayList<SkillPackage>();
+            log.info("Searching skills by tags from Git repository: {}", tags);
+            return packages;
+        });
+    }
+    
+    @Override
     public DiscoveryMethod getMethod() {
         if ("gitee".equalsIgnoreCase(source)) {
             return DiscoveryMethod.GITEE;

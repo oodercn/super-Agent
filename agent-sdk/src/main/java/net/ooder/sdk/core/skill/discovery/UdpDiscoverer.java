@@ -184,6 +184,53 @@ public class UdpDiscoverer implements SkillDiscoverer {
     }
     
     @Override
+    public CompletableFuture<List<SkillPackage>> discoverByCategory(String category) {
+        return discoverByCategory(category, null);
+    }
+    
+    @Override
+    public CompletableFuture<List<SkillPackage>> discoverByCategory(String category, String subCategory) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<SkillPackage> result = new ArrayList<>();
+            if (category == null || category.isEmpty()) {
+                return result;
+            }
+            
+            List<SkillPackage> all = discover().join();
+            
+            for (SkillPackage pkg : all) {
+                if (category.equals(pkg.getCategory()) && passesFilter(pkg)) {
+                    if (subCategory == null || subCategory.isEmpty() || subCategory.equals(pkg.getSubCategory())) {
+                        result.add(pkg);
+                    }
+                }
+            }
+            
+            return result;
+        });
+    }
+    
+    @Override
+    public CompletableFuture<List<SkillPackage>> searchByTags(List<String> tags) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<SkillPackage> result = new ArrayList<>();
+            if (tags == null || tags.isEmpty()) {
+                return result;
+            }
+            
+            List<SkillPackage> all = discover().join();
+            
+            for (SkillPackage pkg : all) {
+                if (hasAllTags(pkg, tags) && passesFilter(pkg)) {
+                    result.add(pkg);
+                }
+            }
+            
+            return result;
+        });
+    }
+    
+    @Override
     public DiscoveryMethod getMethod() {
         return DiscoveryMethod.UDP_BROADCAST;
     }
@@ -485,6 +532,18 @@ public class UdpDiscoverer implements SkillDiscoverer {
             }
         }
         return false;
+    }
+    
+    private boolean hasAllTags(SkillPackage pkg, List<String> requiredTags) {
+        if (pkg.getTags() == null) {
+            return false;
+        }
+        for (String tag : requiredTags) {
+            if (!pkg.getTags().contains(tag)) {
+                return false;
+            }
+        }
+        return true;
     }
     
     private boolean passesFilter(SkillPackage pkg) {

@@ -197,6 +197,77 @@ public class LocalDiscoverer implements SkillDiscoverer {
     }
     
     @Override
+    public CompletableFuture<List<SkillPackage>> discoverByCategory(String category) {
+        return discoverByCategory(category, null);
+    }
+    
+    @Override
+    public CompletableFuture<List<SkillPackage>> discoverByCategory(String category, String subCategory) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<SkillPackage> result = new ArrayList<>();
+            Path skillsPath = Paths.get(skillsDirectory);
+            
+            if (!Files.exists(skillsPath) || category == null || category.isEmpty()) {
+                return result;
+            }
+            
+            try {
+                List<Path> skillDirs = Files.walk(skillsPath, 1)
+                    .filter(Files::isDirectory)
+                    .filter(p -> !p.equals(skillsPath))
+                    .collect(Collectors.toList());
+                
+                for (Path skillDir : skillDirs) {
+                    SkillPackage pkg = loadSkillPackage(skillDir);
+                    if (pkg != null && category.equals(pkg.getCategory()) && passesFilter(pkg)) {
+                        if (subCategory == null || subCategory.isEmpty() || subCategory.equals(pkg.getSubCategory())) {
+                            result.add(pkg);
+                        }
+                    }
+                }
+                
+                log.debug("Found {} skills in category: {}/{}", result.size(), category, subCategory);
+            } catch (IOException e) {
+                log.error("Error discovering skills by category: {}", e.getMessage());
+            }
+            
+            return result;
+        });
+    }
+    
+    @Override
+    public CompletableFuture<List<SkillPackage>> searchByTags(List<String> tags) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<SkillPackage> result = new ArrayList<>();
+            Path skillsPath = Paths.get(skillsDirectory);
+            
+            if (!Files.exists(skillsPath) || tags == null || tags.isEmpty()) {
+                return result;
+            }
+            
+            try {
+                List<Path> skillDirs = Files.walk(skillsPath, 1)
+                    .filter(Files::isDirectory)
+                    .filter(p -> !p.equals(skillsPath))
+                    .collect(Collectors.toList());
+                
+                for (Path skillDir : skillDirs) {
+                    SkillPackage pkg = loadSkillPackage(skillDir);
+                    if (pkg != null && hasAllTags(pkg, tags) && passesFilter(pkg)) {
+                        result.add(pkg);
+                    }
+                }
+                
+                log.debug("Found {} skills matching tags: {}", result.size(), tags);
+            } catch (IOException e) {
+                log.error("Error searching skills by tags: {}", e.getMessage());
+            }
+            
+            return result;
+        });
+    }
+    
+    @Override
     public DiscoveryMethod getMethod() {
         return DiscoveryMethod.LOCAL_FS;
     }
@@ -423,6 +494,18 @@ public class LocalDiscoverer implements SkillDiscoverer {
             }
         }
         return false;
+    }
+    
+    private boolean hasAllTags(SkillPackage pkg, List<String> requiredTags) {
+        if (pkg.getTags() == null) {
+            return false;
+        }
+        for (String tag : requiredTags) {
+            if (!pkg.getTags().contains(tag)) {
+                return false;
+            }
+        }
+        return true;
     }
     
     private boolean passesFilter(SkillPackage pkg) {
