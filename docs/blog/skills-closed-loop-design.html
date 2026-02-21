@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>从"硬编码"到"零配置"：OoderAgent 技能闭环系统的设计哲学与实践</title>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --secondary-color: #8b5cf6;
+            --accent-color: #06b6d4;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-bg: #1e293b;
+            --light-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.8;
+            color: var(--text-primary);
+            background: var(--light-bg);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        article {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
+            padding: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.5rem;
+            line-height: 1.3;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 2.5rem 0 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        h3 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 2rem 0 1rem;
+        }
+
+        h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin: 1.5rem 0 0.75rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .intro {
+            font-size: 1.15rem;
+            color: var(--text-primary);
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 2rem;
+        }
+
+        .diagram-container {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            border-radius: 12px;
+            overflow-x: auto;
+        }
+
+        .diagram-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        svg {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .node {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .node:hover {
+            filter: brightness(1.1);
+        }
+
+        .node-box {
+            fill: white;
+            stroke: #e2e8f0;
+            stroke-width: 2;
+            filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.1));
+        }
+
+        .node-box-primary {
+            fill: url(#primaryGradient);
+            stroke: none;
+        }
+
+        .node-box-secondary {
+            fill: url(#secondaryGradient);
+            stroke: none;
+        }
+
+        .node-box-accent {
+            fill: url(#accentGradient);
+            stroke: none;
+        }
+
+        .node-box-success {
+            fill: url(#successGradient);
+            stroke: none;
+        }
+
+        .node-text {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 13px;
+            fill: white;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+
+        .node-text-dark {
+            fill: var(--text-primary);
+        }
+
+        .node-subtext {
+            font-size: 10px;
+            fill: rgba(255, 255, 255, 0.8);
+        }
+
+        .node-subtext-dark {
+            fill: var(--text-secondary);
+        }
+
+        .arrow-line {
+            stroke: #94a3b8;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+
+        .arrow-line-dashed {
+            stroke-dasharray: 5, 5;
+        }
+
+        .connector-line {
+            stroke: #cbd5e1;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .label-box {
+            fill: white;
+            stroke: #e2e8f0;
+            stroke-width: 1;
+            rx: 4;
+        }
+
+        .label-text {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 11px;
+            fill: var(--text-secondary);
+        }
+
+        pre {
+            background: var(--dark-bg);
+            color: #e2e8f0;
+            padding: 1.25rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+        }
+
+        .inline-code {
+            background: #e2e8f0;
+            color: var(--text-primary);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        th:first-child {
+            border-radius: 8px 0 0 0;
+        }
+
+        th:last-child {
+            border-radius: 0 8px 0 0;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        tr:hover td {
+            background: #f8fafc;
+        }
+
+        tr:last-child td:first-child {
+            border-radius: 0 0 0 8px;
+        }
+
+        tr:last-child td:last-child {
+            border-radius: 0 0 8px 0;
+        }
+
+        ul, ol {
+            margin: 1rem 0 1rem 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid var(--warning-color);
+            padding: 1rem 1.5rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box p {
+            color: #92400e;
+            margin: 0;
+        }
+
+        .version-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .badge-new {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .badge-enhanced {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .badge-inherited {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            article {
+                padding: 1.5rem;
+            }
+            h1 {
+                font-size: 1.75rem;
+            }
+            h2 {
+                font-size: 1.5rem;
+            }
+            .diagram-container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <article>
+            <h1>从"硬编码"到"零配置"：OoderAgent 技能闭环系统的设计哲学与实践</h1>
+            
+            <div class="intro">
+                在传统的企业应用集成中，我们习惯了这样的开发模式：配置文件中写死服务地址、手动管理依赖关系、人工处理服务发现。这种方式在单体应用时代尚可接受，但在分布式、智能化、快速迭代的今天，它已成为制约效率的瓶颈。<br><br>
+                OoderAgent SDK 0.7.0 提出了一种全新的技能闭环系统设计，将"零配置发现"、"场景驱动"、"无中心组网"等理念融为一体，重新定义了应用与能力之间的连接方式。
+            </div>
+
+            <h2>零、版本演进：从 0.6.6 到 0.7.0</h2>
+
+            <h3>0.1 0.6.6 的设计基础</h3>
+            <p>OoderAgent 0.6.6 版本已经建立了完整的 Agent 体系架构：</p>
+
+            <div class="diagram-container">
+                <div class="diagram-title">OoderAgent 0.6.6 架构</div>
+                <svg width="600" height="400" viewBox="0 0 600 400">
+                    <defs>
+                        <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#667eea"/>
+                            <stop offset="100%" style="stop-color:#764ba2"/>
+                        </linearGradient>
+                        <linearGradient id="secondaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#f093fb"/>
+                            <stop offset="100%" style="stop-color:#f5576c"/>
+                        </linearGradient>
+                        <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#4facfe"/>
+                            <stop offset="100%" style="stop-color:#00f2fe"/>
+                        </linearGradient>
+                        <linearGradient id="successGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#10b981"/>
+                            <stop offset="100%" style="stop-color:#059669"/>
+                        </linearGradient>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+                        </marker>
+                    </defs>
+                    
+                    <g class="node" transform="translate(225, 30)">
+                        <rect class="node-box-primary" width="150" height="60" rx="8"/>
+                        <text class="node-text" x="75" y="25">MCP Agent</text>
+                        <text class="node-subtext" x="75" y="42">主控节点 / 资源管理调度</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="300" y1="90" x2="300" y2="120"/>
+                    
+                    <line class="connector-line" x1="150" y1="150" x2="450" y2="150"/>
+                    <line class="arrow-line" x1="150" y1="150" x2="150" y2="170"/>
+                    <line class="arrow-line" x1="300" y1="150" x2="300" y2="170"/>
+                    <line class="arrow-line" x1="450" y1="150" x2="450" y2="170"/>
+                    
+                    <g class="node" transform="translate(75, 180)">
+                        <rect class="node-box-secondary" width="150" height="60" rx="8"/>
+                        <text class="node-text" x="75" y="25">Route Agent</text>
+                        <text class="node-subtext" x="75" y="42">消息路由/转发</text>
+                    </g>
+                    
+                    <g class="node" transform="translate(225, 180)">
+                        <rect class="node-box-secondary" width="150" height="60" rx="8"/>
+                        <text class="node-text" x="75" y="25">Route Agent</text>
+                        <text class="node-subtext" x="75" y="42">消息路由/转发</text>
+                    </g>
+                    
+                    <g class="node" transform="translate(375, 180)">
+                        <rect class="node-box-secondary" width="150" height="60" rx="8"/>
+                        <text class="node-text" x="75" y="25">Route Agent</text>
+                        <text class="node-subtext" x="75" y="42">消息路由/转发</text>
+                    </g>
+                    
+                    <line class="connector-line" x1="150" y1="240" x2="450" y2="240"/>
+                    <line class="arrow-line" x1="300" y1="240" x2="300" y2="280"/>
+                    
+                    <g class="node" transform="translate(225, 290)">
+                        <rect class="node-box-accent" width="150" height="60" rx="8"/>
+                        <text class="node-text" x="75" y="25">End Agent</text>
+                        <text class="node-subtext" x="75" y="42">终端设备 / 数据采集执行</text>
+                    </g>
+                </svg>
+            </div>
+
+            <h4>0.6.6 核心协议</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>协议</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Agent 协议</td>
+                        <td>南向协议，Agent 间通信</td>
+                    </tr>
+                    <tr>
+                        <td>Skill 协议</td>
+                        <td>技能注册、调用、健康检查</td>
+                    </tr>
+                    <tr>
+                        <td>P2P 协议</td>
+                        <td>无中心组网基础</td>
+                    </tr>
+                    <tr>
+                        <td>VFS 协议</td>
+                        <td>文件存储和同步</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>0.6.6 的 Skill-Capability 关系</h4>
+            <div class="diagram-container">
+                <div class="diagram-title">Skill-Capability 关系图</div>
+                <svg width="400" height="200" viewBox="0 0 400 200">
+                    <g class="node" transform="translate(125, 20)">
+                        <rect class="node-box-primary" width="150" height="50" rx="8"/>
+                        <text class="node-text" x="75" y="25">Skill</text>
+                        <text class="node-subtext" x="75" y="40">功能模块</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="175" y1="70" x2="125" y2="110"/>
+                    <line class="arrow-line" x1="225" y1="70" x2="275" y2="110"/>
+                    
+                    <g class="node" transform="translate(25, 120)">
+                        <rect class="node-box-success" width="150" height="50" rx="8"/>
+                        <text class="node-text" x="75" y="25">Capability 1</text>
+                        <text class="node-subtext" x="75" y="40">具体能力</text>
+                    </g>
+                    
+                    <g class="node" transform="translate(225, 120)">
+                        <rect class="node-box-success" width="150" height="50" rx="8"/>
+                        <text class="node-text" x="75" y="25">Capability 2</text>
+                        <text class="node-subtext" x="75" y="40">具体能力</text>
+                    </g>
+                </svg>
+            </div>
+
+            <h3>0.2 0.7.0 的演进方向</h3>
+            <p>0.7.0 在 0.6.6 的基础上，重点解决了以下问题：</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>问题</th>
+                        <th>0.6.6 现状</th>
+                        <th>0.7.0 解决方案</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>技能发现</td>
+                        <td>UDP 广播发现</td>
+                        <td>多层发现策略（UDP + DHT + SkillCenter）</td>
+                    </tr>
+                    <tr>
+                        <td>技能安装</td>
+                        <td>手动部署</td>
+                        <td>SkillPackageManager 自动安装</td>
+                    </tr>
+                    <tr>
+                        <td>场景管理</td>
+                        <td>场景定义存在</td>
+                        <td>场景组管理 + 硬地址解码</td>
+                    </tr>
+                    <tr>
+                        <td>配置管理</td>
+                        <td>手动配置</td>
+                        <td>配置模板 + 自动注入</td>
+                    </tr>
+                    <tr>
+                        <td>文档体系</td>
+                        <td>协议文档</td>
+                        <td>三层文档（用户/AI/开发者/运维）</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>0.3 架构演进对比</h3>
+            <div class="diagram-container">
+                <div class="diagram-title">架构演进对比</div>
+                <svg width="700" height="350" viewBox="0 0 700 350">
+                    <text x="175" y="25" fill="#1e293b" font-size="14" font-weight="600" text-anchor="middle">0.6.6 架构</text>
+                    <text x="525" y="25" fill="#1e293b" font-size="14" font-weight="600" text-anchor="middle">0.7.0 架构</text>
+                    
+                    <line x1="350" y1="40" x2="350" y2="340" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="5,5"/>
+                    
+                    <g class="node" transform="translate(75, 50)">
+                        <rect class="node-box" width="200" height="50" rx="8"/>
+                        <text class="node-text node-text-dark" x="100" y="20">Application</text>
+                        <text class="node-subtext node-subtext-dark" x="100" y="36">配置硬编码地址</text>
+                    </g>
+                    
+                    <g class="node" transform="translate(425, 50)">
+                        <rect class="node-box-primary" width="200" height="50" rx="8"/>
+                        <text class="node-text" x="100" y="20">Application</text>
+                        <text class="node-subtext" x="100" y="36">requestScene()</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="175" y1="100" x2="175" y2="130"/>
+                    <line class="arrow-line" x1="525" y1="100" x2="525" y2="130"/>
+                    
+                    <g class="node" transform="translate(75, 140)">
+                        <rect class="node-box" width="200" height="50" rx="8"/>
+                        <text class="node-text node-text-dark" x="100" y="20">Skill 服务</text>
+                        <text class="node-subtext node-subtext-dark" x="100" y="36">手动部署</text>
+                    </g>
+                    
+                    <g class="node" transform="translate(425, 140)">
+                        <rect class="node-box-secondary" width="200" height="50" rx="8"/>
+                        <text class="node-text" x="100" y="20">SkillPackageManager</text>
+                        <text class="node-subtext" x="100" y="36">自动发现/安装</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="175" y1="190" x2="175" y2="220"/>
+                    <line class="arrow-line" x1="525" y1="190" x2="525" y2="220"/>
+                    
+                    <g class="node" transform="translate(75, 230)">
+                        <rect class="node-box" width="200" height="50" rx="8"/>
+                        <text class="node-text node-text-dark" x="100" y="20">UDP 广播发现</text>
+                        <text class="node-subtext node-subtext-dark" x="100" y="36">局域网限制</text>
+                    </g>
+                    
+                    <g class="node" transform="translate(425, 230)">
+                        <rect class="node-box-accent" width="200" height="50" rx="8"/>
+                        <text class="node-text" x="100" y="20">SceneGroup</text>
+                        <text class="node-subtext" x="100" y="36">场景组管理</text>
+                    </g>
+                </svg>
+            </div>
+
+            <h2>一、问题的本质</h2>
+
+            <h3>1.1 传统模式的困境</h3>
+            <p>考虑一个典型的企业应用场景：一个 Nexus 应用需要集成飞书的组织机构数据。</p>
+            
+            <p><strong>传统做法：</strong></p>
+            <pre><code class="language-yaml"># application.yml
+feishu:
+  server-url: https://feishu-api.company.com
+  app-id: cli_xxx
+  app-secret: xxx</code></pre>
+
+            <p>这种做法存在几个问题：</p>
+            <ol>
+                <li><strong>硬编码依赖</strong>：服务地址需要人工配置，环境迁移时容易出错</li>
+                <li><strong>缺乏灵活性</strong>：无法动态切换服务提供者</li>
+                <li><strong>无自动发现</strong>：新增服务需要手动更新配置</li>
+                <li><strong>无故障转移</strong>：服务不可用时没有自动切换机制</li>
+            </ol>
+
+            <h3>1.2 核心矛盾</h3>
+            <div class="highlight-box">
+                <p>传统模式的根本矛盾在于：<strong>应用关注的是"能力"，而配置关注的是"地址"</strong>。</p>
+            </div>
+            <p>用户真正需要的是"读取组织数据"这个能力，而不是"连接到 192.168.1.100:8080"这个地址。将能力与地址解耦，是我们设计的出发点。</p>
+
+            <h2>二、核心理念：场景驱动</h2>
+
+            <h3>2.1 什么是场景？</h3>
+            <p>场景（Scene）是一组相关能力的静态定义，描述了"谁在什么情况下能做什么"。</p>
+
+            <pre><code class="language-yaml">name: auth
+description: 认证场景，提供用户认证和组织数据访问能力
+capabilities:
+  - org-data-read
+  - user-auth
+roles:
+  - roleId: org-provider
+    required: true
+    capabilities: [org-data-read, user-auth]</code></pre>
+
+            <p>场景的特点：</p>
+            <ul>
+                <li><strong>静态性</strong>：场景定义在技能发布时就已确定，不会在运行时改变</li>
+                <li><strong>平等性</strong>：所有场景在网络中是平等的，没有父子关系</li>
+                <li><strong>可组合性</strong>：多个技能可以参与同一个场景</li>
+            </ul>
+
+            <h3>2.2 场景 vs 服务</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>维度</th>
+                        <th>传统服务</th>
+                        <th>场景</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>关注点</td>
+                        <td>地址和协议</td>
+                        <td>能力和角色</td>
+                    </tr>
+                    <tr>
+                        <td>发现方式</td>
+                        <td>配置文件</td>
+                        <td>自动发现</td>
+                    </tr>
+                    <tr>
+                        <td>扩展方式</td>
+                        <td>修改配置</td>
+                        <td>加入场景组</td>
+                    </tr>
+                    <tr>
+                        <td>容错方式</td>
+                        <td>手动切换</td>
+                        <td>自动选举</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>2.3 从场景到组</h3>
+            <p>场景是静态定义，组（Group）是场景在运行时的实例化。</p>
+
+            <div class="diagram-container">
+                <div class="diagram-title">场景与组的关系</div>
+                <svg width="500" height="180" viewBox="0 0 500 180">
+                    <g class="node" transform="translate(25, 40)">
+                        <rect class="node-box-primary" width="180" height="100" rx="8"/>
+                        <text class="node-text" x="90" y="30">auth 场景</text>
+                        <text class="node-subtext" x="90" y="50">能力定义</text>
+                        <text class="node-subtext" x="90" y="70">角色约束</text>
+                        <rect class="label-box" x="55" y="0" width="70" height="20"/>
+                        <text class="label-text" x="90" y="-5" text-anchor="middle">静态</text>
+                    </g>
+                    
+                    <line class="arrow-line arrow-line-dashed" x1="205" y1="90" x2="295" y2="90"/>
+                    <text x="250" y="80" fill="#64748b" font-size="11" text-anchor="middle">实例化</text>
+                    
+                    <g class="node" transform="translate(295, 40)">
+                        <rect class="node-box-secondary" width="180" height="100" rx="8"/>
+                        <text class="node-text" x="90" y="30">auth-group-001</text>
+                        <text class="node-subtext" x="90" y="50">成员协作</text>
+                        <text class="node-subtext" x="90" y="70">连接信息</text>
+                        <rect class="label-box" x="55" y="0" width="70" height="20"/>
+                        <text class="label-text" x="90" y="-5" text-anchor="middle">运行时</text>
+                    </g>
+                </svg>
+            </div>
+
+            <p>组负责两件事：</p>
+            <ol>
+                <li><strong>实时连接情况反馈</strong>：谁在线、谁离线</li>
+                <li><strong>场景实例关系处理</strong>：如何协作、如何选主</li>
+            </ol>
+
+            <h3>2.4 场景与 Agent 的关系</h3>
+            <p>基于 0.6.6 的 Agent 体系，场景与角色的对应关系：</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Agent 类型</th>
+                        <th>场景角色</th>
+                        <th>职责</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>RouteAgent</td>
+                        <td>服务提供者 (Provider)</td>
+                        <td>提供能力服务，创建场景组</td>
+                    </tr>
+                    <tr>
+                        <td>EndAgent</td>
+                        <td>服务消费者 (Consumer)</td>
+                        <td>消费能力服务，加入场景组</td>
+                    </tr>
+                    <tr>
+                        <td>MCPAgent</td>
+                        <td>场景协调者 (Coordinator)</td>
+                        <td>协调场景组，管理元数据</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>三、零配置发现机制</h2>
+
+            <h3>3.1 设计目标</h3>
+            <p>用户只需要表达"我需要什么能力"，系统自动完成：</p>
+            <ul>
+                <li>发现可用的技能</li>
+                <li>选择最优的提供者</li>
+                <li>建立连接并获取服务</li>
+            </ul>
+
+            <h3>3.2 发现流程</h3>
+            <div class="diagram-container">
+                <div class="diagram-title">零配置发现流程</div>
+                <svg width="600" height="500" viewBox="0 0 600 500">
+                    <g class="node" transform="translate(200, 20)">
+                        <rect class="node-box-primary" width="200" height="50" rx="8"/>
+                        <text class="node-text" x="100" y="18">1. 用户请求场景</text>
+                        <text class="node-subtext" x="100" y="35">requestScene("auth")</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="300" y1="70" x2="300" y2="100"/>
+                    
+                    <g class="node" transform="translate(200, 110)">
+                        <rect class="node-box-secondary" width="200" height="50" rx="8"/>
+                        <text class="node-text" x="100" y="18">2. 场景是否存在？</text>
+                        <text class="node-subtext" x="100" y="35">检查本地注册表</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="400" y1="135" x2="480" y2="135"/>
+                    <text x="430" y="128" fill="#ef4444" font-size="11">否</text>
+                    
+                    <g class="node" transform="translate(380, 180)">
+                        <rect class="node-box-accent" width="180" height="50" rx="8"/>
+                        <text class="node-text" x="90" y="18">3. 查询技能中心</text>
+                        <text class="node-subtext" x="90" y="35">SkillCenter API</text>
+                    </g>
+                    
+                    <line class="arrow-line arrow-line-dashed" x1="300" y1="160" x2="300" y2="250"/>
+                    <text x="315" y="210" fill="#10b981" font-size="11">是</text>
+                    
+                    <g class="node" transform="translate(200, 260)">
+                        <rect class="node-box-success" width="200" height="50" rx="8"/>
+                        <text class="node-text" x="100" y="18">4. 加入场景组</text>
+                        <text class="node-subtext" x="100" y="35">获取组成员信息</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="380" y1="230" x2="310" y2="260"/>
+                    <text x="340" y="238" fill="#64748b" font-size="10">4a. 下载安装技能</text>
+                    
+                    <line class="arrow-line" x1="300" y1="310" x2="300" y2="340"/>
+                    
+                    <g class="node" transform="translate(200, 350)">
+                        <rect class="node-box-primary" width="200" height="50" rx="8"/>
+                        <text class="node-text" x="100" y="18">5. 获取连接信息</text>
+                        <text class="node-subtext" x="100" y="35">自动解码</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="300" y1="400" x2="300" y2="430"/>
+                    
+                    <g class="node" transform="translate(200, 440)">
+                        <rect class="node-box-success" width="200" height="50" rx="8"/>
+                        <text class="node-text" x="100" y="25">6. 服务可用 ✓</text>
+                    </g>
+                </svg>
+            </div>
+
+            <h3>3.3 多层发现策略</h3>
+            <p>系统支持多种发现方式，按优先级自动切换：</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>优先级</th>
+                        <th>发现方式</th>
+                        <th>适用场景</th>
+                        <th>协议基础</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>UDP广播</td>
+                        <td>局域网环境</td>
+                        <td>0.6.6 DiscoveryService</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>DHT (Kademlia)</td>
+                        <td>跨网络 P2P</td>
+                        <td>0.6.6 P2P 协议</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>SkillCenter API</td>
+                        <td>集中式查询</td>
+                        <td>0.7.0 新增</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>本地缓存</td>
+                        <td>离线降级</td>
+                        <td>0.6.6 VFS 协议</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>3.4 UDP 广播发现（继承自 0.6.6）</h3>
+            <p>基于 0.6.6 的安全广播消息格式：</p>
+            
+            <p><strong>发现请求消息：</strong></p>
+            <pre><code>DISCOVER:SKILL:{agentId};{skillName};{skillType};{endpoint};{timestamp};{signature}</code></pre>
+
+            <p><strong>加入响应消息：</strong></p>
+            <pre><code>JOIN_RESPONSE:SKILL:{agentId};{skillType};{sceneId};{status};{timestamp};{signature}</code></pre>
+
+            <p><strong>安全机制：</strong></p>
+            <ul>
+                <li>HMAC-SHA256 签名验证</li>
+                <li>时间戳防重放攻击</li>
+                <li>预共享密钥管理</li>
+            </ul>
+
+            <h3>3.5 连接信息解码</h3>
+            <p>用户不需要知道服务的具体地址，连接信息从组中动态获取：</p>
+            <pre><code class="language-java">SceneJoinResult result = sdk.requestScene("auth").get();
+
+// 自动获取连接信息
+String endpoint = result.getEndpoint();  // 动态解析
+String apiKey = result.getApiKey();      // 自动注入</code></pre>
+            <p>这种"硬地址解码"机制，让应用完全与基础设施解耦。</p>
+
+            <h2>四、双模式部署</h2>
+
+            <h3>4.1 远程托管模式</h3>
+            <p>技能运行在 SkillCenter，用户只需配置认证信息：</p>
+            <pre><code class="language-java">InstallRequest.builder()
+    .skillId("skill-org-feishu")
+    .mode(InstallMode.REMOTE_HOSTED)
+    .config("FEISHU_APP_ID", "xxx")
+    .build();</code></pre>
+
+            <p>优势：</p>
+            <ul>
+                <li>快速部署，无需维护</li>
+                <li>自动升级，无需干预</li>
+                <li>资源共享，降低成本</li>
+            </ul>
+
+            <h3>4.2 本地部署模式</h3>
+            <p>技能下载到本地运行：</p>
+            <pre><code class="language-java">InstallRequest.builder()
+    .skillId("skill-org-feishu")
+    .mode(InstallMode.LOCAL_DEPLOYED)
+    .config("FEISHU_APP_ID", "xxx")
+    .autoStart(true)
+    .build();</code></pre>
+
+            <p>优势：</p>
+            <ul>
+                <li>数据安全，不出内网</li>
+                <li>低延迟，本地调用</li>
+                <li>可定制，深度集成</li>
+            </ul>
+
+            <h3>4.3 与 VFS 的集成</h3>
+            <p>基于 0.6.6 的 VFS 协议，本地部署的技能可以：</p>
+            <ol>
+                <li><strong>自动同步配置</strong>：配置文件通过 VFS 同步</li>
+                <li><strong>数据持久化</strong>：技能数据存储在 VFS</li>
+                <li><strong>故障恢复</strong>：VFS 不可用时自动切换到本地存储</li>
+            </ol>
+
+            <div class="diagram-container">
+                <div class="diagram-title">VFS 集成架构</div>
+                <svg width="650" height="280" viewBox="0 0 650 280">
+                    <g class="node" transform="translate(25, 40)">
+                        <rect class="node-box-primary" width="140" height="60" rx="8"/>
+                        <text class="node-text" x="70" y="25">Skill 本地</text>
+                        <text class="node-subtext" x="70" y="42">实例</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="165" y1="70" x2="215" y2="70"/>
+                    
+                    <g class="node" transform="translate(225, 40)">
+                        <rect class="node-box-secondary" width="140" height="60" rx="8"/>
+                        <text class="node-text" x="70" y="25">VFS</text>
+                        <text class="node-subtext" x="70" y="42">存储同步</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="365" y1="70" x2="415" y2="70"/>
+                    
+                    <g class="node" transform="translate(425, 40)">
+                        <rect class="node-box-accent" width="140" height="60" rx="8"/>
+                        <text class="node-text" x="70" y="25">SkillCenter</text>
+                        <text class="node-subtext" x="70" y="42">远程托管</text>
+                    </g>
+                    
+                    <line class="arrow-line arrow-line-dashed" x1="95" y1="100" x2="95" y2="150"/>
+                    <text x="110" y="130" fill="#64748b" font-size="10">VFS 不可用时</text>
+                    
+                    <g class="node" transform="translate(25, 160)">
+                        <rect class="node-box" width="140" height="60" rx="8"/>
+                        <text class="node-text node-text-dark" x="70" y="25">本地存储</text>
+                        <text class="node-subtext node-subtext-dark" x="70" y="42">降级模式</text>
+                    </g>
+                    
+                    <line class="arrow-line arrow-line-dashed" x1="295" y1="100" x2="295" y2="150"/>
+                    <text x="310" y="130" fill="#64748b" font-size="10">恢复后</text>
+                    
+                    <g class="node" transform="translate(225, 160)">
+                        <rect class="node-box-success" width="140" height="60" rx="8"/>
+                        <text class="node-text" x="70" y="25">自动同步</text>
+                        <text class="node-subtext" x="70" y="42">恢复后</text>
+                    </g>
+                </svg>
+            </div>
+
+            <h3>4.4 模式选择建议</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>场景</th>
+                        <th>推荐模式</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>快速验证</td>
+                        <td>远程托管</td>
+                    </tr>
+                    <tr>
+                        <td>生产环境（公网）</td>
+                        <td>远程托管</td>
+                    </tr>
+                    <tr>
+                        <td>生产环境（内网）</td>
+                        <td>本地部署</td>
+                    </tr>
+                    <tr>
+                        <td>数据敏感业务</td>
+                        <td>本地部署</td>
+                    </tr>
+                    <tr>
+                        <td>高性能要求</td>
+                        <td>本地部署</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>五、无中心组网</h2>
+
+            <h3>5.1 为什么需要无中心？</h3>
+            <p>传统中心化架构存在单点故障风险：</p>
+            <ul>
+                <li>注册中心宕机 → 服务发现失败</li>
+                <li>配置中心宕机 → 配置无法更新</li>
+                <li>网关宕机 → 服务无法访问</li>
+            </ul>
+            <p>无中心组网通过 P2P 协议，让每个节点都可以作为发现节点，消除了单点故障。</p>
+
+            <h3>5.2 Kademlia DHT</h3>
+            <p>基于 0.6.6 的 P2P 协议，我们采用 Kademlia 算法实现分布式哈希表（DHT）：</p>
+
+            <div class="diagram-container">
+                <div class="diagram-title">Kademlia DHT 架构</div>
+                <svg width="600" height="300" viewBox="0 0 600 300">
+                    <rect x="20" y="20" width="560" height="260" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+                    <text x="300" y="50" fill="#1e293b" font-size="14" font-weight="600" text-anchor="middle">Kademlia DHT</text>
+                    
+                    <g class="node" transform="translate(50, 80)">
+                        <circle cx="30" cy="30" r="30" fill="url(#primaryGradient)"/>
+                        <text class="node-text" x="30" y="30" font-size="11">Node1</text>
+                    </g>
+                    
+                    <g class="node" transform="translate(150, 80)">
+                        <circle cx="30" cy="30" r="30" fill="url(#primaryGradient)"/>
+                        <text class="node-text" x="30" y="30" font-size="11">Node2</text>
+                    </g>
+                    
+                    <g class="node" transform="translate(250, 80)">
+                        <circle cx="30" cy="30" r="30" fill="url(#primaryGradient)"/>
+                        <text class="node-text" x="30" y="30" font-size="11">Node3</text>
+                    </g>
+                    
+                    <g class="node" transform="translate(350, 80)">
+                        <circle cx="30" cy="30" r="30" fill="url(#primaryGradient)"/>
+                        <text class="node-text" x="30" y="30" font-size="11">Node4</text>
+                    </g>
+                    
+                    <g class="node" transform="translate(450, 80)">
+                        <circle cx="30" cy="30" r="30" fill="url(#primaryGradient)"/>
+                        <text class="node-text" x="30" y="30" font-size="11">Node5</text>
+                    </g>
+                    
+                    <line class="connector-line" x1="110" y1="110" x2="150" y2="110"/>
+                    <line class="connector-line" x1="210" y1="110" x2="250" y2="110"/>
+                    <line class="connector-line" x1="310" y1="110" x2="350" y2="110"/>
+                    <line class="connector-line" x1="410" y1="110" x2="450" y2="110"/>
+                    
+                    <line class="connector-line" x1="80" y1="140" x2="80" y2="180"/>
+                    <line class="connector-line" x1="180" y1="140" x2="180" y2="180"/>
+                    <line class="connector-line" x1="280" y1="140" x2="280" y2="180"/>
+                    <line class="connector-line" x1="380" y1="140" x2="380" y2="180"/>
+                    <line class="connector-line" x1="480" y1="140" x2="480" y2="180"/>
+                    
+                    <rect x="60" y="180" width="440" height="80" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+                    <text x="280" y="205" fill="#1e293b" font-size="12" font-weight="600" text-anchor="middle">技能注册表 (DHT)</text>
+                    <text x="280" y="225" fill="#64748b" font-size="11" text-anchor="middle">Key: SHA256(skillId + capability)</text>
+                    <text x="280" y="245" fill="#64748b" font-size="11" text-anchor="middle">Value: {endpoint, version, timestamp}</text>
+                </svg>
+            </div>
+
+            <h3>5.3 自组织特性</h3>
+            <p>无中心组网具有自组织特性：</p>
+            <ol>
+                <li><strong>自发现</strong>：新节点自动加入网络</li>
+                <li><strong>自愈合</strong>：节点离线后自动重新选主</li>
+                <li><strong>自负载</strong>：请求自动路由到最优节点</li>
+                <li><strong>自扩展</strong>：新节点自动分担负载</li>
+            </ol>
+
+            <h3>5.4 与 0.6.6 Agent 层次的融合</h3>
+            <div class="diagram-container">
+                <div class="diagram-title">无中心组网与 Agent 层次</div>
+                <svg width="600" height="380" viewBox="0 0 600 380">
+                    <g class="node" transform="translate(225, 20)">
+                        <rect class="node-box-primary" width="150" height="50" rx="8"/>
+                        <text class="node-text" x="75" y="20">MCP Agent</text>
+                        <text class="node-subtext" x="75" y="36">协调层</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="300" y1="70" x2="300" y2="100"/>
+                    <rect x="280" y="75" width="40" height="18" fill="white" rx="4"/>
+                    <text x="300" y="87" fill="#64748b" font-size="10" text-anchor="middle">P2P</text>
+                    
+                    <line class="connector-line" x1="200" y1="130" x2="400" y2="130"/>
+                    
+                    <g class="node" transform="translate(75, 150)">
+                        <rect class="node-box-secondary" width="150" height="50" rx="8"/>
+                        <text class="node-text" x="75" y="20">Route Agent 1</text>
+                        <text class="node-subtext" x="75" y="36">DHT 节点</text>
+                    </g>
+                    
+                    <g class="node" transform="translate(375, 150)">
+                        <rect class="node-box-secondary" width="150" height="50" rx="8"/>
+                        <text class="node-text" x="75" y="20">Route Agent 2</text>
+                        <text class="node-subtext" x="75" y="36">DHT 节点</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="150" y1="200" x2="150" y2="230"/>
+                    <line class="arrow-line" x1="450" y1="200" x2="450" y2="230"/>
+                    
+                    <g class="node" transform="translate(75, 240)">
+                        <rect class="node-box-accent" width="150" height="50" rx="8"/>
+                        <text class="node-text" x="75" y="20">Group A</text>
+                        <text class="node-subtext" x="75" y="36">(auth)</text>
+                    </g>
+                    
+                    <g class="node" transform="translate(375, 240)">
+                        <rect class="node-box-accent" width="150" height="50" rx="8"/>
+                        <text class="node-text" x="75" y="20">Group B</text>
+                        <text class="node-subtext" x="75" y="36">(msg)</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="150" y1="290" x2="150" y2="320"/>
+                    <line class="arrow-line" x1="450" y1="290" x2="450" y2="320"/>
+                    
+                    <g class="node" transform="translate(75, 330)">
+                        <rect class="node-box-success" width="150" height="40" rx="8"/>
+                        <text class="node-text" x="75" y="20">End Agent 1</text>
+                    </g>
+                    
+                    <g class="node" transform="translate(375, 330)">
+                        <rect class="node-box-success" width="150" height="40" rx="8"/>
+                        <text class="node-text" x="75" y="20">End Agent 2</text>
+                    </g>
+                </svg>
+            </div>
+
+            <h2>六、AI 友好设计</h2>
+
+            <h3>6.1 SKILLS.md 规范</h3>
+            <p>技能通过自然语言描述，便于 AI 理解：</p>
+            <pre><code class="language-markdown"># skill-org-feishu
+
+## 提供的能力
+
+### org-data-read
+读取飞书组织机构数据，包括部门树、成员列表等。
+
+**参数：**
+- orgId (可选): 组织ID
+- includeInactive (可选): 是否包含停用成员
+
+**返回：**
+组织树结构
+
+## 配置示例
+```yaml
+feishu:
+  app-id: cli_xxx
+  app-secret: xxx
+```</code></pre>
+
+            <h3>6.2 AI 调用流程</h3>
+            <div class="diagram-container">
+                <div class="diagram-title">AI 调用流程</div>
+                <svg width="500" height="350" viewBox="0 0 500 350">
+                    <g class="node" transform="translate(175, 20)">
+                        <rect class="node-box-primary" width="150" height="40" rx="8"/>
+                        <text class="node-text" x="75" y="20">AI 助手</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="250" y1="60" x2="250" y2="90"/>
+                    <text x="280" y="80" fill="#64748b" font-size="10">1. 读取 SKILLS.md 理解能力</text>
+                    
+                    <g class="node" transform="translate(175, 100)">
+                        <rect class="node-box-secondary" width="150" height="40" rx="8"/>
+                        <text class="node-text" x="75" y="20">SDK 调用</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="250" y1="140" x2="250" y2="170"/>
+                    <text x="280" y="160" fill="#64748b" font-size="10">2. requestScene("auth")</text>
+                    
+                    <g class="node" transform="translate(175, 180)">
+                        <rect class="node-box-accent" width="150" height="40" rx="8"/>
+                        <text class="node-text" x="75" y="20">自动发现</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="250" y1="220" x2="250" y2="250"/>
+                    <text x="280" y="240" fill="#64748b" font-size="10">3. 获取连接信息</text>
+                    
+                    <g class="node" transform="translate(175, 260)">
+                        <rect class="node-box-success" width="150" height="40" rx="8"/>
+                        <text class="node-text" x="75" y="20">服务调用</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="250" y1="300" x2="250" y2="330"/>
+                    <text x="280" y="320" fill="#64748b" font-size="10">4. 获取组织数据</text>
+                    
+                    <g class="node" transform="translate(175, 340)">
+                        <rect class="node-box-primary" width="150" height="40" rx="8"/>
+                        <text class="node-text" x="75" y="20">返回结果</text>
+                    </g>
+                </svg>
+            </div>
+
+            <h3>6.3 与 0.6.6 Capability 模型的对应</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>0.6.6 概念</th>
+                        <th>0.7.0 概念</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Capability</td>
+                        <td>Capability</td>
+                        <td>能力定义（继承）</td>
+                    </tr>
+                    <tr>
+                        <td>Skill</td>
+                        <td>Skill + Scene</td>
+                        <td>技能 + 场景组织</td>
+                    </tr>
+                    <tr>
+                        <td>Endpoint</td>
+                        <td>ConnectionInfo</td>
+                        <td>连接信息（动态解析）</td>
+                    </tr>
+                    <tr>
+                        <td>Register API</td>
+                        <td>SkillPackageManager</td>
+                        <td>注册 → 安装管理</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>七、三层文档体系</h2>
+
+            <h3>7.1 设计理念</h3>
+            <p>不同角色对技能的理解需求不同：</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>角色</th>
+                        <th>关注点</th>
+                        <th>文档</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>终端用户</td>
+                        <td>如何使用</td>
+                        <td>SKILLS-README.md</td>
+                    </tr>
+                    <tr>
+                        <td>AI 智能体</td>
+                        <td>能力边界</td>
+                        <td>SKILLS.md</td>
+                    </tr>
+                    <tr>
+                        <td>开发者</td>
+                        <td>如何开发</td>
+                        <td>SCENE-DESIGN.md</td>
+                    </tr>
+                    <tr>
+                        <td>运维人员</td>
+                        <td>如何运维</td>
+                        <td>SKILL-RUNTIME.md</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>7.2 文档闭环</h3>
+            <div class="diagram-container">
+                <div class="diagram-title">文档闭环流程</div>
+                <svg width="500" height="320" viewBox="0 0 500 320">
+                    <g class="node" transform="translate(175, 20)">
+                        <rect class="node-box-primary" width="150" height="40" rx="8"/>
+                        <text class="node-text" x="75" y="20">用户需求</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="250" y1="60" x2="250" y2="80"/>
+                    
+                    <g class="node" transform="translate(150, 90)">
+                        <rect class="node-box-secondary" width="200" height="40" rx="8"/>
+                        <text class="node-text" x="100" y="15">SKILLS-README.md</text>
+                        <text class="node-subtext" x="100" y="30">理解技能</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="250" y1="130" x2="250" y2="150"/>
+                    
+                    <g class="node" transform="translate(175, 160)">
+                        <rect class="node-box-accent" width="150" height="40" rx="8"/>
+                        <text class="node-text" x="75" y="15">SKILLS.md</text>
+                        <text class="node-subtext" x="75" y="30">AI 解析</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="250" y1="200" x2="250" y2="220"/>
+                    
+                    <g class="node" transform="translate(150, 230)">
+                        <rect class="node-box-success" width="200" height="40" rx="8"/>
+                        <text class="node-text" x="100" y="15">SCENE-DESIGN.md</text>
+                        <text class="node-subtext" x="100" y="30">开发实现</text>
+                    </g>
+                    
+                    <line class="arrow-line" x1="250" y1="270" x2="250" y2="290"/>
+                    
+                    <g class="node" transform="translate(150, 300)">
+                        <rect class="node-box-primary" width="200" height="40" rx="8"/>
+                        <text class="node-text" x="100" y="15">SKILL-RUNTIME.md</text>
+                        <text class="node-subtext" x="100" y="30">运维部署</text>
+                    </g>
+                    
+                    <path d="M 350 320 Q 420 320 420 200 Q 420 50 250 50" stroke="#94a3b8" stroke-width="2" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+                    <text x="430" y="200" fill="#64748b" font-size="10">用户反馈</text>
+                    <text x="430" y="215" fill="#64748b" font-size="10">持续优化</text>
+                </svg>
+            </div>
+
+            <h3>7.3 与 0.6.6 协议文档的关系</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>0.6.6 文档</th>
+                        <th>0.7.0 文档</th>
+                        <th>关系</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>skill-protocol.md</td>
+                        <td>skill-package-protocol.md</td>
+                        <td>协议扩展</td>
+                    </tr>
+                    <tr>
+                        <td>skill-interface.md</td>
+                        <td>skill-manifest-spec.md</td>
+                        <td>接口 → 清单规范</td>
+                    </tr>
+                    <tr>
+                        <td>agent-protocol.md</td>
+                        <td>skill-discovery-protocol.md</td>
+                        <td>发现机制增强</td>
+                    </tr>
+                    <tr>
+                        <td>p2p-protocol.md</td>
+                        <td>(继承)</td>
+                        <td>无变化</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>八、实践案例</h2>
+
+            <h3>8.1 场景：企业组织集成</h3>
+            <p>某企业需要将飞书组织数据集成到内部应用。</p>
+
+            <p><strong>传统方式（0.6.6）：</strong></p>
+            <ol>
+                <li>手动部署 skill-org-feishu</li>
+                <li>配置飞书 API 地址</li>
+                <li>配置 App ID 和 Secret</li>
+                <li>手动处理 Token 刷新</li>
+                <li>手动处理故障转移</li>
+            </ol>
+
+            <p><strong>OoderAgent 0.7.0 方式：</strong></p>
+            <pre><code class="language-java">// 1. 请求场景（自动发现、自动安装）
+SceneJoinResult result = sdk.requestScene(
+    SceneRequest.builder()
+        .sceneName("auth")
+        .capability("org-data-read")
+        .build()
+).get();
+
+// 2. 获取数据
+OrgClient client = new OrgClient(result.getEndpoint(), result.getApiKey());
+Org org = client.getOrgTree();
+
+// 完成！无需配置地址，无需管理 Token</code></pre>
+
+            <h3>8.2 场景：多技能协作</h3>
+            <p>某应用需要同时使用组织数据和消息通知。</p>
+            <pre><code class="language-java">// 请求认证场景
+SceneJoinResult authResult = sdk.requestScene("auth").get();
+
+// 请求消息场景
+SceneJoinResult msgResult = sdk.requestScene("messaging").get();
+
+// 组合使用
+OrgClient orgClient = new OrgClient(authResult.getEndpoint(), authResult.getApiKey());
+MsgClient msgClient = new MsgClient(msgResult.getEndpoint(), msgResult.getApiKey());
+
+// 获取组织成员并发送通知
+List<Person> members = orgClient.getOrgMembers("dept-001");
+for (Person member : members) {
+    msgClient.sendMessage(member.getId(), "系统通知");
+}</code></pre>
+
+            <h2>九、总结与展望</h2>
+
+            <h3>9.1 版本演进总结</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>维度</th>
+                        <th>0.6.6</th>
+                        <th>0.7.0</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>技能发现</td>
+                        <td>UDP 广播</td>
+                        <td>多层发现策略</td>
+                    </tr>
+                    <tr>
+                        <td>技能管理</td>
+                        <td>手动部署</td>
+                        <td>SkillPackageManager</td>
+                    </tr>
+                    <tr>
+                        <td>场景管理</td>
+                        <td>基础支持</td>
+                        <td>场景组 + 硬地址解码</td>
+                    </tr>
+                    <tr>
+                        <td>配置管理</td>
+                        <td>手动配置</td>
+                        <td>模板 + 自动注入</td>
+                    </tr>
+                    <tr>
+                        <td>文档体系</td>
+                        <td>协议文档</td>
+                        <td>三层文档体系</td>
+                    </tr>
+                    <tr>
+                        <td>AI 支持</td>
+                        <td>无</td>
+                        <td>SKILLS.md 自然语言</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>9.2 设计亮点回顾</h3>
+            <p>OoderAgent 技能闭环系统的核心设计亮点：</p>
+            <ol>
+                <li><strong>零配置发现</strong>：从"配置地址"到"请求能力"</li>
+                <li><strong>场景驱动</strong>：从"服务为中心"到"场景为中心"</li>
+                <li><strong>双模式部署</strong>：灵活适应不同环境需求</li>
+                <li><strong>无中心组网</strong>：消除单点故障，实现自组织</li>
+                <li><strong>AI 友好</strong>：自然语言描述，便于 AI 理解和调用</li>
+                <li><strong>三层文档</strong>：分层设计，满足不同角色需求</li>
+                <li><strong>向后兼容</strong>：继承 0.6.6 核心协议，平滑升级</li>
+            </ol>
+
+            <h3>9.3 技术价值</h3>
+            <p>这套设计带来的技术价值：</p>
+            <ul>
+                <li><strong>降低集成成本</strong>：从天级降到分钟级</li>
+                <li><strong>提高系统韧性</strong>：自动故障转移和恢复</li>
+                <li><strong>增强灵活性</strong>：动态发现和切换服务</li>
+                <li><strong>支持智能化</strong>：AI 可自主发现和调用能力</li>
+            </ul>
+
+            <h3>9.4 未来展望</h3>
+            <p>后续规划：</p>
+            <ol>
+                <li><strong>技能市场</strong>：构建技能生态系统</li>
+                <li><strong>智能路由</strong>：基于负载和延迟的智能调度</li>
+                <li><strong>联邦学习</strong>：跨组织的技能共享</li>
+                <li><strong>低代码集成</strong>：可视化技能编排</li>
+            </ol>
+
+            <h2>附录一：关键概念对照表</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>概念</th>
+                        <th>定义</th>
+                        <th>类比</th>
+                        <th>版本</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Skill</td>
+                        <td>能力单元</td>
+                        <td>手机 App</td>
+                        <td><span class="version-badge badge-inherited">0.6.6+</span></td>
+                    </tr>
+                    <tr>
+                        <td>Capability</td>
+                        <td>具体能力</td>
+                        <td>API 接口</td>
+                        <td><span class="version-badge badge-inherited">0.6.6+</span></td>
+                    </tr>
+                    <tr>
+                        <td>Scene</td>
+                        <td>能力场景</td>
+                        <td>App 功能分类</td>
+                        <td><span class="version-badge badge-new">0.7.0</span></td>
+                    </tr>
+                    <tr>
+                        <td>Group</td>
+                        <td>运行时协作组</td>
+                        <td>聊天群</td>
+                        <td><span class="version-badge badge-new">0.7.0</span></td>
+                    </tr>
+                    <tr>
+                        <td>Role</td>
+                        <td>场景角色</td>
+                        <td>群成员身份</td>
+                        <td><span class="version-badge badge-new">0.7.0</span></td>
+                    </tr>
+                    <tr>
+                        <td>RouteAgent</td>
+                        <td>服务提供者</td>
+                        <td>群主</td>
+                        <td><span class="version-badge badge-inherited">0.6.6+</span></td>
+                    </tr>
+                    <tr>
+                        <td>EndAgent</td>
+                        <td>服务消费者</td>
+                        <td>群成员</td>
+                        <td><span class="version-badge badge-inherited">0.6.6+</span></td>
+                    </tr>
+                    <tr>
+                        <td>MCPAgent</td>
+                        <td>场景协调者</td>
+                        <td>群管理员</td>
+                        <td><span class="version-badge badge-inherited">0.6.6+</span></td>
+                    </tr>
+                    <tr>
+                        <td>VFS</td>
+                        <td>虚拟文件系统</td>
+                        <td>云盘</td>
+                        <td><span class="version-badge badge-inherited">0.6.6+</span></td>
+                    </tr>
+                    <tr>
+                        <td>SkillCenter</td>
+                        <td>技能中心</td>
+                        <td>应用商店</td>
+                        <td><span class="version-badge badge-new">0.7.0</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>附录二：协议版本对照</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>协议</th>
+                        <th>0.6.6</th>
+                        <th>0.7.0</th>
+                        <th>变化</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Agent 协议</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                        <td><span class="version-badge badge-inherited">继承</span></td>
+                    </tr>
+                    <tr>
+                        <td>Skill 协议</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                        <td><span class="version-badge badge-enhanced">扩展</span></td>
+                    </tr>
+                    <tr>
+                        <td>P2P 协议</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                        <td><span class="version-badge badge-inherited">继承</span></td>
+                    </tr>
+                    <tr>
+                        <td>VFS 协议</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                        <td><span class="version-badge badge-inherited">继承</span></td>
+                    </tr>
+                    <tr>
+                        <td>Skill Package 协议</td>
+                        <td>❌</td>
+                        <td>✅</td>
+                        <td><span class="version-badge badge-new">新增</span></td>
+                    </tr>
+                    <tr>
+                        <td>Skill Discovery 协议</td>
+                        <td>部分</td>
+                        <td>✅</td>
+                        <td><span class="version-badge badge-enhanced">增强</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="footer">
+                <p>本文基于 OoderAgent SDK 0.7.0 设计实践整理，相关代码和文档已开源。</p>
+            </div>
+        </article>
+    </div>
+
+    <script>
+        document.querySelectorAll('.node').forEach(node => {
+            node.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+            node.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+</body>
+</html>
