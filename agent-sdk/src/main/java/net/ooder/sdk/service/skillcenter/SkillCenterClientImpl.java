@@ -30,6 +30,7 @@ public class SkillCenterClientImpl implements SkillCenterClient {
     
     private static final String API_SKILLS = "/api/v1/skills";
     private static final String API_SCENES = "/api/v1/scenes";
+    private static final String API_CATEGORIES = "/api/v1/categories";
     
     private String endpoint;
     private String authToken;
@@ -39,6 +40,7 @@ public class SkillCenterClientImpl implements SkillCenterClient {
     
     private final Map<String, SkillPackage> skillCache = new ConcurrentHashMap<>();
     private final Map<String, SceneInfo> sceneCache = new ConcurrentHashMap<>();
+    private final Map<String, CategoryInfo> categoryCache = new ConcurrentHashMap<>();
     
     public SkillCenterClientImpl() {
     }
@@ -125,6 +127,81 @@ public class SkillCenterClientImpl implements SkillCenterClient {
             } catch (IOException e) {
                 log.warn("Failed to get skills by scene: {}, using cache", e.getMessage());
                 return filterByScene(sceneId);
+            }
+        });
+    }
+    
+    @Override
+    public CompletableFuture<List<SkillPackage>> getSkillsByCategory(String category) {
+        return getSkillsByCategory(category, null);
+    }
+    
+    @Override
+    public CompletableFuture<List<SkillPackage>> getSkillsByCategory(String category, String subCategory) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (!connected || endpoint == null) {
+                return filterByCategory(category, subCategory);
+            }
+            
+            try {
+                String url = endpoint + API_SKILLS + "/category/" + category;
+                if (subCategory != null && !subCategory.isEmpty()) {
+                    url += "/" + subCategory;
+                }
+                String response = httpGet(url);
+                return parseSkillPackages(response);
+            } catch (IOException e) {
+                log.warn("Failed to get skills by category: {}, using cache", e.getMessage());
+                return filterByCategory(category, subCategory);
+            }
+        });
+    }
+    
+    @Override
+    public CompletableFuture<List<SkillPackage>> searchSkillsByTags(List<String> tags) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (!connected || endpoint == null || tags == null || tags.isEmpty()) {
+                return filterByTags(tags);
+            }
+            
+            try {
+                StringBuilder tagsJson = new StringBuilder("[");
+                for (int i = 0; i < tags.size(); i++) {
+                    if (i > 0) tagsJson.append(",");
+                    tagsJson.append("\"").append(escapeJson(tags.get(i))).append("\"");
+                }
+                tagsJson.append("]");
+                
+                String jsonBody = "{\"tags\":" + tagsJson.toString() + "}";
+                String response = httpPost(endpoint + API_SKILLS + "/tags/search", jsonBody);
+                return parseSkillPackages(response);
+            } catch (IOException e) {
+                log.warn("Failed to search skills by tags: {}, using cache", e.getMessage());
+                return filterByTags(tags);
+            }
+        });
+    }
+    
+    @Override
+    public CompletableFuture<List<CategoryInfo>> listCategories() {
+        return CompletableFuture.supplyAsync(() -> {
+            if (!connected || endpoint == null) {
+                return new ArrayList<>(categoryCache.values());
+            }
+            
+            try {
+                String response = httpGet(endpoint + API_CATEGORIES);
+                List<CategoryInfo> categories = parseCategoryInfos(response);
+                
+                for (CategoryInfo category : categories) {
+                    categoryCache.put(category.getId(), category);
+                }
+                
+                log.debug("Listed {} categories from SkillCenter", categories.size());
+                return categories;
+            } catch (IOException e) {
+                log.warn("Failed to list categories: {}, using cache", e.getMessage());
+                return new ArrayList<>(categoryCache.values());
             }
         });
     }
@@ -419,9 +496,16 @@ public class SkillCenterClientImpl implements SkillCenterClient {
         }
     }
     
+    public void addCategoryToCache(CategoryInfo categoryInfo) {
+        if (categoryInfo != null && categoryInfo.getId() != null) {
+            categoryCache.put(categoryInfo.getId(), categoryInfo);
+        }
+    }
+    
     public void clearCache() {
         skillCache.clear();
         sceneCache.clear();
+        categoryCache.clear();
     }
     
     public void setConnectionTimeout(long timeout) {
@@ -573,6 +657,43 @@ public class SkillCenterClientImpl implements SkillCenterClient {
         return results;
     }
     
+    private List<SkillPackage> filterByCategory(String category, String subCategory) {
+        List<SkillPackage> results = new ArrayList<>();
+        for (SkillPackage pkg : skillCache.values()) {
+            if (category != null && !category.equals(pkg.getCategory())) {
+                continue;
+            }
+            if (subCategory != null && !subCategory.equals(pkg.getSubCategory())) {
+                continue;
+            }
+            results.add(pkg);
+        }
+        return results;
+    }
+    
+    private List<SkillPackage> filterByTags(List<String> tags) {
+        List<SkillPackage> results = new ArrayList<>();
+        if (tags == null || tags.isEmpty()) {
+            return results;
+        }
+        for (SkillPackage pkg : skillCache.values()) {
+            if (pkg.getTags() == null) {
+                continue;
+            }
+            boolean hasAllTags = true;
+            for (String tag : tags) {
+                if (!pkg.getTags().contains(tag)) {
+                    hasAllTags = false;
+                    break;
+                }
+            }
+            if (hasAllTags) {
+                results.add(pkg);
+            }
+        }
+        return results;
+    }
+    
     private List<SkillPackage> parseSkillPackages(String json) {
         List<SkillPackage> packages = new ArrayList<>();
         if (json == null || json.isEmpty()) return packages;
@@ -620,7 +741,28 @@ public class SkillCenterClientImpl implements SkillCenterClient {
         pkg.setSceneId(getString(data, "sceneId"));
         pkg.setDownloadUrl(getString(data, "downloadUrl"));
         pkg.setChecksum(getString(data, "checksum"));
+        pkg.setCategory(getString(data, "category"));
+        pkg.setSubCategory(getString(data, "subCategory"));
         pkg.setSource("skillcenter:" + endpoint);
+        
+        Object tagsObj = data.get("tags");
+        if (tagsObj instanceof String) {
+            String tagsStr = (String) tagsObj;
+            List<String> tagsList = new ArrayList<>();
+            if (tagsStr.startsWith("[") && tagsStr.endsWith("]")) {
+                tagsStr = tagsStr.substring(1, tagsStr.length() - 1);
+                for (String tag : tagsStr.split(",")) {
+                    tag = tag.trim();
+                    if (tag.startsWith("\"") && tag.endsWith("\"")) {
+                        tag = tag.substring(1, tag.length() - 1);
+                    }
+                    if (!tag.isEmpty()) {
+                        tagsList.add(tag);
+                    }
+                }
+            }
+            pkg.setTags(tagsList);
+        }
         
         SkillManifest manifest = new SkillManifest();
         manifest.setSkillId(pkg.getSkillId());
@@ -628,6 +770,9 @@ public class SkillCenterClientImpl implements SkillCenterClient {
         manifest.setDescription(pkg.getDescription());
         manifest.setVersion(pkg.getVersion());
         manifest.setSceneId(pkg.getSceneId());
+        manifest.setCategory(pkg.getCategory());
+        manifest.setSubCategory(pkg.getSubCategory());
+        manifest.setTags(pkg.getTags());
         pkg.setManifest(manifest);
         
         return pkg;
@@ -698,6 +843,57 @@ public class SkillCenterClientImpl implements SkillCenterClient {
         scene.setMemberCount(getInt(data, "memberCount", 0));
         
         return scene;
+    }
+    
+    private List<CategoryInfo> parseCategoryInfos(String json) {
+        List<CategoryInfo> categories = new ArrayList<>();
+        if (json == null || json.isEmpty()) return categories;
+        
+        json = json.trim();
+        if (!json.startsWith("[")) {
+            CategoryInfo category = parseCategoryInfo(json);
+            if (category != null) categories.add(category);
+            return categories;
+        }
+        
+        json = json.substring(1, json.length() - 1).trim();
+        int depth = 0;
+        int start = -1;
+        
+        for (int i = 0; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (c == '{') {
+                if (depth == 0) start = i;
+                depth++;
+            } else if (c == '}') {
+                depth--;
+                if (depth == 0 && start >= 0) {
+                    CategoryInfo category = parseCategoryInfo(json.substring(start, i + 1));
+                    if (category != null) categories.add(category);
+                    start = -1;
+                }
+            }
+        }
+        
+        return categories;
+    }
+    
+    private CategoryInfo parseCategoryInfo(String json) {
+        if (json == null || json.isEmpty() || !json.trim().startsWith("{")) return null;
+        
+        Map<String, Object> data = parseJson(json);
+        if (data.isEmpty()) return null;
+        
+        CategoryInfo category = new CategoryInfo();
+        category.setId(getString(data, "id"));
+        category.setName(getString(data, "name"));
+        category.setNameEn(getString(data, "nameEn"));
+        category.setDescription(getString(data, "description"));
+        category.setIcon(getString(data, "icon"));
+        category.setOrder(getInt(data, "order", 0));
+        category.setSkillCount(getInt(data, "skillCount", 0));
+        
+        return category;
     }
     
     private List<String> parseVersions(String json) {
@@ -836,7 +1032,19 @@ public class SkillCenterClientImpl implements SkillCenterClient {
         sb.append("\"name\":\"").append(escapeJson(pkg.getName() != null ? pkg.getName() : "")).append("\",");
         sb.append("\"description\":\"").append(escapeJson(pkg.getDescription() != null ? pkg.getDescription() : "")).append("\",");
         sb.append("\"version\":\"").append(escapeJson(pkg.getVersion() != null ? pkg.getVersion() : "")).append("\",");
-        sb.append("\"sceneId\":\"").append(escapeJson(pkg.getSceneId() != null ? pkg.getSceneId() : "")).append("\"");
+        sb.append("\"sceneId\":\"").append(escapeJson(pkg.getSceneId() != null ? pkg.getSceneId() : "")).append("\",");
+        sb.append("\"category\":\"").append(escapeJson(pkg.getCategory() != null ? pkg.getCategory() : "")).append("\",");
+        sb.append("\"subCategory\":\"").append(escapeJson(pkg.getSubCategory() != null ? pkg.getSubCategory() : "")).append("\"");
+        
+        if (pkg.getTags() != null && !pkg.getTags().isEmpty()) {
+            sb.append(",\"tags\":[");
+            for (int i = 0; i < pkg.getTags().size(); i++) {
+                if (i > 0) sb.append(",");
+                sb.append("\"").append(escapeJson(pkg.getTags().get(i))).append("\"");
+            }
+            sb.append("]");
+        }
+        
         sb.append("}");
         return sb.toString();
     }

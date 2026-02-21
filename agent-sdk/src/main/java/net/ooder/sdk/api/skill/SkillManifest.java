@@ -23,6 +23,9 @@ public class SkillManifest {
     private String author;
     private String license;
     private String homepage;
+    private String category;
+    private String subCategory;
+    private List<String> tags;
     
     public String getSkillId() {
         return skillId;
@@ -162,6 +165,30 @@ public class SkillManifest {
     
     public void setHomepage(String homepage) {
         this.homepage = homepage;
+    }
+    
+    public String getCategory() {
+        return category;
+    }
+    
+    public void setCategory(String category) {
+        this.category = category;
+    }
+    
+    public String getSubCategory() {
+        return subCategory;
+    }
+    
+    public void setSubCategory(String subCategory) {
+        this.subCategory = subCategory;
+    }
+    
+    public List<String> getTags() {
+        return tags;
+    }
+    
+    public void setTags(List<String> tags) {
+        this.tags = tags;
     }
     
     public static class Dependency {

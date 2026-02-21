@@ -32,6 +32,8 @@ public class SkillCenterDiscoverer implements SkillDiscoverer {
     private static final String API_SEARCH = "/api/v1/skills/search";
     private static final String API_BY_SCENE = "/api/v1/skills/scene";
     private static final String API_BY_CAPABILITY = "/api/v1/skills/capability";
+    private static final String API_BY_CATEGORY = "/api/v1/skills/category";
+    private static final String API_BY_TAGS = "/api/v1/skills/tags";
     
     private String endpoint;
     private long timeout = 10000;
@@ -175,6 +177,77 @@ public class SkillCenterDiscoverer implements SkillDiscoverer {
                 return filtered;
             } catch (Exception e) {
                 log.error("Failed to search skills by capability: {}", e.getMessage());
+                return new ArrayList<SkillPackage>();
+            }
+        });
+    }
+    
+    @Override
+    public CompletableFuture<List<SkillPackage>> discoverByCategory(String category) {
+        return discoverByCategory(category, null);
+    }
+    
+    @Override
+    public CompletableFuture<List<SkillPackage>> discoverByCategory(String category, String subCategory) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (!isAvailable() || category == null || category.isEmpty()) {
+                return new ArrayList<SkillPackage>();
+            }
+            
+            try {
+                String url = endpoint + API_BY_CATEGORY + "/" + category;
+                if (subCategory != null && !subCategory.isEmpty()) {
+                    url += "/" + subCategory;
+                }
+                
+                String response = httpGet(url);
+                List<SkillPackage> packages = parseSkillPackages(response);
+                
+                List<SkillPackage> filtered = new ArrayList<>();
+                for (SkillPackage pkg : packages) {
+                    if (passesFilter(pkg)) {
+                        filtered.add(pkg);
+                    }
+                }
+                
+                log.debug("Found {} skills in category {} from SkillCenter", filtered.size(), category);
+                return filtered;
+            } catch (Exception e) {
+                log.error("Failed to discover skills by category: {}", e.getMessage());
+                return new ArrayList<SkillPackage>();
+            }
+        });
+    }
+    
+    @Override
+    public CompletableFuture<List<SkillPackage>> searchByTags(List<String> tags) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (!isAvailable() || tags == null || tags.isEmpty()) {
+                return new ArrayList<SkillPackage>();
+            }
+            
+            try {
+                StringBuilder tagsParam = new StringBuilder();
+                for (int i = 0; i < tags.size(); i++) {
+                    if (i > 0) tagsParam.append(",");
+                    tagsParam.append(escapeJson(tags.get(i)));
+                }
+                
+                String jsonBody = "{\"tags\":[" + tagsParam.toString().replaceAll("([^,]+)", "\"$1\"") + "]}";
+                String response = httpPost(endpoint + API_BY_TAGS + "/search", jsonBody);
+                List<SkillPackage> packages = parseSkillPackages(response);
+                
+                List<SkillPackage> filtered = new ArrayList<>();
+                for (SkillPackage pkg : packages) {
+                    if (passesFilter(pkg)) {
+                        filtered.add(pkg);
+                    }
+                }
+                
+                log.debug("Found {} skills matching tags from SkillCenter", filtered.size());
+                return filtered;
+            } catch (Exception e) {
+                log.error("Failed to search skills by tags: {}", e.getMessage());
                 return new ArrayList<SkillPackage>();
             }
         });
@@ -362,6 +435,27 @@ public class SkillCenterDiscoverer implements SkillDiscoverer {
         pkg.setDownloadUrl(getString(data, "downloadUrl"));
         pkg.setChecksum(getString(data, "checksum"));
         pkg.setSource("skillcenter:" + endpoint);
+        pkg.setCategory(getString(data, "category"));
+        pkg.setSubCategory(getString(data, "subCategory"));
+        
+        Object tagsObj = data.get("tags");
+        if (tagsObj instanceof String) {
+            String tagsStr = (String) tagsObj;
+            List<String> tagsList = new ArrayList<>();
+            if (tagsStr.startsWith("[") && tagsStr.endsWith("]")) {
+                tagsStr = tagsStr.substring(1, tagsStr.length() - 1);
+                for (String tag : tagsStr.split(",")) {
+                    tag = tag.trim();
+                    if (tag.startsWith("\"") && tag.endsWith("\"")) {
+                        tag = tag.substring(1, tag.length() - 1);
+                    }
+                    if (!tag.isEmpty()) {
+                        tagsList.add(tag);
+                    }
+                }
+            }
+            pkg.setTags(tagsList);
+        }
         
         Object sizeObj = data.get("size");
         if (sizeObj instanceof Number) {
@@ -376,6 +470,9 @@ public class SkillCenterDiscoverer implements SkillDiscoverer {
         manifest.setMainClass(getString(data, "mainClass"));
         manifest.setAuthor(getString(data, "author"));
         manifest.setLicense(getString(data, "license"));
+        manifest.setCategory(pkg.getCategory());
+        manifest.setSubCategory(pkg.getSubCategory());
+        manifest.setTags(pkg.getTags());
         
         pkg.setManifest(manifest);
         
@@ -492,6 +589,22 @@ public class SkillCenterDiscoverer implements SkillDiscoverer {
         }
         if (filter.getVersion() != null && !filter.getVersion().equals(pkg.getVersion())) {
             return false;
+        }
+        if (filter.getCategory() != null && !filter.getCategory().equals(pkg.getCategory())) {
+            return false;
+        }
+        if (filter.getSubCategory() != null && !filter.getSubCategory().equals(pkg.getSubCategory())) {
+            return false;
+        }
+        if (filter.getTags() != null && !filter.getTags().isEmpty()) {
+            if (pkg.getTags() == null) {
+                return false;
+            }
+            for (String requiredTag : filter.getTags()) {
+                if (!pkg.getTags().contains(requiredTag)) {
+                    return false;
+                }
+            }
         }
         return true;
     }

@@ -19,6 +19,9 @@ public class SkillPackage {
     private List<String> dependencies;
     private Map<String, Object> metadata;
     private SkillManifest manifest;
+    private String category;
+    private String subCategory;
+    private List<String> tags;
     
     public String getSkillId() {
         return skillId;
@@ -122,5 +125,29 @@ public class SkillPackage {
     
     public void setManifest(SkillManifest manifest) {
         this.manifest = manifest;
+    }
+    
+    public String getCategory() {
+        return category;
+    }
+    
+    public void setCategory(String category) {
+        this.category = category;
+    }
+    
+    public String getSubCategory() {
+        return subCategory;
+    }
+    
+    public void setSubCategory(String subCategory) {
+        this.subCategory = subCategory;
+    }
+    
+    public List<String> getTags() {
+        return tags;
+    }
+    
+    public void setTags(List<String> tags) {
+        this.tags = tags;
     }
 }

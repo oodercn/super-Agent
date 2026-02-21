@@ -19,6 +19,12 @@ public interface SkillDiscoverer {
     
     CompletableFuture<List<SkillPackage>> searchByCapability(String capabilityId);
     
+    CompletableFuture<List<SkillPackage>> discoverByCategory(String category);
+    
+    CompletableFuture<List<SkillPackage>> discoverByCategory(String category, String subCategory);
+    
+    CompletableFuture<List<SkillPackage>> searchByTags(List<String> tags);
+    
     DiscoveryMethod getMethod();
     
     boolean isAvailable();
@@ -36,6 +42,9 @@ public interface SkillDiscoverer {
         private String version;
         private List<String> capabilities;
         private Map<String, String> labels;
+        private String category;
+        private String subCategory;
+        private List<String> tags;
         
         public String getSceneId() { return sceneId; }
         public void setSceneId(String sceneId) { this.sceneId = sceneId; }
@@ -45,5 +54,11 @@ public interface SkillDiscoverer {
         public void setCapabilities(List<String> capabilities) { this.capabilities = capabilities; }
         public Map<String, String> getLabels() { return labels; }
         public void setLabels(Map<String, String> labels) { this.labels = labels; }
+        public String getCategory() { return category; }
+        public void setCategory(String category) { this.category = category; }
+        public String getSubCategory() { return subCategory; }
+        public void setSubCategory(String subCategory) { this.subCategory = subCategory; }
+        public List<String> getTags() { return tags; }
+        public void setTags(List<String> tags) { this.tags = tags; }
     }
 }

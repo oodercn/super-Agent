@@ -15,6 +15,14 @@ public interface SkillCenterClient {
     
     CompletableFuture<List<SkillPackage>> getSkillsByScene(String sceneId);
     
+    CompletableFuture<List<SkillPackage>> getSkillsByCategory(String category);
+    
+    CompletableFuture<List<SkillPackage>> getSkillsByCategory(String category, String subCategory);
+    
+    CompletableFuture<List<SkillPackage>> searchSkillsByTags(List<String> tags);
+    
+    CompletableFuture<List<CategoryInfo>> listCategories();
+    
     CompletableFuture<String> getDownloadUrl(String skillId, String version);
     
     CompletableFuture<SkillManifest> getManifest(String skillId);
@@ -81,5 +89,30 @@ public interface SkillCenterClient {
         public void setSceneGroupId(String sceneGroupId) { this.sceneGroupId = sceneGroupId; }
         public String getError() { return error; }
         public void setError(String error) { this.error = error; }
+    }
+    
+    class CategoryInfo {
+        private String id;
+        private String name;
+        private String nameEn;
+        private String description;
+        private String icon;
+        private int order;
+        private int skillCount;
+        
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getNameEn() { return nameEn; }
+        public void setNameEn(String nameEn) { this.nameEn = nameEn; }
+        public String getDescription() { return description; }
+        public void setDescription(String description) { this.description = description; }
+        public String getIcon() { return icon; }
+        public void setIcon(String icon) { this.icon = icon; }
+        public int getOrder() { return order; }
+        public void setOrder(int order) { this.order = order; }
+        public int getSkillCount() { return skillCount; }
+        public void setSkillCount(int skillCount) { this.skillCount = skillCount; }
     }
 }
