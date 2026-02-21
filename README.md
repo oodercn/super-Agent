@@ -64,23 +64,18 @@ public enum DiscoveryMethod {
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │                    super-Agent (本仓库)                   │   │
-│  │  ├── agent-skillcenter 技能中心                          │   │
-│  │  ├── skills-a2ui        A2UI 技能                        │   │
-│  │  └── skills-rad         RAD 技能                         │   │
+│  │  ├── agent-skillcenter   技能中心                        │   │
+│  │  ├── ooder-Nexus         分发枢纽 (个人版)               │   │
+│  │  └── ooder-Nexus-Enterprise 分发枢纽 (企业版)            │   │
 │  └─────────────────────────────────────────────────────────┘   │
 │                              │                                   │
 │              ┌───────────────┼───────────────┐                  │
 │              │               │               │                  │
 │              ▼               ▼               ▼                  │
 │     ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
-│     │ ooder-sdk   │  │ ooder-skills│  │ ooder-Nexus │          │
-│     │ (SDK核心)   │  │ (能力库)    │  │ (分发枢纽)  │          │
+│     │ ooder-sdk   │  │ ooder-skills│  │   common    │          │
+│     │ (SDK核心)   │  │ (能力库)    │  │ (企业套包)  │          │
 │     └─────────────┘  └─────────────┘  └─────────────┘          │
-│                                                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                      common 2.2                           │   │
-│  │  企业开发套包：数据库、缓存、VFS、组织、消息               │   │
-│  └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -197,14 +192,25 @@ packageManager.install(request).join();
 super-Agent/
 ├── agent-skillcenter/            # 技能中心
 │   ├── src/main/java/net/ooder/skillcenter/
-│   │   ├── sdk/                  # SDK 服务
-│   │   └── kubernetes/           # K8s 托管
+│   │   ├── controller/           # 控制器
+│   │   ├── service/              # 服务层
+│   │   ├── market/               # 技能市场
+│   │   └── p2p/                  # P2P 网络
 │   └── pom.xml
 │
-├── skills-a2ui/                  # A2UI 技能
-├── skills-rad/                   # RAD 技能
+├── ooder-Nexus/                  # 分发枢纽 (个人版)
+│   ├── src/main/resources/
+│   │   ├── scenes/               # 场景配置
+│   │   ├── skills/               # 技能配置
+│   │   └── static/               # 静态资源
+│   └── pom.xml
 │
-├── independent-mcp-agent/        # 独立 MCP Agent 示例
+├── ooder-Nexus-Enterprise/       # 分发枢纽 (企业版)
+│   ├── src/main/resources/
+│   │   ├── scenes/               # 场景配置
+│   │   └── static/               # 静态资源
+│   └── pom.xml
+│
 ├── examples/                     # 示例代码
 │   ├── end-agent/
 │   ├── mcp-agent/
@@ -249,17 +255,15 @@ super-Agent/
 |------|------|------|
 | **ooder-sdk** | Agent SDK 核心 | [github.com/oodercn/ooder-sdk](https://github.com/oodercn/ooder-sdk) |
 | **ooder-skills** | 共享能力库 | [github.com/oodercn/ooder-skills](https://github.com/oodercn/ooder-skills) |
-| **ooder-Nexus** | P2P AI 能力分发枢纽 | [github.com/oodercn/ooder-Nexus](https://github.com/oodercn/ooder-Nexus) |
 | **common** | 企业开发套包 | [github.com/oodercn/common](https://github.com/oodercn/common) |
 
 ## 文档资源
 
 | 文档 | 说明 |
 |------|------|
-| [总体设计规范](../overall-design/specifications/REQUIREMENTS_DESIGN_SPECIFICATION.md) | 需求设计规范 |
-| [场景驱动配置指南](../SCENE_DRIVEN_CONFIGURATION_GUIDE.md) | 场景配置指南 |
-| [用户故事归集](../overall-design/analysis/USER_STORIES_CONSOLIDATION.md) | 用户故事分析 |
-| [0.7.3 开源规划](../overall-design/planning/OODER_0.7.3_OPEN_SOURCE_PLAN.md) | 开源规划方案 |
+| [协议文档](protocol-release/) | 协议发布文档 |
+| [开发指南](docs/overview/) | 开发概述 |
+| [技能开发](docs/skills/) | 技能开发规范 |
 
 ## 贡献指南
 
