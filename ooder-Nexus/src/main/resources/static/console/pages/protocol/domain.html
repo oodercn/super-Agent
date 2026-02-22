@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexus Domain Management Protocol - 域管理协议">
+    <meta name="theme-color" content="#000000">
+    <title>域管理协议 - Nexus Console</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+    <script src="../../js/theme-manager.js?v=2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="page-header">
+                <h1><i class="ri-domain-line"></i> 域管理协议</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary btn-sm" onclick="startDomainManagement()"><i class="ri-play-line"></i> 启动</button>
+                    <button class="btn btn-secondary btn-sm" onclick="stopDomainManagement()"><i class="ri-stop-line"></i> 停止</button>
+                    <button class="btn btn-secondary btn-sm" onclick="refreshStatus()"><i class="ri-refresh-line"></i> 刷新</button>
+                </div>
+            </div>
+            
+            <div class="protocol-status-bar">
+                <div class="status-item">
+                    <div class="status-label">状态</div>
+                    <div class="status-value" id="protocolStatus">
+                        <span class="badge badge-success">运行中</span>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">管理域</div>
+                    <div class="status-value" id="domainCount">-</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">域成员</div>
+                    <div class="status-value" id="memberCount">-</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">最后更新</div>
+                    <div class="status-value" id="lastUpdate">-</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-global-line"></i> 域列表</h3>
+                    <div class="card-header-actions">
+                        <button class="btn btn-primary btn-sm" onclick="showCreateDomainModal()"><i class="ri-add-line"></i> 创建域</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>域ID</th>
+                                    <th>域名称</th>
+                                    <th>类型</th>
+                                    <th>成员数</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="domainsTableBody">
+                                <tr><td colspan="6" class="loading">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-user-settings-line"></i> 域成员管理</h3>
+                </div>
+                <div class="card-body">
+                    <div class="members-panel" id="membersPanel">
+                        <div class="empty-state">请先选择一个域</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-settings-3-line"></i> 域配置</h3>
+                </div>
+                <div class="card-body">
+                    <form id="domainConfigForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">默认策略</label>
+                                <select class="form-control" id="defaultPolicy">
+                                    <option value="allow">允许</option>
+                                    <option value="deny">拒绝</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">心跳间隔(秒)</label>
+                                <input type="number" class="form-control" id="heartbeatInterval" value="30">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">超时时间(秒)</label>
+                                <input type="number" class="form-control" id="timeout" value="60">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-primary" onclick="saveConfig()">保存配置</button>
+                            <button type="button" class="btn btn-secondary" onclick="resetConfig()">重置</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="createDomainModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-add-line"></i> 创建域</h3>
+                <button class="modal-close" onclick="hideCreateDomainModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createDomainForm">
+                    <div class="form-group">
+                        <label class="form-label">域ID</label>
+                        <input type="text" class="form-control" id="domainId" required placeholder="唯一标识符">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">域名称</label>
+                        <input type="text" class="form-control" id="domainName" required placeholder="显示名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">域类型</label>
+                        <select class="form-control" id="domainType">
+                            <option value="public">公开域</option>
+                            <option value="private">私有域</option>
+                            <option value="hybrid">混合域</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-control" id="domainDescription" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideCreateDomainModal()">取消</button>
+                <button class="btn btn-primary" onclick="createDomain()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStatus();
+            loadDomains();
+        });
+        
+        function loadStatus() {
+            fetch('/api/protocol/domain/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const status = data.data;
+                        document.getElementById('protocolStatus').innerHTML = 
+                            status.running ? '<span class="badge badge-success">运行中</span>' : '<span class="badge badge-danger">已停止</span>';
+                        document.getElementById('domainCount').textContent = status.domainCount || 0;
+                        document.getElementById('memberCount').textContent = status.memberCount || 0;
+                        document.getElementById('lastUpdate').textContent = formatDate(status.lastUpdate);
+                    }
+                })
+                .catch(error => console.error('Failed to load status:', error));
+        }
+        
+        function loadDomains() {
+            fetch('/api/protocol/domain/list')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('domainsTableBody');
+                    if (data.success && data.data && data.data.length > 0) {
+                        tbody.innerHTML = data.data.map(domain => `
+                            <tr onclick="selectDomain('${domain.id}')" class="clickable">
+                                <td><code>${domain.id}</code></td>
+                                <td>${domain.name}</td>
+                                <td><span class="badge badge-${getTypeBadge(domain.type)}">${getTypeName(domain.type)}</span></td>
+                                <td>${domain.memberCount || 0}</td>
+                                <td><span class="badge badge-${domain.status === 'active' ? 'success' : 'secondary'}">${domain.status === 'active' ? '活跃' : '非活跃'}</span></td>
+                                <td class="actions">
+                                    <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); editDomain('${domain.id}')">编辑</button>
+                                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteDomain('${domain.id}')">删除</button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无域数据</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load domains:', error);
+                    document.getElementById('domainsTableBody').innerHTML = '<tr><td colspan="6" class="empty-state">加载失败</td></tr>';
+                });
+        }
+        
+        function selectDomain(domainId) {
+            fetch(`/api/protocol/domain/${domainId}/members`)
+                .then(response => response.json())
+                .then(data => {
+                    const panel = document.getElementById('membersPanel');
+                    if (data.success && data.data) {
+                        const members = data.data;
+                        panel.innerHTML = `
+                            <div class="members-header">
+                                <h4>域成员</h4>
+                                <button class="btn btn-sm btn-primary" onclick="showAddMemberModal('${domainId}')">添加成员</button>
+                            </div>
+                            <div class="members-list">
+                                ${members.map(member => `
+                                    <div class="member-item">
+                                        <div class="member-avatar">${member.name.charAt(0)}</div>
+                                        <div class="member-info">
+                                            <div class="member-name">${member.name}</div>
+                                            <div class="member-role">${member.role || '成员'}</div>
+                                        </div>
+                                        <button class="btn btn-sm btn-danger" onclick="removeMember('${domainId}', '${member.id}')">移除</button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    } else {
+                        panel.innerHTML = '<div class="empty-state">暂无成员</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load members:', error);
+                });
+        }
+        
+        function showCreateDomainModal() {
+            document.getElementById('createDomainModal').classList.add('show');
+        }
+        
+        function hideCreateDomainModal() {
+            document.getElementById('createDomainModal').classList.remove('show');
+            document.getElementById('createDomainForm').reset();
+        }
+        
+        function createDomain() {
+            const domain = {
+                id: document.getElementById('domainId').value,
+                name: document.getElementById('domainName').value,
+                type: document.getElementById('domainType').value,
+                description: document.getElementById('domainDescription').value
+            };
+            
+            fetch('/api/protocol/domain/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(domain)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideCreateDomainModal();
+                    loadDomains();
+                    loadStatus();
+                    alert('域创建成功');
+                } else {
+                    alert('创建失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to create domain:', error);
+                alert('创建失败');
+            });
+        }
+        
+        function deleteDomain(domainId) {
+            if (confirm('确定要删除此域吗？')) {
+                fetch(`/api/protocol/domain/${domainId}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadDomains();
+                            loadStatus();
+                            document.getElementById('membersPanel').innerHTML = '<div class="empty-state">请先选择一个域</div>';
+                            alert('域已删除');
+                        } else {
+                            alert('删除失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to delete domain:', error);
+                        alert('删除失败');
+                    });
+            }
+        }
+        
+        function startDomainManagement() {
+            fetch('/api/protocol/domain/start', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('域管理已启动');
+                        loadStatus();
+                    } else {
+                        alert('启动失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to start:', error);
+                    alert('启动失败');
+                });
+        }
+        
+        function stopDomainManagement() {
+            if (confirm('确定要停止域管理吗？')) {
+                fetch('/api/protocol/domain/stop', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('域管理已停止');
+                            loadStatus();
+                        } else {
+                            alert('停止失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to stop:', error);
+                        alert('停止失败');
+                    });
+            }
+        }
+        
+        function saveConfig() {
+            const config = {
+                defaultPolicy: document.getElementById('defaultPolicy').value,
+                heartbeatInterval: parseInt(document.getElementById('heartbeatInterval').value),
+                timeout: parseInt(document.getElementById('timeout').value)
+            };
+            
+            fetch('/api/protocol/domain/config', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('配置已保存');
+                } else {
+                    alert('保存失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to save config:', error);
+                alert('保存失败');
+            });
+        }
+        
+        function resetConfig() {
+            document.getElementById('defaultPolicy').value = 'allow';
+            document.getElementById('heartbeatInterval').value = 30;
+            document.getElementById('timeout').value = 60;
+        }
+        
+        function refreshStatus() {
+            loadStatus();
+            loadDomains();
+        }
+        
+        function getTypeBadge(type) {
+            const badges = { 'public': 'primary', 'private': 'warning', 'hybrid': 'success' };
+            return badges[type] || 'secondary';
+        }
+        
+        function getTypeName(type) {
+            const names = { 'public': '公开域', 'private': '私有域', 'hybrid': '混合域' };
+            return names[type] || type;
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            return new Date(dateStr).toLocaleString('zh-CN');
+        }
+    </script>
+    
+    <style>
+        .protocol-status-bar {
+            display: flex;
+            gap: 32px;
+            padding: 16px 24px;
+            background: var(--ns-card-bg);
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .members-panel {
+            min-height: 200px;
+        }
+        
+        .members-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .members-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--ns-bg-hover);
+            border-radius: 8px;
+        }
+        
+        .member-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--nx-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        .member-info {
+            flex: 1;
+        }
+        
+        .member-name {
+            font-weight: 500;
+        }
+        
+        .member-role {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .clickable {
+            cursor: pointer;
+        }
+        
+        .clickable:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        
+        .form-actions {
+            margin-top: 16px;
+        }
+    </style>
+</body>
+</html>
