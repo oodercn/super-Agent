@@ -256,7 +256,7 @@
      * @returns {Promise} 系统概览统计数据
      */
     async getDashboardStats() {
-      const result = await this.post('/api/dashboard/stats');
+      const result = await this.post('/api/dashboard');
       return result.data;
     },
 
