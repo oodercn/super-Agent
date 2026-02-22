@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>依赖管理 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">依赖管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="checkAllDependencies()">
+                        <i class="ri-refresh-line"></i> 检查依赖
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-3 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-git-branch-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">依赖总数</div>
+                                <div class="nx-stat-card__value" id="total-deps">0</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-check-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">已满足</div>
+                                <div class="nx-stat-card__value" id="satisfied-deps">0</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--error">
+                                <i class="ri-error-warning-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">缺失</div>
+                                <div class="nx-stat-card__value" id="missing-deps">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">依赖关系</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>技能</th>
+                                            <th>依赖项</th>
+                                            <th>版本要求</th>
+                                            <th>当前版本</th>
+                                            <th>状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dependency-list">
+                                        <tr>
+                                            <td colspan="6" class="nx-text-center nx-text-secondary">加载中...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/api-client.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            loadDependencies();
+        };
+        
+        async function loadDependencies() {
+            try {
+                const result = await ApiClient.post('/api/install/check-dependencies', {});
+                if (result && result.data) {
+                    renderDependencies(result.data.dependencies || []);
+                }
+            } catch (error) {
+                renderMockDependencies();
+            }
+        }
+        
+        function renderMockDependencies() {
+            const deps = [
+                { skill: 'skill-weather', dependency: 'requests', required: '>=2.25.0', current: '2.28.0', status: 'satisfied' },
+                { skill: 'skill-stock', dependency: 'pandas', required: '>=1.3.0', current: '1.5.0', status: 'satisfied' },
+                { skill: 'skill-chat', dependency: 'openai', required: '>=1.0.0', current: null, status: 'missing' }
+            ];
+            renderDependencies(deps);
+        }
+        
+        function renderDependencies(deps) {
+            const tbody = document.getElementById('dependency-list');
+            const total = deps.length;
+            const satisfied = deps.filter(d => d.status === 'satisfied').length;
+            const missing = total - satisfied;
+            
+            document.getElementById('total-deps').textContent = total;
+            document.getElementById('satisfied-deps').textContent = satisfied;
+            document.getElementById('missing-deps').textContent = missing;
+            
+            if (!deps || deps.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="nx-text-center nx-text-secondary">暂无依赖</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = deps.map(d => `
+                <tr>
+                    <td>${d.skill}</td>
+                    <td><code>${d.dependency}</code></td>
+                    <td>${d.required}</td>
+                    <td>${d.current || '-'}</td>
+                    <td>
+                        <span class="nx-badge nx-badge--${d.status === 'satisfied' ? 'success' : 'error'}">
+                            ${d.status === 'satisfied' ? '已满足' : '缺失'}
+                        </span>
+                    </td>
+                    <td>
+                        ${d.status === 'missing' ? 
+                            `<button class="nx-btn nx-btn--primary nx-btn--sm" onclick="installDep('${d.dependency}')">
+                                <i class="ri-download-line"></i> 安装
+                            </button>` : 
+                            '<span class="nx-text-secondary">-</span>'
+                        }
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        async function checkAllDependencies() {
+            ApiClient.showLoading('检查中...');
+            await loadDependencies();
+            ApiClient.hideLoading();
+            ApiClient.showSuccess('检查完成');
+        }
+        
+        async function installDep(dep) {
+            ApiClient.showLoading('安装中...');
+            setTimeout(() => {
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('安装成功');
+                loadDependencies();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

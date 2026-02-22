@@ -3,459 +3,425 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>技能管理 - SkillCenter 控制台</title>
-    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
-    <link href="../assets/css/remixicon/remixicon.css" rel="stylesheet">
-    <script src="/skillcenter/console/js/menu.js"></script>
+    <title>技能管理 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .skill-status-pending { background: var(--nx-warning); color: white; }
+        .skill-status-active { background: var(--nx-success); color: white; }
+        .skill-status-rejected { background: var(--nx-danger); color: white; }
+        .skill-status-inactive { background: var(--nx-text-secondary); color: white; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <aside class="sidebar" id="sidebar">
-            <!-- 菜单将通过menu.js动态加载 -->
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
         </aside>
-        <main class="main-content">
-            <div class="header">
-                <h1><i class="ri-tools-line"></i> 技能管理</h1>
-                <div class="user-info">
-                    <span class="user-name">管理员</span>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="openAddModal()">
+                        <i class="ri-add-line"></i> 新建技能
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                            <h3 class="nx-card__title">技能列表</h3>
+                            <div class="nx-flex nx-gap-2">
+                                <input type="text" id="searchKeyword" class="nx-input" placeholder="搜索技能..." style="width: 200px;">
+                                <button class="nx-btn nx-btn--secondary" onclick="loadSkills()">
+                                    <i class="ri-search-line"></i> 搜索
+                                </button>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>技能ID</th>
+                                            <th>技能名称</th>
+                                            <th>分类</th>
+                                            <th>版本</th>
+                                            <th>状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="skill-table-body">
+                                        <tr><td colspan="6" style="text-align: center;">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <!-- 标签页导航 -->
-            <div class="section" style="padding-bottom: 0;">
-                <div style="display: flex; border-bottom: 1px solid var(--ooder-border); margin-bottom: 0;">
-                    <button class="btn btn-secondary" style="border-radius: var(--ooder-radius) var(--ooder-radius) 0 0; border-bottom: none; margin-right: 0;" onclick="switchTab('skill-list')">技能列表</button>
-                    <button class="btn btn-secondary" style="border-radius: 0; border-bottom: none; margin-right: 0;" onclick="switchTab('skill-publish')">发布技能</button>
-                    <button class="btn btn-secondary" style="border-radius: 0 var(--ooder-radius) 0 0; border-bottom: none; margin-right: 0;" onclick="switchTab('skill-categories')">技能分类</button>
+        </main>
+    </div>
+    
+    <div id="skillModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 600px;">
+            <div class="modal-header">
+                <h3 id="modalTitle">新建技能</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editSkillId">
+                
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">技能ID</label>
+                    <input type="text" id="skillId" class="nx-input" placeholder="输入技能ID">
+                </div>
+                
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">技能名称</label>
+                    <input type="text" id="skillName" class="nx-input" placeholder="输入技能名称">
+                </div>
+                
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">分类</label>
+                    <select id="skillCategory" class="nx-select" style="width: 100%;">
+                        <option value="信息查询">信息查询</option>
+                        <option value="金融">金融</option>
+                        <option value="工具">工具</option>
+                        <option value="娱乐">娱乐</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">版本</label>
+                    <input type="text" id="skillVersion" class="nx-input" placeholder="如: 1.0.0">
+                </div>
+                
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">描述</label>
+                    <textarea id="skillDescription" class="nx-textarea" rows="3" placeholder="技能描述"></textarea>
+                </div>
+                
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">入口文件</label>
+                    <input type="text" id="skillEntry" class="nx-input" placeholder="如: main.py">
                 </div>
             </div>
-            
-            <!-- 标签页内容 -->
-            <div class="section">
-                <!-- 技能列表标签页 -->
-                <div id="skill-list-tab" class="tab-content">
-                    <!-- 传统表格视图 -->
-                    <div class="table-container" style="margin-bottom: 24px;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>技能ID</th>
-                                    <th>技能名称</th>
-                                    <th>分类</th>
-                                    <th>状态</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>text-uppercase</td>
-                                    <td>文本转大写</td>
-                                    <td>文本处理</td>
-                                    <td>可用</td>
-                                    <td>
-                                        <button class="btn btn-secondary" style="margin-right: 8px;" onclick="showSkillDetail('text-uppercase')">详情</button>
-                                        <button class="btn btn-primary" style="margin-right: 8px;" onclick="executeSkill('text-uppercase')">执行</button>
-                                        <button class="btn btn-danger" onclick="deleteSkill('text-uppercase')">删除</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>code-generation</td>
-                                    <td>代码生成</td>
-                                    <td>开发工具</td>
-                                    <td>可用</td>
-                                    <td>
-                                        <button class="btn btn-secondary" style="margin-right: 8px;" onclick="showSkillDetail('code-generation')">详情</button>
-                                        <button class="btn btn-primary" style="margin-right: 8px;" onclick="executeSkill('code-generation')">执行</button>
-                                        <button class="btn btn-danger" onclick="deleteSkill('code-generation')">删除</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>local-deployment</td>
-                                    <td>本地部署</td>
-                                    <td>部署工具</td>
-                                    <td>可用</td>
-                                    <td>
-                                        <button class="btn btn-secondary" style="margin-right: 8px;" onclick="showSkillDetail('local-deployment')">详情</button>
-                                        <button class="btn btn-primary" style="margin-right: 8px;" onclick="executeSkill('local-deployment')">执行</button>
-                                        <button class="btn btn-danger" onclick="deleteSkill('local-deployment')">删除</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <!-- 模板渲染视图 -->
-                    <h3 style="margin-bottom: 16px; color: var(--ooder-primary);">模板渲染视图</h3>
-                    <div class="skill-list-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;"></div>
-                </div>
-                
-                <!-- 发布技能标签页 -->
-                <div id="skill-publish-tab" class="tab-content hidden">
-                    <div class="form-group">
-                        <label for="skill-id">技能ID</label>
-                        <input type="text" id="skill-id" placeholder="请输入技能ID">
-                    </div>
-                    <div class="form-group">
-                        <label for="skill-name">技能名称</label>
-                        <input type="text" id="skill-name" placeholder="请输入技能名称">
-                    </div>
-                    <div class="form-group">
-                        <label for="skill-category">技能分类</label>
-                        <select id="skill-category">
-                            <option value="text-processing">文本处理</option>
-                            <option value="development">开发工具</option>
-                            <option value="deployment">部署工具</option>
-                            <option value="media">媒体处理</option>
-                            <option value="storage">存储服务</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="skill-description">技能描述</label>
-                        <textarea id="skill-description" rows="4" placeholder="请输入技能描述"></textarea>
-                    </div>
-                    <div style="margin-top: 16px;">
-                        <button class="btn btn-primary" onclick="publishSkill()">发布技能</button>
-                    </div>
-                </div>
-                
-                <!-- 技能分类标签页 -->
-                <div id="skill-categories-tab" class="tab-content hidden">
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>分类名称</th>
-                                    <th>技能数量</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>文本处理</td>
-                                    <td>1</td>
-                                    <td>
-                                        <button class="btn btn-secondary" onclick="viewSkillsByCategory('text-processing')">查看技能</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>开发工具</td>
-                                    <td>1</td>
-                                    <td>
-                                        <button class="btn btn-secondary" onclick="viewSkillsByCategory('development')">查看技能</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>部署工具</td>
-                                    <td>1</td>
-                                    <td>
-                                        <button class="btn btn-secondary" onclick="viewSkillsByCategory('deployment')">查看技能</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="saveSkill()">保存</button>
             </div>
         </div>
     </div>
     
+    <div id="detailModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 700px;">
+            <div class="modal-header">
+                <h3>技能详情</h3>
+                <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="detailContent">
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/utils.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
     <script>
-        // API基础URL
-        const API_BASE_URL = '/skillcenter/api';
+        var skillsData = [];
         
-        // 初始化页面
-        function init() {
-            updateTimestamp();
-            setInterval(updateTimestamp, 60000); // 每分钟更新时间戳
-        }
-        
-        // 更新时间戳
-        function updateTimestamp() {
-            const now = new Date();
-            const timestamp = document.getElementById('timestamp');
-            if (timestamp) {
-                timestamp.textContent = now.toLocaleString('zh-CN');
+        window.onPageInit = function() {
+            console.log('[SkillManagement] 页面初始化');
+            if (typeof initMenu === 'function') {
+                initMenu('skill-management');
             }
-        }
-        
-        // 加载技能列表
-        async function loadSkills() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/skills`);
-                if (!response.ok) {
-                    throw new Error('加载技能列表失败');
-                }
-                const skills = await response.json();
-                renderSkillList(skills);
-            } catch (error) {
-                console.error('加载技能列表错误:', error);
-                alert('加载技能列表失败: ' + error.message);
-            }
-        }
-        
-        // 渲染技能列表
-        function renderSkillList(skills) {
-            const tbody = document.querySelector('#skill-list-section table tbody');
-            tbody.innerHTML = '';
-            
-            skills.forEach(skill => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${skill.id}</td>
-                    <td>${skill.name}</td>
-                    <td>${skill.category || '未分类'}</td>
-                    <td>可用</td>
-                    <td>
-                        <button class="btn btn-secondary" style="margin-right: 8px;" onclick="showSkillDetail('${skill.id}')">详情</button>
-                        <button class="btn btn-primary" style="margin-right: 8px;" onclick="executeSkill('${skill.id}')">执行</button>
-                        <button class="btn btn-danger" onclick="deleteSkill('${skill.id}')">删除</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-        
-        // 显示技能详情
-        async function showSkillDetail(skillId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/skills/${skillId}`);
-                if (!response.ok) {
-                    throw new Error('获取技能详情失败');
-                }
-                const skill = await response.json();
-                alert(`技能详情:\nID: ${skill.id}\n名称: ${skill.name}\n分类: ${skill.category || '未分类'}\n描述: ${skill.description || '无描述'}`);
-            } catch (error) {
-                console.error('获取技能详情错误:', error);
-                alert('获取技能详情失败: ' + error.message);
-            }
-        }
-        
-        // 执行技能
-        async function executeSkill(skillId) {
-            try {
-                const parameters = {};
-                if (skillId === 'text-uppercase') {
-                    parameters.text = prompt('请输入要转换的文本:');
-                } else if (skillId === 'code-generation') {
-                    parameters.language = prompt('请输入语言:');
-                    parameters.prompt = prompt('请输入代码生成提示:');
-                } else if (skillId === 'local-deployment') {
-                    parameters.appName = prompt('请输入应用名称:');
-                    parameters.appPath = prompt('请输入应用路径:');
-                }
-                
-                const response = await fetch(`${API_BASE_URL}/skills/${skillId}/execute`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ parameters })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('执行技能失败');
-                }
-                
-                const result = await response.json();
-                if (result.status === 'SUCCESS') {
-                    alert('执行成功!\n结果: ' + result.output);
-                } else {
-                    alert('执行失败!\n错误: ' + result.errorMessage);
-                }
-            } catch (error) {
-                console.error('执行技能错误:', error);
-                alert('执行技能失败: ' + error.message);
-            }
-        }
-        
-        // 删除技能
-        async function deleteSkill(skillId) {
-            if (!confirm('确定要删除技能 ' + skillId + ' 吗?')) {
-                return;
-            }
-            
-            try {
-                // 这里需要添加删除技能的API调用
-                // 由于后端API还没有实现删除技能的功能，这里只是一个示例
-                alert('技能 ' + skillId + ' 已删除');
-                loadSkills();
-            } catch (error) {
-                console.error('删除技能错误:', error);
-                alert('删除技能失败: ' + error.message);
-            }
-        }
-        
-        // 发布新技能
-        async function publishSkill() {
-            const skillId = document.getElementById('skill-id').value;
-            const skillName = document.getElementById('skill-name').value;
-            const skillCategory = document.getElementById('skill-category').value;
-            const skillDescription = document.getElementById('skill-description').value;
-            
-            if (!skillId || !skillName || !skillCategory) {
-                alert('请填写所有必填字段');
-                return;
-            }
-            
-            try {
-                // 这里需要添加发布技能的API调用
-                // 由于后端API还没有实现发布技能的功能，这里只是一个示例
-                alert('技能 ' + skillName + ' 已发布');
-                showSkillList();
-            } catch (error) {
-                console.error('发布技能错误:', error);
-                alert('发布技能失败: ' + error.message);
-            }
-        }
-        
-        // 标签页切换函数
-        function switchTab(tabId) {
-            // 隐藏所有标签页内容
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.add('hidden');
-            });
-            
-            // 显示选中的标签页内容
-            document.getElementById(`${tabId}-tab`).classList.remove('hidden');
-            
-            // 更新标签页按钮状态
-            document.querySelectorAll('.btn-secondary').forEach(btn => {
-                btn.style.backgroundColor = '#1a1a1a';
-                btn.style.color = 'var(--ooder-secondary)';
-            });
-            
-            // 高亮当前标签页按钮
-            event.target.style.backgroundColor = 'var(--ooder-primary)';
-            event.target.style.color = 'white';
-        }
-        
-        // 按分类查看技能
-        function viewSkillsByCategory(category) {
-            alert('查看分类: ' + category + ' 的技能');
-            // 这里可以添加按分类加载技能的逻辑
-        }
-        
-        // 修改loadSkills函数
-        async function loadSkills() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/skills`);
-                if (!response.ok) {
-                    throw new Error('加载技能列表失败');
-                }
-                const skills = await response.json();
-                renderSkillList(skills);
-            } catch (error) {
-                console.error('加载技能列表错误:', error);
-                alert('加载技能列表失败: ' + error.message);
-            }
-        }
-        
-        // 修改renderSkillList函数
-        function renderSkillList(skills) {
-            const tbody = document.querySelector('#skill-list-tab table tbody');
-            tbody.innerHTML = '';
-            
-            skills.forEach(skill => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${skill.id}</td>
-                    <td>${skill.name}</td>
-                    <td>${skill.category || '未分类'}</td>
-                    <td>可用</td>
-                    <td>
-                        <button class="btn btn-secondary" style="margin-right: 8px;" onclick="showSkillDetail('${skill.id}')">详情</button>
-                        <button class="btn btn-primary" style="margin-right: 8px;" onclick="executeSkill('${skill.id}')">执行</button>
-                        <button class="btn btn-danger" onclick="deleteSkill('${skill.id}')">删除</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-        
-        // 修改deleteSkill函数
-        async function deleteSkill(skillId) {
-            if (!confirm('确定要删除技能 ' + skillId + ' 吗?')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/skills/${skillId}`, {
-                    method: 'DELETE'
-                });
-                if (!response.ok) {
-                    throw new Error('删除技能失败');
-                }
-                const result = await response.json();
-                if (result) {
-                    alert('技能 ' + skillId + ' 已删除');
-                    loadSkills();
-                } else {
-                    alert('删除技能失败');
-                }
-            } catch (error) {
-                console.error('删除技能错误:', error);
-                alert('删除技能失败: ' + error.message);
-            }
-        }
-        
-        // 修改publishSkill函数
-        async function publishSkill() {
-            const skillId = document.getElementById('skill-id').value;
-            const skillName = document.getElementById('skill-name').value;
-            const skillCategory = document.getElementById('skill-category').value;
-            const skillDescription = document.getElementById('skill-description').value;
-            
-            if (!skillId || !skillName || !skillCategory) {
-                alert('请填写所有必填字段');
-                return;
-            }
-            
-            try {
-                const skill = {
-                    id: skillId,
-                    name: skillName,
-                    category: skillCategory,
-                    description: skillDescription
-                };
-                
-                const response = await fetch(`${API_BASE_URL}/skills`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(skill)
-                });
-                
-                if (!response.ok) {
-                    throw new Error('发布技能失败');
-                }
-                
-                const result = await response.json();
-                if (result) {
-                    alert('技能 ' + skillName + ' 已发布');
-                    // 清空表单
-                    document.getElementById('skill-id').value = '';
-                    document.getElementById('skill-name').value = '';
-                    document.getElementById('skill-category').value = 'text-processing';
-                    document.getElementById('skill-description').value = '';
-                    // 切换到技能列表标签页
-                    switchTab('skill-list');
-                    // 重新加载技能列表
-                    loadSkills();
-                } else {
-                    alert('发布技能失败');
-                }
-            } catch (error) {
-                console.error('发布技能错误:', error);
-                alert('发布技能失败: ' + error.message);
-            }
-        }
-        
-        // 页面加载完成后初始化
-        window.onload = function() {
-            initMenu('skill');
-            init();
+            loadSkills();
         };
+        
+        async function loadSkills() {
+            const tbody = document.getElementById('skill-table-body');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">加载中...</td></tr>';
+            
+            const keyword = document.getElementById('searchKeyword').value;
+            
+            try {
+                const result = await utils.api.post('/skills/list', {
+                    pageNum: 1,
+                    pageSize: 50,
+                    keyword: keyword || ''
+                });
+                
+                if (result.code === 200 && result.data) {
+                    skillsData = result.data.list || result.data.content || result.data.items || result.data || [];
+                    
+                    if (skillsData.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--nx-text-secondary);">暂无技能数据</td></tr>';
+                        return;
+                    }
+                    
+                    renderSkillTable();
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--nx-danger);">加载失败</td></tr>';
+                }
+            } catch (error) {
+                console.error('[SkillManagement] 加载技能列表错误:', error);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--nx-danger);">加载失败</td></tr>';
+            }
+        }
+        
+        function renderSkillTable() {
+            const tbody = document.getElementById('skill-table-body');
+            tbody.innerHTML = skillsData.map(skill => `
+                <tr>
+                    <td>${skill.id || skill.skillId || '-'}</td>
+                    <td>${skill.name || '-'}</td>
+                    <td><span class="nx-badge nx-badge--primary">${skill.category || '未分类'}</span></td>
+                    <td>${skill.version || '-'}</td>
+                    <td><span class="nx-badge skill-status-${skill.status || 'pending'}">${getStatusText(skill.status)}</span></td>
+                    <td>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="viewDetail('${skill.id || skill.skillId}')">详情</button>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="editSkill('${skill.id || skill.skillId}')">编辑</button>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="executeSkill('${skill.id || skill.skillId}')">执行</button>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm nx-text-danger" onclick="deleteSkill('${skill.id || skill.skillId}')">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        window.openAddModal = function() {
+            document.getElementById('modalTitle').textContent = '新建技能';
+            document.getElementById('editSkillId').value = '';
+            document.getElementById('skillId').value = '';
+            document.getElementById('skillId').disabled = false;
+            document.getElementById('skillName').value = '';
+            document.getElementById('skillCategory').value = '信息查询';
+            document.getElementById('skillVersion').value = '1.0.0';
+            document.getElementById('skillDescription').value = '';
+            document.getElementById('skillEntry').value = '';
+            document.getElementById('skillModal').style.display = 'block';
+        };
+        
+        window.closeModal = function() {
+            document.getElementById('skillModal').style.display = 'none';
+        };
+        
+        window.editSkill = async function(skillId) {
+            const skill = skillsData.find(s => (s.id || s.skillId) === skillId);
+            if (!skill) {
+                utils.msg.error('未找到技能信息');
+                return;
+            }
+            
+            document.getElementById('modalTitle').textContent = '编辑技能';
+            document.getElementById('editSkillId').value = skillId;
+            document.getElementById('skillId').value = skillId;
+            document.getElementById('skillId').disabled = true;
+            document.getElementById('skillName').value = skill.name || '';
+            document.getElementById('skillCategory').value = skill.category || '信息查询';
+            document.getElementById('skillVersion').value = skill.version || '';
+            document.getElementById('skillDescription').value = skill.description || '';
+            document.getElementById('skillEntry').value = skill.entry || '';
+            document.getElementById('skillModal').style.display = 'block';
+        };
+        
+        window.saveSkill = async function() {
+            const editId = document.getElementById('editSkillId').value;
+            const skillId = document.getElementById('skillId').value;
+            const name = document.getElementById('skillName').value;
+            const category = document.getElementById('skillCategory').value;
+            const version = document.getElementById('skillVersion').value;
+            const description = document.getElementById('skillDescription').value;
+            const entry = document.getElementById('skillEntry').value;
+            
+            if (!skillId) {
+                utils.msg.error('请输入技能ID');
+                return;
+            }
+            if (!name) {
+                utils.msg.error('请输入技能名称');
+                return;
+            }
+            
+            const data = {
+                id: skillId,
+                skillId: skillId,
+                name: name,
+                category: category,
+                version: version,
+                description: description,
+                entry: entry
+            };
+            
+            try {
+                let result;
+                if (editId) {
+                    result = await utils.api.post('/skills/update', data);
+                } else {
+                    result = await utils.api.post('/skills/add', data);
+                }
+                
+                if (result.code === 200) {
+                    utils.msg.success(editId ? '更新成功' : '创建成功');
+                    closeModal();
+                    loadSkills();
+                } else {
+                    utils.msg.error('操作失败: ' + (result.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('[SkillManagement] 保存技能错误:', error);
+                utils.msg.error('操作失败');
+            }
+        };
+        
+        window.deleteSkill = async function(skillId) {
+            if (!confirm('确定要删除技能 "' + skillId + '" 吗？')) return;
+            
+            try {
+                const result = await utils.api.post('/skills/delete', { id: skillId });
+                
+                if (result.code === 200) {
+                    utils.msg.success('删除成功');
+                    loadSkills();
+                } else {
+                    utils.msg.error('删除失败');
+                }
+            } catch (error) {
+                console.error('[SkillManagement] 删除技能错误:', error);
+                utils.msg.error('删除失败');
+            }
+        };
+        
+        window.executeSkill = function(skillId) {
+            window.location.href = '/skillcenter/console/pages/execution.html?skillId=' + skillId;
+        };
+        
+        window.viewDetail = async function(skillId) {
+            try {
+                const result = await utils.api.post('/skills/get', { id: skillId });
+                
+                if (result.code === 200 && result.data) {
+                    const skill = result.data;
+                    document.getElementById('detailContent').innerHTML = `
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                            <div class="nx-form-group">
+                                <label class="nx-label">技能ID</label>
+                                <p>${skill.id || skill.skillId || '-'}</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">技能名称</label>
+                                <p>${skill.name || '-'}</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">分类</label>
+                                <p>${skill.category || '-'}</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">版本</label>
+                                <p>${skill.version || '-'}</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">状态</label>
+                                <p><span class="nx-badge skill-status-${skill.status || 'pending'}">${getStatusText(skill.status)}</span></p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">入口文件</label>
+                                <p>${skill.entry || '-'}</p>
+                            </div>
+                            <div class="nx-form-group nx-col-span-2">
+                                <label class="nx-label">描述</label>
+                                <p>${skill.description || '-'}</p>
+                            </div>
+                        </div>
+                        ${skill.status === 'pending' ? `
+                        <div class="nx-flex nx-gap-2 nx-mt-4">
+                            <button class="nx-btn nx-btn--success" onclick="approveSkill('${skill.id || skill.skillId}')">
+                                <i class="ri-check-line"></i> 审批通过
+                            </button>
+                            <button class="nx-btn nx-btn--danger" onclick="rejectSkill('${skill.id || skill.skillId}')">
+                                <i class="ri-close-line"></i> 拒绝
+                            </button>
+                        </div>
+                        ` : ''}
+                    `;
+                    document.getElementById('detailModal').style.display = 'block';
+                } else {
+                    utils.msg.error('获取详情失败');
+                }
+            } catch (error) {
+                console.error('[SkillManagement] 获取详情错误:', error);
+                utils.msg.error('获取详情失败');
+            }
+        };
+        
+        window.closeDetailModal = function() {
+            document.getElementById('detailModal').style.display = 'none';
+        };
+        
+        window.approveSkill = async function(skillId) {
+            try {
+                const result = await utils.api.post('/skills/' + skillId + '/approve', {});
+                
+                if (result.code === 200) {
+                    utils.msg.success('审批通过');
+                    closeDetailModal();
+                    loadSkills();
+                } else {
+                    utils.msg.error('审批失败');
+                }
+            } catch (error) {
+                utils.msg.error('审批失败');
+            }
+        };
+        
+        window.rejectSkill = async function(skillId) {
+            try {
+                const result = await utils.api.post('/skills/' + skillId + '/reject', {});
+                
+                if (result.code === 200) {
+                    utils.msg.success('已拒绝');
+                    closeDetailModal();
+                    loadSkills();
+                } else {
+                    utils.msg.error('操作失败');
+                }
+            } catch (error) {
+                utils.msg.error('操作失败');
+            }
+        };
+        
+        function getStatusText(status) {
+            const map = {
+                'pending': '待审批',
+                'active': '已发布',
+                'rejected': '已拒绝',
+                'inactive': '已停用'
+            };
+            return map[status] || status || '未知';
+        }
     </script>
 </body>
 </html>

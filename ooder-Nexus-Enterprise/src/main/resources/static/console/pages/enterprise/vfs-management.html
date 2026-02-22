@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAS/VFS 管理 - Nexus Console</title>
+    
+    <!-- 图标字体 -->
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    
+    <!-- Nexus UI Framework -->
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <!-- 侧边栏 -->
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <!-- 主内容区 -->
+        <main class="nx-page__content">
+            <!-- 顶部导航 -->
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">NAS/VFS 管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- 页面内容 -->
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <!-- 统计卡片 -->
+                    <div class="nx-grid nx-grid-cols-3 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-hard-drive-2-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">已连接 NAS</div>
+                                <div class="nx-stat-card__value" id="total-nas">4</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-database-2-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">总存储容量</div>
+                                <div class="nx-stat-card__value" id="total-storage">12.5 TB</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-pie-chart-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">已使用容量</div>
+                                <div class="nx-stat-card__value" id="used-storage">8.3 TB</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 主内容 -->
+                    <div class="nx-card">
+                        <div class="nx-card__body">
+                            <div class="nx-grid" style="grid-template-columns: 280px 1fr; gap: var(--nx-space-4);">
+                                <!-- 左侧 NAS 列表 -->
+                                <div style="border-right: 1px solid var(--nx-border); padding-right: var(--nx-space-4);">
+                                    <h4 class="nx-text-sm nx-font-semibold nx-text-secondary nx-mb-3">
+                                        <i class="ri-server-line"></i> NAS 品牌
+                                    </h4>
+                                    
+                                    <div class="nas-brand-card nx-flex nx-items-center nx-gap-3 nx-p-3 nx-mb-2 nx-cursor-pointer" data-brand="synology" style="background: var(--nx-primary-light); border-radius: var(--nx-radius); border: 1px solid var(--nx-primary);">
+                                        <div class="nx-avatar" style="background: #0067c5; color: white;">
+                                            <i class="ri-server-line"></i>
+                                        </div>
+                                        <div class="nx-flex-1">
+                                            <div class="nx-font-medium">Synology DSM</div>
+                                            <div class="nx-text-sm nx-text-secondary">192.168.1.100</div>
+                                        </div>
+                                        <span class="nx-badge nx-badge--success">已连接</span>
+                                    </div>
+                                    
+                                    <div class="nas-brand-card nx-flex nx-items-center nx-gap-3 nx-p-3 nx-mb-2 nx-cursor-pointer" data-brand="qnap" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                        <div class="nx-avatar" style="background: #00a0e9; color: white;">
+                                            <i class="ri-server-line"></i>
+                                        </div>
+                                        <div class="nx-flex-1">
+                                            <div class="nx-font-medium">QNAP QTS</div>
+                                            <div class="nx-text-sm nx-text-secondary">192.168.1.101</div>
+                                        </div>
+                                        <span class="nx-badge nx-badge--success">已连接</span>
+                                    </div>
+                                    
+                                    <div class="nas-brand-card nx-flex nx-items-center nx-gap-3 nx-p-3 nx-mb-2 nx-cursor-pointer" data-brand="wd" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                        <div class="nx-avatar" style="background: #f4c430; color: #333;">
+                                            <i class="ri-server-line"></i>
+                                        </div>
+                                        <div class="nx-flex-1">
+                                            <div class="nx-font-medium">WD My Cloud</div>
+                                            <div class="nx-text-sm nx-text-secondary">192.168.1.102</div>
+                                        </div>
+                                        <span class="nx-badge nx-badge--secondary">未连接</span>
+                                    </div>
+                                    
+                                    <div class="nas-brand-card nx-flex nx-items-center nx-gap-3 nx-p-3 nx-mb-4 nx-cursor-pointer" data-brand="unraid" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                        <div class="nx-avatar" style="background: #e67e22; color: white;">
+                                            <i class="ri-server-line"></i>
+                                        </div>
+                                        <div class="nx-flex-1">
+                                            <div class="nx-font-medium">Unraid</div>
+                                            <div class="nx-text-sm nx-text-secondary">192.168.1.103</div>
+                                        </div>
+                                        <span class="nx-badge nx-badge--success">已连接</span>
+                                    </div>
+                                    
+                                    <button class="nx-btn nx-btn--primary nx-w-full" id="add-nas-btn">
+                                        <i class="ri-add-line"></i> 添加 NAS 连接
+                                    </button>
+                                </div>
+                                
+                                <!-- 右侧文件浏览器 -->
+                                <div>
+                                    <div class="nx-flex nx-items-center nx-justify-between nx-mb-4">
+                                        <div class="nx-flex nx-items-center nx-gap-2 nx-text-sm">
+                                            <a href="#" class="nx-text-primary"><i class="ri-home-line"></i></a>
+                                            <i class="ri-arrow-right-s-line nx-text-tertiary"></i>
+                                            <a href="#" class="nx-text-primary">Synology DSM</a>
+                                            <i class="ri-arrow-right-s-line nx-text-tertiary"></i>
+                                            <span class="nx-text-secondary">共享文件夹</span>
+                                        </div>
+                                        <div class="nx-flex nx-gap-2">
+                                            <button class="nx-btn nx-btn--ghost nx-btn--icon nx-btn--sm" title="上传文件">
+                                                <i class="ri-upload-line"></i>
+                                            </button>
+                                            <button class="nx-btn nx-btn--ghost nx-btn--icon nx-btn--sm" title="新建文件夹">
+                                                <i class="ri-folder-add-line"></i>
+                                            </button>
+                                            <button class="nx-btn nx-btn--ghost nx-btn--icon nx-btn--sm" title="刷新">
+                                                <i class="ri-refresh-line"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="file-list">
+                                        <div class="nx-flex nx-items-center nx-gap-3 nx-p-3 nx-mb-2 nx-cursor-pointer" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                            <i class="ri-folder-3-fill nx-text-xl" style="color: #f4c430;"></i>
+                                            <div class="nx-flex-1">
+                                                <div class="nx-font-medium">文档</div>
+                                                <div class="nx-text-sm nx-text-secondary">文件夹 · 128 个项目</div>
+                                            </div>
+                                            <div class="nx-text-sm nx-text-secondary">2024-01-15</div>
+                                        </div>
+                                        
+                                        <div class="nx-flex nx-items-center nx-gap-3 nx-p-3 nx-mb-2 nx-cursor-pointer" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                            <i class="ri-folder-3-fill nx-text-xl" style="color: #f4c430;"></i>
+                                            <div class="nx-flex-1">
+                                                <div class="nx-font-medium">照片</div>
+                                                <div class="nx-text-sm nx-text-secondary">文件夹 · 2,456 个项目</div>
+                                            </div>
+                                            <div class="nx-text-sm nx-text-secondary">2024-01-14</div>
+                                        </div>
+                                        
+                                        <div class="nx-flex nx-items-center nx-gap-3 nx-p-3 nx-mb-2 nx-cursor-pointer" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                            <i class="ri-folder-3-fill nx-text-xl" style="color: #f4c430;"></i>
+                                            <div class="nx-flex-1">
+                                                <div class="nx-font-medium">视频</div>
+                                                <div class="nx-text-sm nx-text-secondary">文件夹 · 156 个项目</div>
+                                            </div>
+                                            <div class="nx-text-sm nx-text-secondary">2024-01-13</div>
+                                        </div>
+                                        
+                                        <div class="nx-flex nx-items-center nx-gap-3 nx-p-3 nx-mb-2 nx-cursor-pointer" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                            <i class="ri-file-word-fill nx-text-xl" style="color: #4285f4;"></i>
+                                            <div class="nx-flex-1">
+                                                <div class="nx-font-medium">项目计划.docx</div>
+                                                <div class="nx-text-sm nx-text-secondary">Word 文档 · 2.5 MB</div>
+                                            </div>
+                                            <div class="nx-text-sm nx-text-secondary">2024-01-15 14:30</div>
+                                        </div>
+                                        
+                                        <div class="nx-flex nx-items-center nx-gap-3 nx-p-3 nx-mb-2 nx-cursor-pointer" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                            <i class="ri-file-excel-fill nx-text-xl" style="color: #0f9d58;"></i>
+                                            <div class="nx-flex-1">
+                                                <div class="nx-font-medium">财务报表.xlsx</div>
+                                                <div class="nx-text-sm nx-text-secondary">Excel 表格 · 1.8 MB</div>
+                                            </div>
+                                            <div class="nx-text-sm nx-text-secondary">2024-01-14 09:15</div>
+                                        </div>
+                                        
+                                        <div class="nx-flex nx-items-center nx-gap-3 nx-p-3 nx-cursor-pointer" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                            <i class="ri-file-pdf-fill nx-text-xl" style="color: #ea4335;"></i>
+                                            <div class="nx-flex-1">
+                                                <div class="nx-font-medium">技术白皮书.pdf</div>
+                                                <div class="nx-text-sm nx-text-secondary">PDF 文档 · 5.2 MB</div>
+                                            </div>
+                                            <div class="nx-text-sm nx-text-secondary">2024-01-13 16:45</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Nexus JS -->
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('VFS 管理页面初始化完成');
+            
+            document.querySelectorAll('.nas-brand-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('.nas-brand-card').forEach(c => {
+                        c.style.background = 'var(--nx-bg-elevated)';
+                        c.style.border = 'none';
+                    });
+                    this.style.background = 'var(--nx-primary-light)';
+                    this.style.border = '1px solid var(--nx-primary)';
+                });
+            });
+            
+            document.getElementById('add-nas-btn')?.addEventListener('click', function() {
+                alert('添加 NAS 连接功能待实现');
+            });
+        };
+    </script>
+</body>
+</html>

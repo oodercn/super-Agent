@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>已安装技能 - Nexus</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <style>
+        .skill-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+        .skill-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            padding: 20px;
+            transition: all 0.2s;
+        }
+        .skill-card:hover {
+            border-color: var(--nx-primary);
+            transform: translateY(-2px);
+        }
+        .skill-card.running {
+            border-color: var(--ns-success);
+        }
+        .skill-card.error {
+            border-color: var(--ns-danger);
+        }
+        .skill-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .skill-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--nx-primary), #6366f1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            flex-shrink: 0;
+        }
+        .skill-title {
+            flex: 1;
+            min-width: 0;
+        }
+        .skill-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .skill-version {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        .skill-status {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .status-installed {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--ns-success);
+        }
+        .status-running {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--nx-primary);
+        }
+        .status-stopped {
+            background: rgba(148, 163, 184, 0.1);
+            color: var(--ns-secondary);
+        }
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--ns-danger);
+        }
+        .status-updating {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--ns-warning);
+        }
+        .skill-desc {
+            font-size: 13px;
+            color: var(--ns-secondary);
+            margin-bottom: 12px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .skill-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--ns-secondary);
+            margin-bottom: 12px;
+        }
+        .skill-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .skill-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .skill-actions .nx-btn {
+            flex: 1;
+            min-width: 60px;
+        }
+        .skill-actions .nx-btn--danger {
+            color: var(--ns-danger);
+        }
+        .skill-actions .nx-btn--danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--ns-dark);
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: var(--ns-dark);
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--ns-secondary);
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding: 16px 24px;
+            border-top: 1px solid var(--ns-border);
+        }
+        .form-row {
+            margin-bottom: 16px;
+        }
+        .form-row:last-child {
+            margin-bottom: 0;
+        }
+        .form-group {
+            margin-bottom: 0;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            background-color: var(--ns-input-bg);
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        .log-container {
+            background: var(--ns-background);
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            padding: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .log-entry {
+            color: var(--ns-secondary);
+            margin-bottom: 4px;
+        }
+        .log-entry.error {
+            color: var(--ns-danger);
+        }
+        .log-entry.success {
+            color: var(--ns-success);
+        }
+        .config-editor {
+            background: var(--ns-background);
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            padding: 12px;
+            min-height: 200px;
+            font-family: monospace;
+            font-size: 13px;
+            color: var(--ns-dark);
+            white-space: pre-wrap;
+        }
+        .protocol-section {
+            margin-bottom: 20px;
+        }
+        .protocol-title {
+            font-weight: 600;
+            color: var(--ns-dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .protocol-status {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .protocol-connected {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--ns-success);
+        }
+        .protocol-disconnected {
+            background: rgba(148, 163, 184, 0.1);
+            color: var(--ns-secondary);
+        }
+        .command-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .command-tag {
+            padding: 4px 8px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: monospace;
+            color: var(--ns-dark);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--ns-secondary);
+        }
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .skill-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">已安装技能</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="refreshSkillList()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="showInstallModal()">
+                        <i class="ri-download-line"></i> 安装技能
+                    </button>
+                </div>
+            </header>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="stats-grid" id="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-total">0</div>
+                            <div class="stat-label">总技能数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-running">0</div>
+                            <div class="stat-label">运行中</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-stopped">0</div>
+                            <div class="stat-label">已停止</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-error">0</div>
+                            <div class="stat-label">错误</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-runs">0</div>
+                            <div class="stat-label">总运行次数</div>
+                        </div>
+                    </div>
+
+                    <div class="skill-grid" id="skill-grid">
+                        <div class="empty-state">
+                            <i class="ri-apps-line"></i>
+                            <p>加载中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="install-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>安装技能</h3>
+                <button class="modal-close" onclick="closeModal('install-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="install-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">技能ID</label>
+                            <input type="text" id="install-skill-id" class="form-input" placeholder="从技能市场选择或输入ID">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">技能名称</label>
+                            <input type="text" id="install-skill-name" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">版本</label>
+                            <input type="text" id="install-version" class="form-input" value="1.0.0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">描述</label>
+                            <textarea id="install-description" class="form-textarea" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">分类</label>
+                            <select id="install-category" class="form-select">
+                                <option value="utilities">工具</option>
+                                <option value="productivity">生产力</option>
+                                <option value="communication">通信</option>
+                                <option value="finance">金融</option>
+                                <option value="media">媒体</option>
+                                <option value="development">开发</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">作者</label>
+                            <input type="text" id="install-author" class="form-input">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('install-modal')">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="installSkill()">安装</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="edit-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑技能</h3>
+                <button class="modal-close" onclick="closeModal('edit-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-form">
+                    <input type="hidden" id="edit-skill-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">技能名称</label>
+                            <input type="text" id="edit-skill-name" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">版本</label>
+                            <input type="text" id="edit-version" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">描述</label>
+                            <textarea id="edit-description" class="form-textarea" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">分类</label>
+                            <select id="edit-category" class="form-select">
+                                <option value="utilities">工具</option>
+                                <option value="productivity">生产力</option>
+                                <option value="communication">通信</option>
+                                <option value="finance">金融</option>
+                                <option value="media">媒体</option>
+                                <option value="development">开发</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">作者</label>
+                            <input type="text" id="edit-author" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">图标</label>
+                            <input type="text" id="edit-icon" class="form-input" placeholder="ri-apps-line">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('edit-modal')">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="saveEditSkill()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="run-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>运行技能</h3>
+                <button class="modal-close" onclick="closeModal('run-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="run-skill-info" style="margin-bottom: 16px;"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">输入参数</label>
+                        <textarea id="run-input" class="form-textarea" rows="3" placeholder="输入技能执行参数..."></textarea>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <input type="checkbox" id="run-debug"> 调试模式
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('run-modal')">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="executeSkill()">执行</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="result-modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>执行结果</h3>
+                <button class="modal-close" onclick="closeModal('result-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="result-status" style="margin-bottom: 16px;"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">输出</label>
+                        <div id="result-output" class="config-editor"></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">执行日志</label>
+                        <div id="result-logs" class="log-container"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('result-modal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="config-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>技能配置</h3>
+                <button class="modal-close" onclick="closeModal('config-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="config-skill-info" style="margin-bottom: 16px;"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">配置 (JSON)</label>
+                        <textarea id="config-json" class="form-textarea" rows="8" placeholder='{"key": "value"}'></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('config-modal')">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="saveConfig()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="logs-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>技能日志</h3>
+                <button class="modal-close" onclick="closeModal('logs-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="logs-skill-info" style="margin-bottom: 16px;"></div>
+                <div id="logs-container" class="log-container" style="max-height: 400px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('logs-modal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="protocol-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>协议关联</h3>
+                <button class="modal-close" onclick="closeModal('protocol-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="protocol-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('protocol-modal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/pages/installed-skills.js"></script>
+</body>
+</html>

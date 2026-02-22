@@ -1,0 +1,670 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ooderNexus API 文档",
+    "description": "ooderNexus P2P AI 能力分发中心 - RESTful API 接口文档\n\n## 模块说明\n\n- **OpenWrt P2P**: P2P网络管理、连接建立、QoS配置\n- **MCP Agent**: MCP代理管理、网络状态、命令执行\n- **Device**: 设备管理、控制、日志\n- **System**: 系统配置、监控、健康检查\n- **Network**: 网络路由、链路、终端管理\n- **SkillCenter**: 技能中心、分享、分组\n- **SkillBridge**: 技能桥接、执行、注册\n- **Sync**: 同步任务管理",
+    "version": "2.0.0",
+    "contact": {
+      "name": "ooder Team",
+      "email": "support@ooder.net",
+      "url": "https://www.ooder.net"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8081",
+      "description": "本地开发环境"
+    }
+  ],
+  "tags": [
+    {"name": "OpenWrt P2P", "description": "P2P网络管理"},
+    {"name": "OpenWrt Network", "description": "OpenWrt网络配置"},
+    {"name": "MCP Agent", "description": "MCP代理管理"},
+    {"name": "MCP Management", "description": "MCP实例管理"},
+    {"name": "Device", "description": "设备管理"},
+    {"name": "Config", "description": "配置管理"},
+    {"name": "System", "description": "系统监控"},
+    {"name": "Network Route", "description": "路由管理"},
+    {"name": "Network Link", "description": "网络链路"},
+    {"name": "End Agent", "description": "终端代理"},
+    {"name": "SkillBridge", "description": "技能桥接"},
+    {"name": "Sync", "description": "同步管理"},
+    {"name": "SkillCenter", "description": "技能中心"},
+    {"name": "Debug", "description": "调试工具"},
+    {"name": "Personal", "description": "个人中心"},
+    {"name": "SDK", "description": "SDK数据存储"}
+  ],
+  "paths": {
+    "/api/openwrt/p2p/version": {
+      "get": {
+        "tags": ["OpenWrt P2P"],
+        "summary": "获取协议版本",
+        "operationId": "getP2PVersion",
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/openwrt/p2p/agents/register": {
+      "post": {
+        "tags": ["OpenWrt P2P"],
+        "summary": "注册Agent",
+        "operationId": "registerAgent",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/openwrt/p2p/agents": {
+      "get": {
+        "tags": ["OpenWrt P2P"],
+        "summary": "获取已注册Agent列表",
+        "operationId": "getAgents",
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/openwrt/p2p/conntrack/pre-establish": {
+      "post": {
+        "tags": ["OpenWrt P2P"],
+        "summary": "预建立conntrack",
+        "operationId": "preEstablishConntrack",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/openwrt/p2p/port-pools/allocate": {
+      "post": {
+        "tags": ["OpenWrt P2P"],
+        "summary": "分配端口池",
+        "operationId": "allocatePortPool",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/openwrt/p2p/qos/hardware": {
+      "post": {
+        "tags": ["OpenWrt P2P"],
+        "summary": "配置硬件QoS",
+        "operationId": "configureHardwareQos",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/openwrt/p2p/connections/establish": {
+      "post": {
+        "tags": ["OpenWrt P2P"],
+        "summary": "建立P2P连接",
+        "operationId": "establishConnection",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/openwrt/network/port-forwarding": {
+      "get": {
+        "tags": ["OpenWrt Network"],
+        "summary": "获取端口映射规则",
+        "operationId": "getPortForwarding",
+        "responses": {"200": {"description": "成功"}}
+      },
+      "post": {
+        "tags": ["OpenWrt Network"],
+        "summary": "添加端口映射规则",
+        "operationId": "addPortForwarding",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/openwrt/network/firewall": {
+      "get": {
+        "tags": ["OpenWrt Network"],
+        "summary": "获取防火墙规则列表",
+        "operationId": "getFirewallRules",
+        "responses": {"200": {"description": "成功"}}
+      },
+      "post": {
+        "tags": ["OpenWrt Network"],
+        "summary": "添加防火墙规则",
+        "operationId": "addFirewallRule",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/openwrt/network/tunnels": {
+      "get": {
+        "tags": ["OpenWrt Network"],
+        "summary": "获取内网穿透配置",
+        "operationId": "getTunnels",
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/openwrt/network/ddns": {
+      "get": {
+        "tags": ["OpenWrt Network"],
+        "summary": "获取DDNS配置",
+        "operationId": "getDdnsConfig",
+        "responses": {"200": {"description": "成功"}}
+      },
+      "post": {
+        "tags": ["OpenWrt Network"],
+        "summary": "添加DDNS配置",
+        "operationId": "addDdnsConfig",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/mcp/health": {
+      "get": {
+        "tags": ["MCP Agent"],
+        "summary": "健康检查",
+        "operationId": "mcpHealthCheck",
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/mcp/network/status": {
+      "get": {
+        "tags": ["MCP Agent"],
+        "summary": "获取网络状态",
+        "operationId": "getNetworkStatus",
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/mcp/network/topology": {
+      "get": {
+        "tags": ["MCP Agent"],
+        "summary": "获取网络拓扑",
+        "operationId": "getNetworkTopology",
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/mcp/system/status": {
+      "get": {
+        "tags": ["MCP Agent"],
+        "summary": "获取系统状态",
+        "operationId": "getSystemStatus",
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/mcp/command/test": {
+      "post": {
+        "tags": ["MCP Agent"],
+        "summary": "测试命令发送",
+        "operationId": "testCommand",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/mcp/endagent/list": {
+      "get": {
+        "tags": ["MCP Agent"],
+        "summary": "获取终端列表",
+        "operationId": "getEndAgentList",
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/mcp/route/list": {
+      "get": {
+        "tags": ["MCP Agent"],
+        "summary": "获取路由列表",
+        "operationId": "getRouteList",
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/mcp/config/basic": {
+      "get": {
+        "tags": ["MCP Agent"],
+        "summary": "获取基础配置",
+        "operationId": "getBasicConfig",
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/mcp/management/agents": {
+      "get": {
+        "tags": ["MCP Management"],
+        "summary": "获取所有MCP Agent实例",
+        "operationId": "getAllMcpAgents",
+        "responses": {"200": {"description": "成功"}}
+      },
+      "post": {
+        "tags": ["MCP Management"],
+        "summary": "创建MCP Agent实例",
+        "operationId": "createMcpAgent",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/devices/list": {
+      "post": {
+        "tags": ["Device"],
+        "summary": "获取设备列表",
+        "operationId": "getDeviceList",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/devices/detail": {
+      "post": {
+        "tags": ["Device"],
+        "summary": "获取设备详情",
+        "operationId": "getDeviceDetail",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object", "properties": {"id": {"type": "string"}}}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/devices/control": {
+      "post": {
+        "tags": ["Device"],
+        "summary": "控制设备",
+        "operationId": "controlDevice",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/devices/logs": {
+      "post": {
+        "tags": ["Device"],
+        "summary": "获取设备操作日志",
+        "operationId": "getDeviceLogs",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/config/nexus": {
+      "get": {
+        "tags": ["Config"],
+        "summary": "获取Nexus配置",
+        "operationId": "getNexusConfig",
+        "responses": {"200": {"description": "成功"}}
+      },
+      "put": {
+        "tags": ["Config"],
+        "summary": "更新Nexus配置",
+        "operationId": "updateNexusConfig",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/config/all": {
+      "get": {
+        "tags": ["Config"],
+        "summary": "获取所有配置",
+        "operationId": "getAllConfig",
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/system/config/all": {
+      "get": {
+        "tags": ["System"],
+        "summary": "获取所有系统配置",
+        "operationId": "getAllSystemConfig",
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/system/monitor/health": {
+      "post": {
+        "tags": ["System"],
+        "summary": "获取系统健康状态",
+        "operationId": "getSystemHealth",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/system/monitor/metrics": {
+      "post": {
+        "tags": ["System"],
+        "summary": "获取系统指标",
+        "operationId": "getSystemMetrics",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/network/route/list": {
+      "get": {
+        "tags": ["Network Route"],
+        "summary": "获取路由列表",
+        "operationId": "getNetworkRouteList",
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/network/route/discover": {
+      "post": {
+        "tags": ["Network Route"],
+        "summary": "发现路由",
+        "operationId": "discoverRoute",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/network/link/list": {
+      "get": {
+        "tags": ["Network Link"],
+        "summary": "获取网络链路列表",
+        "operationId": "getNetworkLinkList",
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/network/link/add": {
+      "post": {
+        "tags": ["Network Link"],
+        "summary": "添加网络链路",
+        "operationId": "addNetworkLink",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/network/endagent/list": {
+      "get": {
+        "tags": ["End Agent"],
+        "summary": "获取终端Agent列表",
+        "operationId": "getEndAgentList2",
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/network/endagent/discover": {
+      "post": {
+        "tags": ["End Agent"],
+        "summary": "发现终端Agent",
+        "operationId": "discoverEndAgent",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/skillbridge/register": {
+      "post": {
+        "tags": ["SkillBridge"],
+        "summary": "注册技能",
+        "operationId": "registerSkill",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/skillbridge/discover": {
+      "post": {
+        "tags": ["SkillBridge"],
+        "summary": "发现技能",
+        "operationId": "discoverSkill",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/skillbridge/execute": {
+      "post": {
+        "tags": ["SkillBridge"],
+        "summary": "执行技能",
+        "operationId": "executeSkill",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/skillbridge/registered/list": {
+      "post": {
+        "tags": ["SkillBridge"],
+        "summary": "获取已注册技能列表",
+        "operationId": "getRegisteredSkills",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/sync/tasks/list": {
+      "post": {
+        "tags": ["Sync"],
+        "summary": "获取同步任务列表",
+        "operationId": "getSyncTasks",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/sync/tasks/create": {
+      "post": {
+        "tags": ["Sync"],
+        "summary": "创建同步任务",
+        "operationId": "createSyncTask",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/sync/tasks/execute": {
+      "post": {
+        "tags": ["Sync"],
+        "summary": "执行同步任务",
+        "operationId": "executeSyncTask",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/skillcenter/personal/dashboard/stats": {
+      "post": {
+        "tags": ["SkillCenter"],
+        "summary": "获取仪表盘统计",
+        "operationId": "getDashboardStats",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/skillcenter/personal/skills": {
+      "post": {
+        "tags": ["SkillCenter"],
+        "summary": "获取技能列表",
+        "operationId": "getPersonalSkills",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/skillcenter/personal/execution/execute": {
+      "post": {
+        "tags": ["SkillCenter"],
+        "summary": "执行技能",
+        "operationId": "executePersonalSkill",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/v1/debug/protocols/list": {
+      "post": {
+        "tags": ["Debug"],
+        "summary": "获取协议列表",
+        "operationId": "getDebugProtocols",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/v1/debug/simulators/list": {
+      "post": {
+        "tags": ["Debug"],
+        "summary": "获取模拟器列表",
+        "operationId": "getDebugSimulators",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/v1/debug/simulators/create": {
+      "post": {
+        "tags": ["Debug"],
+        "summary": "创建模拟器",
+        "operationId": "createDebugSimulator",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/personal/dashboard": {
+      "post": {
+        "tags": ["Personal"],
+        "summary": "获取个人仪表盘数据",
+        "operationId": "getPersonalDashboard",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/personal/profile": {
+      "post": {
+        "tags": ["Personal"],
+        "summary": "获取个人信息",
+        "operationId": "getPersonalProfile",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/sdk/data": {
+      "post": {
+        "tags": ["SDK"],
+        "summary": "SDK数据操作",
+        "operationId": "sdkDataOperation",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/sdk/query": {
+      "post": {
+        "tags": ["SDK"],
+        "summary": "SDK数据查询",
+        "operationId": "sdkDataQuery",
+        "requestBody": {
+          "content": {"application/json": {"schema": {"type": "object"}}}
+        },
+        "responses": {"200": {"description": "成功"}}
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": ["System"],
+        "summary": "健康检查",
+        "operationId": "healthCheck",
+        "responses": {"200": {"description": "成功"}}
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ResultModel": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean", "description": "操作是否成功"},
+          "message": {"type": "string", "description": "提示信息"},
+          "data": {"type": "object", "description": "返回数据"},
+          "error": {"type": "string", "description": "错误信息"}
+        }
+      },
+      "AgentInfo": {
+        "type": "object",
+        "properties": {
+          "wid": {"type": "string", "description": "Agent ID"},
+          "name": {"type": "string", "description": "Agent名称"},
+          "type": {"type": "string", "description": "Agent类型"},
+          "status": {"type": "string", "description": "状态"}
+        }
+      },
+      "NetworkStatus": {
+        "type": "object",
+        "properties": {
+          "online": {"type": "boolean"},
+          "ipAddress": {"type": "string"},
+          "port": {"type": "integer"},
+          "latency": {"type": "integer"}
+        }
+      },
+      "SyncTask": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "type": {"type": "string"},
+          "status": {"type": "string"},
+          "totalItems": {"type": "integer"},
+          "processedItems": {"type": "integer"}
+        }
+      },
+      "Skill": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "category": {"type": "string"},
+          "version": {"type": "string"}
+        }
+      },
+      "Device": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "type": {"type": "string"},
+          "status": {"type": "string"},
+          "ipAddress": {"type": "string"}
+        }
+      }
+    }
+  }
+}

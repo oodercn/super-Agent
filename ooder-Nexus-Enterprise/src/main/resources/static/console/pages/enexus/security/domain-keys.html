@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>域密钥 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">域密钥</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="openGenerateModal()">
+                        <i class="ri-key-line"></i> 生成域密钥
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-domain-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">域总数</div>
+                                <div class="nx-stat-card__value" id="totalCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">活跃域</div>
+                                <div class="nx-stat-card__value" id="activeCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-user-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">用户总数</div>
+                                <div class="nx-stat-card__value" id="userCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--info">
+                                <i class="ri-server-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">Nexus总数</div>
+                                <div class="nx-stat-card__value" id="nexusCount">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">域密钥列表</h3>
+                            <div class="nx-flex nx-gap-2">
+                                <input type="text" class="nx-input" id="searchInput" placeholder="搜索域..." style="width: 200px;">
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>域ID</th>
+                                            <th>域名称</th>
+                                            <th>管理员</th>
+                                            <th>用户数</th>
+                                            <th>Nexus数</th>
+                                            <th>状态</th>
+                                            <th>创建时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="keyTableBody">
+                                        <tr><td colspan="8" class="nx-text-center">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="nx-modal" id="generateModal">
+        <div class="nx-modal__backdrop" onclick="closeModal()"></div>
+        <div class="nx-modal__content">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">生成域密钥</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-mb-4">
+                    <label class="nx-label">域名称</label>
+                    <input type="text" class="nx-input" id="domainName" placeholder="输入域名称">
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">管理员ID</label>
+                    <input type="text" class="nx-input" id="adminId" placeholder="输入管理员用户ID">
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">密钥类型</label>
+                    <select class="nx-select" id="keyType">
+                        <option value="RSA">RSA</option>
+                        <option value="ECDSA">ECDSA</option>
+                    </select>
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">有效期(天)</label>
+                    <input type="number" class="nx-input" id="validDays" value="365">
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="generateKey()">生成</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="nx-modal" id="detailModal">
+        <div class="nx-modal__backdrop" onclick="closeDetailModal()"></div>
+        <div class="nx-modal__content nx-modal__content--lg">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">域详情</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeDetailModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body" id="detailBody">
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let allDomains = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDomains();
+        });
+
+        async function loadDomains() {
+            try {
+                const response = await fetch('/api/enexus/security/domain-key/list', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                const rs = await response.json();
+                allDomains = rs.data?.list || [];
+                renderTable(allDomains);
+                updateStats();
+            } catch (error) {
+                document.getElementById('keyTableBody').innerHTML = 
+                    '<tr><td colspan="8" class="nx-text-center nx-text-danger">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        function updateStats() {
+            let active = 0, users = 0, nexus = 0;
+            allDomains.forEach(d => {
+                if (d.status === 'ACTIVE') active++;
+                users += d.userCount || 0;
+                nexus += d.nexusCount || 0;
+            });
+            document.getElementById('totalCount').textContent = allDomains.length;
+            document.getElementById('activeCount').textContent = active;
+            document.getElementById('userCount').textContent = users;
+            document.getElementById('nexusCount').textContent = nexus;
+        }
+
+        function renderTable(domains) {
+            if (!domains || domains.length === 0) {
+                document.getElementById('keyTableBody').innerHTML = 
+                    '<tr><td colspan="8" class="nx-text-center">暂无数据</td></tr>';
+                return;
+            }
+
+            let html = '';
+            domains.forEach(domain => {
+                const statusBadge = getStatusBadge(domain.status);
+                const createdAt = formatTime(domain.createdAt);
+                
+                html += '<tr>';
+                html += '  <td>' + (domain.domainId || '-') + '</td>';
+                html += '  <td>' + (domain.domainName || '-') + '</td>';
+                html += '  <td>' + (domain.adminId || '-') + '</td>';
+                html += '  <td>' + (domain.userCount || 0) + '</td>';
+                html += '  <td>' + (domain.nexusCount || 0) + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--' + statusBadge + '">' + (domain.status || '-') + '</span></td>';
+                html += '  <td>' + createdAt + '</td>';
+                html += '  <td>';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="viewDomain(\'' + domain.domainId + '\')">详情</button> ';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--primary" onclick="rotateKey(\'' + domain.domainId + '\')">轮换</button>';
+                html += '  </td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('keyTableBody').innerHTML = html;
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'ACTIVE': 'success',
+                'INACTIVE': 'secondary',
+                'SUSPENDED': 'danger'
+            };
+            return map[status] || 'secondary';
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function openGenerateModal() {
+            document.getElementById('domainName').value = '';
+            document.getElementById('adminId').value = '';
+            document.getElementById('keyType').value = 'RSA';
+            document.getElementById('validDays').value = 365;
+            document.getElementById('generateModal').classList.add('nx-modal--open');
+        }
+
+        function closeModal() {
+            document.getElementById('generateModal').classList.remove('nx-modal--open');
+        }
+
+        async function generateKey() {
+            const domainName = document.getElementById('domainName').value;
+            const adminId = document.getElementById('adminId').value;
+            const keyType = document.getElementById('keyType').value;
+            const validDays = document.getElementById('validDays').value;
+            
+            if (!domainName || !adminId) {
+                alert('请填写域名称和管理员ID');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/enexus/security/domain-key/generate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        domainName: domainName,
+                        adminId: adminId,
+                        keyType: keyType,
+                        validDays: parseInt(validDays)
+                    })
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    closeModal();
+                    loadDomains();
+                }
+            } catch (error) {
+                alert('生成失败: ' + error.message);
+            }
+        }
+
+        async function viewDomain(domainId) {
+            try {
+                const response = await fetch('/api/enexus/security/domain-key/get', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({domainId: domainId})
+                });
+                const rs = await response.json();
+                const domain = rs.data;
+                
+                let html = '';
+                html += '<div class="nx-grid nx-grid-cols-2 nx-gap-4">';
+                html += '  <div><strong>域ID:</strong> ' + (domain.domainId || '-') + '</div>';
+                html += '  <div><strong>域名称:</strong> ' + (domain.domainName || '-') + '</div>';
+                html += '  <div><strong>管理员:</strong> ' + (domain.adminId || '-') + '</div>';
+                html += '  <div><strong>状态:</strong> <span class="nx-badge nx-badge--' + getStatusBadge(domain.status) + '">' + (domain.status || '-') + '</span></div>';
+                html += '  <div><strong>用户数:</strong> ' + (domain.userCount || 0) + '</div>';
+                html += '  <div><strong>Nexus数:</strong> ' + (domain.nexusCount || 0) + '</div>';
+                html += '  <div><strong>创建时间:</strong> ' + formatTime(domain.createdAt) + '</div>';
+                html += '  <div><strong>密钥轮换时间:</strong> ' + formatTime(domain.lastKeyRotation) + '</div>';
+                html += '</div>';
+                
+                if (domain.publicKey) {
+                    html += '<div class="nx-mt-4"><strong>公钥:</strong></div>';
+                    html += '<pre class="nx-code-block" style="max-height: 100px; overflow: auto;">' + domain.publicKey + '</pre>';
+                }
+                
+                document.getElementById('detailBody').innerHTML = html;
+                document.getElementById('detailModal').classList.add('nx-modal--open');
+            } catch (error) {
+                alert('获取详情失败: ' + error.message);
+            }
+        }
+
+        async function rotateKey(domainId) {
+            if (!confirm('确定要轮换此域的密钥吗？')) return;
+            
+            try {
+                const response = await fetch('/api/enexus/security/domain-key/rotate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({domainId: domainId})
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    loadDomains();
+                }
+            } catch (error) {
+                alert('轮换失败: ' + error.message);
+            }
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('nx-modal--open');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterDomains();
+        });
+
+        function filterDomains() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            
+            let filtered = allDomains;
+            
+            if (search) {
+                filtered = filtered.filter(d => 
+                    (d.domainId && d.domainId.toLowerCase().includes(search)) ||
+                    (d.domainName && d.domainName.toLowerCase().includes(search)) ||
+                    (d.adminId && d.adminId.toLowerCase().includes(search))
+                );
+            }
+            
+            renderTable(filtered);
+        }
+    </script>
+</body>
+</html>

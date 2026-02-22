@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>存储能力监控 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .stat-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .stat-card__title {
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        
+        .stat-card__icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .stat-card__icon.primary { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .stat-card__icon.success { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .stat-card__icon.warning { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .stat-card__icon.info { background: rgba(148, 163, 184, 0.2); color: var(--ns-secondary); }
+        
+        .stat-card__value {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--ns-dark);
+            margin-bottom: 4px;
+        }
+        
+        .stat-card__sub {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--ns-input-bg);
+            padding: 4px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--ns-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .tab:hover {
+            color: var(--ns-dark);
+        }
+        
+        .tab.active {
+            background: var(--nx-primary);
+            color: white;
+        }
+        
+        .panel {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+        }
+        
+        .panel__header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .panel__body {
+            padding: 20px;
+        }
+        
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .metrics-table th,
+        .metrics-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .metrics-table th {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--ns-secondary);
+            text-transform: uppercase;
+            background: var(--ns-input-bg);
+        }
+        
+        .metrics-table td {
+            font-size: 14px;
+            color: var(--ns-dark);
+        }
+        
+        .metrics-table tr:hover td {
+            background: var(--ns-bg-hover);
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .status-badge.normal { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .status-badge.slow { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .status-badge.warning { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--ns-input-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-bar__fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-bar__fill.success { background: var(--ns-success); }
+        .progress-bar__fill.warning { background: var(--ns-warning); }
+        .progress-bar__fill.danger { background: var(--ns-danger); }
+        
+        .chart-container {
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            padding: 20px 0;
+        }
+        
+        .chart-bar {
+            flex: 1;
+            background: var(--nx-primary);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            min-height: 10px;
+            transition: height 0.3s ease;
+        }
+        
+        .chart-bar:hover {
+            background: #2563eb;
+        }
+        
+        .chart-bar__label {
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: var(--ns-secondary);
+            white-space: nowrap;
+        }
+        
+        .trend-chart {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            height: 30px;
+        }
+        
+        .trend-bar {
+            flex: 1;
+            background: var(--nx-primary);
+            border-radius: 2px;
+            min-height: 4px;
+            transition: height 0.2s ease;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: var(--nx-primary);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: var(--ns-card-bg);
+            color: var(--ns-dark);
+            border: 1px solid var(--ns-border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--ns-bg-hover);
+            border-color: var(--nx-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold"><i class="ri-line-chart-line"></i> 存储能力监控</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="btn btn-secondary" onclick="loadData()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                    <button class="btn btn-primary" onclick="exportReport()">
+                        <i class="ri-download-line"></i> 导出报告
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="stats-row" id="statsRow">
+                        <div class="stat-card">
+                            <div class="stat-card__header">
+                                <span class="stat-card__title">存储类型</span>
+                                <div class="stat-card__icon primary"><i class="ri-database-2-line"></i></div>
+                            </div>
+                            <div class="stat-card__value" id="statStorageType">S3</div>
+                            <div class="stat-card__sub">就绪 ✓</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__header">
+                                <span class="stat-card__title">文件数量</span>
+                                <div class="stat-card__icon success"><i class="ri-file-line"></i></div>
+                            </div>
+                            <div class="stat-card__value" id="statFileCount">12,345</div>
+                            <div class="stat-card__sub">总文件数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__header">
+                                <span class="stat-card__title">存储容量</span>
+                                <div class="stat-card__icon warning"><i class="ri-hard-drive-2-line"></i></div>
+                            </div>
+                            <div class="stat-card__value" id="statStorageSize">45.2 GB</div>
+                            <div class="stat-card__sub">45.2% 已使用</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__header">
+                                <span class="stat-card__title">读写速率</span>
+                                <div class="stat-card__icon info"><i class="ri-speed-line"></i></div>
+                            </div>
+                            <div class="stat-card__value" id="statThroughput">125 MB/s</div>
+                            <div class="stat-card__sub">平均吞吐量</div>
+                        </div>
+                    </div>
+                    
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchTab('overview')">概览</div>
+                        <div class="tab" onclick="switchTab('capabilities')">能力状态</div>
+                        <div class="tab" onclick="switchTab('performance')">性能指标</div>
+                        <div class="tab" onclick="switchTab('alerts')">告警配置</div>
+                    </div>
+                    
+                    <div id="tabContent">
+                        <div id="overviewTab">
+                            <div class="panel">
+                                <div class="panel__header">
+                                    <span class="panel__title">能力状态</span>
+                                </div>
+                                <div class="panel__body">
+                                    <table class="metrics-table">
+                                        <thead>
+                                            <tr>
+                                                <th>能力</th>
+                                                <th>状态</th>
+                                                <th>调用次数</th>
+                                                <th>成功率</th>
+                                                <th>平均延迟</th>
+                                                <th>趋势</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="capabilitiesBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="capabilitiesTab" style="display: none;">
+                            <div class="panel">
+                                <div class="panel__header">
+                                    <span class="panel__title">能力详情</span>
+                                </div>
+                                <div class="panel__body">
+                                    <table class="metrics-table">
+                                        <thead>
+                                            <tr>
+                                                <th>能力ID</th>
+                                                <th>能力名称</th>
+                                                <th>状态</th>
+                                                <th>调用次数</th>
+                                                <th>成功次数</th>
+                                                <th>错误次数</th>
+                                                <th>成功率</th>
+                                                <th>平均延迟</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="capabilitiesDetailBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="performanceTab" style="display: none;">
+                            <div class="panel">
+                                <div class="panel__header">
+                                    <span class="panel__title">性能趋势 (最近 24 小时)</span>
+                                </div>
+                                <div class="panel__body">
+                                    <div class="chart-container" id="performanceChart">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="alertsTab" style="display: none;">
+                            <div class="panel">
+                                <div class="panel__header">
+                                    <span class="panel__title">告警配置</span>
+                                    <button class="btn btn-primary" onclick="addAlert()">
+                                        <i class="ri-add-line"></i> 添加告警
+                                    </button>
+                                </div>
+                                <div class="panel__body">
+                                    <table class="metrics-table">
+                                        <thead>
+                                            <tr>
+                                                <th>告警名称</th>
+                                                <th>条件</th>
+                                                <th>阈值</th>
+                                                <th>状态</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="alertsBody">
+                                            <tr>
+                                                <td>存储空间告警</td>
+                                                <td>使用率超过</td>
+                                                <td>80%</td>
+                                                <td><span class="status-badge normal">已启用</span></td>
+                                                <td><button class="btn btn-secondary" style="padding: 6px 12px;">编辑</button></td>
+                                            </tr>
+                                            <tr>
+                                                <td>延迟告警</td>
+                                                <td>平均延迟超过</td>
+                                                <td>100ms</td>
+                                                <td><span class="status-badge normal">已启用</span></td>
+                                                <td><button class="btn btn-secondary" style="padding: 6px 12px;">编辑</button></td>
+                                            </tr>
+                                            <tr>
+                                                <td>错误率告警</td>
+                                                <td>错误率超过</td>
+                                                <td>5%</td>
+                                                <td><span class="status-badge normal">已启用</span></td>
+                                                <td><button class="btn btn-secondary" style="padding: 6px 12px;">编辑</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let capabilityMetrics = [];
+        
+        window.onPageInit = function() {
+            loadData();
+        };
+        
+        async function loadData() {
+            await Promise.all([
+                loadStats(),
+                loadCapabilityMetrics()
+            ]);
+        }
+        
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/vfs/stats');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const stats = result.data;
+                    document.getElementById('statFileCount').textContent = formatNumber(stats.totalFiles || 0);
+                    document.getElementById('statStorageSize').textContent = formatSize(stats.totalSize || 0);
+                }
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+        
+        async function loadCapabilityMetrics() {
+            try {
+                const response = await fetch('/api/vfs/capabilities/metrics');
+                const result = await response.json();
+                
+                if (result.success) {
+                    capabilityMetrics = result.data;
+                    renderCapabilities();
+                    renderCapabilitiesDetail();
+                    renderPerformanceChart();
+                }
+            } catch (error) {
+                console.error('Failed to load capability metrics:', error);
+            }
+        }
+        
+        function renderCapabilities() {
+            const tbody = document.getElementById('capabilitiesBody');
+            tbody.innerHTML = capabilityMetrics.map(metric => {
+                const statusClass = metric.status === 'normal' ? 'normal' : 
+                                   metric.status === 'slow' ? 'slow' : 'warning';
+                const statusText = metric.status === 'normal' ? '正常' : 
+                                  metric.status === 'slow' ? '慢' : '警告';
+                
+                return `
+                    <tr>
+                        <td><strong>${metric.capabilityName}</strong></td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>${formatNumber(metric.invokeCount)}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="progress-bar" style="width: 100px;">
+                                    <div class="progress-bar__fill ${metric.successRate >= 99 ? 'success' : metric.successRate >= 95 ? 'warning' : 'danger'}" 
+                                         style="width: ${metric.successRate}%"></div>
+                                </div>
+                                <span>${metric.successRate.toFixed(1)}%</span>
+                            </div>
+                        </td>
+                        <td>${metric.avgLatency.toFixed(0)}ms</td>
+                        <td>
+                            <div class="trend-chart">
+                                ${generateTrendBars()}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function renderCapabilitiesDetail() {
+            const tbody = document.getElementById('capabilitiesDetailBody');
+            tbody.innerHTML = capabilityMetrics.map(metric => {
+                const statusClass = metric.status === 'normal' ? 'normal' : 
+                                   metric.status === 'slow' ? 'slow' : 'warning';
+                const statusText = metric.status === 'normal' ? '正常' : 
+                                  metric.status === 'slow' ? '慢' : '警告';
+                
+                return `
+                    <tr>
+                        <td><code>${metric.capabilityId}</code></td>
+                        <td>${metric.capabilityName}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>${formatNumber(metric.invokeCount)}</td>
+                        <td>${formatNumber(metric.successCount)}</td>
+                        <td>${formatNumber(metric.errorCount)}</td>
+                        <td>${metric.successRate.toFixed(1)}%</td>
+                        <td>${metric.avgLatency.toFixed(0)}ms</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function renderPerformanceChart() {
+            const container = document.getElementById('performanceChart');
+            const hours = [];
+            for (let i = 23; i >= 0; i--) {
+                hours.push(i + 'h前');
+            }
+            
+            container.innerHTML = hours.map((label, index) => {
+                const height = 20 + Math.random() * 80;
+                return `
+                    <div class="chart-bar" style="height: ${height}%">
+                        <span class="chart-bar__label">${label}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function generateTrendBars() {
+            let bars = '';
+            for (let i = 0; i < 20; i++) {
+                const height = 20 + Math.random() * 80;
+                bars += `<div class="trend-bar" style="height: ${height}%"></div>`;
+            }
+            return bars;
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('overviewTab').style.display = tabName === 'overview' ? 'block' : 'none';
+            document.getElementById('capabilitiesTab').style.display = tabName === 'capabilities' ? 'block' : 'none';
+            document.getElementById('performanceTab').style.display = tabName === 'performance' ? 'block' : 'none';
+            document.getElementById('alertsTab').style.display = tabName === 'alerts' ? 'block' : 'none';
+        }
+        
+        function exportReport() {
+            const report = {
+                timestamp: new Date().toISOString(),
+                stats: {
+                    fileCount: document.getElementById('statFileCount').textContent,
+                    storageSize: document.getElementById('statStorageSize').textContent
+                },
+                capabilities: capabilityMetrics
+            };
+            
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `storage-report-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function addAlert() {
+            alert('告警配置功能开发中...');
+        }
+        
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+        
+        function formatSize(bytes) {
+            if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(1) + ' GB';
+            if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+            if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return bytes + ' B';
+        }
+    </script>
+</body>
+</html>

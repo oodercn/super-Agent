@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景列表 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">场景列表</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="openCreateModal()">
+                        <i class="ri-add-line"></i> 创建场景
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">运行中</div>
+                                <div class="nx-stat-card__value" id="activeCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-time-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">创建中</div>
+                                <div class="nx-stat-card__value" id="creatingCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--secondary">
+                                <i class="ri-pause-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">已停止</div>
+                                <div class="nx-stat-card__value" id="stoppedCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-git-branch-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">总数</div>
+                                <div class="nx-stat-card__value" id="totalCount">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">场景列表</h3>
+                            <div class="nx-flex nx-gap-2">
+                                <input type="text" class="nx-input" id="searchInput" placeholder="搜索场景..." style="width: 200px;">
+                                <select class="nx-select" id="statusFilter">
+                                    <option value="">全部状态</option>
+                                    <option value="ACTIVE">运行中</option>
+                                    <option value="CREATING">创建中</option>
+                                    <option value="STOPPED">已停止</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>场景ID</th>
+                                            <th>场景名称</th>
+                                            <th>状态</th>
+                                            <th>服务数</th>
+                                            <th>能力数</th>
+                                            <th>创建时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sceneTableBody">
+                                        <tr><td colspan="7" class="nx-text-center">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="nx-modal" id="createModal">
+        <div class="nx-modal__backdrop" onclick="closeModal()"></div>
+        <div class="nx-modal__content">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">创建场景</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-mb-4">
+                    <label class="nx-label">场景名称</label>
+                    <input type="text" class="nx-input" id="sceneName" placeholder="输入场景名称">
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">描述</label>
+                    <textarea class="nx-textarea" id="sceneDesc" rows="3" placeholder="场景描述"></textarea>
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createScene()">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let allScenes = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadScenes();
+        });
+
+        async function loadScenes() {
+            try {
+                const response = await fetch('/api/enexus/scene/list', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                const rs = await response.json();
+                allScenes = rs.data?.content || [];
+                renderTable(allScenes);
+                updateStats();
+            } catch (error) {
+                document.getElementById('sceneTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="nx-text-center nx-text-danger">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        function updateStats() {
+            let active = 0, creating = 0, stopped = 0;
+            allScenes.forEach(s => {
+                if (s.status === 'ACTIVE') active++;
+                else if (s.status === 'CREATING') creating++;
+                else if (s.status === 'STOPPED') stopped++;
+            });
+            document.getElementById('activeCount').textContent = active;
+            document.getElementById('creatingCount').textContent = creating;
+            document.getElementById('stoppedCount').textContent = stopped;
+            document.getElementById('totalCount').textContent = allScenes.length;
+        }
+
+        function renderTable(scenes) {
+            if (!scenes || scenes.length === 0) {
+                document.getElementById('sceneTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="nx-text-center">暂无数据</td></tr>';
+                return;
+            }
+
+            let html = '';
+            scenes.forEach(scene => {
+                const statusBadge = getStatusBadge(scene.status);
+                const createdAt = formatTime(scene.createdAt);
+                const serviceCount = countServices(scene);
+                const capabilityCount = countCapabilities(scene);
+                
+                html += '<tr>';
+                html += '  <td>' + (scene.sceneId || '-') + '</td>';
+                html += '  <td>' + (scene.sceneName || '-') + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--' + statusBadge + '">' + (scene.status || '-') + '</span></td>';
+                html += '  <td>' + serviceCount + '</td>';
+                html += '  <td>' + capabilityCount + '</td>';
+                html += '  <td>' + createdAt + '</td>';
+                html += '  <td>';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="viewScene(\'' + scene.sceneId + '\')">配置</button> ';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--primary" onclick="monitorScene(\'' + scene.sceneId + '\')">监控</button> ';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--danger" onclick="deleteScene(\'' + scene.sceneId + '\')">删除</button>';
+                html += '  </td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('sceneTableBody').innerHTML = html;
+        }
+
+        function countServices(scene) {
+            let count = 0;
+            if (scene.org) count++;
+            if (scene.vfs) count++;
+            if (scene.msg) count++;
+            if (scene.jds) count++;
+            return count;
+        }
+
+        function countCapabilities(scene) {
+            let count = 0;
+            if (scene.org && scene.org.capabilities) count += Object.keys(scene.org.capabilities).length;
+            if (scene.vfs && scene.vfs.capabilities) count += Object.keys(scene.vfs.capabilities).length;
+            if (scene.msg && scene.msg.capabilities) count += Object.keys(scene.msg.capabilities).length;
+            if (scene.jds && scene.jds.capabilities) count += Object.keys(scene.jds.capabilities).length;
+            return count;
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'ACTIVE': 'success',
+                'CREATING': 'warning',
+                'STOPPED': 'secondary',
+                'ERROR': 'danger'
+            };
+            return map[status] || 'secondary';
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function openCreateModal() {
+            document.getElementById('sceneName').value = '';
+            document.getElementById('sceneDesc').value = '';
+            document.getElementById('createModal').classList.add('nx-modal--open');
+        }
+
+        function closeModal() {
+            document.getElementById('createModal').classList.remove('nx-modal--open');
+        }
+
+        async function createScene() {
+            const name = document.getElementById('sceneName').value;
+            const desc = document.getElementById('sceneDesc').value;
+            
+            if (!name) {
+                alert('请输入场景名称');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/enexus/scene/create', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        sceneName: name,
+                        description: desc,
+                        createdBy: 'admin'
+                    })
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    closeModal();
+                    loadScenes();
+                }
+            } catch (error) {
+                alert('创建失败: ' + error.message);
+            }
+        }
+
+        function viewScene(sceneId) {
+            window.location.href = '/console/pages/scene/config-editor.html?sceneId=' + sceneId;
+        }
+
+        function monitorScene(sceneId) {
+            window.location.href = '/console/pages/scene/dashboard.html?sceneId=' + sceneId;
+        }
+
+        async function deleteScene(sceneId) {
+            if (!confirm('确定要删除此场景吗？')) return;
+            
+            try {
+                const response = await fetch('/api/enexus/scene/delete', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({sceneId: sceneId})
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    loadScenes();
+                }
+            } catch (error) {
+                alert('删除失败: ' + error.message);
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterScenes();
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            filterScenes();
+        });
+
+        function filterScenes() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            
+            let filtered = allScenes;
+            
+            if (search) {
+                filtered = filtered.filter(s => 
+                    (s.sceneId && s.sceneId.toLowerCase().includes(search)) ||
+                    (s.sceneName && s.sceneName.toLowerCase().includes(search))
+                );
+            }
+            
+            if (status) {
+                filtered = filtered.filter(s => s.status === status);
+            }
+            
+            renderTable(filtered);
+        }
+    </script>
+</body>
+</html>

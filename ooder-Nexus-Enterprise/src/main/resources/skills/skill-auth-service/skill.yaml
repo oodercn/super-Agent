@@ -1,0 +1,151 @@
+apiVersion: ooder.io/v1
+kind: Skill
+metadata:
+  skillId: "skill-auth-service"
+  skillName: "域认证中心"
+  skillType: "SYSTEM_SERVICE"
+  version: "1.0.0"
+  description: "提供用户认证、域管理、密钥管理、权限管理功能"
+  author: "ooder Team"
+  createdAt: "2026-02-18T00:00:00Z"
+  scene: "SYS"
+
+spec:
+  capabilities:
+    - capabilityId: "cap-user-auth"
+      capabilityName: "用户认证"
+      description: "登录、Token管理、会话管理"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-login"
+          operationName: "用户登录"
+          description: "用户登录认证"
+          inputSchema:
+            type: "object"
+            properties:
+              username:
+                type: "string"
+              password:
+                type: "string"
+              domain:
+                type: "string"
+          outputSchema:
+            type: "object"
+            properties:
+              success:
+                type: "boolean"
+              token:
+                type: "string"
+              refreshToken:
+                type: "string"
+        
+        - operationId: "op-logout"
+          operationName: "用户登出"
+          description: "用户登出系统"
+        
+        - operationId: "op-refresh-token"
+          operationName: "刷新Token"
+          description: "刷新访问令牌"
+    
+    - capabilityId: "cap-domain-mgmt"
+      capabilityName: "域管理"
+      description: "域创建、查询、删除"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-create-domain"
+          operationName: "创建域"
+          description: "创建新的域"
+        
+        - operationId: "op-get-domain"
+          operationName: "获取域信息"
+          description: "获取域详细信息"
+        
+        - operationId: "op-list-domains"
+          operationName: "列出域"
+          description: "列出所有域"
+        
+        - operationId: "op-delete-domain"
+          operationName: "删除域"
+          description: "删除指定域"
+    
+    - capabilityId: "cap-key-mgmt"
+      capabilityName: "密钥管理"
+      description: "密钥生成、轮换、签名、加密"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-generate-key"
+          operationName: "生成密钥"
+          description: "生成新的密钥对"
+        
+        - operationId: "op-rotate-key"
+          operationName: "轮换密钥"
+          description: "轮换密钥"
+        
+        - operationId: "op-sign-data"
+          operationName: "数据签名"
+          description: "对数据进行签名"
+        
+        - operationId: "op-verify-signature"
+          operationName: "验证签名"
+          description: "验证数据签名"
+    
+    - capabilityId: "cap-permission-mgmt"
+      capabilityName: "权限管理"
+      description: "角色分配、权限验证"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-assign-role"
+          operationName: "分配角色"
+          description: "为用户分配角色"
+        
+        - operationId: "op-check-permission"
+          operationName: "检查权限"
+          description: "检查用户权限"
+
+  config:
+    port: 8081
+    host: "0.0.0.0"
+    endpoints:
+      - path: "/api/auth/login"
+        description: "登录接口"
+      - path: "/api/auth/logout"
+        description: "登出接口"
+      - path: "/api/auth/token"
+        description: "Token管理接口"
+      - path: "/api/auth/domain"
+        description: "域管理接口"
+      - path: "/api/auth/key"
+        description: "密钥管理接口"
+      - path: "/api/auth/permission"
+        description: "权限管理接口"
+    
+    dependencies:
+      - skillId: "skill-jds-server"
+        required: true
+        description: "服务注册发现"
+      - skillId: "skill-data-service"
+        required: true
+        description: "数据存储"
+    
+    token:
+      expireHours: 24
+      refreshExpireHours: 168
+      algorithm: "HS256"
+    
+    key:
+      algorithm: "RSA-2048"
+      rotationDays: 30
+
+  healthCheck:
+    enabled: true
+    interval: 30000
+    timeout: 5000
+    endpoint: "/api/auth/health"
+
+  resources:
+    cpu:
+      request: "250m"
+      limit: "1000m"
+    memory:
+      request: "256Mi"
+      limit: "1Gi"

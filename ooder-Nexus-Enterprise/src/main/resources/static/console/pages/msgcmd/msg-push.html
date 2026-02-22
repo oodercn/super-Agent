@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消息推送 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .push-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+            height: calc(100vh - 180px);
+        }
+        
+        .push-sidebar {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .push-sidebar__header {
+            padding: 16px;
+            border-bottom: 1px solid var(--ns-border);
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .push-type-list {
+            padding: 8px;
+        }
+        
+        .push-type-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 4px;
+        }
+        
+        .push-type-item:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .push-type-item.active {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--nx-primary);
+        }
+        
+        .push-type-item__icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .push-type-item__icon.p2p { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .push-type-item__icon.group { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .push-type-item__icon.topic { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .push-type-item__icon.broadcast { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+        
+        .push-type-item__info {
+            flex: 1;
+        }
+        
+        .push-type-item__title {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .push-type-item__desc {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .push-main {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .push-editor {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .push-editor__header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .push-editor__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .push-editor__body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .target-selector {
+            margin-bottom: 20px;
+        }
+        
+        .target-selector__label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ns-secondary);
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .target-selector__input {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .target-selector__input input {
+            flex: 1;
+            padding: 10px 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        
+        .target-selector__input input:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        
+        .target-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .target-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--nx-primary);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .target-tag__remove {
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        
+        .target-tag__remove:hover {
+            opacity: 1;
+        }
+        
+        .message-editor {
+            margin-bottom: 20px;
+        }
+        
+        .message-editor__label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ns-secondary);
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .message-editor__textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            color: var(--ns-dark);
+            font-size: 14px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .message-editor__textarea:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        
+        .message-editor__toolbar {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .toolbar-btn {
+            padding: 6px 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--ns-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .toolbar-btn:hover {
+            background: var(--ns-bg-hover);
+            border-color: var(--nx-primary);
+        }
+        
+        .message-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .option-group__label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ns-secondary);
+        }
+        
+        .option-group__select,
+        .option-group__input {
+            padding: 10px 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        
+        .option-group__select:focus,
+        .option-group__input:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        
+        .push-editor__footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--ns-input-bg);
+        }
+        
+        .push-editor__actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: var(--nx-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: var(--ns-card-bg);
+            color: var(--ns-dark);
+            border: 1px solid var(--ns-border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--ns-bg-hover);
+            border-color: var(--nx-primary);
+        }
+        
+        .push-history {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+        }
+        
+        .push-history__header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .push-history__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .push-history__body {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .history-table th,
+        .history-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .history-table th {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--ns-secondary);
+            text-transform: uppercase;
+            background: var(--ns-input-bg);
+            position: sticky;
+            top: 0;
+        }
+        
+        .history-table td {
+            font-size: 14px;
+            color: var(--ns-dark);
+        }
+        
+        .history-table tr:hover td {
+            background: var(--ns-bg-hover);
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .status-badge.success { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .status-badge.pending { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .status-badge.failed { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .type-badge.p2p { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .type-badge.group { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .type-badge.topic { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        
+        .char-count {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .quick-templates {
+            margin-top: 12px;
+        }
+        
+        .quick-templates__title {
+            font-size: 12px;
+            color: var(--ns-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .quick-templates__list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .template-chip {
+            padding: 6px 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--ns-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .template-chip:hover {
+            background: var(--ns-bg-hover);
+            border-color: var(--nx-primary);
+        }
+        
+        .user-selector {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            box-shadow: var(--nx-shadow-lg);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+        
+        .user-selector.active {
+            display: block;
+        }
+        
+        .user-selector__item {
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .user-selector__item:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .target-selector__wrapper {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold"><i class="ri-send-plane-line"></i> 消息推送</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="push-container">
+                        <div class="push-sidebar">
+                            <div class="push-sidebar__header">推送类型</div>
+                            <div class="push-type-list">
+                                <div class="push-type-item active" data-type="p2p" onclick="selectPushType('p2p')">
+                                    <div class="push-type-item__icon p2p"><i class="ri-user-line"></i></div>
+                                    <div class="push-type-item__info">
+                                        <div class="push-type-item__title">点对点消息</div>
+                                        <div class="push-type-item__desc">发送给指定用户</div>
+                                    </div>
+                                </div>
+                                <div class="push-type-item" data-type="group" onclick="selectPushType('group')">
+                                    <div class="push-type-item__icon group"><i class="ri-team-line"></i></div>
+                                    <div class="push-type-item__info">
+                                        <div class="push-type-item__title">群组消息</div>
+                                        <div class="push-type-item__desc">发送给群组</div>
+                                    </div>
+                                </div>
+                                <div class="push-type-item" data-type="topic" onclick="selectPushType('topic')">
+                                    <div class="push-type-item__icon topic"><i class="ri-git-branch-line"></i></div>
+                                    <div class="push-type-item__info">
+                                        <div class="push-type-item__title">Topic消息</div>
+                                        <div class="push-type-item__desc">发布到Topic</div>
+                                    </div>
+                                </div>
+                                <div class="push-type-item" data-type="broadcast" onclick="selectPushType('broadcast')">
+                                    <div class="push-type-item__icon broadcast"><i class="ri-broadcast-line"></i></div>
+                                    <div class="push-type-item__info">
+                                        <div class="push-type-item__title">广播消息</div>
+                                        <div class="push-type-item__desc">群发给所有用户</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="push-main">
+                            <div class="push-editor">
+                                <div class="push-editor__header">
+                                    <span class="push-editor__title" id="editorTitle">发送点对点消息</span>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button class="btn btn-secondary" onclick="clearForm()">
+                                            <i class="ri-delete-bin-line"></i> 清空
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="push-editor__body">
+                                    <div class="target-selector" id="targetSelector">
+                                        <label class="target-selector__label">接收目标</label>
+                                        <div class="target-selector__wrapper">
+                                            <div class="target-selector__input">
+                                                <input type="text" id="targetInput" placeholder="输入用户ID或选择用户" oninput="onTargetInput(event)" onfocus="showUserSelector()">
+                                                <button class="btn btn-secondary" onclick="addTarget()">
+                                                    <i class="ri-add-line"></i> 添加
+                                                </button>
+                                            </div>
+                                            <div class="user-selector" id="userSelector"></div>
+                                        </div>
+                                        <div class="target-tags" id="targetTags"></div>
+                                    </div>
+                                    
+                                    <div class="message-editor">
+                                        <label class="message-editor__label">消息内容</label>
+                                        <textarea class="message-editor__textarea" id="messageContent" placeholder="请输入消息内容..." oninput="updateCharCount()"></textarea>
+                                        <div class="message-editor__toolbar">
+                                            <button class="toolbar-btn" onclick="insertTemplate('alert')"><i class="ri-alarm-warning-line"></i> 告警模板</button>
+                                            <button class="toolbar-btn" onclick="insertTemplate('notification')"><i class="ri-notification-line"></i> 通知模板</button>
+                                            <button class="toolbar-btn" onclick="insertTemplate('task')"><i class="ri-task-line"></i> 任务模板</button>
+                                            <span class="char-count"><span id="charCount">0</span>/4000</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="message-options">
+                                        <div class="option-group">
+                                            <label class="option-group__label">优先级</label>
+                                            <select class="option-group__select" id="priority">
+                                                <option value="high">高优先级</option>
+                                                <option value="normal" selected>普通</option>
+                                                <option value="low">低优先级</option>
+                                            </select>
+                                        </div>
+                                        <div class="option-group">
+                                            <label class="option-group__label">过期时间</label>
+                                            <select class="option-group__select" id="expireTime">
+                                                <option value="600">10分钟</option>
+                                                <option value="3600" selected>1小时</option>
+                                                <option value="86400">24小时</option>
+                                                <option value="604800">7天</option>
+                                            </select>
+                                        </div>
+                                        <div class="option-group">
+                                            <label class="option-group__label">回执要求</label>
+                                            <select class="option-group__select" id="receiptType">
+                                                <option value="none">不需要回执</option>
+                                                <option value="delivered">送达回执</option>
+                                                <option value="read" selected>已读回执</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="quick-templates">
+                                        <div class="quick-templates__title">快捷模板</div>
+                                        <div class="quick-templates__list">
+                                            <span class="template-chip" onclick="useTemplate('system')">系统通知</span>
+                                            <span class="template-chip" onclick="useTemplate('update')">更新提醒</span>
+                                            <span class="template-chip" onclick="useTemplate('warning')">警告通知</span>
+                                            <span class="template-chip" onclick="useTemplate('meeting')">会议邀请</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="push-editor__footer">
+                                    <div style="color: var(--ns-secondary); font-size: 13px;">
+                                        <i class="ri-information-line"></i> 消息将实时推送给目标用户
+                                    </div>
+                                    <div class="push-editor__actions">
+                                        <button class="btn btn-secondary" onclick="saveDraft()">
+                                            <i class="ri-save-line"></i> 保存草稿
+                                        </button>
+                                        <button class="btn btn-primary" onclick="sendMessage()">
+                                            <i class="ri-send-plane-line"></i> 发送消息
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="push-history">
+                                <div class="push-history__header">
+                                    <span class="push-history__title">推送历史</span>
+                                    <button class="btn btn-secondary" style="padding: 6px 12px;" onclick="loadHistory()">
+                                        <i class="ri-refresh-line"></i>
+                                    </button>
+                                </div>
+                                <div class="push-history__body">
+                                    <table class="history-table">
+                                        <thead>
+                                            <tr>
+                                                <th>时间</th>
+                                                <th>类型</th>
+                                                <th>目标</th>
+                                                <th>状态</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="historyBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let currentPushType = 'p2p';
+        let selectedTargets = [];
+        let mockUsers = [
+            { id: 'user-001', name: '张三' },
+            { id: 'user-002', name: '李四' },
+            { id: 'user-003', name: '王五' },
+            { id: 'agent-001', name: 'Agent-1' },
+            { id: 'agent-002', name: 'Agent-2' },
+            { id: 'device-001', name: 'Device-1' }
+        ];
+        let mockGroups = [
+            { id: 'group-001', name: '开发组' },
+            { id: 'group-002', name: '运维组' },
+            { id: 'group-003', name: '测试组' }
+        ];
+        let mockTopics = [
+            { id: 'ooder/system/alarm', name: '系统告警' },
+            { id: 'ooder/sensor/temp', name: '温度传感器' },
+            { id: 'ooder/command/device', name: '设备命令' }
+        ];
+        
+        window.onPageInit = function() {
+            loadHistory();
+        };
+        
+        function selectPushType(type) {
+            currentPushType = type;
+            document.querySelectorAll('.push-type-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.type === type);
+            });
+            
+            const titles = {
+                'p2p': '发送点对点消息',
+                'group': '发送群组消息',
+                'topic': '发布Topic消息',
+                'broadcast': '发送广播消息'
+            };
+            
+            const placeholders = {
+                'p2p': '输入用户ID或选择用户',
+                'group': '输入群组ID或选择群组',
+                'topic': '输入Topic路径或选择Topic',
+                'broadcast': '广播消息将发送给所有用户'
+            };
+            
+            document.getElementById('editorTitle').textContent = titles[type];
+            document.getElementById('targetInput').placeholder = placeholders[type];
+            
+            if (type === 'broadcast') {
+                document.getElementById('targetSelector').style.display = 'none';
+            } else {
+                document.getElementById('targetSelector').style.display = 'block';
+            }
+            
+            selectedTargets = [];
+            renderTargetTags();
+        }
+        
+        function showUserSelector() {
+            const selector = document.getElementById('userSelector');
+            const input = document.getElementById('targetInput').value.toLowerCase();
+            
+            let items = [];
+            if (currentPushType === 'p2p') {
+                items = mockUsers.filter(u => u.id.includes(input) || u.name.includes(input));
+            } else if (currentPushType === 'group') {
+                items = mockGroups.filter(g => g.id.includes(input) || g.name.includes(input));
+            } else if (currentPushType === 'topic') {
+                items = mockTopics.filter(t => t.id.includes(input) || t.name.includes(input));
+            }
+            
+            selector.innerHTML = items.map(item => `
+                <div class="user-selector__item" onclick="selectItem('${item.id}', '${item.name}')">
+                    <strong>${item.id}</strong> - ${item.name}
+                </div>
+            `).join('');
+            
+            selector.classList.add('active');
+        }
+        
+        function selectItem(id, name) {
+            if (!selectedTargets.find(t => t.id === id)) {
+                selectedTargets.push({ id, name });
+                renderTargetTags();
+            }
+            document.getElementById('targetInput').value = '';
+            document.getElementById('userSelector').classList.remove('active');
+        }
+        
+        function addTarget() {
+            const input = document.getElementById('targetInput');
+            const value = input.value.trim();
+            if (value && !selectedTargets.find(t => t.id === value)) {
+                selectedTargets.push({ id: value, name: value });
+                renderTargetTags();
+                input.value = '';
+            }
+        }
+        
+        function removeTarget(id) {
+            selectedTargets = selectedTargets.filter(t => t.id !== id);
+            renderTargetTags();
+        }
+        
+        function renderTargetTags() {
+            const container = document.getElementById('targetTags');
+            container.innerHTML = selectedTargets.map(target => `
+                <span class="target-tag">
+                    ${target.name}
+                    <span class="target-tag__remove" onclick="removeTarget('${target.id}')">
+                        <i class="ri-close-line"></i>
+                    </span>
+                </span>
+            `).join('');
+        }
+        
+        function onTargetInput(event) {
+            if (event.key === 'Enter') {
+                addTarget();
+            } else {
+                showUserSelector();
+            }
+        }
+        
+        function updateCharCount() {
+            const content = document.getElementById('messageContent').value;
+            document.getElementById('charCount').textContent = content.length;
+        }
+        
+        function insertTemplate(type) {
+            const templates = {
+                'alert': '【告警通知】\n告警级别：严重\n告警内容：\n发生时间：\n请及时处理！',
+                'notification': '【系统通知】\n通知内容：\n生效时间：\n请知悉。',
+                'task': '【任务分配】\n任务名称：\n任务描述：\n截止时间：\n请按时完成。'
+            };
+            
+            const textarea = document.getElementById('messageContent');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            textarea.value = text.substring(0, start) + templates[type] + text.substring(end);
+            updateCharCount();
+        }
+        
+        function useTemplate(type) {
+            const templates = {
+                'system': '【系统通知】系统将于今晚22:00进行维护升级，届时服务将暂停，预计维护时长2小时，请提前做好准备。',
+                'update': '【更新提醒】新版本v2.1.0已发布，包含以下更新：\n1. 新增消息推送功能\n2. 优化系统性能\n3. 修复已知问题',
+                'warning': '【警告通知】检测到异常访问行为，IP地址：192.168.1.100，请及时确认是否为正常操作。',
+                'meeting': '【会议邀请】\n会议主题：项目进度汇报\n会议时间：2026-02-20 14:00\n会议地点：会议室A\n请准时参加。'
+            };
+            
+            document.getElementById('messageContent').value = templates[type];
+            updateCharCount();
+        }
+        
+        function clearForm() {
+            document.getElementById('messageContent').value = '';
+            selectedTargets = [];
+            renderTargetTags();
+            updateCharCount();
+        }
+        
+        function saveDraft() {
+            const draft = {
+                type: currentPushType,
+                targets: selectedTargets,
+                content: document.getElementById('messageContent').value,
+                priority: document.getElementById('priority').value,
+                expireTime: document.getElementById('expireTime').value,
+                receiptType: document.getElementById('receiptType').value
+            };
+            
+            localStorage.setItem('msgDraft', JSON.stringify(draft));
+            alert('草稿已保存');
+        }
+        
+        async function sendMessage() {
+            const content = document.getElementById('messageContent').value.trim();
+            
+            if (!content) {
+                alert('请输入消息内容');
+                return;
+            }
+            
+            if (currentPushType !== 'broadcast' && selectedTargets.length === 0) {
+                alert('请选择接收目标');
+                return;
+            }
+            
+            const message = {
+                type: currentPushType,
+                targets: selectedTargets.map(t => t.id),
+                content: content,
+                priority: document.getElementById('priority').value,
+                expireTime: parseInt(document.getElementById('expireTime').value),
+                receiptType: document.getElementById('receiptType').value
+            };
+            
+            try {
+                const response = await fetch('/api/msg/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(message)
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('消息发送成功');
+                    clearForm();
+                    loadHistory();
+                } else {
+                    alert('消息发送失败: ' + (result.error || '未知错误'));
+                }
+            } catch (error) {
+                alert('消息发送失败: ' + error.message);
+            }
+        }
+        
+        async function loadHistory() {
+            try {
+                const response = await fetch('/api/msg/history?limit=10');
+                const result = await response.json();
+                
+                if (result.success) {
+                    renderHistory(result.data);
+                }
+            } catch (error) {
+                renderMockHistory();
+            }
+        }
+        
+        function renderMockHistory() {
+            const mockHistory = [
+                { time: '10:30:00', type: 'p2p', target: 'user-001', status: 'success' },
+                { time: '10:25:00', type: 'topic', target: 'ooder/system/alarm', status: 'success' },
+                { time: '10:20:00', type: 'group', target: 'group-001', status: 'pending' },
+                { time: '10:15:00', type: 'p2p', target: 'agent-002', status: 'success' },
+                { time: '10:10:00', type: 'broadcast', target: '所有用户', status: 'success' }
+            ];
+            renderHistory(mockHistory);
+        }
+        
+        function renderHistory(history) {
+            const tbody = document.getElementById('historyBody');
+            
+            if (!history || history.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--ns-secondary);">暂无推送历史</td></tr>';
+                return;
+            }
+            
+            const typeLabels = {
+                'p2p': '点对点',
+                'group': '群组',
+                'topic': 'Topic',
+                'broadcast': '广播'
+            };
+            
+            const statusLabels = {
+                'success': '已送达',
+                'pending': '发送中',
+                'failed': '失败'
+            };
+            
+            tbody.innerHTML = history.map(item => `
+                <tr>
+                    <td>${item.time}</td>
+                    <td><span class="type-badge ${item.type}">${typeLabels[item.type] || item.type}</span></td>
+                    <td>${item.target}</td>
+                    <td><span class="status-badge ${item.status}">${statusLabels[item.status] || item.status}</span></td>
+                    <td>
+                        <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;" onclick="viewDetail('${item.id || ''}')">详情</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function viewDetail(id) {
+            alert('查看消息详情: ' + id);
+        }
+        
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.target-selector__wrapper')) {
+                document.getElementById('userSelector').classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

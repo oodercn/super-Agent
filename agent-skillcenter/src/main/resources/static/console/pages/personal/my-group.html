@@ -4,267 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的群组 - SkillCenter</title>
-    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
-    <link href="../../assets/css/remixicon/remixicon.css" rel="stylesheet">
-    <script src="/skillcenter/console/js/menu.js"></script>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
 </head>
 <body>
-    <div class="container">
-        <aside class="sidebar" id="sidebar">
-            <!-- 菜单将通过menu.js动态加载 -->
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
         </aside>
-        <main class="main-content">
-            <header class="header">
-                <h1>我的群组</h1>
-                <div class="user-info">
-                    <span class="user-name">用户</span>
-                    <i class="ri-user-line"></i>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">我的群组</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="openCreateGroupModal()">
+                        <i class="ri-add-line"></i> 创建群组
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
                 </div>
             </header>
-            <div class="group-content">
-                <div class="group-actions">
-                    <div class="group-search">
-                        <input type="text" placeholder="搜索群组..." id="group-search-input">
-                        <button class="btn-search">
-                            <i class="ri-search-line"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="group-tabs">
-                    <button class="tab-btn active" data-tab="list">群组列表</button>
-                    <button class="tab-btn" data-tab="skills">群组技能</button>
-                </div>
-                <div class="tab-content" id="list-tab">
-                    <div class="group-list" id="group-list">
-                        <!-- 群组列表将通过JavaScript动态加载 -->
-                    </div>
-                </div>
-                <div class="tab-content" id="skills-tab" style="display: none;">
-                    <div class="group-skills" id="group-skills">
-                        <!-- 群组技能将通过JavaScript动态加载 -->
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-3 nx-gap-6" id="groups-container">
+                        <div class="nx-col-span-3 nx-text-center nx-py-12">
+                            <i class="ri-loader-4-line nx-text-4xl nx-text-secondary nx-animate-spin"></i>
+                            <p class="nx-text-secondary nx-mt-4">加载中...</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
-    <script>
-        // 初始化菜单
-        initMenu('my-groups');
-        
-        // 模拟群组数据
-        const groups = [
-            {
-                id: 'dev-team',
-                name: '开发团队',
-                description: '公司的开发团队，负责产品的技术开发',
-                memberCount: 15,
-                createdAt: '2026-01-01',
-                role: '成员'
-            },
-            {
-                id: 'marketing-team',
-                name: '市场团队',
-                description: '公司的市场团队，负责产品的市场推广',
-                memberCount: 8,
-                createdAt: '2026-01-05',
-                role: '成员'
-            },
-            {
-                id: 'hr-team',
-                name: '人力资源团队',
-                description: '公司的人力资源团队，负责人事管理',
-                memberCount: 5,
-                createdAt: '2026-01-10',
-                role: '管理员'
-            }
-        ];
-        
-        // 模拟群组技能数据
-        const groupSkills = [
-            {
-                id: 'group-skill-001',
-                groupId: 'dev-team',
-                groupName: '开发团队',
-                skillId: 'code-generator',
-                skillName: '代码生成',
-                sharedBy: '张三',
-                sharedAt: '2026-01-20',
-                description: '用于生成各种代码模板'
-            },
-            {
-                id: 'group-skill-002',
-                groupId: 'dev-team',
-                groupName: '开发团队',
-                skillId: 'json-formatter',
-                skillName: 'JSON格式化',
-                sharedBy: '李四',
-                sharedAt: '2026-01-22',
-                description: '格式化JSON数据'
-            },
-            {
-                id: 'group-skill-003',
-                groupId: 'marketing-team',
-                groupName: '市场团队',
-                skillId: 'image-resizer',
-                skillName: '图片 resize',
-                sharedBy: '王五',
-                sharedAt: '2026-01-25',
-                description: '调整图片大小'
-            }
-        ];
-        
-        // 渲染群组列表
-        function renderGroupList() {
-            const groupList = document.getElementById('group-list');
-            groupList.innerHTML = '';
-            
-            groups.forEach(group => {
-                const groupCard = document.createElement('div');
-                groupCard.className = 'group-card';
-                groupCard.innerHTML = `
-                    <div class="group-card-header">
-                        <h3>${group.name}</h3>
-                        <span class="group-role">${group.role}</span>
-                    </div>
-                    <div class="group-card-body">
-                        <p>${group.description}</p>
-                        <div class="group-meta">
-                            <span class="group-members">成员: ${group.memberCount}人</span>
-                            <span class="group-created">创建于: ${group.createdAt}</span>
-                        </div>
-                    </div>
-                    <div class="group-card-footer">
-                        <button class="btn-sm btn-primary view-group-skills-btn" data-id="${group.id}">
-                            <i class="ri-lightbulb-line"></i> 查看技能
-                        </button>
-                    </div>
-                `;
-                groupList.appendChild(groupCard);
-            });
-            
-            // 绑定查看群组技能按钮事件
-            document.querySelectorAll('.view-group-skills-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const groupId = this.getAttribute('data-id');
-                    // 切换到技能标签并筛选该群组的技能
-                    document.querySelector('.tab-btn[data-tab="skills"]').click();
-                    filterGroupSkills(groupId);
-                });
-            });
-        }
-        
-        // 渲染群组技能
-        function renderGroupSkills() {
-            const groupSkillsContainer = document.getElementById('group-skills');
-            groupSkillsContainer.innerHTML = '';
-            
-            groupSkills.forEach(skill => {
-                const skillCard = document.createElement('div');
-                skillCard.className = 'group-skill-card';
-                skillCard.innerHTML = `
-                    <div class="group-skill-card-header">
-                        <h4>${skill.skillName}</h4>
-                        <span class="group-name">${skill.groupName}</span>
-                    </div>
-                    <div class="group-skill-card-body">
-                        <p>${skill.description}</p>
-                        <div class="skill-meta">
-                            <span class="shared-by">分享人: ${skill.sharedBy}</span>
-                            <span class="shared-at">分享时间: ${skill.sharedAt}</span>
-                        </div>
-                    </div>
-                    <div class="group-skill-card-footer">
-                        <button class="btn-sm btn-primary add-to-my-skills-btn" data-id="${skill.id}">
-                            <i class="ri-add-circle-line"></i> 添加到我的技能
-                        </button>
-                    </div>
-                `;
-                groupSkillsContainer.appendChild(skillCard);
-            });
-            
-            // 绑定添加到我的技能按钮事件
-            document.querySelectorAll('.add-to-my-skills-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const skillId = this.getAttribute('data-id');
-                    addToMySkills(skillId);
-                });
-            });
-        }
-        
-        // 筛选群组技能
-        function filterGroupSkills(groupId) {
-            const skillCards = document.querySelectorAll('.group-skill-card');
-            skillCards.forEach(card => {
-                const cardGroupId = card.querySelector('.group-name').textContent;
-                const group = groups.find(g => g.id === groupId);
-                if (group && cardGroupId === group.name) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-        
-        // 添加到我的技能
-        function addToMySkills(skillId) {
-            const skill = groupSkills.find(s => s.id === skillId);
-            if (skill) {
-                alert(`技能 ${skill.skillName} 已添加到我的技能！`);
-                // 这里可以添加实际的添加逻辑
-            }
-        }
-        
-        // 事件监听
-        document.addEventListener('DOMContentLoaded', function() {
-            // 渲染群组列表和群组技能
-            renderGroupList();
-            renderGroupSkills();
-            
-            // 标签切换
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    // 移除所有标签的active类
-                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                    // 添加当前标签的active类
-                    this.classList.add('active');
-                    // 隐藏所有内容
-                    document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
-                    // 显示当前标签的内容
-                    const tabId = this.getAttribute('data-tab');
-                    document.getElementById(`${tabId}-tab`).style.display = 'block';
-                });
-            });
-            
-            // 搜索群组
-            document.getElementById('group-search-input').addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                const activeTab = document.querySelector('.tab-btn.active').getAttribute('data-tab');
-                
-                if (activeTab === 'list') {
-                    const groupCards = document.querySelectorAll('.group-card');
-                    groupCards.forEach(card => {
-                        const groupName = card.querySelector('h3').textContent.toLowerCase();
-                        const groupDescription = card.querySelector('p').textContent.toLowerCase();
-                        if (groupName.includes(searchTerm) || groupDescription.includes(searchTerm)) {
-                            card.style.display = 'block';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-                } else if (activeTab === 'skills') {
-                    const skillCards = document.querySelectorAll('.group-skill-card');
-                    skillCards.forEach(card => {
-                        const skillName = card.querySelector('h4').textContent.toLowerCase();
-                        const groupName = card.querySelector('.group-name').textContent.toLowerCase();
-                        if (skillName.includes(searchTerm) || groupName.includes(searchTerm)) {
-                            card.style.display = 'block';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-                }
-            });
-        });
-    </script>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script src="/skillcenter/console/js/my-group.js"></script>
 </body>
 </html>

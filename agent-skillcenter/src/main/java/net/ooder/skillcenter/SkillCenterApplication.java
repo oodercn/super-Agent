@@ -1,10 +1,17 @@
+/*
+ * Copyright (c) 2024 Ooder Team
+ *
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
 package net.ooder.skillcenter;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * 技能中心应用主类
+ * SkillCenter Application Main Class
+ * Entry point for the SkillCenter Spring Boot application
  */
 @SpringBootApplication
 public class SkillCenterApplication {

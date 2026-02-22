@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据源管理 - Nexus Console</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .wizard-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .wizard-steps {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--ns-border);
+            padding-bottom: 20px;
+        }
+        
+        .wizard-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        
+        .wizard-step::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: var(--ns-border);
+        }
+        
+        .wizard-step:last-child::after {
+            display: none;
+        }
+        
+        .wizard-step.active::after {
+            background: var(--nx-primary);
+        }
+        
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--ns-border);
+            color: var(--ns-secondary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .wizard-step.active .step-number {
+            background: var(--nx-primary);
+            color: white;
+        }
+        
+        .wizard-step.completed .step-number {
+            background: var(--ns-success);
+            color: white;
+        }
+        
+        .step-label {
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        
+        .wizard-step.active .step-label {
+            color: var(--nx-primary);
+            font-weight: 500;
+        }
+        
+        .datasource-types {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .datasource-type-card {
+            border: 2px solid var(--ns-border);
+            border-radius: 12px;
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .datasource-type-card:hover {
+            border-color: var(--nx-primary);
+            background: var(--ns-bg-hover);
+        }
+        
+        .datasource-type-card.selected {
+            border-color: var(--nx-primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+        
+        .datasource-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            background: var(--ns-card-bg);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .datasource-type-card.selected .datasource-icon {
+            background: var(--nx-primary);
+            color: white;
+        }
+        
+        .datasource-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .datasource-desc {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .config-form {
+            background: var(--ns-card-bg);
+            border-radius: 12px;
+            padding: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 13px;
+        }
+        
+        .form-label .required {
+            color: var(--ns-danger);
+            margin-left: 2px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--ns-border);
+            border-radius: 6px;
+            font-size: 14px;
+            background: var(--ns-input-bg);
+            color: var(--ns-dark);
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        
+        .form-hint {
+            font-size: 12px;
+            color: var(--ns-secondary);
+            margin-top: 4px;
+        }
+        
+        .capability-matrix {
+            margin-top: 24px;
+        }
+        
+        .capability-matrix h4 {
+            margin-bottom: 12px;
+        }
+        
+        .capability-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .capability-table th,
+        .capability-table td {
+            padding: 10px 12px;
+            border: 1px solid var(--ns-border);
+            text-align: center;
+            font-size: 13px;
+        }
+        
+        .capability-table th {
+            background: var(--ns-bg-hover);
+            font-weight: 500;
+        }
+        
+        .capability-supported {
+            color: var(--ns-success);
+        }
+        
+        .capability-unsupported {
+            color: var(--ns-danger);
+        }
+        
+        .test-result {
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 8px;
+        }
+        
+        .test-result.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid var(--ns-success);
+        }
+        
+        .test-result.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--ns-danger);
+        }
+        
+        .sync-config {
+            background: var(--ns-card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .sync-config h4 {
+            margin-bottom: 16px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--ns-border);
+            transition: .3s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--nx-primary);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+        
+        .wizard-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--ns-border);
+        }
+        
+        .btn {
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--nx-primary);
+            color: white;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: var(--ns-card-bg);
+            color: var(--ns-dark);
+            border: 1px solid var(--ns-border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .btn-success {
+            background: var(--ns-success);
+            color: white;
+            border: none;
+        }
+        
+        .btn-warning {
+            background: var(--ns-warning);
+            color: white;
+            border: none;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .step-content {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .datasource-list {
+            margin-top: 24px;
+        }
+        
+        .datasource-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: var(--ns-card-bg);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid var(--ns-border);
+        }
+        
+        .datasource-item .icon {
+            width: 40px;
+            height: 40px;
+            background: var(--ns-bg-hover);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            font-size: 20px;
+        }
+        
+        .datasource-item .info {
+            flex: 1;
+        }
+        
+        .datasource-item .name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .datasource-item .meta {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .datasource-item .status {
+            margin-left: 16px;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-badge.online {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--ns-success);
+        }
+        
+        .status-badge.offline {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--ns-danger);
+        }
+        
+        .status-badge.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--ns-warning);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold"><i class="ri-database-2-line"></i> 数据源管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="btn btn-primary" onclick="showWizard()">+ 新建数据源</button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+            <div class="datasource-list" id="datasourceList">
+            </div>
+            
+            <div class="wizard-container hidden" id="wizardContainer">
+                <div class="wizard-steps">
+                    <div class="wizard-step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">选择类型</div>
+                    </div>
+                    <div class="wizard-step" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">配置参数</div>
+                    </div>
+                    <div class="wizard-step" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">能力确认</div>
+                    </div>
+                    <div class="wizard-step" data-step="4">
+                        <div class="step-number">4</div>
+                        <div class="step-label">测试连接</div>
+                    </div>
+                    <div class="wizard-step" data-step="5">
+                        <div class="step-number">5</div>
+                        <div class="step-label">完成</div>
+                    </div>
+                </div>
+                
+                <div class="step-content" id="stepContent">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        const DATASOURCE_TYPES = [
+            { type: 'database', name: '数据库', icon: '🗄️', desc: '传统企业应用', impl: 'JDBC' },
+            { type: 'dingtalk', name: '钉钉', icon: '📱', desc: '钉钉组织架构', impl: 'Skills API' },
+            { type: 'feishu', name: '飞书', icon: '💬', desc: '飞书组织架构', impl: 'Skills API' },
+            { type: 'wecom', name: '企业微信', icon: '👥', desc: '企业微信通讯录', impl: 'Skills API' },
+            { type: 'json', name: 'JSON文件', icon: '📄', desc: '本地Mock数据', impl: '本地文件' }
+        ];
+        
+        const CAPABILITIES = [
+            { code: 'org-query', name: '组织查询' },
+            { code: 'org-admin', name: '组织管理' },
+            { code: 'org-sync', name: '组织同步' },
+            { code: 'person-query', name: '人员查询' },
+            { code: 'person-admin', name: '人员管理' },
+            { code: 'person-sync', name: '人员同步' },
+            { code: 'role-query', name: '角色查询' },
+            { code: 'role-admin', name: '角色管理' },
+            { code: 'user-auth', name: '用户认证' }
+        ];
+        
+        const CAPABILITY_MATRIX = {
+            database: ['org-query', 'org-admin', 'person-query', 'person-admin', 'role-query', 'role-admin', 'user-auth'],
+            dingtalk: ['org-query', 'org-sync', 'person-query', 'person-sync', 'role-query'],
+            feishu: ['org-query', 'org-sync', 'person-query', 'person-sync', 'role-query'],
+            wecom: ['org-query', 'org-sync', 'person-query', 'person-sync', 'role-query'],
+            json: ['org-query', 'person-query', 'role-query']
+        };
+        
+        const CONFIG_FIELDS = {
+            database: [
+                { name: 'dbUrl', label: '数据库URL', type: 'text', required: true, placeholder: 'jdbc:mysql://localhost:3306/orgdb' },
+                { name: 'dbDriver', label: '驱动类', type: 'text', required: false, placeholder: 'com.mysql.cj.jdbc.Driver' },
+                { name: 'dbUser', label: '用户名', type: 'text', required: true, placeholder: '' },
+                { name: 'dbPassword', label: '密码', type: 'password', required: true, placeholder: '' }
+            ],
+            dingtalk: [
+                { name: 'appKey', label: 'AppKey', type: 'text', required: true, placeholder: '' },
+                { name: 'appSecret', label: 'AppSecret', type: 'password', required: true, placeholder: '' },
+                { name: 'agentId', label: 'Agent ID', type: 'text', required: false, placeholder: '' },
+                { name: 'skillEndpoint', label: 'Skills服务地址', type: 'text', required: true, placeholder: 'http://skill-gateway:8080/api/skills/org' }
+            ],
+            feishu: [
+                { name: 'appId', label: 'App ID', type: 'text', required: true, placeholder: '' },
+                { name: 'appSecret', label: 'App Secret', type: 'password', required: true, placeholder: '' },
+                { name: 'skillEndpoint', label: 'Skills服务地址', type: 'text', required: true, placeholder: 'http://skill-gateway:8080/api/skills/org' }
+            ],
+            wecom: [
+                { name: 'corpId', label: '企业ID', type: 'text', required: true, placeholder: '' },
+                { name: 'corpSecret', label: 'Corp Secret', type: 'password', required: true, placeholder: '' },
+                { name: 'agentId', label: 'Agent ID', type: 'text', required: false, placeholder: '' },
+                { name: 'skillEndpoint', label: 'Skills服务地址', type: 'text', required: true, placeholder: 'http://skill-gateway:8080/api/skills/org' }
+            ],
+            json: [
+                { name: 'storagePath', label: '数据路径', type: 'text', required: true, placeholder: './data/org' },
+                { name: 'autoReload', label: '自动重载', type: 'switch', required: false }
+            ]
+        };
+        
+        let currentStep = 1;
+        let selectedType = null;
+        let configData = {};
+        
+        function showWizard() {
+            document.getElementById('datasourceList').classList.add('hidden');
+            document.getElementById('wizardContainer').classList.remove('hidden');
+            currentStep = 1;
+            selectedType = null;
+            configData = {};
+            updateWizardSteps();
+            renderStepContent();
+        }
+        
+        function hideWizard() {
+            document.getElementById('datasourceList').classList.remove('hidden');
+            document.getElementById('wizardContainer').classList.add('hidden');
+            loadDatasourceList();
+        }
+        
+        function updateWizardSteps() {
+            document.querySelectorAll('.wizard-step').forEach((step, index) => {
+                const stepNum = index + 1;
+                step.classList.remove('active', 'completed');
+                if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                } else if (stepNum === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+        }
+        
+        function renderStepContent() {
+            const container = document.getElementById('stepContent');
+            
+            switch (currentStep) {
+                case 1:
+                    renderStep1(container);
+                    break;
+                case 2:
+                    renderStep2(container);
+                    break;
+                case 3:
+                    renderStep3(container);
+                    break;
+                case 4:
+                    renderStep4(container);
+                    break;
+                case 5:
+                    renderStep5(container);
+                    break;
+            }
+        }
+        
+        function renderStep1(container) {
+            let html = '<h3>选择数据源类型</h3>';
+            html += '<p style="color: var(--ns-secondary); margin-bottom: 20px;">请选择适合您场景的数据源类型</p>';
+            html += '<div class="datasource-types">';
+            
+            DATASOURCE_TYPES.forEach(ds => {
+                html += `
+                    <div class="datasource-type-card ${selectedType === ds.type ? 'selected' : ''}" onclick="selectType('${ds.type}')">
+                        <div class="datasource-icon">${ds.icon}</div>
+                        <div class="datasource-name">${ds.name}</div>
+                        <div class="datasource-desc">${ds.desc}</div>
+                        <div class="datasource-desc" style="margin-top: 4px; font-size: 11px;">${ds.impl}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            html += `
+                <div class="wizard-actions">
+                    <button class="btn btn-secondary" onclick="hideWizard()">取消</button>
+                    <button class="btn btn-primary" onclick="nextStep()" ${!selectedType ? 'disabled' : ''}>下一步</button>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function selectType(type) {
+            selectedType = type;
+            document.querySelectorAll('.datasource-type-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            document.querySelector('.btn-primary').disabled = false;
+        }
+        
+        function renderStep2(container) {
+            const fields = CONFIG_FIELDS[selectedType] || [];
+            
+            let html = `<h3>配置参数 - ${DATASOURCE_TYPES.find(d => d.type === selectedType).name}</h3>`;
+            html += '<div class="config-form">';
+            
+            fields.forEach(field => {
+                if (field.type === 'switch') {
+                    html += `
+                        <div class="form-group">
+                            <label class="form-label">${field.label}</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="${field.name}" ${configData[field.name] !== false ? 'checked' : ''}>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="form-group">
+                            <label class="form-label">${field.label}${field.required ? '<span class="required">*</span>' : ''}</label>
+                            <input type="${field.type}" class="form-input" name="${field.name}" 
+                                   value="${configData[field.name] || ''}"
+                                   placeholder="${field.placeholder || ''}"
+                                   ${field.required ? 'required' : ''}>
+                            ${field.placeholder ? `<div class="form-hint">${field.placeholder}</div>` : ''}
+                        </div>
+                    `;
+                }
+            });
+            
+            html += `
+                <div class="sync-config">
+                    <h4>同步配置</h4>
+                    <div class="form-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="syncEnabled" ${configData.syncEnabled ? 'checked' : ''}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span style="margin-left: 12px;">启用自动同步</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">同步间隔 (毫秒)</label>
+                        <input type="number" class="form-input" name="syncInterval" 
+                               value="${configData.syncInterval || 300000}" style="width: 200px;">
+                    </div>
+                </div>
+            `;
+            
+            html += '</div>';
+            html += `
+                <div class="wizard-actions">
+                    <button class="btn btn-secondary" onclick="prevStep()">上一步</button>
+                    <button class="btn btn-primary" onclick="saveConfigAndNext()">下一步</button>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function saveConfigAndNext() {
+            const inputs = document.querySelectorAll('.form-input, input[type="checkbox"]');
+            inputs.forEach(input => {
+                if (input.type === 'checkbox') {
+                    configData[input.name] = input.checked;
+                } else {
+                    configData[input.name] = input.value;
+                }
+            });
+            nextStep();
+        }
+        
+        function renderStep3(container) {
+            const supportedCaps = CAPABILITY_MATRIX[selectedType] || [];
+            
+            let html = '<h3>能力确认</h3>';
+            html += '<p style="color: var(--ns-secondary); margin-bottom: 20px;">查看所选数据源支持的能力</p>';
+            
+            html += '<div class="capability-matrix">';
+            html += '<table class="capability-table">';
+            html += '<thead><tr><th>能力</th><th>支持状态</th><th>说明</th></tr></thead>';
+            html += '<tbody>';
+            
+            CAPABILITIES.forEach(cap => {
+                const supported = supportedCaps.includes(cap.code);
+                html += `
+                    <tr>
+                        <td>${cap.name}</td>
+                        <td class="${supported ? 'capability-supported' : 'capability-unsupported'}">
+                            ${supported ? '✅ 支持' : '❌ 不支持'}
+                        </td>
+                        <td style="text-align: left; color: var(--ns-secondary);">
+                            ${supported ? '该能力可用' : '该数据源不支持此能力'}
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            
+            if (['dingtalk', 'feishu', 'wecom'].includes(selectedType)) {
+                html += `
+                    <div class="test-result warning" style="margin-top: 20px; background: rgba(245, 158, 11, 0.1); border-color: var(--ns-warning);">
+                        <strong>⚠️ 注意</strong>
+                        <p style="margin: 8px 0 0 0; font-size: 13px;">
+                            钉钉/飞书/企业微信数据源不支持组织管理、人员管理、用户认证等管理类能力。
+                            如需这些能力，请考虑使用数据库数据源或配置JSON降级方案。
+                        </p>
+                    </div>
+                `;
+            }
+            
+            html += `
+                <div class="wizard-actions">
+                    <button class="btn btn-secondary" onclick="prevStep()">上一步</button>
+                    <button class="btn btn-primary" onclick="nextStep()">下一步</button>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function renderStep4(container) {
+            let html = '<h3>测试连接</h3>';
+            html += '<p style="color: var(--ns-secondary); margin-bottom: 20px;">验证配置参数是否正确</p>';
+            
+            html += `
+                <div class="config-form">
+                    <button class="btn btn-primary" onclick="testConnection()">🔍 测试连接</button>
+                    <div id="testResult"></div>
+                </div>
+            `;
+            
+            html += `
+                <div class="wizard-actions">
+                    <button class="btn btn-secondary" onclick="prevStep()">上一步</button>
+                    <button class="btn btn-success" onclick="nextStep()" id="completeBtn" disabled>完成配置</button>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        async function testConnection() {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.innerHTML = '<p style="margin-top: 16px;">⏳ 正在测试连接...</p>';
+            
+            try {
+                const response = await fetch('/api/enexus/datasource/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sceneId: 'test-scene',
+                        type: selectedType,
+                        config: configData
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="test-result success">
+                            <strong>✅ 连接成功</strong>
+                            <p style="margin: 8px 0 0 0; font-size: 13px;">
+                                延迟: ${result.data.latency}ms<br>
+                                ${result.data.message}
+                            </p>
+                        </div>
+                    `;
+                    document.getElementById('completeBtn').disabled = false;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="test-result error">
+                            <strong>❌ 连接失败</strong>
+                            <p style="margin: 8px 0 0 0; font-size: 13px;">
+                                ${result.data ? result.data.message : result.message}
+                            </p>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                resultDiv.innerHTML = `
+                    <div class="test-result error">
+                        <strong>❌ 连接失败</strong>
+                        <p style="margin: 8px 0 0 0; font-size: 13px;">${e.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderStep5(container) {
+            let html = '<h3>配置完成</h3>';
+            html += '<div class="test-result success">';
+            html += '<strong>🎉 数据源配置成功！</strong>';
+            html += '<p style="margin: 12px 0 0 0; font-size: 13px;">';
+            html += `数据源类型: <strong>${DATASOURCE_TYPES.find(d => d.type === selectedType).name}</strong><br>`;
+            html += `支持能力: <strong>${CAPABILITY_MATRIX[selectedType].length}</strong> 项<br>`;
+            html += `同步状态: <strong>${configData.syncEnabled ? '已启用' : '未启用'}</strong>`;
+            html += '</p></div>';
+            
+            html += `
+                <div class="wizard-actions" style="justify-content: center;">
+                    <button class="btn btn-primary" onclick="hideWizard()">返回列表</button>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function nextStep() {
+            if (currentStep < 5) {
+                currentStep++;
+                updateWizardSteps();
+                renderStepContent();
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateWizardSteps();
+                renderStepContent();
+            }
+        }
+        
+        async function loadDatasourceList() {
+            const container = document.getElementById('datasourceList');
+            
+            try {
+                const response = await fetch('/api/enexus/datasource/options');
+                const result = await response.json();
+                
+                if (result.success) {
+                    let html = '<h3>已配置的数据源</h3>';
+                    
+                    if (result.data && result.data.length > 0) {
+                        result.data.forEach(ds => {
+                            const typeInfo = DATASOURCE_TYPES.find(t => t.type === ds.type) || { icon: '📦', name: ds.type };
+                            html += `
+                                <div class="datasource-item">
+                                    <div class="icon">${typeInfo.icon}</div>
+                                    <div class="info">
+                                        <div class="name">${ds.name}</div>
+                                        <div class="meta">类型: ${typeInfo.name} | 支持能力: ${ds.supportedCapabilities ? ds.supportedCapabilities.length : 0} 项</div>
+                                    </div>
+                                    <div class="status">
+                                        <span class="status-badge online">在线</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html += '<p style="color: var(--ns-secondary);">暂无已配置的数据源，点击"新建数据源"开始配置。</p>';
+                    }
+                    
+                    container.innerHTML = html;
+                }
+            } catch (e) {
+                container.innerHTML = '<p style="color: var(--ns-danger);">加载数据源列表失败: ' + e.message + '</p>';
+            }
+        }
+        
+        window.onPageInit = function() {
+            loadDatasourceList();
+        };
+    </script>
+</body>
+</html>

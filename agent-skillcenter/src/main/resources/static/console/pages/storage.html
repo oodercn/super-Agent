@@ -3,491 +3,694 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>存储管理 - SkillCenter 控制台</title>
-    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
-    <link href="../assets/css/remixicon/remixicon.css" rel="stylesheet">
-    <script src="/skillcenter/console/js/menu.js"></script>
+    <title>存储管理 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .storage-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--nx-bg-elevated);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--nx-primary);
+        }
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: var(--nx-text-secondary);
+            margin-top: 4px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--nx-border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .progress-success { background: var(--nx-success); }
+        .progress-warning { background: var(--nx-warning); }
+        .progress-danger { background: var(--nx-danger); }
+        .progress-primary { background: var(--nx-primary); }
+        
+        .storage-category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--nx-border);
+        }
+        .storage-category-item:last-child {
+            border-bottom: none;
+        }
+        
+        .backup-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid var(--nx-border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .cleanup-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid var(--nx-border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .cleanup-item.selected {
+            border-color: var(--nx-primary);
+            background: var(--nx-bg-elevated);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <!-- 侧边导航栏 -->
-        <aside class="sidebar" id="sidebar">
-            <!-- 菜单将通过menu.js动态加载 -->
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
         </aside>
         
-        <!-- 主内容区 -->
-        <main class="main-content">
-            <div class="header">
-                <h1><i class="ri-database-line"></i> 存储管理</h1>
-                <div class="user-info">
-                    <span class="user-name">管理员</span>
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">存储管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="storage-stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-total-size">-</div>
+                            <div class="stat-label">总存储</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-total-files">-</div>
+                            <div class="stat-label">文件数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-total-dirs">-</div>
+                            <div class="stat-label">目录数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-backup-count">-</div>
+                            <div class="stat-label">备份数</div>
+                        </div>
+                    </div>
+
+                    <div class="nx-tabs nx-mb-6">
+                        <div class="nx-tabs__list">
+                            <button class="nx-tabs__tab active" data-tab="overview">存储概览</button>
+                            <button class="nx-tabs__tab" data-tab="backup">备份管理</button>
+                            <button class="nx-tabs__tab" data-tab="cleanup">存储清理</button>
+                            <button class="nx-tabs__tab" data-tab="settings">存储设置</button>
+                        </div>
+                    </div>
+
+                    <div id="tab-overview" class="tab-content active">
+                        <div class="nx-card">
+                            <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                                <h3 class="nx-card__title">存储状态</h3>
+                                <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="refreshStorageStats()">
+                                    <i class="ri-refresh-line"></i> 刷新
+                                </button>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-mb-4">
+                                    <div class="nx-flex nx-justify-between nx-mb-2">
+                                        <span>存储路径</span>
+                                        <span id="storage-path">-</span>
+                                    </div>
+                                    <div class="nx-flex nx-justify-between nx-mb-2">
+                                        <span>存储状态</span>
+                                        <span id="storage-status">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="nx-card nx-mt-6">
+                            <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                                <h3 class="nx-card__title">存储分类</h3>
+                                <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="analyzeStorage()">
+                                    <i class="ri-pie-chart-line"></i> 分析存储
+                                </button>
+                            </div>
+                            <div class="nx-card__body">
+                                <div id="storage-categories">
+                                    <div class="storage-category-item">
+                                        <span>加载中...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-backup" class="tab-content">
+                        <div class="nx-card">
+                            <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                                <h3 class="nx-card__title">备份列表</h3>
+                                <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="openCreateBackupModal()">
+                                    <i class="ri-add-line"></i> 创建备份
+                                </button>
+                            </div>
+                            <div class="nx-card__body">
+                                <div id="backup-list">
+                                    <div class="backup-item">
+                                        <span>加载中...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="nx-flex nx-gap-3 nx-mt-6">
+                            <button class="nx-btn nx-btn--warning" onclick="cleanOldBackups()">
+                                <i class="ri-delete-bin-line"></i> 清理旧备份
+                            </button>
+                            <button class="nx-btn nx-btn--secondary" onclick="exportBackup()">
+                                <i class="ri-download-line"></i> 导出备份
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="tab-cleanup" class="tab-content">
+                        <div class="nx-card">
+                            <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                                <h3 class="nx-card__title">可清理项目</h3>
+                                <div class="nx-flex nx-gap-2">
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="selectAllCleanup()">全选</button>
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="deselectAllCleanup()">取消全选</button>
+                                </div>
+                            </div>
+                            <div class="nx-card__body">
+                                <div id="cleanup-items">
+                                    <div class="cleanup-item">
+                                        <span>加载中...</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="nx-mt-4 nx-p-4" style="background: var(--nx-bg-elevated); border-radius: 8px;">
+                                    <div class="nx-flex nx-justify-between nx-items-center">
+                                        <span>预计可释放空间</span>
+                                        <span id="estimated-cleanup-size" style="font-weight: bold; color: var(--nx-success);">0 B</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="nx-flex nx-gap-3 nx-mt-6">
+                            <button class="nx-btn nx-btn--warning" onclick="executeCleanup()">
+                                <i class="ri-delete-bin-line"></i> 开始清理
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="tab-settings" class="tab-content">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">备份设置</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">自动备份</label>
+                                    <select id="settings-auto-backup" class="nx-select" style="max-width: 200px;">
+                                        <option value="true">开启</option>
+                                        <option value="false">关闭</option>
+                                    </select>
+                                </div>
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">备份间隔 (小时)</label>
+                                    <input type="number" id="settings-backup-interval" class="nx-input" value="24" style="max-width: 200px;">
+                                </div>
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">最大备份数量</label>
+                                    <input type="number" id="settings-max-backups" class="nx-input" value="10" style="max-width: 200px;">
+                                </div>
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">备份路径</label>
+                                    <input type="text" id="settings-backup-path" class="nx-input" style="max-width: 400px;" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="nx-card nx-mt-6">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">存储限制</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">最大存储大小</label>
+                                    <input type="text" id="settings-max-storage" class="nx-input" value="10GB" style="max-width: 200px;" readonly>
+                                </div>
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">最大文件大小</label>
+                                    <input type="text" id="settings-max-file" class="nx-input" value="100MB" style="max-width: 200px;" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="nx-flex nx-gap-3 nx-mt-6">
+                            <button class="nx-btn nx-btn--primary" onclick="saveStorageSettings()">
+                                <i class="ri-save-line"></i> 保存设置
+                            </button>
+                            <button class="nx-btn nx-btn--ghost" onclick="resetStorageSettings()">
+                                <i class="ri-refresh-line"></i> 重置默认
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <!-- 标签页导航 -->
-            <div class="section" style="padding-bottom: 0;">
-                <div style="display: flex; border-bottom: 1px solid var(--ooder-border); margin-bottom: 0;">
-                    <button class="btn btn-secondary" style="border-radius: var(--ooder-radius) var(--ooder-radius) 0 0; border-bottom: none; margin-right: 0;" onclick="switchTab('storage-status')">存储状态</button>
-                    <button class="btn btn-secondary" style="border-radius: 0; border-bottom: none; margin-right: 0;" onclick="switchTab('storage-backup')">备份管理</button>
-                    <button class="btn btn-secondary" style="border-radius: 0; border-bottom: none; margin-right: 0;" onclick="switchTab('storage-clean')">数据清理</button>
-                    <button class="btn btn-secondary" style="border-radius: 0 var(--ooder-radius) 0 0; border-bottom: none; margin-right: 0;" onclick="switchTab('storage-settings')">存储设置</button>
+        </main>
+    </div>
+
+    <div id="createBackupModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h3>创建备份</h3>
+                <button class="modal-close" onclick="closeCreateBackupModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">备份名称 (可选)</label>
+                    <input type="text" id="backup-name" class="nx-input" placeholder="留空自动生成">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">备份类型</label>
+                    <select id="backup-type" class="nx-select" style="width: 100%;">
+                        <option value="full">完整备份 - 备份所有数据</option>
+                        <option value="incremental">增量备份 - 仅备份变更数据</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">备注</label>
+                    <textarea id="backup-note" class="nx-input" rows="3" placeholder="备份说明..."></textarea>
                 </div>
             </div>
-            
-            <!-- 标签页内容 -->
-            <div class="section">
-                <!-- 存储状态标签页 -->
-                <div id="storage-status-tab" class="tab-content">
-                    <h3>存储状态</h3>
-                    <div class="status-grid">
-                        <div class="status-item ok">
-                            <div class="key">存储状态</div>
-                            <div class="value">正常</div>
-                        </div>
-                        <div class="status-item ok">
-                            <div class="key">使用空间</div>
-                            <div class="value">15MB / 100MB</div>
-                        </div>
-                        <div class="status-item ok">
-                            <div class="key">备份状态</div>
-                            <div class="value">已备份</div>
-                        </div>
-                        <div class="status-item ok">
-                            <div class="key">最后备份</div>
-                            <div class="value">2026-01-30</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 备份管理标签页 -->
-                <div id="storage-backup-tab" class="tab-content hidden">
-                    <h3>备份管理</h3>
-                    <div style="margin-bottom: 16px;">
-                        <button class="btn btn-primary" onclick="backupData()">创建备份</button>
-                        <button class="btn btn-secondary" onclick="restoreData()">恢复备份</button>
-                    </div>
-                    <div id="backup-list">
-                        <!-- 备份列表将在这里显示 -->
-                    </div>
-                </div>
-                
-                <!-- 数据清理标签页 -->
-                <div id="storage-clean-tab" class="tab-content hidden">
-                    <h3>数据清理</h3>
-                    <div style="margin-bottom: 16px;">
-                        <button class="btn btn-primary" onclick="cleanData()">清理临时数据</button>
-                        <button class="btn btn-secondary" onclick="cleanOldBackups()">清理旧备份</button>
-                    </div>
-                    <div id="clean-result">
-                        <!-- 清理结果将在这里显示 -->
-                    </div>
-                </div>
-                
-                <!-- 存储设置标签页 -->
-                <div id="storage-settings-tab" class="tab-content hidden">
-                    <h3>存储设置</h3>
-                    <div style="margin-bottom: 16px;">
-                        <label style="display: block; margin-bottom: 8px;">存储路径</label>
-                        <input type="text" id="storage-path" value="/data/skillcenter" style="padding: 10px; border: 1px solid var(--ooder-border); border-radius: var(--ooder-radius); background-color: #1a1a1a; color: var(--ooder-dark); width: 300px;">
-                    </div>
-                    <div style="margin-bottom: 16px;">
-                        <label style="display: block; margin-bottom: 8px;">备份保留天数</label>
-                        <input type="number" id="backup-days" value="7" style="padding: 10px; border: 1px solid var(--ooder-border); border-radius: var(--ooder-radius); background-color: #1a1a1a; color: var(--ooder-dark); width: 100px;">
-                    </div>
-                    <button class="btn btn-primary" onclick="saveStorageSettings()">保存设置</button>
-                </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeCreateBackupModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createBackup()">创建备份</button>
             </div>
         </div>
     </div>
-    
+
+    <div id="restoreConfirmModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h3>恢复备份确认</h3>
+                <button class="modal-close" onclick="closeRestoreConfirmModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-alert nx-alert--warning nx-mb-4">
+                    <i class="ri-alert-line"></i>
+                    <span>警告: 恢复备份将覆盖当前数据，此操作不可撤销！</span>
+                </div>
+                <div class="nx-mb-4">
+                    <p><strong>备份名称:</strong> <span id="restore-backup-name">-</span></p>
+                    <p><strong>备份大小:</strong> <span id="restore-backup-size">-</span></p>
+                </div>
+                <div class="nx-form-group">
+                    <label class="nx-label">请输入 "RESTORE" 确认恢复</label>
+                    <input type="text" id="restore-confirm-input" class="nx-input" placeholder="输入 RESTORE">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeRestoreConfirmModal()">取消</button>
+                <button class="nx-btn nx-btn--danger" onclick="confirmRestore()">确认恢复</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
     <script>
-        // API基础URL
-        const API_BASE_URL = '/skillcenter/api';
-        
-        // 初始化页面
-        function init() {
-            loadStorageStatus();
-        }
-        
-        // 更新时间戳
-        function updateTimestamp() {
-            const now = new Date();
-            const timestamp = document.getElementById('timestamp');
-            if (timestamp) {
-                timestamp.textContent = now.toLocaleString('zh-CN');
-            }
-        }
-        
-        // 存储管理相关函数
-        
-        // 加载存储状态
-        async function loadStorageStatus() {
-            try {
-                // 获取存储状态
-                const statusResponse = await fetch(`${API_BASE_URL}/storage/status`);
-                if (!statusResponse.ok) {
-                    throw new Error('获取存储状态失败');
-                }
-                const status = await statusResponse.json();
-                
-                // 获取存储统计信息
-                const statsResponse = await fetch(`${API_BASE_URL}/storage/stats`);
-                if (!statsResponse.ok) {
-                    throw new Error('获取存储统计信息失败');
-                }
-                const stats = await statsResponse.json();
-                
-                // 渲染存储状态
-                renderStorageStatus(status, stats);
-            } catch (error) {
-                console.error('加载存储状态错误:', error);
-                alert('加载存储状态失败: ' + error.message);
-            }
-        }
-        
-        // 渲染存储状态
-        function renderStorageStatus(status, stats) {
-            const statusGrid = document.querySelector('.status-grid');
-            statusGrid.innerHTML = '';
-            
-            // 存储状态
-            const statusItem = document.createElement('div');
-            statusItem.className = `status-item ${status.status === '正常' ? 'ok' : 'error'}`;
-            statusItem.innerHTML = `
-                <div class="key">存储状态</div>
-                <div class="value">${status.status}</div>
-            `;
-            statusGrid.appendChild(statusItem);
-            
-            // 使用空间
-            const usageItem = document.createElement('div');
-            usageItem.className = 'status-item ok';
-            usageItem.innerHTML = `
-                <div class="key">使用空间</div>
-                <div class="value">${stats.totalSizeHuman || '0 B'} / ${stats.maxSizeHuman || '0 B'}</div>
-            `;
-            statusGrid.appendChild(usageItem);
-            
-            // 备份状态
-            const backupItem = document.createElement('div');
-            backupItem.className = 'status-item ok';
-            backupItem.innerHTML = `
-                <div class="key">备份状态</div>
-                <div class="value">已备份</div>
-            `;
-            statusGrid.appendChild(backupItem);
-            
-            // 最后备份
-            const lastBackupItem = document.createElement('div');
-            lastBackupItem.className = 'status-item ok';
-            lastBackupItem.innerHTML = `
-                <div class="key">最后备份</div>
-                <div class="value">${new Date().toLocaleDateString('zh-CN')}</div>
-            `;
-            statusGrid.appendChild(lastBackupItem);
-        }
-        
-        // 备份数据
-        async function backupData() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/storage/backup`, {
-                    method: 'POST'
-                });
-                if (!response.ok) {
-                    throw new Error('备份数据失败');
-                }
-                const result = await response.json();
-                if (result.success) {
-                    alert('备份数据成功!\n备份文件: ' + result.backupFileName);
-                    loadStorageStatus();
-                } else {
-                    alert('备份数据失败: ' + result.message);
-                }
-            } catch (error) {
-                console.error('备份数据错误:', error);
-                alert('备份数据失败: ' + error.message);
-            }
-        }
-        
-        // 清理数据
-        async function cleanData() {
-            if (!confirm('确定要清理数据吗? 这将删除所有临时文件和缓存数据。')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/storage/clean`, {
-                    method: 'POST'
-                });
-                if (!response.ok) {
-                    throw new Error('清理数据失败');
-                }
-                const result = await response.json();
-                if (result.success) {
-                    alert('清理数据成功!');
-                    loadStorageStatus();
-                } else {
-                    alert('清理数据失败: ' + result.message);
-                }
-            } catch (error) {
-                console.error('清理数据错误:', error);
-                alert('清理数据失败: ' + error.message);
-            }
-        }
-        
-        // 恢复数据
-        async function restoreData() {
-            try {
-                // 获取备份列表
-                const response = await fetch(`${API_BASE_URL}/storage/backups`);
-                if (!response.ok) {
-                    throw new Error('获取备份列表失败');
-                }
-                const backups = await response.json();
-                
-                if (backups.length === 0) {
-                    alert('没有找到备份文件');
-                    return;
-                }
-                
-                // 显示备份列表供用户选择
-                let backupOptions = backups.map((backup, index) => `${index + 1}. ${backup.name} (${backup.sizeHuman})`).join('\n');
-                const backupIndex = prompt(`请选择要恢复的备份文件:\n${backupOptions}\n\n输入对应的数字:`);
-                
-                if (backupIndex && !isNaN(backupIndex) && backupIndex > 0 && backupIndex <= backups.length) {
-                    const selectedBackup = backups[backupIndex - 1];
-                    const confirmRestore = confirm(`确定要恢复备份 ${selectedBackup.name} 吗?`);
+        let storageStats = null;
+        let storageSettings = null;
+        let backupList = [];
+        let cleanupItems = [];
+        let selectedCleanupItems = new Set();
+        let currentRestoreBackup = null;
+
+        window.onPageInit = function() {
+            initTabs();
+            loadStorageStats();
+            loadStorageSettings();
+            loadBackupList();
+            loadCleanupItems();
+        };
+
+        function initTabs() {
+            document.querySelectorAll('.nx-tabs__tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.nx-tabs__tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                     
-                    if (confirmRestore) {
-                        const restoreResponse = await fetch(`${API_BASE_URL}/storage/restore/${encodeURIComponent(selectedBackup.name)}`, {
-                            method: 'POST'
-                        });
-                        
-                        if (!restoreResponse.ok) {
-                            throw new Error('恢复数据失败');
-                        }
-                        
-                        const restoreResult = await restoreResponse.json();
-                        if (restoreResult.success) {
-                            alert('恢复数据成功!');
-                            loadStorageStatus();
-                        } else {
-                            alert('恢复数据失败: ' + restoreResult.message);
-                        }
+                    this.classList.add('active');
+                    const tabId = 'tab-' + this.dataset.tab;
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+
+        function postApi(url, data) {
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data || {})
+            }).then(res => res.json());
+        }
+
+        function loadStorageStats() {
+            postApi('/api/system/storage/stats').then(res => {
+                if (res.code === 200 && res.data) {
+                    storageStats = res.data;
+                    document.getElementById('stat-total-size').textContent = res.data.totalSizeHuman || '-';
+                    document.getElementById('stat-total-files').textContent = res.data.totalFiles || 0;
+                    document.getElementById('stat-total-dirs').textContent = res.data.totalDirectories || 0;
+                    document.getElementById('storage-path').textContent = res.data.path || '-';
+                }
+            });
+
+            postApi('/api/system/storage/status').then(res => {
+                if (res.code === 200 && res.data) {
+                    document.getElementById('storage-status').textContent = res.data.status || '-';
+                }
+            });
+
+            postApi('/api/system/storage/backups', { pageNum: 1, pageSize: 100 }).then(res => {
+                if (res.code === 200 && res.data) {
+                    document.getElementById('stat-backup-count').textContent = res.data.total || 0;
+                }
+            });
+        }
+
+        function loadStorageSettings() {
+            postApi('/api/system/storage/settings').then(res => {
+                if (res.code === 200 && res.data) {
+                    storageSettings = res.data;
+                    
+                    if (res.data.backup) {
+                        document.getElementById('settings-auto-backup').value = res.data.backup.autoBackup ? 'true' : 'false';
+                        document.getElementById('settings-backup-interval').value = res.data.backup.backupInterval || 24;
+                        document.getElementById('settings-max-backups').value = res.data.backup.maxBackupCount || 10;
+                        document.getElementById('settings-backup-path').value = res.data.backup.backupPath || '-';
+                    }
+                    
+                    if (res.data.limits) {
+                        document.getElementById('settings-max-storage').value = res.data.limits.maxStorageSize || '10GB';
+                        document.getElementById('settings-max-file').value = res.data.limits.maxFileSize || '100MB';
                     }
                 }
-            } catch (error) {
-                console.error('恢复数据错误:', error);
-                alert('恢复数据失败: ' + error.message);
-            }
-        }
-        
-        // 标签页切换函数
-        function switchTab(tabId) {
-            // 隐藏所有标签页内容
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.add('hidden');
             });
-            
-            // 显示选中的标签页内容
-            document.getElementById(`${tabId}-tab`).classList.remove('hidden');
-            
-            // 更新标签页按钮状态
-            document.querySelectorAll('.btn-secondary').forEach(btn => {
-                btn.style.backgroundColor = '#1a1a1a';
-                btn.style.color = 'var(--ooder-secondary)';
-            });
-            
-            // 高亮当前标签页按钮
-            event.target.style.backgroundColor = 'var(--ooder-primary)';
-            event.target.style.color = 'white';
-            
-            // 根据标签页ID加载相应的数据
-            if (tabId === 'storage-status') {
-                loadStorageStatus();
-            } else if (tabId === 'storage-backup') {
-                loadBackupList();
-            }
         }
-        
-        // 加载备份列表
-        async function loadBackupList() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/storage/backups`);
-                if (!response.ok) {
-                    throw new Error('获取备份列表失败');
+
+        function loadBackupList() {
+            postApi('/api/system/storage/backups', { pageNum: 1, pageSize: 20 }).then(res => {
+                if (res.code === 200 && res.data) {
+                    backupList = res.data.list || [];
+                    renderBackupList();
                 }
-                const backups = await response.json();
-                const backupList = document.getElementById('backup-list');
-                
-                if (backups.length === 0) {
-                    backupList.innerHTML = '<p>没有找到备份文件</p>';
-                    return;
-                }
-                
-                backupList.innerHTML = `
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>备份文件名</th>
-                                    <th>大小</th>
-                                    <th>创建时间</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${backups.map(backup => `
-                                    <tr>
-                                        <td>${backup.name}</td>
-                                        <td>${backup.sizeHuman}</td>
-                                        <td>${new Date(backup.createdTime).toLocaleString('zh-CN')}</td>
-                                        <td>
-                                            <button class="btn btn-secondary" onclick="restoreFromBackup('${backup.name}')">恢复</button>
-                                            <button class="btn btn-danger" onclick="deleteBackup('${backup.name}')">删除</button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
+            });
+        }
+
+        function renderBackupList() {
+            const container = document.getElementById('backup-list');
+            if (!backupList || backupList.length === 0) {
+                container.innerHTML = '<div class="backup-item"><span>暂无备份</span></div>';
+                return;
+            }
+
+            container.innerHTML = backupList.map(backup => {
+                const time = new Date(backup.lastModified).toLocaleString();
+                return `
+                    <div class="backup-item">
+                        <div>
+                            <div style="font-weight: 500;">${backup.name}</div>
+                            <div style="font-size: 12px; color: var(--nx-text-secondary);">
+                                大小: ${backup.sizeHuman} | 时间: ${time}
+                            </div>
+                        </div>
+                        <div class="nx-flex nx-gap-2">
+                            <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="restoreBackup('${backup.name}')">恢复</button>
+                            <button class="nx-btn nx-btn--danger nx-btn--sm" onclick="deleteBackup('${backup.name}')">删除</button>
+                        </div>
                     </div>
                 `;
-            } catch (error) {
-                console.error('获取备份列表错误:', error);
-                document.getElementById('backup-list').innerHTML = '<p style="color: var(--ooder-danger);">获取备份列表失败: ' + error.message + '</p>';
+            }).join('');
+        }
+
+        function loadCleanupItems() {
+            cleanupItems = [
+                { id: 'temp', name: '临时文件', size: 500 * 1024 * 1024, sizeHuman: '500 MB', description: '临时上传和处理文件' },
+                { id: 'logs', name: '过期日志', size: 200 * 1024 * 1024, sizeHuman: '200 MB', description: '超过30天的日志文件' },
+                { id: 'cache', name: '缓存文件', size: 100 * 1024 * 1024, sizeHuman: '100 MB', description: '系统缓存文件' },
+                { id: 'duplicates', name: '重复文件', size: 50 * 1024 * 1024, sizeHuman: '50 MB', description: '检测到的重复文件' }
+            ];
+            renderCleanupItems();
+            updateEstimatedCleanupSize();
+        }
+
+        function renderCleanupItems() {
+            const container = document.getElementById('cleanup-items');
+            container.innerHTML = cleanupItems.map(item => `
+                <div class="cleanup-item ${selectedCleanupItems.has(item.id) ? 'selected' : ''}" onclick="toggleCleanupItem('${item.id}')">
+                    <input type="checkbox" class="nx-mr-3" ${selectedCleanupItems.has(item.id) ? 'checked' : ''}>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 500;">${item.name}</div>
+                        <div style="font-size: 12px; color: var(--nx-text-secondary);">${item.description}</div>
+                    </div>
+                    <div style="font-weight: bold; color: var(--nx-warning);">${item.sizeHuman}</div>
+                </div>
+            `).join('');
+        }
+
+        function toggleCleanupItem(itemId) {
+            if (selectedCleanupItems.has(itemId)) {
+                selectedCleanupItems.delete(itemId);
+            } else {
+                selectedCleanupItems.add(itemId);
+            }
+            renderCleanupItems();
+            updateEstimatedCleanupSize();
+        }
+
+        function selectAllCleanup() {
+            cleanupItems.forEach(item => selectedCleanupItems.add(item.id));
+            renderCleanupItems();
+            updateEstimatedCleanupSize();
+        }
+
+        function deselectAllCleanup() {
+            selectedCleanupItems.clear();
+            renderCleanupItems();
+            updateEstimatedCleanupSize();
+        }
+
+        function updateEstimatedCleanupSize() {
+            let totalSize = 0;
+            selectedCleanupItems.forEach(id => {
+                const item = cleanupItems.find(i => i.id === id);
+                if (item) totalSize += item.size;
+            });
+            document.getElementById('estimated-cleanup-size').textContent = formatFileSize(totalSize);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+        }
+
+        function refreshStorageStats() {
+            loadStorageStats();
+        }
+
+        function analyzeStorage() {
+            alert('存储分析功能');
+        }
+
+        function openCreateBackupModal() {
+            document.getElementById('backup-name').value = '';
+            document.getElementById('backup-type').value = 'full';
+            document.getElementById('backup-note').value = '';
+            document.getElementById('createBackupModal').style.display = 'flex';
+        }
+
+        function closeCreateBackupModal() {
+            document.getElementById('createBackupModal').style.display = 'none';
+        }
+
+        function createBackup() {
+            const name = document.getElementById('backup-name').value;
+            const type = document.getElementById('backup-type').value;
+            const note = document.getElementById('backup-note').value;
+
+            postApi('/api/system/storage/backup', { name: name, type: type, note: note }).then(res => {
+                if (res.code === 200) {
+                    alert('备份创建成功');
+                    closeCreateBackupModal();
+                    loadBackupList();
+                    loadStorageStats();
+                } else {
+                    alert('备份失败: ' + res.message);
+                }
+            });
+        }
+
+        function restoreBackup(backupName) {
+            currentRestoreBackup = backupList.find(b => b.name === backupName);
+            if (currentRestoreBackup) {
+                document.getElementById('restore-backup-name').textContent = currentRestoreBackup.name;
+                document.getElementById('restore-backup-size').textContent = currentRestoreBackup.sizeHuman;
+                document.getElementById('restore-confirm-input').value = '';
+                document.getElementById('restoreConfirmModal').style.display = 'flex';
             }
         }
-        
-        // 从指定备份恢复
-        async function restoreFromBackup(backupName) {
-            if (!confirm(`确定要从备份 ${backupName} 恢复数据吗?`)) {
+
+        function closeRestoreConfirmModal() {
+            document.getElementById('restoreConfirmModal').style.display = 'none';
+            currentRestoreBackup = null;
+        }
+
+        function confirmRestore() {
+            const confirmText = document.getElementById('restore-confirm-input').value;
+            if (confirmText !== 'RESTORE') {
+                alert('请输入 RESTORE 确认恢复');
                 return;
             }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/storage/restore/${encodeURIComponent(backupName)}`, {
-                    method: 'POST'
+
+            if (currentRestoreBackup) {
+                postApi('/api/system/storage/restore/' + currentRestoreBackup.name).then(res => {
+                    if (res.code === 200) {
+                        alert('备份恢复成功，建议重启系统');
+                        closeRestoreConfirmModal();
+                    } else {
+                        alert('恢复失败: ' + res.message);
+                    }
                 });
-                
-                if (!response.ok) {
-                    throw new Error('恢复数据失败');
-                }
-                
-                const result = await response.json();
-                if (result.success) {
-                    alert('恢复数据成功!');
-                    loadStorageStatus();
-                    loadBackupList();
-                } else {
-                    alert('恢复数据失败: ' + result.message);
-                }
-            } catch (error) {
-                console.error('恢复数据错误:', error);
-                alert('恢复数据失败: ' + error.message);
             }
         }
-        
-        // 删除备份
-        async function deleteBackup(backupName) {
-            if (!confirm(`确定要删除备份 ${backupName} 吗?`)) {
+
+        function deleteBackup(backupName) {
+            if (confirm('确定要删除备份 ' + backupName + ' 吗？')) {
+                postApi('/api/system/storage/backups/' + backupName + '/delete').then(res => {
+                    if (res.code === 200) {
+                        alert('备份删除成功');
+                        loadBackupList();
+                        loadStorageStats();
+                    } else {
+                        alert('删除失败: ' + res.message);
+                    }
+                });
+            }
+        }
+
+        function cleanOldBackups() {
+            if (confirm('确定要清理所有旧备份吗？')) {
+                postApi('/api/system/storage/clean/backups').then(res => {
+                    if (res.code === 200) {
+                        alert('清理完成: 删除了 ' + (res.data.deletedCount || 0) + ' 个备份文件');
+                        loadBackupList();
+                        loadStorageStats();
+                    } else {
+                        alert('清理失败: ' + res.message);
+                    }
+                });
+            }
+        }
+
+        function exportBackup() {
+            alert('备份导出功能');
+        }
+
+        function executeCleanup() {
+            if (selectedCleanupItems.size === 0) {
+                alert('请选择要清理的项目');
                 return;
             }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/storage/backups/${encodeURIComponent(backupName)}`, {
-                    method: 'DELETE'
+
+            const items = Array.from(selectedCleanupItems);
+            if (confirm('确定要清理选中的 ' + items.length + ' 个项目吗？')) {
+                postApi('/api/system/storage/clean', { items: items }).then(res => {
+                    if (res.code === 200) {
+                        alert('清理成功');
+                        selectedCleanupItems.clear();
+                        loadStorageStats();
+                        loadCleanupItems();
+                    } else {
+                        alert('清理失败: ' + res.message);
+                    }
                 });
-                
-                if (!response.ok) {
-                    throw new Error('删除备份失败');
+            }
+        }
+
+        function saveStorageSettings() {
+            const settings = {
+                backup: {
+                    autoBackup: document.getElementById('settings-auto-backup').value === 'true',
+                    backupInterval: parseInt(document.getElementById('settings-backup-interval').value),
+                    maxBackupCount: parseInt(document.getElementById('settings-max-backups').value)
                 }
-                
-                const result = await response.json();
-                if (result.success) {
-                    alert('删除备份成功!');
-                    loadBackupList();
+            };
+
+            postApi('/api/system/storage/settings/update', settings).then(res => {
+                if (res.code === 200) {
+                    alert('设置保存成功');
                 } else {
-                    alert('删除备份失败: ' + result.message);
+                    alert('保存失败: ' + res.message);
                 }
-            } catch (error) {
-                console.error('删除备份错误:', error);
-                alert('删除备份失败: ' + error.message);
+            });
+        }
+
+        function resetStorageSettings() {
+            if (confirm('确定要重置为默认设置吗？')) {
+                document.getElementById('settings-auto-backup').value = 'false';
+                document.getElementById('settings-backup-interval').value = '24';
+                document.getElementById('settings-max-backups').value = '10';
+                alert('已重置为默认设置');
             }
         }
-        
-        // 清理旧备份
-        async function cleanOldBackups() {
-            if (!confirm('确定要清理旧备份吗? 这将删除超过保留天数的备份文件。')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/storage/clean/backups`, {
-                    method: 'POST'
-                });
-                
-                if (!response.ok) {
-                    throw new Error('清理旧备份失败');
-                }
-                
-                const result = await response.json();
-                const cleanResult = document.getElementById('clean-result');
-                
-                if (result.success) {
-                    cleanResult.innerHTML = `<p style="color: var(--ooder-success);">清理旧备份成功! 删除了 ${result.deletedCount} 个旧备份文件。</p>`;
-                    loadBackupList();
-                } else {
-                    cleanResult.innerHTML = `<p style="color: var(--ooder-danger);">清理旧备份失败: ${result.message}</p>`;
-                }
-            } catch (error) {
-                console.error('清理旧备份错误:', error);
-                document.getElementById('clean-result').innerHTML = `<p style="color: var(--ooder-danger);">清理旧备份失败: ${error.message}</p>`;
-            }
-        }
-        
-        // 保存存储设置
-        async function saveStorageSettings() {
-            const storagePath = document.getElementById('storage-path').value;
-            const backupDays = document.getElementById('backup-days').value;
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/storage/settings`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        storagePath: storagePath,
-                        backupRetentionDays: parseInt(backupDays)
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('保存存储设置失败');
-                }
-                
-                const result = await response.json();
-                if (result.success) {
-                    alert('存储设置保存成功!');
-                } else {
-                    alert('存储设置保存失败: ' + result.message);
-                }
-            } catch (error) {
-                console.error('保存存储设置错误:', error);
-                alert('存储设置保存失败: ' + error.message);
-            }
-        }
-        
-        // 初始化页面
-        function init() {
-            loadStorageStatus();
-        }
-        
-        // 页面加载完成后初始化
-        window.onload = function() {
-            initMenu('storage');
-            init();
-        };
     </script>
 </body>
 </html>

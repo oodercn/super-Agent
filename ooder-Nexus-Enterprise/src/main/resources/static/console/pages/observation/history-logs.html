@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>历史日志 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">历史日志</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="loadLogs()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card nx-mb-4">
+                        <div class="nx-card__body">
+                            <div class="nx-flex nx-gap-4">
+                                <select class="nx-input" id="levelFilter" onchange="filterLogs()" style="width: auto;">
+                                    <option value="">所有级别</option>
+                                    <option value="INFO">INFO</option>
+                                    <option value="WARN">WARN</option>
+                                    <option value="ERROR">ERROR</option>
+                                    <option value="DEBUG">DEBUG</option>
+                                </select>
+                                <select class="nx-input" id="sourceFilter" onchange="filterLogs()" style="width: auto;">
+                                    <option value="">所有来源</option>
+                                    <option value="System">System</option>
+                                    <option value="Network">Network</option>
+                                    <option value="Security">Security</option>
+                                    <option value="Application">Application</option>
+                                </select>
+                                <input type="text" class="nx-input" id="searchInput" placeholder="搜索日志..." onkeyup="filterLogs()" style="flex: 1;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">日志列表</h3>
+                            <span class="nx-badge nx-badge--secondary" id="logCount">0条</span>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container" style="max-height: 500px; overflow-y: auto;">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>级别</th>
+                                            <th>来源</th>
+                                            <th>消息</th>
+                                            <th>时间</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="logTableBody">
+                                        <tr><td colspan="4" class="nx-text-center">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/observation-api.js"></script>
+    <script>
+        let allLogs = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLogs();
+        });
+
+        async function loadLogs() {
+            try {
+                const rs = await ObservationAPI.getLogs({});
+                allLogs = rs.data || [];
+                renderTable(allLogs);
+            } catch (error) {
+                document.getElementById('logTableBody').innerHTML = 
+                    '<tr><td colspan="4" class="nx-text-center nx-text-danger">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        function renderTable(logs) {
+            if (!logs || logs.length === 0) {
+                document.getElementById('logTableBody').innerHTML = 
+                    '<tr><td colspan="4" class="nx-text-center">暂无日志</td></tr>';
+                document.getElementById('logCount').textContent = '0条';
+                return;
+            }
+
+            document.getElementById('logCount').textContent = logs.length + '条';
+
+            let html = '';
+            logs.forEach(log => {
+                const time = ObservationAPI.formatTime(log.timestamp);
+                const levelBadge = getLevelBadge(log.level);
+                
+                html += '<tr>';
+                html += '  <td><span class="nx-badge nx-badge--' + levelBadge + '">' + (log.level || '-') + '</span></td>';
+                html += '  <td>' + (log.source || '-') + '</td>';
+                html += '  <td>' + (log.message || '-') + '</td>';
+                html += '  <td>' + time + '</td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('logTableBody').innerHTML = html;
+        }
+
+        function getLevelBadge(level) {
+            const map = { 'INFO': 'info', 'WARN': 'warning', 'ERROR': 'danger', 'DEBUG': 'secondary' };
+            return map[level] || 'secondary';
+        }
+
+        function filterLogs() {
+            const level = document.getElementById('levelFilter').value;
+            const source = document.getElementById('sourceFilter').value;
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            
+            let filtered = allLogs.filter(log => {
+                if (level && log.level !== level) return false;
+                if (source && log.source !== source) return false;
+                if (search && log.message && !log.message.toLowerCase().includes(search)) return false;
+                return true;
+            });
+            
+            renderTable(filtered);
+        }
+    </script>
+</body>
+</html>

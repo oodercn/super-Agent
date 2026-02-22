@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清理策略配置 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--ns-input-bg);
+            padding: 4px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--ns-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .tab:hover { color: var(--ns-dark); }
+        
+        .tab.active {
+            background: var(--nx-primary);
+            color: white;
+        }
+        
+        .panel {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .panel__header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .panel__body { padding: 20px; }
+        
+        .policy-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .policy-table th,
+        .policy-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .policy-table th {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--ns-secondary);
+            text-transform: uppercase;
+            background: var(--ns-input-bg);
+        }
+        
+        .policy-table td { font-size: 14px; color: var(--ns-dark); }
+        .policy-table tr:hover td { background: var(--ns-bg-hover); }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .status-badge.enabled { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .status-badge.disabled { background: rgba(148, 163, 184, 0.2); color: var(--ns-secondary); }
+        
+        .trigger-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--nx-primary);
+        }
+        
+        .action-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .action-badge.delete { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        .action-badge.archive { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .action-badge.move { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        
+        .preview-card {
+            background: var(--ns-input-bg);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .preview-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .preview-card__title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .preview-card__stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .preview-stat { text-align: center; }
+        
+        .preview-stat__value {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .preview-stat__label {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .btn-primary { background: var(--nx-primary); color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        
+        .btn-secondary {
+            background: var(--ns-card-bg);
+            color: var(--ns-dark);
+            border: 1px solid var(--ns-border);
+        }
+        .btn-secondary:hover { background: var(--ns-bg-hover); border-color: var(--nx-primary); }
+        
+        .btn-danger { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.3); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal.active { display: flex; }
+        
+        .modal-content {
+            background: var(--ns-card-bg);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--ns-secondary);
+            cursor: pointer;
+        }
+        
+        .modal-body { padding: 24px; }
+        
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        
+        .form-group { margin-bottom: 16px; }
+        
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ns-secondary);
+            margin-bottom: 6px;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        
+        .summary-bar {
+            background: var(--ns-input-bg);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .summary-bar__item { text-align: center; }
+        
+        .summary-bar__value {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .summary-bar__label {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold"><i class="ri-delete-bin-line"></i> 清理策略配置</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="btn btn-primary" onclick="openAddPolicyModal()">
+                        <i class="ri-add-line"></i> 添加策略
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadPolicies()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchTab('policies')">清理策略</div>
+                        <div class="tab" onclick="switchTab('preview')">清理预览</div>
+                        <div class="tab" onclick="switchTab('history')">清理历史</div>
+                    </div>
+                    
+                    <div id="policiesTab">
+                        <div class="panel">
+                            <div class="panel__header">
+                                <span class="panel__title">策略列表</span>
+                            </div>
+                            <div class="panel__body">
+                                <table class="policy-table">
+                                    <thead>
+                                        <tr>
+                                            <th>目录</th>
+                                            <th>触发条件</th>
+                                            <th>阈值</th>
+                                            <th>操作</th>
+                                            <th>状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="policiesBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="previewTab" style="display: none;">
+                        <div class="summary-bar">
+                            <div class="summary-bar__item">
+                                <div class="summary-bar__value" id="totalCleanableFiles">2,546</div>
+                                <div class="summary-bar__label">可清理文件</div>
+                            </div>
+                            <div class="summary-bar__item">
+                                <div class="summary-bar__value" id="totalCleanableSize">1.9 GB</div>
+                                <div class="summary-bar__label">可释放空间</div>
+                            </div>
+                            <div>
+                                <button class="btn btn-danger" onclick="executeAllCleanup()">
+                                    <i class="ri-delete-bin-line"></i> 一键清理
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="panel">
+                            <div class="panel__header">
+                                <span class="panel__title">清理预览</span>
+                            </div>
+                            <div class="panel__body" id="previewBody"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="historyTab" style="display: none;">
+                        <div class="panel">
+                            <div class="panel__header">
+                                <span class="panel__title">清理历史</span>
+                            </div>
+                            <div class="panel__body">
+                                <table class="policy-table">
+                                    <thead>
+                                        <tr>
+                                            <th>时间</th>
+                                            <th>策略</th>
+                                            <th>清理文件</th>
+                                            <th>释放空间</th>
+                                            <th>状态</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="historyBody">
+                                        <tr>
+                                            <td>2026-02-19 10:30:00</td>
+                                            <td>/temp/uploads</td>
+                                            <td>156 个</td>
+                                            <td>1.2 GB</td>
+                                            <td><span class="status-badge enabled">成功</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>2026-02-18 10:30:00</td>
+                                            <td>/temp/cache</td>
+                                            <td>2,345 个</td>
+                                            <td>500 MB</td>
+                                            <td><span class="status-badge enabled">成功</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="policyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="modalTitle">添加清理策略</span>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="policyId">
+                <div class="form-group">
+                    <label>目录路径</label>
+                    <input type="text" id="policyDirectory" placeholder="/temp/uploads">
+                </div>
+                <div class="form-group">
+                    <label>触发条件</label>
+                    <select id="policyTrigger">
+                        <option value="age">按时间</option>
+                        <option value="size">按大小</option>
+                        <option value="count">按数量</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>阈值</label>
+                    <input type="text" id="policyThreshold" placeholder="24 (小时/MB/个)">
+                </div>
+                <div class="form-group">
+                    <label>执行操作</label>
+                    <select id="policyAction">
+                        <option value="delete">删除</option>
+                        <option value="archive">归档</option>
+                        <option value="move">移动</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="policyEnabled" checked> 启用此策略
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="savePolicy()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let policies = [];
+        
+        window.onPageInit = function() {
+            loadPolicies();
+            loadPreview();
+        };
+        
+        async function loadPolicies() {
+            try {
+                const response = await fetch('/api/vfs/cleanup/policies');
+                const result = await response.json();
+                if (result.success) {
+                    policies = result.data;
+                    renderPolicies();
+                }
+            } catch (error) {
+                console.error('Failed to load policies:', error);
+            }
+        }
+        
+        async function loadPreview() {
+            try {
+                const response = await fetch('/api/vfs/cleanup/preview');
+                const result = await response.json();
+                if (result.success) {
+                    const preview = result.data;
+                    document.getElementById('totalCleanableFiles').textContent = formatNumber(preview.totalCleanableFiles || 0);
+                    document.getElementById('totalCleanableSize').textContent = formatSize(preview.totalCleanableSize || 0);
+                    renderPreview(preview.policies || []);
+                }
+            } catch (error) {
+                console.error('Failed to load preview:', error);
+            }
+        }
+        
+        function renderPolicies() {
+            const tbody = document.getElementById('policiesBody');
+            tbody.innerHTML = policies.map(policy => {
+                const triggerText = policy.triggerType === 'age' ? '按时间' : 
+                                   policy.triggerType === 'size' ? '按大小' : '按数量';
+                const thresholdText = policy.triggerType === 'age' ? formatDuration(policy.threshold) : 
+                                     policy.triggerType === 'size' ? formatSize(policy.threshold) : policy.threshold + ' 个';
+                const actionText = policy.action === 'delete' ? '删除' : 
+                                  policy.action === 'archive' ? '归档' : '移动';
+                
+                return `
+                    <tr>
+                        <td><code>${policy.directory}</code></td>
+                        <td><span class="trigger-badge">${triggerText}</span></td>
+                        <td>${thresholdText}</td>
+                        <td><span class="action-badge ${policy.action}">${actionText}</span></td>
+                        <td><span class="status-badge ${policy.enabled ? 'enabled' : 'disabled'}">${policy.enabled ? '已启用' : '已禁用'}</span></td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm" onclick="executeCleanup('${policy.id}')"><i class="ri-play-line"></i> 执行</button>
+                            <button class="btn btn-secondary btn-sm" onclick="editPolicy('${policy.id}')"><i class="ri-edit-line"></i> 编辑</button>
+                            <button class="btn btn-danger btn-sm" onclick="deletePolicy('${policy.id}')"><i class="ri-delete-bin-line"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function renderPreview(previewPolicies) {
+            const body = document.getElementById('previewBody');
+            body.innerHTML = previewPolicies.map(policy => `
+                <div class="preview-card">
+                    <div class="preview-card__header">
+                        <span class="preview-card__title">${policy.directory}</span>
+                        <button class="btn btn-danger btn-sm" onclick="executeCleanup('${policy.id}')"><i class="ri-delete-bin-line"></i> 清理</button>
+                    </div>
+                    <div class="preview-card__stats">
+                        <div class="preview-stat">
+                            <div class="preview-stat__value">${formatNumber(policy.cleanableFiles || 0)}</div>
+                            <div class="preview-stat__label">可清理文件</div>
+                        </div>
+                        <div class="preview-stat">
+                            <div class="preview-stat__value">${formatSize(policy.cleanableSize || 0)}</div>
+                            <div class="preview-stat__label">可释放空间</div>
+                        </div>
+                        <div class="preview-stat">
+                            <div class="preview-stat__value">${formatTime(policy.lastCleanupTime)}</div>
+                            <div class="preview-stat__label">最后清理时间</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('policiesTab').style.display = tabName === 'policies' ? 'block' : 'none';
+            document.getElementById('previewTab').style.display = tabName === 'preview' ? 'block' : 'none';
+            document.getElementById('historyTab').style.display = tabName === 'history' ? 'block' : 'none';
+        }
+        
+        function openAddPolicyModal() {
+            document.getElementById('modalTitle').textContent = '添加清理策略';
+            document.getElementById('policyId').value = '';
+            document.getElementById('policyDirectory').value = '';
+            document.getElementById('policyTrigger').value = 'age';
+            document.getElementById('policyThreshold').value = '';
+            document.getElementById('policyAction').value = 'delete';
+            document.getElementById('policyEnabled').checked = true;
+            document.getElementById('policyModal').classList.add('active');
+        }
+        
+        function editPolicy(policyId) {
+            const policy = policies.find(p => p.id === policyId);
+            if (!policy) return;
+            document.getElementById('modalTitle').textContent = '编辑清理策略';
+            document.getElementById('policyId').value = policy.id;
+            document.getElementById('policyDirectory').value = policy.directory;
+            document.getElementById('policyTrigger').value = policy.triggerType;
+            document.getElementById('policyThreshold').value = policy.threshold;
+            document.getElementById('policyAction').value = policy.action;
+            document.getElementById('policyEnabled').checked = policy.enabled;
+            document.getElementById('policyModal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('policyModal').classList.remove('active');
+        }
+        
+        async function savePolicy() {
+            const policyId = document.getElementById('policyId').value;
+            const policy = {
+                id: policyId || null,
+                directory: document.getElementById('policyDirectory').value,
+                triggerType: document.getElementById('policyTrigger').value,
+                threshold: parseInt(document.getElementById('policyThreshold').value) || 0,
+                action: document.getElementById('policyAction').value,
+                enabled: document.getElementById('policyEnabled').checked
+            };
+            
+            try {
+                const response = await fetch('/api/vfs/cleanup/policies', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(policy)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    closeModal();
+                    loadPolicies();
+                    loadPreview();
+                } else {
+                    alert('保存失败: ' + (result.error || '未知错误'));
+                }
+            } catch (error) {
+                alert('保存失败: ' + error.message);
+            }
+        }
+        
+        async function deletePolicy(policyId) {
+            if (!confirm('确定要删除此策略吗？')) return;
+            try {
+                const response = await fetch(`/api/vfs/cleanup/policies/${policyId}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (result.success) {
+                    loadPolicies();
+                    loadPreview();
+                }
+            } catch (error) {
+                alert('删除失败: ' + error.message);
+            }
+        }
+        
+        async function executeCleanup(policyId) {
+            if (!confirm('确定要执行清理吗？此操作不可撤销。')) return;
+            try {
+                const response = await fetch(`/api/vfs/cleanup/execute/${policyId}`, { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    alert(`清理完成！清理了 ${result.data.cleanedFiles} 个文件，释放了 ${formatSize(result.data.cleanedSize)} 空间`);
+                    loadPolicies();
+                    loadPreview();
+                } else {
+                    alert('清理失败: ' + (result.error || '未知错误'));
+                }
+            } catch (error) {
+                alert('清理失败: ' + error.message);
+            }
+        }
+        
+        async function executeAllCleanup() {
+            if (!confirm('确定要执行一键清理吗？此操作不可撤销。')) return;
+            for (const policy of policies) {
+                if (policy.enabled) {
+                    await executeCleanup(policy.id);
+                }
+            }
+        }
+        
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+        
+        function formatSize(bytes) {
+            if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(1) + ' GB';
+            if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+            if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return bytes + ' B';
+        }
+        
+        function formatDuration(ms) {
+            const hours = ms / (1000 * 60 * 60);
+            if (hours >= 24) return (hours / 24).toFixed(0) + ' 天';
+            return hours.toFixed(0) + ' 小时';
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '从未';
+            return new Date(timestamp).toLocaleString('zh-CN');
+        }
+    </script>
+</body>
+</html>

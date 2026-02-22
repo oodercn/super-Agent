@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>审计日志 - Nexus</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .audit-filters { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .audit-filter { display: flex; align-items: center; gap: 8px; }
+        .audit-filter label { font-size: 13px; color: var(--ns-secondary); }
+        .audit-filter select, .audit-filter input { padding: 8px 12px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); border-radius: 6px; font-size: 13px; color: var(--ns-dark); min-width: 120px; }
+        
+        .audit-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+        .stat-card { background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 8px; padding: 16px; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: 600; color: var(--ns-dark); }
+        .stat-label { font-size: 13px; color: var(--ns-secondary); margin-top: 4px; }
+        .stat-card.success .stat-value { color: var(--ns-success); }
+        .stat-card.failed .stat-value { color: var(--ns-danger); }
+        .stat-card.denied .stat-value { color: var(--ns-warning); }
+        
+        .log-table { width: 100%; border-collapse: collapse; background: var(--ns-card-bg); border-radius: 8px; overflow: hidden; }
+        .log-table th, .log-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--ns-border); }
+        .log-table th { background: var(--ns-input-bg); font-size: 13px; font-weight: 500; color: var(--ns-secondary); }
+        .log-table td { font-size: 13px; color: var(--ns-dark); }
+        .log-table tr:hover { background: var(--ns-bg-hover); }
+        
+        .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .status-badge.success { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .status-badge.failed { background: rgba(239, 68, 68, 0.1); color: var(--ns-danger); }
+        .status-badge.denied { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        
+        .action-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; font-size: 12px; background: var(--ns-input-bg); }
+        
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+        .pagination button { padding: 8px 16px; background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 6px; font-size: 13px; color: var(--ns-dark); cursor: pointer; }
+        .pagination button:hover { background: var(--ns-bg-hover); }
+        .pagination button.active { background: var(--nx-primary); color: white; border-color: var(--nx-primary); }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .alerts-panel { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--ns-danger); border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+        .alerts-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .alerts-title { font-size: 14px; font-weight: 600; color: var(--ns-danger); display: flex; align-items: center; gap: 8px; }
+        .alerts-count { background: var(--ns-danger); color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+        .alert-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--ns-card-bg); border-radius: 6px; margin-bottom: 8px; }
+        .alert-item:last-child { margin-bottom: 0; }
+        .alert-icon { width: 36px; height: 36px; border-radius: 6px; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center; color: var(--ns-danger); }
+        .alert-content { flex: 1; }
+        .alert-message { font-size: 13px; color: var(--ns-dark); }
+        .alert-time { font-size: 12px; color: var(--ns-secondary); }
+        
+        .empty-state { text-align: center; padding: 40px; color: var(--ns-secondary); }
+        .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">审计日志</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost" onclick="exportLogs()">
+                        <i class="ri-download-line"></i> 导出
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div id="alertsPanel" class="alerts-panel" style="display:none;">
+                        <div class="alerts-header">
+                            <div class="alerts-title">
+                                <i class="ri-alarm-warning-line"></i>
+                                安全告警
+                                <span class="alerts-count" id="alertsCount">0</span>
+                            </div>
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="clearAlerts()">全部已读</button>
+                        </div>
+                        <div id="alertsList"></div>
+                    </div>
+                    
+                    <div class="audit-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalAccess">0</div>
+                            <div class="stat-label">总访问次数</div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-value" id="successCount">0</div>
+                            <div class="stat-label">成功访问</div>
+                        </div>
+                        <div class="stat-card failed">
+                            <div class="stat-value" id="failedCount">0</div>
+                            <div class="stat-label">失败访问</div>
+                        </div>
+                        <div class="stat-card denied">
+                            <div class="stat-value" id="deniedCount">0</div>
+                            <div class="stat-label">拒绝访问</div>
+                        </div>
+                    </div>
+                    
+                    <div class="audit-filters">
+                        <div class="audit-filter">
+                            <label>技能</label>
+                            <select id="filterSkill">
+                                <option value="">全部技能</option>
+                            </select>
+                        </div>
+                        <div class="audit-filter">
+                            <label>操作</label>
+                            <select id="filterAction">
+                                <option value="">全部操作</option>
+                                <option value="read">读取</option>
+                                <option value="write">写入</option>
+                                <option value="delete">删除</option>
+                                <option value="execute">执行</option>
+                                <option value="send_message">发送消息</option>
+                                <option value="upload_file">上传文件</option>
+                            </select>
+                        </div>
+                        <div class="audit-filter">
+                            <label>状态</label>
+                            <select id="filterStatus">
+                                <option value="">全部状态</option>
+                                <option value="1">成功</option>
+                                <option value="0">失败</option>
+                                <option value="2">拒绝</option>
+                            </select>
+                        </div>
+                        <div class="audit-filter">
+                            <label>时间</label>
+                            <select id="filterTime">
+                                <option value="today">今天</option>
+                                <option value="week">本周</option>
+                                <option value="month">本月</option>
+                                <option value="all">全部</option>
+                            </select>
+                        </div>
+                        <button class="nx-btn nx-btn--primary" onclick="applyFilters()">
+                            <i class="ri-search-line"></i> 查询
+                        </button>
+                    </div>
+                    
+                    <table class="log-table">
+                        <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>技能</th>
+                                <th>操作</th>
+                                <th>资源</th>
+                                <th>详情</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logTableBody">
+                        </tbody>
+                    </table>
+                    
+                    <div class="pagination" id="pagination">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var currentUserId = 'user-001';
+        var currentPage = 1;
+        var pageSize = 20;
+        var currentFilters = {};
+        
+        window.onPageInit = function() {
+            loadStats();
+            loadLogs();
+            loadAlerts();
+        };
+        
+        function loadStats() {
+            var timeRange = getTimeRange();
+            fetch('/api/audit/log/stats', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: currentUserId,
+                    startTime: timeRange.start,
+                    endTime: timeRange.end
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    document.getElementById('totalAccess').textContent = rs.data.totalAccess || 0;
+                    document.getElementById('successCount').textContent = rs.data.successCount || 0;
+                    document.getElementById('failedCount').textContent = rs.data.failedCount || 0;
+                    document.getElementById('deniedCount').textContent = rs.data.deniedCount || 0;
+                }
+            });
+        }
+        
+        function loadLogs() {
+            var timeRange = getTimeRange();
+            var params = {
+                userId: currentUserId,
+                page: currentPage,
+                pageSize: pageSize,
+                startTime: timeRange.start,
+                endTime: timeRange.end
+            };
+            
+            if (currentFilters.skillId) params.skillId = currentFilters.skillId;
+            if (currentFilters.action) params.action = currentFilters.action;
+            if (currentFilters.status) params.status = parseInt(currentFilters.status);
+            
+            fetch('/api/audit/log/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(params)
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    renderLogs(rs.data || []);
+                }
+            });
+        }
+        
+        function renderLogs(logs) {
+            var tbody = document.getElementById('logTableBody');
+            
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><i class="ri-file-list-line"></i><p>暂无审计日志</p></td></tr>';
+                return;
+            }
+            
+            var html = '';
+            logs.forEach(function(log) {
+                var statusClass = log.status === 1 ? 'success' : (log.status === 2 ? 'denied' : 'failed');
+                var statusText = log.statusText || (log.status === 1 ? '成功' : (log.status === 2 ? '拒绝' : '失败'));
+                
+                html += '<tr>' +
+                    '<td>' + formatTime(log.timestamp) + '</td>' +
+                    '<td>' + log.skillName + '</td>' +
+                    '<td><span class="action-badge">' + log.actionText + '</span></td>' +
+                    '<td>' + (log.resourceName || '-') + '</td>' +
+                    '<td>' + (log.detail || '-') + '</td>' +
+                    '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
+                    '</tr>';
+            });
+            tbody.innerHTML = html;
+        }
+        
+        function loadAlerts() {
+            fetch('/api/audit/alerts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200 && rs.data && rs.data.length > 0) {
+                    document.getElementById('alertsPanel').style.display = 'block';
+                    document.getElementById('alertsCount').textContent = rs.data.length;
+                    renderAlerts(rs.data);
+                } else {
+                    document.getElementById('alertsPanel').style.display = 'none';
+                }
+            });
+        }
+        
+        function renderAlerts(alerts) {
+            var html = '';
+            alerts.forEach(function(alert) {
+                html += '<div class="alert-item">' +
+                    '<div class="alert-icon"><i class="ri-forbid-line"></i></div>' +
+                    '<div class="alert-content">' +
+                    '<div class="alert-message">' + alert.message + '</div>' +
+                    '<div class="alert-time">' + formatTime(alert.timestamp) + '</div>' +
+                    '</div>' +
+                    '</div>';
+            });
+            document.getElementById('alertsList').innerHTML = html;
+        }
+        
+        function clearAlerts() {
+            fetch('/api/audit/alerts/read', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ logId: 'all', userId: currentUserId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    document.getElementById('alertsPanel').style.display = 'none';
+                }
+            });
+        }
+        
+        function applyFilters() {
+            currentFilters = {
+                skillId: document.getElementById('filterSkill').value,
+                action: document.getElementById('filterAction').value,
+                status: document.getElementById('filterStatus').value
+            };
+            currentPage = 1;
+            loadLogs();
+            loadStats();
+        }
+        
+        function getTimeRange() {
+            var timeFilter = document.getElementById('filterTime').value;
+            var now = new Date();
+            var start = 0;
+            var end = now.getTime();
+            
+            if (timeFilter === 'today') {
+                start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            } else if (timeFilter === 'week') {
+                start = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+            } else if (timeFilter === 'month') {
+                start = now.getTime() - 30 * 24 * 60 * 60 * 1000;
+            }
+            
+            return { start: start, end: end };
+        }
+        
+        function exportLogs() {
+            var timeRange = getTimeRange();
+            fetch('/api/audit/export', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: currentUserId,
+                    startTime: timeRange.start,
+                    endTime: timeRange.end,
+                    format: 'json'
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    alert('导出成功: ' + rs.data);
+                }
+            });
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            var d = new Date(timestamp);
+            return d.getFullYear() + '-' + 
+                   (d.getMonth() + 1).toString().padStart(2, '0') + '-' + 
+                   d.getDate().toString().padStart(2, '0') + ' ' +
+                   d.getHours().toString().padStart(2, '0') + ':' + 
+                   d.getMinutes().toString().padStart(2, '0');
+        }
+    </script>
+</body>
+</html>

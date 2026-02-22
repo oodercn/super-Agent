@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EndRoute管理 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">EndRoute管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-3 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-route-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">路由总数</div>
+                                <div class="nx-stat-card__value" id="routeCount">0</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-terminal-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">终端代理数</div>
+                                <div class="nx-stat-card__value" id="endAgentCount">0</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-wifi-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">网络状态</div>
+                                <div class="nx-stat-card__value" id="networkStatus">正常</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">路由管理</h3>
+                            <button class="nx-btn nx-btn--secondary" onclick="refreshRoutes()">
+                                <i class="ri-refresh-line"></i> 刷新
+                            </button>
+                        </div>
+                        <div class="nx-card__body">
+                            <table class="nx-table">
+                                <thead>
+                                    <tr>
+                                        <th>路由ID</th>
+                                        <th>状态</th>
+                                        <th>注册时间</th>
+                                        <th>最后心跳</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="routesTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">终端代理管理</h3>
+                            <button class="nx-btn nx-btn--secondary" onclick="refreshEndAgents()">
+                                <i class="ri-refresh-line"></i> 刷新
+                            </button>
+                        </div>
+                        <div class="nx-card__body">
+                            <table class="nx-table">
+                                <thead>
+                                    <tr>
+                                        <th>终端ID</th>
+                                        <th>状态</th>
+                                        <th>创建时间</th>
+                                        <th>最后心跳</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="endAgentsTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 编辑路由模态框 -->
+    <div class="modal" id="edit-route-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑路由</h3>
+                <button class="modal-close" onclick="closeEditRouteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-route-id">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-form-label">路由ID</label>
+                    <input type="text" id="edit-route-id-display" class="nx-input" disabled>
+                </div>
+                <div class="nx-form-group">
+                    <label class="nx-form-label">状态</label>
+                    <select id="edit-route-status" class="nx-input">
+                        <option value="active">活跃</option>
+                        <option value="inactive">非活跃</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeEditRouteModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="submitEditRoute()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑终端模态框 -->
+    <div class="modal" id="edit-agent-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑终端</h3>
+                <button class="modal-close" onclick="closeEditAgentModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-agent-id">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-form-label">终端ID</label>
+                    <input type="text" id="edit-agent-id-display" class="nx-input" disabled>
+                </div>
+                <div class="nx-form-group">
+                    <label class="nx-form-label">状态</label>
+                    <select id="edit-agent-status" class="nx-input">
+                        <option value="active">活跃</option>
+                        <option value="inactive">非活跃</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeEditAgentModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="submitEditAgent()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/endroute.js"></script>
+</body>
+</html>

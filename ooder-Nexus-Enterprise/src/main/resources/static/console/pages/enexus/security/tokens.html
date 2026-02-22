@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token管理 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">Token管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="openGenerateModal()">
+                        <i class="ri-ticket-line"></i> 生成Token
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-ticket-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">总Token数</div>
+                                <div class="nx-stat-card__value" id="totalCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">有效</div>
+                                <div class="nx-stat-card__value" id="validCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-time-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">即将过期</div>
+                                <div class="nx-stat-card__value" id="expiringCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--info">
+                                <i class="ri-user-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">活跃用户</div>
+                                <div class="nx-stat-card__value" id="activeUsers">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">Token列表</h3>
+                            <div class="nx-flex nx-gap-2">
+                                <input type="text" class="nx-input" id="searchInput" placeholder="搜索Token..." style="width: 200px;">
+                                <select class="nx-select" id="statusFilter">
+                                    <option value="">全部状态</option>
+                                    <option value="VALID">有效</option>
+                                    <option value="EXPIRED">已过期</option>
+                                    <option value="REVOKED">已撤销</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Token ID</th>
+                                            <th>用户</th>
+                                            <th>类型</th>
+                                            <th>权限范围</th>
+                                            <th>状态</th>
+                                            <th>创建时间</th>
+                                            <th>过期时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tokenTableBody">
+                                        <tr><td colspan="8" class="nx-text-center">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="nx-modal" id="generateModal">
+        <div class="nx-modal__backdrop" onclick="closeModal()"></div>
+        <div class="nx-modal__content">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">生成Token</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-mb-4">
+                    <label class="nx-label">用户ID</label>
+                    <input type="text" class="nx-input" id="userId" placeholder="输入用户ID">
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">Token类型</label>
+                    <select class="nx-select" id="tokenType">
+                        <option value="ACCESS">访问令牌</option>
+                        <option value="REFRESH">刷新令牌</option>
+                        <option value="API">API密钥</option>
+                    </select>
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">权限范围</label>
+                    <div class="nx-flex nx-flex-wrap nx-gap-2">
+                        <label class="nx-checkbox">
+                            <input type="checkbox" value="read" checked> 读取
+                        </label>
+                        <label class="nx-checkbox">
+                            <input type="checkbox" value="write"> 写入
+                        </label>
+                        <label class="nx-checkbox">
+                            <input type="checkbox" value="admin"> 管理
+                        </label>
+                    </div>
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">有效期(小时)</label>
+                    <input type="number" class="nx-input" id="validHours" value="24">
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="generateToken()">生成</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="nx-modal" id="detailModal">
+        <div class="nx-modal__backdrop" onclick="closeDetailModal()"></div>
+        <div class="nx-modal__content nx-modal__content--lg">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">Token详情</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeDetailModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body" id="detailBody">
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let allTokens = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTokens();
+        });
+
+        async function loadTokens() {
+            try {
+                const response = await fetch('/api/enexus/security/token/list', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                const rs = await response.json();
+                allTokens = rs.data?.list || [];
+                renderTable(allTokens);
+                updateStats();
+            } catch (error) {
+                document.getElementById('tokenTableBody').innerHTML = 
+                    '<tr><td colspan="8" class="nx-text-center nx-text-danger">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        function updateStats() {
+            let valid = 0, expiring = 0;
+            const now = new Date();
+            const dayLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+            const users = new Set();
+            
+            allTokens.forEach(t => {
+                if (t.status === 'REVOKED') return;
+                users.add(t.userId);
+                const exp = t.expiresAt ? new Date(t.expiresAt) : null;
+                if (!exp || exp < now) return;
+                if (exp < dayLater) expiring++;
+                else valid++;
+            });
+            
+            document.getElementById('totalCount').textContent = allTokens.length;
+            document.getElementById('validCount').textContent = valid;
+            document.getElementById('expiringCount').textContent = expiring;
+            document.getElementById('activeUsers').textContent = users.size;
+        }
+
+        function renderTable(tokens) {
+            if (!tokens || tokens.length === 0) {
+                document.getElementById('tokenTableBody').innerHTML = 
+                    '<tr><td colspan="8" class="nx-text-center">暂无数据</td></tr>';
+                return;
+            }
+
+            let html = '';
+            tokens.forEach(token => {
+                const statusBadge = getStatusBadge(token.status);
+                const createdAt = formatTime(token.createdAt);
+                const expiresAt = formatTime(token.expiresAt);
+                
+                html += '<tr>';
+                html += '  <td>' + (token.tokenId || '-') + '</td>';
+                html += '  <td>' + (token.userId || '-') + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--info">' + (token.tokenType || '-') + '</span></td>';
+                html += '  <td>' + (token.scope || '-') + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--' + statusBadge + '">' + (token.status || '-') + '</span></td>';
+                html += '  <td>' + createdAt + '</td>';
+                html += '  <td>' + expiresAt + '</td>';
+                html += '  <td>';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="viewToken(\'' + token.tokenId + '\')">详情</button> ';
+                if (token.status === 'VALID') {
+                    html += '    <button class="nx-btn nx-btn--sm nx-btn--danger" onclick="revokeToken(\'' + token.tokenId + '\')">撤销</button>';
+                }
+                html += '  </td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('tokenTableBody').innerHTML = html;
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'VALID': 'success',
+                'EXPIRED': 'secondary',
+                'REVOKED': 'danger'
+            };
+            return map[status] || 'secondary';
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function openGenerateModal() {
+            document.getElementById('userId').value = '';
+            document.getElementById('tokenType').value = 'ACCESS';
+            document.getElementById('validHours').value = 24;
+            document.getElementById('generateModal').classList.add('nx-modal--open');
+        }
+
+        function closeModal() {
+            document.getElementById('generateModal').classList.remove('nx-modal--open');
+        }
+
+        async function generateToken() {
+            const userId = document.getElementById('userId').value;
+            const tokenType = document.getElementById('tokenType').value;
+            const validHours = document.getElementById('validHours').value;
+            
+            const scopes = [];
+            document.querySelectorAll('#generateModal input[type="checkbox"]:checked').forEach(cb => {
+                scopes.push(cb.value);
+            });
+            
+            if (!userId) {
+                alert('请输入用户ID');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/enexus/security/token/generate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        userId: userId,
+                        tokenType: tokenType,
+                        scope: scopes.join(' '),
+                        validHours: parseInt(validHours)
+                    })
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    closeModal();
+                    loadTokens();
+                }
+            } catch (error) {
+                alert('生成失败: ' + error.message);
+            }
+        }
+
+        async function viewToken(tokenId) {
+            try {
+                const response = await fetch('/api/enexus/security/token/get', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({tokenId: tokenId})
+                });
+                const rs = await response.json();
+                const token = rs.data;
+                
+                let html = '';
+                html += '<div class="nx-grid nx-grid-cols-2 nx-gap-4">';
+                html += '  <div><strong>Token ID:</strong> ' + (token.tokenId || '-') + '</div>';
+                html += '  <div><strong>用户:</strong> ' + (token.userId || '-') + '</div>';
+                html += '  <div><strong>类型:</strong> <span class="nx-badge nx-badge--info">' + (token.tokenType || '-') + '</span></div>';
+                html += '  <div><strong>状态:</strong> <span class="nx-badge nx-badge--' + getStatusBadge(token.status) + '">' + (token.status || '-') + '</span></div>';
+                html += '  <div><strong>权限范围:</strong> ' + (token.scope || '-') + '</div>';
+                html += '  <div><strong>客户端ID:</strong> ' + (token.clientId || '-') + '</div>';
+                html += '  <div><strong>创建时间:</strong> ' + formatTime(token.createdAt) + '</div>';
+                html += '  <div><strong>过期时间:</strong> ' + formatTime(token.expiresAt) + '</div>';
+                html += '</div>';
+                
+                if (token.lastUsedAt) {
+                    html += '<div class="nx-mt-4"><strong>最后使用:</strong> ' + formatTime(token.lastUsedAt) + '</div>';
+                }
+                
+                document.getElementById('detailBody').innerHTML = html;
+                document.getElementById('detailModal').classList.add('nx-modal--open');
+            } catch (error) {
+                alert('获取详情失败: ' + error.message);
+            }
+        }
+
+        async function revokeToken(tokenId) {
+            if (!confirm('确定要撤销此Token吗？')) return;
+            
+            try {
+                const response = await fetch('/api/enexus/security/token/revoke', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({tokenId: tokenId})
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    loadTokens();
+                }
+            } catch (error) {
+                alert('撤销失败: ' + error.message);
+            }
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('nx-modal--open');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterTokens();
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            filterTokens();
+        });
+
+        function filterTokens() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            
+            let filtered = allTokens;
+            
+            if (search) {
+                filtered = filtered.filter(t => 
+                    (t.tokenId && t.tokenId.toLowerCase().includes(search)) ||
+                    (t.userId && t.userId.toLowerCase().includes(search))
+                );
+            }
+            
+            if (status) {
+                filtered = filtered.filter(t => t.status === status);
+            }
+            
+            renderTable(filtered);
+        }
+    </script>
+</body>
+</html>

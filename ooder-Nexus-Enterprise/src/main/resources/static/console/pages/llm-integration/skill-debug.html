@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能调试 - Nexus</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <style>
+        .debug-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+            min-height: 600px;
+        }
+        @media (max-width: 768px) {
+            .debug-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        .debug-sidebar {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            padding: 20px;
+        }
+        .debug-sidebar h3 {
+            margin: 0 0 16px 0;
+            font-size: 14px;
+            color: var(--ns-dark);
+        }
+        .debug-skill-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .debug-skill-item {
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+        }
+        .debug-skill-item:hover {
+            background: var(--ns-bg-hover);
+        }
+        .debug-skill-item.active {
+            background: var(--nx-primary);
+            color: white;
+            border-color: var(--nx-primary);
+        }
+        .debug-main {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .debug-toolbar {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            padding: 20px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .debug-tool {
+            flex: 1;
+            min-width: 200px;
+        }
+        .debug-tool label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        .debug-tool input,
+        .debug-tool select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            background: var(--ns-input-bg);
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        .debug-log-container {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .debug-log-container h3 {
+            margin: 0 0 16px 0;
+            font-size: 14px;
+            color: var(--ns-dark);
+        }
+        .debug-log {
+            flex: 1;
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            color: #d4d4d4;
+            overflow-y: auto;
+            min-height: 300px;
+        }
+        .log-empty {
+            color: var(--ns-secondary);
+            text-align: center;
+            padding: 40px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--ns-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能调试</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="exportLogs()">
+                        <i class="ri-download-line"></i> 导出日志
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="clearLogs()">
+                        <i class="ri-delete-bin-line"></i> 清除日志
+                    </button>
+                </div>
+            </header>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="debug-container">
+                        <div class="debug-sidebar">
+                            <h3><i class="ri-list-check"></i> 技能列表</h3>
+                            <div class="debug-skill-list" id="debug-skill-list">
+                                <div class="loading">加载中...</div>
+                            </div>
+                        </div>
+                        <div class="debug-main">
+                            <div class="debug-toolbar">
+                                <div class="debug-tool">
+                                    <label>选择技能</label>
+                                    <select id="debug-skill-select">
+                                        <option value="">选择技能</option>
+                                    </select>
+                                </div>
+                                <div class="debug-tool">
+                                    <label>参数测试</label>
+                                    <input type="text" id="debug-params" placeholder="输入测试参数">
+                                </div>
+                                <button class="btn btn-primary" onclick="testSkill()">
+                                    <i class="ri-play-line"></i> 测试技能
+                                </button>
+                            </div>
+                            <div class="debug-log-container">
+                                <h3><i class="ri-terminal-line"></i> 实时日志</h3>
+                                <div class="debug-log" id="debug-log">
+                                    <div class="log-empty">暂无日志</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/llm-integration-api.js"></script>
+    <script src="/console/js/skill-debug.js"></script>
+    <script>
+        window.onPageInit = function() {
+            // 页面特定的初始化代码
+        };
+    </script>
+</body>
+</html>

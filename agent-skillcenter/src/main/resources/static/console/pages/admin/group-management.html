@@ -3,338 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理中心 - 群组管理</title>
-    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
-    <link href="../../assets/css/remixicon/remixicon.css" rel="stylesheet">
-    <script src="/skillcenter/console/js/menu.js"></script>
-
+    <title>群组管理 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
 </head>
 <body>
-    <div class="container">
-        <aside class="sidebar" id="sidebar">
-            <!-- 菜单将通过menu.js动态加载 -->
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
         </aside>
-        <main class="main-content">
-            <header class="header">
-                <h1>群组管理</h1>
-                <div class="user-info">
-                    <span class="user-name">管理员</span>
-                    <i class="ri-user-line"></i>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">群组管理</h2>
                 </div>
-            </header>
-            <div class="admin-dashboard-content">
-                <div class="page-header">
-                    <button class="btn btn-primary" onclick="openAddGroupModal()">
-                        <i class="ri-group-add-line"></i> 创建群组
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <span class="nx-badge nx-badge--danger">管理员</span>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
                     </button>
                 </div>
-        
-        <!-- 搜索框 -->
-        <div class="search-box">
-            <input type="text" placeholder="搜索群组名称或ID" id="groupSearch" class="form-control">
-        </div>
-        
-        <!-- 群组列表 -->
-        <div class="skills-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>群组ID</th>
-                        <th>群组名称</th>
-                        <th>描述</th>
-                        <th>成员数量</th>
-                        <th>创建时间</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="groupTableBody">
-                    <!-- 群组数据将通过JavaScript动态填充 -->
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- 群组详情 -->
-        <div class="system-info-card" id="groupDetails" style="display: none;">
-            <h3>群组详情</h3>
-            <div class="detail-section">
-                <h4>基本信息</h4>
-                <div id="basicInfo"></div>
-            </div>
-            <div class="detail-section">
-                <h4>成员列表</h4>
-                <ul class="member-list" id="memberList"></ul>
-            </div>
-            <div class="detail-section">
-                <h4>群组技能</h4>
-                <ul class="member-list" id="groupSkills"></ul>
-            </div>
-            <button class="btn btn-secondary" onclick="hideGroupDetails()">关闭详情</button>
-        </div>
-    </div>
-    
-    <!-- 添加/编辑群组模态框 -->
-    <div id="groupModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modalTitle">创建群组</h2>
-                <button class="close-btn" onclick="closeGroupModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="groupForm">
-                    <input type="hidden" id="groupId">
-                    <div class="form-group">
-                        <label for="groupName">群组名称</label>
-                        <input type="text" id="groupName" required class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="groupDescription">群组描述</label>
-                        <textarea id="groupDescription" required class="form-control"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeGroupModal()">取消</button>
-                <button type="submit" class="btn btn-primary" form="groupForm">保存</button>
-            </div>
-        </div>
-    </div>
-    
-    <script>
-        // API基础URL
-        const API_BASE_URL = '/skillcenter/api';
-        
-        // 页面加载时渲染群组列表
-        document.addEventListener('DOMContentLoaded', function() {
-            renderGroupList();
-        });
-        
-        // 渲染群组列表
-        function renderGroupList() {
-            const tableBody = document.getElementById('groupTableBody');
-            tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">加载中...</td></tr>';
+            </header>
             
-            const searchTerm = document.getElementById('groupSearch').value.toLowerCase();
-            
-            // 构建查询参数
-            const params = new URLSearchParams();
-            if (searchTerm) params.append('search', searchTerm);
-            const queryString = params.toString();
-            
-            // 调用API获取群组列表
-            fetch(`${API_BASE_URL}/groups${queryString ? '?' + queryString : ''}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const groups = data.data.items || [];
-                        tableBody.innerHTML = '';
-                        
-                        groups.forEach(group => {
-                            const row = document.createElement('tr');
-                            row.innerHTML = `
-                                <td>${group.id}</td>
-                                <td>${group.name}</td>
-                                <td>${group.description}</td>
-                                <td>${group.memberCount || 0}</td>
-                                <td>${group.createdAt ? new Date(group.createdAt).toLocaleString() : ''}</td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn btn-secondary" onclick="viewGroupDetails('${group.id}')">
-                                            <i class="ri-eye-line"></i> 查看
-                                        </button>
-                                        <button class="btn btn-primary" onclick="editGroup('${group.id}')">
-                                            <i class="ri-edit-line"></i> 编辑
-                                        </button>
-                                        <button class="btn btn-danger" onclick="deleteGroup('${group.id}')">
-                                            <i class="ri-delete-line"></i> 删除
-                                        </button>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-3 nx-gap-6">
+                        <div class="nx-card">
+                            <div class="nx-card__body">
+                                <div class="nx-flex nx-items-center nx-gap-3 nx-mb-3">
+                                    <i class="ri-team-line nx-text-2xl nx-text-primary"></i>
+                                    <div>
+                                        <h4 class="nx-font-semibold">开发组</h4>
+                                        <span class="nx-text-secondary nx-text-sm">5 成员</span>
                                     </div>
-                                </td>
-                            `;
-                            tableBody.appendChild(row);
-                        });
-                    } else {
-                        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: red;">获取群组列表失败</td></tr>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching groups:', error);
-                    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: red;">获取群组列表失败</td></tr>';
-                });
-        }
-        
-        // 打开创建群组模态框
-        function openAddGroupModal() {
-            document.getElementById('modalTitle').textContent = '创建群组';
-            document.getElementById('groupId').value = '';
-            document.getElementById('groupName').value = '';
-            document.getElementById('groupDescription').value = '';
-            document.getElementById('groupModal').style.display = 'block';
-        }
-        
-        // 打开编辑群组模态框
-        function editGroup(groupId) {
-            // 调用API获取群组详情
-            fetch(`${API_BASE_URL}/groups/${groupId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const group = data.data;
-                        document.getElementById('modalTitle').textContent = '编辑群组';
-                        document.getElementById('groupId').value = group.id;
-                        document.getElementById('groupName').value = group.name;
-                        document.getElementById('groupDescription').value = group.description;
-                        document.getElementById('groupModal').style.display = 'block';
-                    } else {
-                        alert('获取群组详情失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching group details:', error);
-                    alert('获取群组详情失败');
-                });
-        }
-        
-        // 关闭群组模态框
-        function closeGroupModal() {
-            document.getElementById('groupModal').style.display = 'none';
-        }
-        
-        // 提交群组表单
-        document.getElementById('groupForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const groupId = document.getElementById('groupId').value;
-            const groupName = document.getElementById('groupName').value;
-            const groupDescription = document.getElementById('groupDescription').value;
-            
-            const groupData = {
-                name: groupName,
-                description: groupDescription
-            };
-            
-            let url = `${API_BASE_URL}/groups`;
-            let method = 'POST';
-            
-            if (groupId) {
-                // 编辑现有群组
-                url = `${API_BASE_URL}/groups/${groupId}`;
-                method = 'PUT';
-            }
-            
-            // 调用API保存群组
-            fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(groupData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    renderGroupList();
-                    closeGroupModal();
-                    alert('群组保存成功！');
-                } else {
-                    alert('群组保存失败');
-                }
-            })
-            .catch(error => {
-                console.error('Error saving group:', error);
-                alert('群组保存失败');
-            });
-        }
-        
-        // 查看群组详情
-        function viewGroupDetails(groupId) {
-            // 调用API获取群组详情
-            fetch(`${API_BASE_URL}/groups/${groupId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const group = data.data;
-                        document.getElementById('basicInfo').innerHTML = `
-                            <p><strong>群组ID:</strong> ${group.id}</p>
-                            <p><strong>群组名称:</strong> ${group.name}</p>
-                            <p><strong>描述:</strong> ${group.description}</p>
-                            <p><strong>成员数量:</strong> ${group.memberCount || 0}</p>
-                            <p><strong>创建时间:</strong> ${group.createdAt ? new Date(group.createdAt).toLocaleString() : ''}</p>
-                        `;
-                        
-                        const memberList = document.getElementById('memberList');
-                        memberList.innerHTML = '';
-                        if (group.members && group.members.length > 0) {
-                            group.members.forEach(member => {
-                                const li = document.createElement('li');
-                                li.textContent = member;
-                                memberList.appendChild(li);
-                            });
-                        } else {
-                            memberList.innerHTML = '<li>暂无成员</li>';
-                        }
-                        
-                        const groupSkills = document.getElementById('groupSkills');
-                        groupSkills.innerHTML = '';
-                        if (group.skills && group.skills.length > 0) {
-                            group.skills.forEach(skill => {
-                                const li = document.createElement('li');
-                                li.textContent = skill;
-                                groupSkills.appendChild(li);
-                            });
-                        } else {
-                            groupSkills.innerHTML = '<li>暂无技能</li>';
-                        }
-                        
-                        document.getElementById('groupDetails').style.display = 'block';
-                    } else {
-                        alert('获取群组详情失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching group details:', error);
-                    alert('获取群组详情失败');
-                });
-        }
-        
-        // 隐藏群组详情
-        function hideGroupDetails() {
-            document.getElementById('groupDetails').style.display = 'none';
-        }
-        
-        // 删除群组
-        function deleteGroup(groupId) {
-            if (confirm('确定要删除这个群组吗？')) {
-                // 调用API删除群组
-                fetch(`${API_BASE_URL}/groups/${groupId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        renderGroupList();
-                        hideGroupDetails();
-                        alert('群组删除成功！');
-                    } else {
-                        alert('群组删除失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error deleting group:', error);
-                    alert('群组删除失败');
-                });
-            }
-        }
-        
-        // 搜索事件
-        document.getElementById('groupSearch').addEventListener('input', renderGroupList);
-        
-        // 初始化菜单
-        initMenu('group-management');
-    </script>
+                                </div>
+                                <p class="nx-text-secondary nx-text-sm nx-mb-4">开发团队共享技能群组</p>
+                                <div class="nx-flex nx-gap-2">
+                                    <button class="nx-btn nx-btn--secondary nx-btn--sm">管理</button>
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm">删除</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('群组管理页面初始化完成');
+        };
+    </script>
 </body>
 </html>

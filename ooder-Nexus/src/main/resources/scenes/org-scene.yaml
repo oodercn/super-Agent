@@ -1,0 +1,215 @@
+apiVersion: scene.ooder.net/v1
+kind: SceneDefinition
+
+metadata:
+  sceneId: org
+  name: Organization Management
+  description: |
+    组织管理场景，基于ooder-common 2.0的ooder-org-web模块。
+    提供组织架构、成员管理、角色管理等功能。
+  version: "2.0.0"
+  suite: security
+  category: identity
+  author: Ooder Team
+  createdAt: "2026-02-18T00:00:00Z"
+
+spec:
+  type: primary
+  required: true
+  priority: 0
+  
+  capabilities:
+    - capId: org-create
+      name: Create Organization
+      description: 创建组织
+      parameters:
+        - name: name
+          type: string
+          required: true
+          description: 组织名称
+        - name: parentId
+          type: string
+          required: false
+          description: 父组织ID
+        - name: leaderId
+          type: string
+          required: false
+          description: 负责人ID
+      returnType: object
+      async: false
+      mapsTo: CtOrg
+      
+    - capId: org-read
+      name: Read Organization
+      description: 读取组织信息
+      parameters:
+        - name: orgId
+          type: string
+          required: true
+          description: 组织ID
+      returnType: object
+      async: false
+      mapsTo: CtOrg.getOrgId
+      
+    - capId: org-update
+      name: Update Organization
+      description: 更新组织信息
+      parameters:
+        - name: orgId
+          type: string
+          required: true
+          description: 组织ID
+        - name: name
+          type: string
+          required: false
+          description: 组织名称
+        - name: leaderId
+          type: string
+          required: false
+          description: 负责人ID
+      returnType: boolean
+      async: false
+      
+    - capId: org-delete
+      name: Delete Organization
+      description: 删除组织
+      parameters:
+        - name: orgId
+          type: string
+          required: true
+          description: 组织ID
+      returnType: boolean
+      async: false
+      
+    - capId: org-tree
+      name: Get Organization Tree
+      description: 获取组织树
+      parameters:
+        - name: rootOrgId
+          type: string
+          required: false
+          description: 根组织ID
+        - name: depth
+          type: number
+          required: false
+          default: -1
+          description: 深度(-1为无限)
+      returnType: list
+      async: false
+      
+    - capId: person-create
+      name: Create Person
+      description: 创建人员
+      parameters:
+        - name: name
+          type: string
+          required: true
+          description: 姓名
+        - name: orgId
+          type: string
+          required: true
+          description: 组织ID
+        - name: email
+          type: string
+          required: false
+          description: 邮箱
+      returnType: object
+      async: false
+      mapsTo: CtPerson
+      
+    - capId: person-read
+      name: Read Person
+      description: 读取人员信息
+      parameters:
+        - name: personId
+          type: string
+          required: true
+          description: 人员ID
+      returnType: object
+      async: false
+      
+    - capId: person-list
+      name: List Persons
+      description: 列出组织人员
+      parameters:
+        - name: orgId
+          type: string
+          required: true
+          description: 组织ID
+        - name: recursive
+          type: boolean
+          required: false
+          default: false
+          description: 是否递归
+      returnType: list
+      async: false
+      
+    - capId: role-create
+      name: Create Role
+      description: 创建角色
+      parameters:
+        - name: name
+          type: string
+          required: true
+          description: 角色名称
+        - name: orgId
+          type: string
+          required: true
+          description: 组织ID
+        - name: permissions
+          type: list
+          required: false
+          description: 权限列表
+      returnType: object
+      async: false
+      mapsTo: CtRole
+      
+    - capId: role-assign
+      name: Assign Role
+      description: 分配角色
+      parameters:
+        - name: personId
+          type: string
+          required: true
+          description: 人员ID
+        - name: roleId
+          type: string
+          required: true
+          description: 角色ID
+      returnType: boolean
+      async: false
+
+  dependencies:
+    scenes:
+      - sceneId: vfs
+        required: true
+    skills:
+      - skillId: skill-org
+        required: true
+        version: ">=2.0.0"
+
+  config:
+    maxOrgDepth: 10
+    maxPersonsPerOrg: 10000
+    maxRolesPerOrg: 100
+    enableOrgSync: true
+    syncInterval: 300000
+    cacheEnabled: true
+    cacheTtl: 1800
+
+  commonModule:
+    groupId: net.ooder
+    artifactId: ooder-org-web
+    version: "2.0.0"
+    mainClass: net.ooder.common.org.CtOrgManager
+
+  deployment:
+    singleton: true
+    autoStart: true
+    healthCheck:
+      path: /api/health
+      interval: 30
+      timeout: 10
+    resources:
+      cpu: "250m"
+      memory: "256Mi"

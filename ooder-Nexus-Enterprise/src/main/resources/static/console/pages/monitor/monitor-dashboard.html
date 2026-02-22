@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>监控仪表盘 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--nx-primary), #1d4ed8);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .dashboard-header__top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .dashboard-header h1 {
+            margin: 0;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .dashboard-header__status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.healthy { background: #22c55e; }
+        .status-dot.warning { background: #f59e0b; }
+        .status-dot.critical { background: #ef4444; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .dashboard-header__metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        
+        .header-metric {
+            text-align: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        
+        .header-metric__value {
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .header-metric__label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .metric-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .metric-card__title {
+            font-size: 14px;
+            color: var(--ns-secondary);
+        }
+        
+        .metric-card__icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .metric-card__icon.cpu { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .metric-card__icon.memory { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .metric-card__icon.disk { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .metric-card__icon.network { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+        .metric-card__icon.requests { background: rgba(236, 72, 153, 0.2); color: #ec4899; }
+        .metric-card__icon.errors { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        
+        .metric-card__value {
+            font-size: 36px;
+            font-weight: 600;
+            color: var(--ns-dark);
+            margin-bottom: 8px;
+        }
+        
+        .metric-card__chart {
+            height: 60px;
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+        }
+        
+        .chart-bar {
+            flex: 1;
+            background: var(--nx-primary);
+            border-radius: 2px 2px 0 0;
+            min-height: 4px;
+            transition: height 0.3s;
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .panel {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+        }
+        
+        .panel__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .panel__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .panel__body {
+            padding: 16px 20px;
+        }
+        
+        .service-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .service-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--ns-input-bg);
+            border-radius: 8px;
+        }
+        
+        .service-item__info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .service-item__icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--nx-primary);
+        }
+        
+        .service-item__name {
+            color: var(--ns-dark);
+            font-weight: 500;
+        }
+        
+        .service-item__type {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .service-item__metrics {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .service-metric {
+            text-align: right;
+        }
+        
+        .service-metric__value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .service-metric__label {
+            font-size: 11px;
+            color: var(--ns-secondary);
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-badge.up { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .status-badge.down { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        .status-badge.degraded { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        
+        .alert-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .alert-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: var(--ns-input-bg);
+            border-radius: 8px;
+            border-left: 3px solid;
+        }
+        
+        .alert-item.critical { border-left-color: var(--ns-danger); }
+        .alert-item.warning { border-left-color: var(--ns-warning); }
+        .alert-item.info { border-left-color: var(--nx-primary); }
+        
+        .alert-item__icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .alert-item__icon.critical { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        .alert-item__icon.warning { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .alert-item__icon.info { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        
+        .alert-item__content {
+            flex: 1;
+        }
+        
+        .alert-item__message {
+            color: var(--ns-dark);
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        
+        .alert-item__meta {
+            display: flex;
+            gap: 16px;
+            font-size: 11px;
+            color: var(--ns-secondary);
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 24px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--ns-border);
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-bottom: 16px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--nx-primary);
+            border: 2px solid var(--ns-card-bg);
+        }
+        
+        .timeline-item__time {
+            font-size: 11px;
+            color: var(--ns-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .timeline-item__content {
+            font-size: 13px;
+            color: var(--ns-dark);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--ns-border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-bar__fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        
+        .progress-bar__fill.primary { background: var(--nx-primary); }
+        .progress-bar__fill.success { background: var(--ns-success); }
+        .progress-bar__fill.warning { background: var(--ns-warning); }
+        .progress-bar__fill.danger { background: var(--ns-danger); }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--ns-secondary);
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .refresh-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .refresh-info.spinning i {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">监控仪表盘</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <div class="refresh-info" id="refreshInfo">
+                        <i class="ri-refresh-line"></i>
+                        <span id="lastUpdate">-</span>
+                    </div>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="exportMetrics()">
+                        <i class="ri-download-line"></i> 导出
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="refreshAll()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="dashboard-header">
+                        <div class="dashboard-header__top">
+                            <h1><i class="ri-dashboard-3-line"></i> 系统监控</h1>
+                            <div class="dashboard-header__status">
+                                <span class="status-dot healthy" id="statusDot"></span>
+                                <span id="systemStatus">系统正常</span>
+                            </div>
+                        </div>
+                        <div class="dashboard-header__metrics">
+                            <div class="header-metric">
+                                <div class="header-metric__value" id="uptime">-</div>
+                                <div class="header-metric__label">运行时间</div>
+                            </div>
+                            <div class="header-metric">
+                                <div class="header-metric__value" id="totalRequests">-</div>
+                                <div class="header-metric__label">总请求数</div>
+                            </div>
+                            <div class="header-metric">
+                                <div class="header-metric__value" id="activeConnections">-</div>
+                                <div class="header-metric__label">活跃连接</div>
+                            </div>
+                            <div class="header-metric">
+                                <div class="header-metric__value" id="errorRate">-</div>
+                                <div class="header-metric__label">错误率</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-card__header">
+                                <span class="metric-card__title">CPU 使用率</span>
+                                <div class="metric-card__icon cpu">
+                                    <i class="ri-cpu-line"></i>
+                                </div>
+                            </div>
+                            <div class="metric-card__value" id="cpuValue">-</div>
+                            <div class="progress-bar" style="margin-bottom: 12px;">
+                                <div class="progress-bar__fill primary" id="cpuBar" style="width: 0%"></div>
+                            </div>
+                            <div class="metric-card__chart" id="cpuChart"></div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-card__header">
+                                <span class="metric-card__title">内存使用率</span>
+                                <div class="metric-card__icon memory">
+                                    <i class="ri-ram-line"></i>
+                                </div>
+                            </div>
+                            <div class="metric-card__value" id="memoryValue">-</div>
+                            <div class="progress-bar" style="margin-bottom: 12px;">
+                                <div class="progress-bar__fill success" id="memoryBar" style="width: 0%"></div>
+                            </div>
+                            <div class="metric-card__chart" id="memoryChart"></div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-card__header">
+                                <span class="metric-card__title">磁盘使用率</span>
+                                <div class="metric-card__icon disk">
+                                    <i class="ri-hard-drive-2-line"></i>
+                                </div>
+                            </div>
+                            <div class="metric-card__value" id="diskValue">-</div>
+                            <div class="progress-bar" style="margin-bottom: 12px;">
+                                <div class="progress-bar__fill warning" id="diskBar" style="width: 0%"></div>
+                            </div>
+                            <div class="metric-card__chart" id="diskChart"></div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-card__header">
+                                <span class="metric-card__title">网络流量</span>
+                                <div class="metric-card__icon network">
+                                    <i class="ri-wifi-line"></i>
+                                </div>
+                            </div>
+                            <div class="metric-card__value" id="networkValue">-</div>
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--ns-secondary);">
+                                <span>入站: <span id="networkIn">-</span></span>
+                                <span>出站: <span id="networkOut">-</span></span>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-card__header">
+                                <span class="metric-card__title">请求/秒</span>
+                                <div class="metric-card__icon requests">
+                                    <i class="ri-pulse-line"></i>
+                                </div>
+                            </div>
+                            <div class="metric-card__value" id="rpsValue">-</div>
+                            <div class="metric-card__chart" id="rpsChart"></div>
+                        </div>
+                        
+                        <div class="metric-card">
+                            <div class="metric-card__header">
+                                <span class="metric-card__title">错误数</span>
+                                <div class="metric-card__icon errors">
+                                    <i class="ri-error-warning-line"></i>
+                                </div>
+                            </div>
+                            <div class="metric-card__value" id="errorsValue">-</div>
+                            <div style="font-size: 12px; color: var(--ns-secondary);">
+                                最近 1 小时: <span id="recentErrors">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="two-column">
+                        <div class="panel">
+                            <div class="panel__header">
+                                <span class="panel__title">服务状态</span>
+                                <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="runHealthCheck()">
+                                    健康检查
+                                </button>
+                            </div>
+                            <div class="panel__body">
+                                <div class="service-list" id="serviceList">
+                                    <div class="empty-state">
+                                        <i class="ri-loader-4-line"></i>
+                                        <p>加载中...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="panel">
+                            <div class="panel__header">
+                                <span class="panel__title">告警信息</span>
+                                <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="clearAlerts()">
+                                    清除
+                                </button>
+                            </div>
+                            <div class="panel__body">
+                                <div class="alert-list" id="alertList">
+                                    <div class="empty-state">
+                                        <i class="ri-checkbox-circle-line"></i>
+                                        <p>暂无告警</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <div class="panel__header">
+                            <span class="panel__title">最近事件</span>
+                        </div>
+                        <div class="panel__body">
+                            <div class="timeline" id="eventTimeline">
+                                <div class="empty-state">
+                                    <i class="ri-history-line"></i>
+                                    <p>暂无事件</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var refreshInterval = null;
+        var cpuHistory = [];
+        var memoryHistory = [];
+        var diskHistory = [];
+        var rpsHistory = [];
+        var historyLength = 20;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            loadAll();
+            startAutoRefresh();
+        });
+        
+        function initCharts() {
+            for (var i = 0; i < historyLength; i++) {
+                cpuHistory.push(0);
+                memoryHistory.push(0);
+                diskHistory.push(0);
+                rpsHistory.push(0);
+            }
+        }
+        
+        function startAutoRefresh() {
+            refreshInterval = setInterval(function() {
+                refreshAll();
+            }, 30000);
+        }
+        
+        function loadAll() {
+            loadMetrics();
+            loadServices();
+            loadAlerts();
+            loadEvents();
+        }
+        
+        function refreshAll() {
+            var refreshInfo = document.getElementById('refreshInfo');
+            refreshInfo.classList.add('spinning');
+            
+            loadAll();
+            
+            setTimeout(function() {
+                refreshInfo.classList.remove('spinning');
+                document.getElementById('lastUpdate').textContent = '更新于 ' + new Date().toLocaleTimeString('zh-CN');
+            }, 1000);
+        }
+        
+        async function loadMetrics() {
+            try {
+                var response = await fetch('/api/monitor/metrics');
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    renderMetrics(rs.data);
+                }
+            } catch (error) {
+                console.error('Load metrics failed:', error);
+            }
+        }
+        
+        function renderMetrics(metrics) {
+            var cpu = metrics.cpuUsage || 0;
+            var memory = metrics.memoryUsage || 0;
+            var disk = metrics.diskUsage || 0;
+            
+            cpuHistory.push(cpu);
+            cpuHistory.shift();
+            memoryHistory.push(memory);
+            memoryHistory.shift();
+            diskHistory.push(disk);
+            diskHistory.shift();
+            
+            document.getElementById('cpuValue').textContent = cpu.toFixed(1) + '%';
+            document.getElementById('cpuBar').style.width = cpu + '%';
+            updateProgressBarClass('cpuBar', cpu);
+            
+            document.getElementById('memoryValue').textContent = memory.toFixed(1) + '%';
+            document.getElementById('memoryBar').style.width = memory + '%';
+            updateProgressBarClass('memoryBar', memory);
+            
+            document.getElementById('diskValue').textContent = disk.toFixed(1) + '%';
+            document.getElementById('diskBar').style.width = disk + '%';
+            updateProgressBarClass('diskBar', disk);
+            
+            renderChart('cpuChart', cpuHistory, 'var(--nx-primary)');
+            renderChart('memoryChart', memoryHistory, 'var(--ns-success)');
+            renderChart('diskChart', diskHistory, 'var(--ns-warning)');
+            
+            if (metrics.uptime) {
+                document.getElementById('uptime').textContent = formatUptime(metrics.uptime);
+            }
+            
+            document.getElementById('totalRequests').textContent = formatNumber(metrics.totalRequests || 0);
+            document.getElementById('activeConnections').textContent = metrics.activeConnections || 0;
+            document.getElementById('errorRate').textContent = (metrics.errorRate || 0).toFixed(2) + '%';
+            
+            document.getElementById('networkValue').textContent = formatBytes(metrics.networkTotal || 0);
+            document.getElementById('networkIn').textContent = formatBytes(metrics.networkIn || 0) + '/s';
+            document.getElementById('networkOut').textContent = formatBytes(metrics.networkOut || 0) + '/s';
+            
+            var rps = metrics.requestsPerSecond || 0;
+            rpsHistory.push(rps);
+            rpsHistory.shift();
+            document.getElementById('rpsValue').textContent = rps.toFixed(1);
+            renderChart('rpsChart', rpsHistory, '#ec4899');
+            
+            document.getElementById('errorsValue').textContent = metrics.errorCount || 0;
+            document.getElementById('recentErrors').textContent = metrics.recentErrors || 0;
+            
+            updateSystemStatus(metrics);
+        }
+        
+        function renderChart(containerId, data, color) {
+            var container = document.getElementById(containerId);
+            var max = Math.max.apply(null, data) || 1;
+            var html = '';
+            
+            data.forEach(function(value) {
+                var height = (value / max * 100) || 4;
+                html += '<div class="chart-bar" style="height: ' + height + '%; background: ' + color + ';"></div>';
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function updateProgressBarClass(barId, value) {
+            var bar = document.getElementById(barId);
+            bar.classList.remove('primary', 'success', 'warning', 'danger');
+            if (value >= 90) {
+                bar.classList.add('danger');
+            } else if (value >= 80) {
+                bar.classList.add('warning');
+            } else {
+                bar.classList.add('success');
+            }
+        }
+        
+        function updateSystemStatus(metrics) {
+            var statusDot = document.getElementById('statusDot');
+            var statusText = document.getElementById('systemStatus');
+            
+            if (metrics.status === 'CRITICAL' || (metrics.cpuUsage > 90 || metrics.memoryUsage > 90)) {
+                statusDot.className = 'status-dot critical';
+                statusText.textContent = '系统异常';
+            } else if (metrics.status === 'WARNING' || (metrics.cpuUsage > 80 || metrics.memoryUsage > 80)) {
+                statusDot.className = 'status-dot warning';
+                statusText.textContent = '系统警告';
+            } else {
+                statusDot.className = 'status-dot healthy';
+                statusText.textContent = '系统正常';
+            }
+        }
+        
+        async function loadServices() {
+            try {
+                var response = await fetch('/api/health/services');
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    renderServices(rs.data);
+                }
+            } catch (error) {
+                console.error('Load services failed:', error);
+            }
+        }
+        
+        function renderServices(services) {
+            var html = '';
+            var serviceIcons = {
+                'session': 'ri-user-line',
+                'cache': 'ri-database-2-line',
+                'monitor': 'ri-pulse-line',
+                'storage': 'ri-hard-drive-line',
+                'health': 'ri-heart-pulse-line'
+            };
+            
+            var serviceNames = {
+                'session': '会话服务',
+                'cache': '缓存服务',
+                'monitor': '监控服务',
+                'storage': '存储服务',
+                'health': '健康检查'
+            };
+            
+            for (var key in services) {
+                if (services.hasOwnProperty(key)) {
+                    var service = services[key];
+                    var statusClass = service.status === 'UP' ? 'up' : (service.status === 'DEGRADED' ? 'degraded' : 'down');
+                    var icon = serviceIcons[key] || 'ri-service-line';
+                    var name = serviceNames[key] || key;
+                    
+                    html += '<div class="service-item">';
+                    html += '  <div class="service-item__info">';
+                    html += '    <div class="service-item__icon"><i class="' + icon + '"></i></div>';
+                    html += '    <div>';
+                    html += '      <div class="service-item__name">' + name + '</div>';
+                    html += '      <div class="service-item__type">' + (service.type || 'core') + '</div>';
+                    html += '    </div>';
+                    html += '  </div>';
+                    html += '  <div class="service-item__metrics">';
+                    html += '    <div class="service-metric">';
+                    html += '      <div class="service-metric__value">' + (service.responseTime || 0) + 'ms</div>';
+                    html += '      <div class="service-metric__label">响应时间</div>';
+                    html += '    </div>';
+                    html += '  </div>';
+                    html += '  <span class="status-badge ' + statusClass + '">' + service.status + '</span>';
+                    html += '</div>';
+                }
+            }
+            
+            document.getElementById('serviceList').innerHTML = html || '<div class="empty-state"><i class="ri-checkbox-circle-line"></i><p>暂无服务</p></div>';
+        }
+        
+        async function loadAlerts() {
+            try {
+                var response = await fetch('/api/monitor/alerts');
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    renderAlerts(rs.data);
+                }
+            } catch (error) {
+                console.error('Load alerts failed:', error);
+            }
+        }
+        
+        function renderAlerts(alerts) {
+            if (!alerts || alerts.length === 0) {
+                document.getElementById('alertList').innerHTML = '<div class="empty-state"><i class="ri-checkbox-circle-line"></i><p>暂无告警</p></div>';
+                return;
+            }
+            
+            var html = '';
+            var iconMap = {
+                'critical': 'ri-error-warning-line',
+                'warning': 'ri-alert-line',
+                'info': 'ri-information-line'
+            };
+            
+            alerts.slice(0, 10).forEach(function(alert) {
+                var level = alert.level || 'info';
+                var icon = iconMap[level] || 'ri-information-line';
+                
+                html += '<div class="alert-item ' + level + '">';
+                html += '  <div class="alert-item__icon ' + level + '"><i class="' + icon + '"></i></div>';
+                html += '  <div class="alert-item__content">';
+                html += '    <div class="alert-item__message">' + (alert.message || '-') + '</div>';
+                html += '    <div class="alert-item__meta">';
+                html += '      <span>' + (alert.source || 'system') + '</span>';
+                html += '      <span>' + formatTime(alert.timestamp) + '</span>';
+                html += '    </div>';
+                html += '  </div>';
+                html += '</div>';
+            });
+            
+            document.getElementById('alertList').innerHTML = html;
+        }
+        
+        async function loadEvents() {
+            try {
+                var response = await fetch('/api/monitor/events?limit=10');
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    renderEvents(rs.data);
+                }
+            } catch (error) {
+                console.error('Load events failed:', error);
+            }
+        }
+        
+        function renderEvents(events) {
+            if (!events || events.length === 0) {
+                document.getElementById('eventTimeline').innerHTML = '<div class="empty-state"><i class="ri-history-line"></i><p>暂无事件</p></div>';
+                return;
+            }
+            
+            var html = '';
+            events.forEach(function(event) {
+                html += '<div class="timeline-item">';
+                html += '  <div class="timeline-item__time">' + formatTime(event.timestamp) + '</div>';
+                html += '  <div class="timeline-item__content">' + (event.message || event.type) + '</div>';
+                html += '</div>';
+            });
+            
+            document.getElementById('eventTimeline').innerHTML = html;
+        }
+        
+        async function runHealthCheck() {
+            try {
+                var response = await fetch('/api/health/check/detailed', { method: 'POST' });
+                var rs = await response.json();
+                if (rs.success) {
+                    alert('健康检查完成: ' + rs.data.status);
+                    loadServices();
+                }
+            } catch (error) {
+                console.error('Health check failed:', error);
+            }
+        }
+        
+        async function clearAlerts() {
+            try {
+                var response = await fetch('/api/monitor/alerts/clear', { method: 'POST' });
+                var rs = await response.json();
+                if (rs.success) {
+                    loadAlerts();
+                }
+            } catch (error) {
+                console.error('Clear alerts failed:', error);
+            }
+        }
+        
+        function exportMetrics() {
+            window.location.href = '/api/monitor/export';
+        }
+        
+        function formatUptime(ms) {
+            var seconds = Math.floor(ms / 1000);
+            var days = Math.floor(seconds / 86400);
+            var hours = Math.floor((seconds % 86400) / 3600);
+            var minutes = Math.floor((seconds % 3600) / 60);
+            
+            if (days > 0) {
+                return days + 'd ' + hours + 'h';
+            } else if (hours > 0) {
+                return hours + 'h ' + minutes + 'm';
+            } else {
+                return minutes + 'm';
+            }
+        }
+        
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+        
+        function formatBytes(bytes) {
+            if (!bytes) return '0 B';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            var date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+    </script>
+</body>
+</html>

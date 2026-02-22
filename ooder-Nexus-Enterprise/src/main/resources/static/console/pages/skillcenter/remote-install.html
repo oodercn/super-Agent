@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>远程安装 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .remote-install-container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        
+        .install-card { background: var(--ns-card-bg); border-radius: 12px; border: 1px solid var(--ns-border); padding: 24px; }
+        .install-card h3 { margin: 0 0 16px 0; color: var(--ns-dark); display: flex; align-items: center; gap: 8px; }
+        
+        .install-methods { display: flex; flex-direction: column; gap: 12px; }
+        .method-item { display: flex; align-items: center; padding: 12px 16px; background: var(--ns-input-bg); border-radius: 8px; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .method-item:hover { border-color: var(--nx-primary); }
+        .method-item.active { border-color: var(--nx-primary); background: rgba(59, 130, 246, 0.05); }
+        .method-item i { font-size: 24px; color: var(--nx-primary); margin-right: 12px; }
+        .method-item .method-name { font-weight: 500; color: var(--ns-dark); }
+        .method-item .method-desc { font-size: 12px; color: var(--ns-secondary); margin-left: auto; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--ns-secondary); font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { 
+            width: 100%; 
+            background: var(--ns-input-bg); 
+            border: 1px solid var(--ns-border); 
+            color: var(--ns-dark);
+            padding: 10px 12px; 
+            border-radius: 6px; 
+            font-size: 14px;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--nx-primary);
+            outline: none;
+        }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        
+        .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+        .btn-primary { background: var(--nx-primary); color: white; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-secondary { background: var(--ns-card-bg); color: var(--ns-dark); border: 1px solid var(--ns-border); }
+        .btn-secondary:hover { background: var(--ns-bg-hover); }
+        .btn-block { width: 100%; justify-content: center; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .install-log { background: var(--ns-input-bg); border-radius: 8px; padding: 16px; margin-top: 16px; max-height: 300px; overflow-y: auto; font-family: 'Consolas', monospace; font-size: 13px; }
+        .log-entry { padding: 4px 0; border-bottom: 1px solid var(--ns-border); }
+        .log-entry.success { color: var(--ns-success); }
+        .log-entry.error { color: var(--ns-danger); }
+        .log-entry.info { color: var(--ns-secondary); }
+        
+        .progress-bar { height: 4px; background: var(--ns-border); border-radius: 2px; overflow: hidden; margin-top: 16px; }
+        .progress-fill { height: 100%; background: var(--nx-primary); transition: width 0.3s; width: 0%; }
+        
+        .result-card { background: rgba(34, 197, 94, 0.1); border: 1px solid var(--ns-success); border-radius: 8px; padding: 16px; margin-top: 16px; }
+        .result-card.error { background: rgba(239, 68, 68, 0.1); border-color: var(--ns-danger); }
+        .result-card h4 { margin: 0 0 8px 0; color: var(--ns-dark); }
+        .result-card p { margin: 0; color: var(--ns-secondary); font-size: 13px; }
+        
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--ns-secondary); }
+        .empty-state i { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold"><i class="ri-cloud-line"></i> 远程技能安装</h2>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="remote-install-container">
+                        <div class="install-card">
+                            <h3><i class="ri-download-cloud-line"></i> 选择安装方式</h3>
+                            <div class="install-methods">
+                                <div class="method-item active" onclick="selectMethod('github')" id="method-github">
+                                    <i class="ri-github-line"></i>
+                                    <span class="method-name">GitHub</span>
+                                    <span class="method-desc">从GitHub仓库安装</span>
+                                </div>
+                                <div class="method-item" onclick="selectMethod('gitee')" id="method-gitee">
+                                    <i class="ri-git-branch-line"></i>
+                                    <span class="method-name">Gitee</span>
+                                    <span class="method-desc">从Gitee仓库安装</span>
+                                </div>
+                                <div class="method-item" onclick="selectMethod('url')" id="method-url">
+                                    <i class="ri-link-line"></i>
+                                    <span class="method-name">URL下载</span>
+                                    <span class="method-desc">直接下载URL</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="install-card">
+                            <h3><i class="ri-settings-3-line"></i> 安装配置</h3>
+                            <div id="installForm">
+                                <div class="form-group">
+                                    <label>技能ID</label>
+                                    <input type="text" id="skillId" placeholder="例如: skill-org-feishu">
+                                </div>
+                                <div class="form-group" id="repoOwnerGroup">
+                                    <label>仓库所有者</label>
+                                    <input type="text" id="repoOwner" placeholder="例如: ooderCN" value="ooderCN">
+                                </div>
+                                <div class="form-group" id="repoNameGroup">
+                                    <label>仓库名称</label>
+                                    <input type="text" id="repoName" placeholder="例如: skills" value="skills">
+                                </div>
+                                <div class="form-group" id="branchGroup">
+                                    <label>分支</label>
+                                    <input type="text" id="branch" placeholder="例如: main" value="main">
+                                </div>
+                                <div class="form-group" id="urlGroup" style="display: none;">
+                                    <label>下载URL</label>
+                                    <input type="text" id="downloadUrl" placeholder="输入技能包下载URL">
+                                </div>
+                                <div class="form-group">
+                                    <label>访问Token (可选)</label>
+                                    <input type="password" id="token" placeholder="输入GitHub/Gitee Token">
+                                </div>
+                                <button class="btn btn-primary btn-block" onclick="startInstall()" id="installBtn">
+                                    <i class="ri-download-line"></i> 开始安装
+                                </button>
+                            </div>
+                            
+                            <div class="progress-bar" id="progressBar" style="display: none;">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            
+                            <div class="install-log" id="installLog" style="display: none;"></div>
+                            
+                            <div class="result-card" id="resultCard" style="display: none;">
+                                <h4 id="resultTitle">安装成功</h4>
+                                <p id="resultMessage">技能已成功安装到系统</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var currentMethod = 'github';
+        var isInstalling = false;
+        
+        window.onPageInit = function() {
+            loadDiscoveryMethods();
+        };
+        
+        function loadDiscoveryMethods() {
+            fetch('/api/skill/remote/methods')
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        console.log('发现方法:', data.data);
+                    }
+                });
+        }
+        
+        function selectMethod(method) {
+            currentMethod = method;
+            
+            document.querySelectorAll('.method-item').forEach(function(item) {
+                item.classList.remove('active');
+            });
+            document.getElementById('method-' + method).classList.add('active');
+            
+            document.getElementById('repoOwnerGroup').style.display = method === 'url' ? 'none' : 'block';
+            document.getElementById('repoNameGroup').style.display = method === 'url' ? 'none' : 'block';
+            document.getElementById('branchGroup').style.display = method === 'url' ? 'none' : 'block';
+            document.getElementById('urlGroup').style.display = method === 'url' ? 'block' : 'none';
+            
+            resetInstall();
+        }
+        
+        function startInstall() {
+            if (isInstalling) return;
+            
+            var skillId = document.getElementById('skillId').value;
+            if (!skillId) {
+                alert('请输入技能ID');
+                return;
+            }
+            
+            isInstalling = true;
+            document.getElementById('installBtn').disabled = true;
+            document.getElementById('installBtn').innerHTML = '<i class="ri-loader-4-line"></i> 安装中...';
+            
+            document.getElementById('progressBar').style.display = 'block';
+            document.getElementById('installLog').style.display = 'block';
+            document.getElementById('resultCard').style.display = 'none';
+            
+            addLog('info', '开始安装技能: ' + skillId);
+            addLog('info', '安装方式: ' + currentMethod);
+            
+            var apiUrl = '/api/skill/remote/install';
+            var requestBody = {
+                skillId: skillId,
+                discoveryMethod: currentMethod,
+                token: document.getElementById('token').value
+            };
+            
+            if (currentMethod === 'github') {
+                requestBody.source = 'github';
+                requestBody.repositoryUrl = 'https://github.com/' + document.getElementById('repoOwner').value + '/' + document.getElementById('repoName').value;
+                requestBody.branch = document.getElementById('branch').value;
+                apiUrl = '/api/skill/remote/install/github';
+            } else if (currentMethod === 'gitee') {
+                requestBody.source = 'gitee';
+                requestBody.repositoryUrl = 'https://gitee.com/' + document.getElementById('repoOwner').value + '/' + document.getElementById('repoName').value;
+                requestBody.branch = document.getElementById('branch').value;
+                apiUrl = '/api/skill/remote/install/gitee';
+            } else {
+                requestBody.downloadUrl = document.getElementById('downloadUrl').value;
+                apiUrl = '/api/skill/remote/install/url';
+            }
+            
+            simulateProgress();
+            
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                isInstalling = false;
+                document.getElementById('installBtn').disabled = false;
+                document.getElementById('installBtn').innerHTML = '<i class="ri-download-line"></i> 开始安装';
+                
+                if (data.success && data.data && data.data.success) {
+                    addLog('success', '安装成功！');
+                    addLog('info', '技能名称: ' + (data.data.name || skillId));
+                    addLog('info', '版本: ' + (data.data.version || '1.0.0'));
+                    addLog('info', '安装路径: ' + (data.data.installPath || 'N/A'));
+                    addLog('info', '耗时: ' + (data.data.duration || 0) + 'ms');
+                    
+                    showResult(true, '安装成功', '技能 ' + skillId + ' 已成功安装');
+                    document.getElementById('progressFill').style.width = '100%';
+                } else {
+                    addLog('error', '安装失败: ' + (data.data && data.data.error ? data.data.error : '未知错误'));
+                    showResult(false, '安装失败', data.data && data.data.error ? data.data.error : '未知错误');
+                }
+            })
+            .catch(function(err) {
+                isInstalling = false;
+                document.getElementById('installBtn').disabled = false;
+                document.getElementById('installBtn').innerHTML = '<i class="ri-download-line"></i> 开始安装';
+                
+                addLog('error', '请求失败: ' + err.message);
+                showResult(false, '请求失败', err.message);
+            });
+        }
+        
+        function simulateProgress() {
+            var progress = 0;
+            var interval = setInterval(function() {
+                if (!isInstalling || progress >= 90) {
+                    clearInterval(interval);
+                    return;
+                }
+                progress += 10;
+                document.getElementById('progressFill').style.width = progress + '%';
+            }, 200);
+        }
+        
+        function addLog(type, message) {
+            var log = document.getElementById('installLog');
+            var entry = document.createElement('div');
+            entry.className = 'log-entry ' + type;
+            var time = new Date().toLocaleTimeString();
+            entry.textContent = '[' + time + '] ' + message;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function showResult(success, title, message) {
+            var card = document.getElementById('resultCard');
+            card.className = 'result-card' + (success ? '' : ' error');
+            document.getElementById('resultTitle').textContent = title;
+            document.getElementById('resultMessage').textContent = message;
+            card.style.display = 'block';
+        }
+        
+        function resetInstall() {
+            document.getElementById('progressBar').style.display = 'none';
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('installLog').style.display = 'none';
+            document.getElementById('installLog').innerHTML = '';
+            document.getElementById('resultCard').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

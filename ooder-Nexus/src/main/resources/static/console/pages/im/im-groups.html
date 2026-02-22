@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的群组 - Nexus</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+        .group-card { background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 8px; padding: 20px; transition: all 0.2s; }
+        .group-card:hover { border-color: var(--nx-primary); }
+        .group-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+        .group-avatar { width: 48px; height: 48px; border-radius: 10px; background: linear-gradient(135deg, var(--nx-primary), #6366f1); display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; }
+        .group-title { flex: 1; }
+        .group-name { font-size: 16px; font-weight: 600; color: var(--ns-dark); margin-bottom: 4px; }
+        .group-meta { font-size: 12px; color: var(--ns-secondary); }
+        
+        .group-stats { display: flex; gap: 16px; margin-bottom: 16px; padding: 12px; background: var(--ns-input-bg); border-radius: 6px; }
+        .group-stat { text-align: center; flex: 1; }
+        .group-stat-value { font-size: 18px; font-weight: 600; color: var(--ns-dark); }
+        .group-stat-label { font-size: 11px; color: var(--ns-secondary); }
+        
+        .group-members { margin-bottom: 16px; }
+        .group-members-title { font-size: 12px; color: var(--ns-secondary); margin-bottom: 8px; }
+        .member-avatars { display: flex; }
+        .member-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--ns-input-bg); border: 2px solid var(--ns-card-bg); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--ns-dark); margin-left: -8px; }
+        .member-avatar:first-child { margin-left: 0; }
+        .member-avatar.more { background: var(--nx-primary); color: white; }
+        
+        .group-actions { display: flex; gap: 8px; }
+        
+        .group-type { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+        .group-type.scene { background: rgba(59, 130, 246, 0.1); color: var(--nx-primary); }
+        .group-type.chat { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">我的群组</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="createGroup()">
+                        <i class="ri-add-line"></i> 创建群组
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="group-grid" id="groupGrid">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var groups = [];
+        var currentUserId = 'user-001';
+        
+        window.onPageInit = function() {
+            loadGroups();
+        };
+        
+        function loadGroups() {
+            fetch('/api/im/conversation/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    var conversations = rs.data || [];
+                    groups = conversations.filter(function(c) {
+                        return c.conversationType === 'group' || c.conversationType === 'department';
+                    }).map(function(c) {
+                        return {
+                            id: c.conversationId,
+                            name: c.name,
+                            type: c.conversationType === 'department' ? 'scene' : 'chat',
+                            sceneName: c.conversationType === 'department' ? c.name + '场景' : null,
+                            members: Math.floor(Math.random() * 20) + 3,
+                            skills: c.conversationType === 'department' ? Math.floor(Math.random() * 5) : 0,
+                            messages: Math.floor(Math.random() * 500),
+                            myRole: 'member'
+                        };
+                    });
+                    if (groups.length === 0) {
+                        groups = getDefaultGroups();
+                    }
+                    renderGroups();
+                }
+            })
+            .catch(function(err) {
+                console.error('加载群组失败:', err);
+                groups = getDefaultGroups();
+                renderGroups();
+            });
+        }
+        
+        function getDefaultGroups() {
+            return [
+                { id: 'group-001', name: '财务部协作组', type: 'scene', sceneName: '财务协作场景', members: 8, skills: 3, messages: 156, myRole: 'admin' },
+                { id: 'group-002', name: '项目组A', type: 'scene', sceneName: '项目协作场景', members: 12, skills: 5, messages: 342, myRole: 'member' },
+                { id: 'group-003', name: '技术讨论群', type: 'chat', sceneName: null, members: 25, skills: 0, messages: 1024, myRole: 'member' },
+                { id: 'group-004', name: '人事协作组', type: 'scene', sceneName: '人事协作场景', members: 6, skills: 2, messages: 89, myRole: 'member' }
+            ];
+        }
+        
+        function renderGroups() {
+            var container = document.getElementById('groupGrid');
+            if (!groups || groups.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="ri-group-line"></i><p>暂无群组</p></div>';
+                return;
+            }
+            
+            var html = '';
+            
+            groups.forEach(function(group) {
+                html += '<div class="group-card">' +
+                    '<div class="group-header">' +
+                    '<div class="group-avatar"><i class="ri-team-line"></i></div>' +
+                    '<div class="group-title">' +
+                    '<div class="group-name">' + group.name + '</div>' +
+                    '<div class="group-meta">' +
+                    (group.type === 'scene' ? '<span class="group-type scene"><i class="ri-apps-line"></i> ' + group.sceneName + '</span>' : '<span class="group-type chat"><i class="ri-message-2-line"></i> 聊天群</span>') +
+                    '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="group-stats">' +
+                    '<div class="group-stat"><div class="group-stat-value">' + group.members + '</div><div class="group-stat-label">成员</div></div>' +
+                    '<div class="group-stat"><div class="group-stat-value">' + group.skills + '</div><div class="group-stat-label">技能</div></div>' +
+                    '<div class="group-stat"><div class="group-stat-value">' + group.messages + '</div><div class="group-stat-label">消息</div></div>' +
+                    '</div>' +
+                    '<div class="group-members">' +
+                    '<div class="group-members-title">群成员</div>' +
+                    '<div class="member-avatars">' +
+                    '<div class="member-avatar">张</div>' +
+                    '<div class="member-avatar">李</div>' +
+                    '<div class="member-avatar">王</div>' +
+                    '<div class="member-avatar more">+' + (group.members - 3) + '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="group-actions">' +
+                    '<button class="nx-btn nx-btn--primary nx-btn--sm" onclick="enterGroup(\'' + group.id + '\')">进入群组</button>' +
+                    '<button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="viewGroupDetail(\'' + group.id + '\')">详情</button>' +
+                    '</div>' +
+                    '</div>';
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function createGroup() {
+            var name = prompt('请输入群组名称:');
+            if (!name) return;
+            
+            fetch('/api/im/group/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name,
+                    ownerId: currentUserId,
+                    ownerName: '当前用户',
+                    memberIds: []
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    loadGroups();
+                } else {
+                    alert('创建失败: ' + rs.message);
+                }
+            })
+            .catch(function(err) {
+                console.error('创建群组失败:', err);
+                alert('创建群组失败');
+            });
+        }
+        
+        function enterGroup(groupId) {
+            window.location.href = '/console/pages/im/im-main.html?groupId=' + groupId;
+        }
+        
+        function viewGroupDetail(groupId) {
+            window.location.href = '/console/pages/collaboration/collaboration-relations.html?groupId=' + groupId;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>带宽监控 - Nexus</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <style>
+        .bandwidth-chart {
+            width: 100%;
+            height: 320px;
+            background-color: var(--ns-card-bg);
+            border-radius: var(--ns-radius);
+            padding: 24px;
+            position: relative;
+            margin-bottom: 24px;
+            border: 1px solid var(--ns-border);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .chart-body {
+            height: calc(100% - 60px);
+            position: relative;
+        }
+
+        .chart-axis {
+            position: absolute;
+            bottom: 0;
+            left: 24px;
+            width: calc(100% - 48px);
+            height: calc(100% - 24px);
+            border-left: 1px solid var(--ns-border);
+            border-bottom: 1px solid var(--ns-border);
+        }
+
+        .chart-grid {
+            position: absolute;
+            bottom: 0;
+            left: 24px;
+            width: calc(100% - 48px);
+            height: calc(100% - 24px);
+        }
+
+        .chart-grid-line {
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background-color: rgba(148, 163, 184, 0.1);
+        }
+
+        .chart-grid-label {
+            position: absolute;
+            left: -20px;
+            font-size: 12px;
+            color: var(--ns-secondary);
+            transform: translateY(-50%);
+        }
+
+        .chart-x-axis {
+            position: absolute;
+            bottom: -24px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .chart-x-label {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+
+        .bandwidth-metrics {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .metric-item {
+            flex: 1;
+            padding: 16px;
+            background-color: var(--ns-card-bg);
+            border-radius: var(--ns-radius);
+            border: 1px solid var(--ns-border);
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: var(--ns-secondary);
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+
+        .metric-unit {
+            font-size: 14px;
+            color: var(--ns-secondary);
+            margin-left: 4px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            background-color: var(--ns-input-bg);
+            color: var(--ns-dark);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">带宽监控</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <!-- 带宽概览 -->
+                    <div class="grid">
+                        <div class="card">
+                            <h3>实时带宽</h3>
+                            <div style="display: flex; gap: 16px;">
+                                <div style="flex: 1;">
+                                    <p style="font-size: 14px; color: var(--ns-secondary); margin-bottom: 8px;">上传速度</p>
+                                    <p style="font-size: 24px; font-weight: 600; color: var(--nx-primary);">2.4 MB/s</p>
+                                </div>
+                                <div style="flex: 1;">
+                                    <p style="font-size: 14px; color: var(--ns-secondary); margin-bottom: 8px;">下载速度</p>
+                                    <p style="font-size: 24px; font-weight: 600; color: var(--ns-success);">18.7 MB/s</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3>带宽使用</h3>
+                            <div style="display: flex; gap: 16px;">
+                                <div style="flex: 1;">
+                                    <p style="font-size: 14px; color: var(--ns-secondary); margin-bottom: 8px;">今日用量</p>
+                                    <p style="font-size: 24px; font-weight: 600; color: var(--ns-dark);">12.5 GB</p>
+                                </div>
+                                <div style="flex: 1;">
+                                    <p style="font-size: 14px; color: var(--ns-secondary); margin-bottom: 8px;">本月用量</p>
+                                    <p style="font-size: 24px; font-weight: 600; color: var(--ns-dark);">87.3 GB</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3>带宽峰值</h3>
+                            <div style="display: flex; gap: 16px;">
+                                <div style="flex: 1;">
+                                    <p style="font-size: 14px; color: var(--ns-secondary); margin-bottom: 8px;">最高上传</p>
+                                    <p style="font-size: 24px; font-weight: 600; color: var(--nx-primary);">5.2 MB/s</p>
+                                </div>
+                                <div style="flex: 1;">
+                                    <p style="font-size: 14px; color: var(--ns-secondary); margin-bottom: 8px;">最高下载</p>
+                                    <p style="font-size: 24px; font-weight: 600; color: var(--ns-success);">25.6 MB/s</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 带宽趋势图 -->
+                    <div class="section">
+                        <h2>带宽使用趋势</h2>
+
+                        <div class="bandwidth-chart">
+                            <div class="chart-header">
+                                <div class="chart-title">实时带宽使用</div>
+                                <div class="chart-controls">
+                                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">1小时</button>
+                                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">24小时</button>
+                                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">7天</button>
+                                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">30天</button>
+                                </div>
+                            </div>
+                            <div class="chart-body">
+                                <div class="chart-axis"></div>
+                                <div class="chart-grid">
+                                    <div class="chart-grid-line" style="top: 25%;"></div>
+                                    <div class="chart-grid-line" style="top: 50%;"></div>
+                                    <div class="chart-grid-line" style="top: 75%;"></div>
+                                </div>
+                                <svg width="100%" height="100%" viewBox="0 0 800 240" style="position: absolute; top: 0; left: 0;">
+                                    <path d="M 0,200 L 40,180 L 80,160 L 120,190 L 160,140 L 200,120 L 240,150 L 280,100 L 320,80 L 360,110 L 400,70 L 440,90 L 480,60 L 520,80 L 560,50 L 600,70 L 640,40 L 680,60 L 720,30 L 760,50"
+                                          fill="none"
+                                          stroke="var(--ns-success)"
+                                          stroke-width="2"
+                                          stroke-linecap="round"
+                                          stroke-linejoin="round"/>
+                                    <path d="M 0,180 L 40,170 L 80,160 L 120,175 L 160,150 L 200,140 L 240,145 L 280,130 L 320,120 L 360,125 L 400,110 L 440,115 L 480,100 L 520,105 L 560,90 L 600,95 L 640,80 L 680,85 L 720,70 L 760,75"
+                                          fill="none"
+                                          stroke="var(--nx-primary)"
+                                          stroke-width="2"
+                                          stroke-linecap="round"
+                                          stroke-linejoin="round"/>
+                                    <path d="M 0,200 L 40,180 L 80,160 L 120,190 L 160,140 L 200,120 L 240,150 L 280,100 L 320,80 L 360,110 L 400,70 L 440,90 L 480,60 L 520,80 L 560,50 L 600,70 L 640,40 L 680,60 L 720,30 L 760,50 L 760,200 Z"
+                                          fill="rgba(34, 197, 94, 0.1)"
+                                          stroke="none"/>
+                                    <path d="M 0,200 L 40,170 L 80,160 L 120,175 L 160,150 L 200,140 L 240,145 L 280,130 L 320,120 L 360,125 L 400,110 L 440,115 L 480,100 L 520,105 L 560,90 L 600,95 L 640,80 L 680,85 L 720,70 L 760,75 L 760,200 Z"
+                                          fill="rgba(59, 130, 246, 0.1)"
+                                          stroke="none"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 设备带宽使用 -->
+                    <div class="section">
+                        <h2>设备带宽使用</h2>
+
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>设备名称</th>
+                                        <th>IP 地址</th>
+                                        <th>上传速度</th>
+                                        <th>下载速度</th>
+                                        <th>总流量</th>
+                                        <th>使用百分比</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>智能电视</td>
+                                        <td>192.168.1.104</td>
+                                        <td>1.2 MB/s</td>
+                                        <td>12.5 MB/s</td>
+                                        <td>4.2 GB</td>
+                                        <td>
+                                            <div style="width: 60%; height: 8px; background-color: var(--ns-input-bg); border-radius: 4px; overflow: hidden;">
+                                                <div style="width: 60%; height: 100%; background-color: var(--ns-success); border-radius: 4px;"></div>
+                                            </div>
+                                            <span style="font-size: 12px; color: var(--ns-secondary);">60%</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-secondary">详情</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>笔记本电脑</td>
+                                        <td>192.168.1.101</td>
+                                        <td>0.8 MB/s</td>
+                                        <td>4.6 MB/s</td>
+                                        <td>2.1 GB</td>
+                                        <td>
+                                            <div style="width: 30%; height: 8px; background-color: var(--ns-input-bg); border-radius: 4px; overflow: hidden;">
+                                                <div style="width: 30%; height: 100%; background-color: var(--nx-primary); border-radius: 4px;"></div>
+                                            </div>
+                                            <span style="font-size: 12px; color: var(--ns-secondary);">30%</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-secondary">详情</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>游戏主机</td>
+                                        <td>192.168.1.105</td>
+                                        <td>0.5 MB/s</td>
+                                        <td>8.7 MB/s</td>
+                                        <td>3.5 GB</td>
+                                        <td>
+                                            <div style="width: 45%; height: 8px; background-color: var(--ns-input-bg); border-radius: 4px; overflow: hidden;">
+                                                <div style="width: 45%; height: 100%; background-color: var(--ns-warning); border-radius: 4px;"></div>
+                                            </div>
+                                            <span style="font-size: 12px; color: var(--ns-secondary);">45%</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-secondary">详情</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 带宽限制 -->
+                    <div class="section">
+                        <h2>带宽限制</h2>
+
+                        <div class="form-row">
+                            <div>
+                                <label class="form-label">最大上传速度 (MB/s)</label>
+                                <input type="number" class="form-input" placeholder="请输入最大上传速度" value="10">
+                            </div>
+                            <div>
+                                <label class="form-label">最大下载速度 (MB/s)</label>
+                                <input type="number" class="form-input" placeholder="请输入最大下载速度" value="50">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div>
+                                <label class="form-label">每日流量限制 (GB)</label>
+                                <input type="number" class="form-input" placeholder="请输入每日流量限制" value="50">
+                            </div>
+                            <div>
+                                <label class="form-label">每月流量限制 (GB)</label>
+                                <input type="number" class="form-input" placeholder="请输入每月流量限制" value="1500">
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-secondary" onclick="resetBandwidthSettings()">重置</button>
+                            <button class="btn btn-primary" onclick="saveBandwidthSettings()">保存设置</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/pages/traffic-monitor.js"></script>
+</body>
+</html>

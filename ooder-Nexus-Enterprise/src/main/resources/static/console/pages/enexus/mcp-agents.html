@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Agent 管理 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">MCP Agent 管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="loadAgents()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">在线</div>
+                                <div class="nx-stat-card__value" id="onlineCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--secondary">
+                                <i class="ri-close-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">离线</div>
+                                <div class="nx-stat-card__value" id="offlineCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-error-warning-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">告警</div>
+                                <div class="nx-stat-card__value" id="warningCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-robot-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">总数</div>
+                                <div class="nx-stat-card__value" id="totalCount">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">Agent 列表</h3>
+                            <div class="nx-flex nx-gap-2">
+                                <input type="text" class="nx-input" id="searchInput" placeholder="搜索 Agent..." style="width: 200px;">
+                                <select class="nx-select" id="statusFilter">
+                                    <option value="">全部状态</option>
+                                    <option value="ONLINE">在线</option>
+                                    <option value="OFFLINE">离线</option>
+                                    <option value="WARNING">告警</option>
+                                    <option value="DISABLED">禁用</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>MCP ID</th>
+                                            <th>名称</th>
+                                            <th>用户</th>
+                                            <th>域</th>
+                                            <th>状态</th>
+                                            <th>最后心跳</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="agentTableBody">
+                                        <tr><td colspan="7" class="nx-text-center">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="nx-modal" id="detailModal">
+        <div class="nx-modal__backdrop" onclick="closeModal()"></div>
+        <div class="nx-modal__content">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">Agent 详情</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body" id="modalBody">
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let allAgents = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAgents();
+            loadStats();
+        });
+
+        async function loadAgents() {
+            try {
+                const response = await fetch('/api/enexus/mcp/list', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                const rs = await response.json();
+                allAgents = rs.data?.list || [];
+                renderTable(allAgents);
+            } catch (error) {
+                document.getElementById('agentTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="nx-text-center nx-text-danger">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/enexus/mcp/heartbeat/stats', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    document.getElementById('onlineCount').textContent = rs.data.onlineCount || 0;
+                    document.getElementById('offlineCount').textContent = rs.data.offlineCount || 0;
+                    document.getElementById('warningCount').textContent = rs.data.warningCount || 0;
+                    document.getElementById('totalCount').textContent = 
+                        (rs.data.onlineCount || 0) + (rs.data.offlineCount || 0) + (rs.data.warningCount || 0);
+                }
+            } catch (error) {
+                console.error('加载统计失败:', error);
+            }
+        }
+
+        function renderTable(agents) {
+            if (!agents || agents.length === 0) {
+                document.getElementById('agentTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="nx-text-center">暂无数据</td></tr>';
+                return;
+            }
+
+            let html = '';
+            agents.forEach(agent => {
+                const statusBadge = getStatusBadge(agent.status);
+                const lastHeartbeat = formatTime(agent.lastHeartbeat);
+                
+                html += '<tr>';
+                html += '  <td>' + (agent.mcpId || '-') + '</td>';
+                html += '  <td>' + (agent.agentName || '-') + '</td>';
+                html += '  <td>' + (agent.userId || '-') + '</td>';
+                html += '  <td>' + (agent.domainId || '-') + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--' + statusBadge + '">' + (agent.status || '-') + '</span></td>';
+                html += '  <td>' + lastHeartbeat + '</td>';
+                html += '  <td>';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="viewAgent(\'' + agent.mcpId + '\')">详情</button> ';
+                if (agent.status === 'ONLINE') {
+                    html += '    <button class="nx-btn nx-btn--sm nx-btn--warning" onclick="toggleAgent(\'' + agent.mcpId + '\')">禁用</button>';
+                } else if (agent.status === 'DISABLED') {
+                    html += '    <button class="nx-btn nx-btn--sm nx-btn--success" onclick="toggleAgent(\'' + agent.mcpId + '\')">启用</button>';
+                }
+                html += '  </td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('agentTableBody').innerHTML = html;
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'ONLINE': 'success',
+                'OFFLINE': 'secondary',
+                'WARNING': 'warning',
+                'DISABLED': 'danger'
+            };
+            return map[status] || 'secondary';
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+
+        async function viewAgent(mcpId) {
+            try {
+                const response = await fetch('/api/enexus/mcp/get', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({mcpId: mcpId})
+                });
+                const rs = await response.json();
+                const agent = rs.data;
+                
+                let html = '';
+                html += '<div class="nx-mb-2"><strong>MCP ID:</strong> ' + (agent.mcpId || '-') + '</div>';
+                html += '<div class="nx-mb-2"><strong>名称:</strong> ' + (agent.agentName || '-') + '</div>';
+                html += '<div class="nx-mb-2"><strong>用户:</strong> ' + (agent.userId || '-') + '</div>';
+                html += '<div class="nx-mb-2"><strong>Nexus ID:</strong> ' + (agent.nexusId || '-') + '</div>';
+                html += '<div class="nx-mb-2"><strong>域:</strong> ' + (agent.domainId || '-') + '</div>';
+                html += '<div class="nx-mb-2"><strong>状态:</strong> <span class="nx-badge nx-badge--' + getStatusBadge(agent.status) + '">' + (agent.status || '-') + '</span></div>';
+                html += '<div class="nx-mb-2"><strong>最后心跳:</strong> ' + formatTime(agent.lastHeartbeat) + '</div>';
+                html += '<div class="nx-mb-2"><strong>创建时间:</strong> ' + formatTime(agent.createdAt) + '</div>';
+                
+                if (agent.subnetInfo) {
+                    html += '<div class="nx-mt-4"><strong>子网信息:</strong></div>';
+                    html += '<div class="nx-mb-2 nx-ml-4">CIDR: ' + (agent.subnetInfo.cidr || '-') + '</div>';
+                    html += '<div class="nx-mb-2 nx-ml-4">网关: ' + (agent.subnetInfo.gateway || '-') + '</div>';
+                    html += '<div class="nx-mb-2 nx-ml-4">节点数: ' + (agent.subnetInfo.nodeCount || 0) + '</div>';
+                }
+                
+                if (agent.capabilities && agent.capabilities.length > 0) {
+                    html += '<div class="nx-mt-4"><strong>能力列表:</strong></div>';
+                    html += '<div class="nx-flex nx-flex-wrap nx-gap-2 nx-mt-2">';
+                    agent.capabilities.forEach(cap => {
+                        html += '<span class="nx-badge nx-badge--info">' + cap + '</span>';
+                    });
+                    html += '</div>';
+                }
+                
+                document.getElementById('modalBody').innerHTML = html;
+                document.getElementById('detailModal').classList.add('nx-modal--open');
+            } catch (error) {
+                alert('获取详情失败: ' + error.message);
+            }
+        }
+
+        async function toggleAgent(mcpId) {
+            if (!confirm('确定要执行此操作吗？')) return;
+            
+            try {
+                const response = await fetch('/api/enexus/mcp/toggle', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({mcpId: mcpId})
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    loadAgents();
+                    loadStats();
+                }
+            } catch (error) {
+                alert('操作失败: ' + error.message);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('nx-modal--open');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterAgents();
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            filterAgents();
+        });
+
+        function filterAgents() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            
+            let filtered = allAgents;
+            
+            if (search) {
+                filtered = filtered.filter(a => 
+                    (a.mcpId && a.mcpId.toLowerCase().includes(search)) ||
+                    (a.agentName && a.agentName.toLowerCase().includes(search)) ||
+                    (a.userId && a.userId.toLowerCase().includes(search))
+                );
+            }
+            
+            if (status) {
+                filtered = filtered.filter(a => a.status === status);
+            }
+            
+            renderTable(filtered);
+        }
+    </script>
+</body>
+</html>

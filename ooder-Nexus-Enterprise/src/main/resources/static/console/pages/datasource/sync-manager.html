@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>同步管理 - Nexus Console</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .sync-overview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .overview-card {
+            background: var(--ns-card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--ns-border);
+        }
+        
+        .overview-card .label {
+            font-size: 13px;
+            color: var(--ns-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .overview-card .value {
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .overview-card .trend {
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        
+        .overview-card .trend.up {
+            color: var(--ns-success);
+        }
+        
+        .overview-card .trend.down {
+            color: var(--ns-danger);
+        }
+        
+        .sync-tasks {
+            background: var(--ns-card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--ns-border);
+        }
+        
+        .sync-tasks-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .sync-tasks-header h3 {
+            margin: 0;
+        }
+        
+        .sync-task-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .sync-task-item:last-child {
+            border-bottom: none;
+        }
+        
+        .task-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--ns-bg-hover);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            font-size: 18px;
+        }
+        
+        .task-info {
+            flex: 1;
+        }
+        
+        .task-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .task-meta {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .task-progress {
+            width: 200px;
+            margin-right: 20px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--ns-border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--nx-primary);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        
+        .progress-text {
+            font-size: 12px;
+            color: var(--ns-secondary);
+            margin-top: 4px;
+            text-align: right;
+        }
+        
+        .task-status {
+            margin-right: 16px;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-badge.running {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--nx-primary);
+        }
+        
+        .status-badge.completed {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--ns-success);
+        }
+        
+        .status-badge.paused {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--ns-warning);
+        }
+        
+        .status-badge.failed {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--ns-danger);
+        }
+        
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--ns-border);
+            background: var(--ns-card-bg);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .btn-icon:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .btn-icon.primary {
+            background: var(--nx-primary);
+            border-color: var(--nx-primary);
+            color: white;
+        }
+        
+        .btn-icon.danger {
+            color: var(--ns-danger);
+        }
+        
+        .sync-history {
+            background: var(--ns-card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--ns-border);
+            margin-top: 24px;
+        }
+        
+        .sync-history-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .sync-history-header h3 {
+            margin: 0;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .history-table th,
+        .history-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ns-border);
+            font-size: 13px;
+        }
+        
+        .history-table th {
+            background: var(--ns-bg-hover);
+            font-weight: 500;
+        }
+        
+        .history-table tr:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--nx-primary);
+            color: white;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: var(--ns-card-bg);
+            color: var(--ns-dark);
+            border: 1px solid var(--ns-border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .sync-schedule {
+            background: var(--ns-card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--ns-border);
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .schedule-item:last-child {
+            border-bottom: none;
+        }
+        
+        .schedule-info {
+            flex: 1;
+        }
+        
+        .schedule-name {
+            font-weight: 500;
+        }
+        
+        .schedule-cron {
+            font-size: 12px;
+            color: var(--ns-secondary);
+            font-family: monospace;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--ns-border);
+            transition: .3s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--nx-primary);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold"><i class="ri-refresh-line"></i> 同步管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="btn btn-primary" onclick="startNewSync()">+ 新建同步任务</button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+            <div class="sync-overview">
+                <div class="overview-card">
+                    <div class="label">运行中任务</div>
+                    <div class="value" id="runningCount">0</div>
+                    <div class="trend up">实时更新</div>
+                </div>
+                <div class="overview-card">
+                    <div class="label">今日完成</div>
+                    <div class="value" id="completedToday">0</div>
+                    <div class="trend up">↑ 12%</div>
+                </div>
+                <div class="overview-card">
+                    <div class="label">同步数据量</div>
+                    <div class="value" id="syncedRecords">0</div>
+                    <div class="trend">条记录</div>
+                </div>
+                <div class="overview-card">
+                    <div class="label">失败任务</div>
+                    <div class="value" id="failedCount">0</div>
+                    <div class="trend down">需要关注</div>
+                </div>
+            </div>
+            
+            <div class="sync-schedule">
+                <h3 style="margin: 0 0 16px 0;">定时同步计划</h3>
+                <div class="schedule-item">
+                    <div class="schedule-info">
+                        <div class="schedule-name">钉钉组织架构同步</div>
+                        <div class="schedule-cron">Cron: 0 0 2 * * ? (每天凌晨2点)</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="schedule-item">
+                    <div class="schedule-info">
+                        <div class="schedule-name">飞书人员信息同步</div>
+                        <div class="schedule-cron">Cron: 0 30 * * * ? (每小时30分)</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="sync-tasks">
+                <div class="sync-tasks-header">
+                    <h3>同步任务</h3>
+                    <button class="btn btn-secondary" onclick="refreshTasks()">刷新</button>
+                </div>
+                <div id="syncTasksList">
+                </div>
+            </div>
+            
+            <div class="sync-history">
+                <div class="sync-history-header">
+                    <h3>同步历史</h3>
+                </div>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>任务ID</th>
+                            <th>场景</th>
+                            <th>类型</th>
+                            <th>状态</th>
+                            <th>处理数量</th>
+                            <th>耗时</th>
+                            <th>开始时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        async function loadSyncTasks() {
+            try {
+                const response = await fetch('/api/enexus/sync/tasks');
+                const result = await response.json();
+                
+                if (result.success) {
+                    renderSyncTasks(result.data);
+                }
+            } catch (e) {
+                console.error('Failed to load sync tasks:', e);
+            }
+        }
+        
+        function renderSyncTasks(tasks) {
+            const container = document.getElementById('syncTasksList');
+            
+            if (!tasks || Object.keys(tasks).length === 0) {
+                container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--ns-secondary);">暂无同步任务</div>';
+                return;
+            }
+            
+            let html = '';
+            Object.values(tasks).forEach(task => {
+                const statusClass = task.status.toLowerCase();
+                const progress = task.progress || 0;
+                
+                html += `
+                    <div class="sync-task-item">
+                        <div class="task-icon">🔄</div>
+                        <div class="task-info">
+                            <div class="task-name">${task.sceneId}</div>
+                            <div class="task-meta">类型: ${task.syncType} | 范围: ${task.scope ? task.scope.join(', ') : '-'}</div>
+                        </div>
+                        <div class="task-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                            <div class="progress-text">${task.processedCount || 0} / ${task.totalCount || 0}</div>
+                        </div>
+                        <div class="task-status">
+                            <span class="status-badge ${statusClass}">${task.status}</span>
+                        </div>
+                        <div class="task-actions">
+                            ${task.status === 'RUNNING' ? `
+                                <button class="btn-icon" onclick="pauseSync('${task.sceneId}')" title="暂停">⏸️</button>
+                            ` : task.status === 'PAUSED' ? `
+                                <button class="btn-icon primary" onclick="resumeSync('${task.sceneId}')" title="继续">▶️</button>
+                            ` : ''}
+                            <button class="btn-icon danger" onclick="cancelSync('${task.sceneId}')" title="取消">⏹️</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        async function loadSyncHistory() {
+            try {
+                const response = await fetch('/api/enexus/sync/history/all?limit=10');
+                const result = await response.json();
+                
+                if (result.success) {
+                    renderSyncHistory(result.data);
+                }
+            } catch (e) {
+                console.error('Failed to load sync history:', e);
+            }
+        }
+        
+        function renderSyncHistory(records) {
+            const tbody = document.getElementById('historyTableBody');
+            
+            if (!records || records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--ns-secondary);">暂无历史记录</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            records.forEach(record => {
+                const statusClass = record.status.toLowerCase();
+                const duration = record.duration ? (record.duration / 1000).toFixed(1) + 's' : '-';
+                const startTime = record.startTime ? new Date(record.startTime).toLocaleString() : '-';
+                
+                html += `
+                    <tr>
+                        <td><code>${record.taskId}</code></td>
+                        <td>${record.sceneId}</td>
+                        <td>${record.syncType}</td>
+                        <td><span class="status-badge ${statusClass}">${record.status}</span></td>
+                        <td>${record.processedCount || 0}</td>
+                        <td>${duration}</td>
+                        <td>${startTime}</td>
+                        <td><button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;">详情</button></td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        }
+        
+        async function pauseSync(sceneId) {
+            try {
+                const response = await fetch(`/api/enexus/sync/pause/${sceneId}`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadSyncTasks();
+                }
+            } catch (e) {
+                console.error('Failed to pause sync:', e);
+            }
+        }
+        
+        async function resumeSync(sceneId) {
+            try {
+                const response = await fetch(`/api/enexus/sync/resume/${sceneId}`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadSyncTasks();
+                }
+            } catch (e) {
+                console.error('Failed to resume sync:', e);
+            }
+        }
+        
+        async function cancelSync(sceneId) {
+            if (!confirm('确定要取消此同步任务吗？')) return;
+            
+            try {
+                const response = await fetch(`/api/enexus/sync/cancel/${sceneId}`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadSyncTasks();
+                }
+            } catch (e) {
+                console.error('Failed to cancel sync:', e);
+            }
+        }
+        
+        function startNewSync() {
+            alert('请先在数据源配置页面选择数据源并配置同步参数');
+        }
+        
+        function refreshTasks() {
+            loadSyncTasks();
+            loadSyncHistory();
+        }
+        
+        window.onPageInit = function() {
+            loadSyncTasks();
+            loadSyncHistory();
+            
+            setInterval(() => {
+                loadSyncTasks();
+            }, 5000);
+        };
+    </script>
+</body>
+</html>

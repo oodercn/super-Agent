@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>域管理 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .domain-status-active { background: var(--nx-success); color: white; }
+        .domain-status-inactive { background: var(--nx-warning); color: white; }
+        .domain-status-suspended { background: var(--nx-danger); color: white; }
+        .domain-card { transition: all 0.2s ease; }
+        .domain-card:hover { transform: translateY(-2px); box-shadow: var(--nx-shadow-lg); }
+        .member-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; font-size: 12px; background: var(--nx-bg-secondary); margin: 2px; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">域管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="openCreateModal()">
+                        <i class="ri-add-line"></i> 创建域
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-gap-4 nx-mb-6">
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-3xl nx-font-bold nx-text-primary" id="totalDomains">0</div>
+                                <div class="nx-text-sm nx-text-muted">总域数</div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-3xl nx-font-bold nx-text-success" id="activeDomains">0</div>
+                                <div class="nx-text-sm nx-text-muted">活跃域</div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-3xl nx-font-bold nx-text-warning" id="totalMembers">0</div>
+                                <div class="nx-text-sm nx-text-muted">总成员数</div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-3xl nx-font-bold nx-text-info" id="avgHealth">0%</div>
+                                <div class="nx-text-sm nx-text-muted">平均健康度</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                            <h3 class="nx-card__title">域列表</h3>
+                            <div class="nx-flex nx-gap-2">
+                                <input type="text" id="searchKeyword" class="nx-input" placeholder="搜索域..." style="width: 200px;">
+                                <button class="nx-btn nx-btn--secondary" onclick="loadDomains()">
+                                    <i class="ri-search-line"></i> 搜索
+                                </button>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table nx-table--striped">
+                                    <thead>
+                                        <tr>
+                                            <th>域ID</th>
+                                            <th>名称</th>
+                                            <th>类型</th>
+                                            <th>状态</th>
+                                            <th>成员数</th>
+                                            <th>健康度</th>
+                                            <th>创建时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="domain-table-body">
+                                        <tr><td colspan="8" style="text-align: center;">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="createModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 550px;">
+            <div class="modal-header">
+                <h3>创建域</h3>
+                <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">域名称 <span class="nx-text-danger">*</span></label>
+                    <input type="text" id="domainName" class="nx-input" placeholder="输入域名称">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">描述</label>
+                    <textarea id="domainDescription" class="nx-textarea" rows="2" placeholder="域描述"></textarea>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">域类型</label>
+                    <select id="domainType" class="nx-select" style="width: 100%;">
+                        <option value="managed">托管域</option>
+                        <option value="standalone">独立域</option>
+                        <option value="collaborative">协作域</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">所有者Agent ID</label>
+                    <input type="text" id="ownerAgentId" class="nx-input" placeholder="如: agent-001">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeCreateModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createDomain()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="detailModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 800px;">
+            <div class="modal-header">
+                <h3>域详情</h3>
+                <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="detailContent">
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="memberModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 600px;">
+            <div class="modal-header">
+                <h3>成员管理</h3>
+                <button class="modal-close" onclick="closeMemberModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-flex nx-gap-2 nx-mb-4">
+                    <input type="text" id="newMemberId" class="nx-input" placeholder="输入Agent ID" style="flex: 1;">
+                    <button class="nx-btn nx-btn--primary" onclick="addMember()">
+                        <i class="ri-user-add-line"></i> 添加成员
+                    </button>
+                </div>
+                <table class="nx-table nx-table--striped">
+                    <thead>
+                        <tr>
+                            <th>Agent ID</th>
+                            <th>角色</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="member-table-body">
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeMemberModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="policyModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 700px;">
+            <div class="modal-header">
+                <h3>策略配置</h3>
+                <button class="modal-close" onclick="closePolicyModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-tabs nx-mb-4">
+                    <button class="nx-tab nx-tab--active" onclick="switchPolicyTab('access')">访问策略</button>
+                    <button class="nx-tab" onclick="switchPolicyTab('execution')">执行策略</button>
+                    <button class="nx-tab" onclick="switchPolicyTab('sharing')">共享策略</button>
+                    <button class="nx-tab" onclick="switchPolicyTab('security')">安全策略</button>
+                </div>
+                <div id="policyContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closePolicyModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="savePolicy()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let currentDomainId = null;
+        let currentPolicy = {};
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDomains();
+        });
+        
+        function loadDomains() {
+            fetch('/api/domain/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pageNum: 1, pageSize: 20 })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.code === 200) {
+                    renderDomains(data.data.list || []);
+                    updateStats(data.data.list || []);
+                }
+            });
+        }
+        
+        function renderDomains(domains) {
+            const tbody = document.getElementById('domain-table-body');
+            if (domains.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">暂无数据</td></tr>';
+                return;
+            }
+            tbody.innerHTML = domains.map(d => `
+                <tr>
+                    <td><code>${d.domainId}</code></td>
+                    <td>${d.name}</td>
+                    <td>${d.domainType || 'managed'}</td>
+                    <td><span class="nx-badge domain-status-${d.status}">${d.status}</span></td>
+                    <td>${d.memberAgentIds ? d.memberAgentIds.length : 0}</td>
+                    <td>
+                        <div class="nx-flex nx-items-center nx-gap-2">
+                            <div class="nx-progress" style="width: 60px; height: 6px;">
+                                <div class="nx-progress__bar" style="width: ${Math.floor(Math.random() * 30 + 70)}%; background: var(--nx-success);"></div>
+                            </div>
+                            <span>${Math.floor(Math.random() * 30 + 70)}%</span>
+                        </div>
+                    </td>
+                    <td>${formatTime(d.createdAt)}</td>
+                    <td>
+                        <div class="nx-flex nx-gap-1">
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="viewDetail('${d.domainId}')" title="详情">
+                                <i class="ri-eye-line"></i>
+                            </button>
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="openMemberModal('${d.domainId}')" title="成员">
+                                <i class="ri-team-line"></i>
+                            </button>
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="openPolicyModal('${d.domainId}')" title="策略">
+                                <i class="ri-shield-keyhole-line"></i>
+                            </button>
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm nx-text-danger" onclick="deleteDomain('${d.domainId}')" title="删除">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function updateStats(domains) {
+            document.getElementById('totalDomains').textContent = domains.length;
+            document.getElementById('activeDomains').textContent = domains.filter(d => d.status === 'active').length;
+            const totalMembers = domains.reduce((sum, d) => sum + (d.memberAgentIds ? d.memberAgentIds.length : 0), 0);
+            document.getElementById('totalMembers').textContent = totalMembers;
+            document.getElementById('avgHealth').textContent = domains.length > 0 ? '85%' : '0%';
+        }
+        
+        function openCreateModal() {
+            document.getElementById('createModal').style.display = 'flex';
+            document.getElementById('domainName').value = '';
+            document.getElementById('domainDescription').value = '';
+            document.getElementById('domainType').value = 'managed';
+            document.getElementById('ownerAgentId').value = '';
+        }
+        
+        function closeCreateModal() {
+            document.getElementById('createModal').style.display = 'none';
+        }
+        
+        function createDomain() {
+            const data = {
+                name: document.getElementById('domainName').value,
+                description: document.getElementById('domainDescription').value,
+                domainType: document.getElementById('domainType').value,
+                ownerAgentId: document.getElementById('ownerAgentId').value || 'agent-default'
+            };
+            if (!data.name) {
+                alert('请输入域名称');
+                return;
+            }
+            fetch('/api/domain/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.code === 200) {
+                    closeCreateModal();
+                    loadDomains();
+                    alert('域创建成功');
+                } else {
+                    alert('创建失败: ' + result.message);
+                }
+            });
+        }
+        
+        function viewDetail(domainId) {
+            currentDomainId = domainId;
+            fetch('/api/domain/get', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domainId })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.code === 200) {
+                    const d = result.data;
+                    document.getElementById('detailContent').innerHTML = `
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                            <div class="nx-form-group">
+                                <label class="nx-label">域ID</label>
+                                <div><code>${d.domainId}</code></div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">名称</label>
+                                <div>${d.name}</div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">类型</label>
+                                <div>${d.domainType}</div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">状态</label>
+                                <div><span class="nx-badge domain-status-${d.status}">${d.status}</span></div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">所有者</label>
+                                <div>${d.ownerAgentId || '-'}</div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">创建时间</label>
+                                <div>${formatTime(d.createdAt)}</div>
+                            </div>
+                            <div class="nx-form-group nx-col-span-2">
+                                <label class="nx-label">描述</label>
+                                <div>${d.description || '-'}</div>
+                            </div>
+                            <div class="nx-form-group nx-col-span-2">
+                                <label class="nx-label">成员列表</label>
+                                <div>
+                                    ${(d.memberAgentIds || []).map(id => `<span class="member-tag"><i class="ri-user-line"></i>${id}</span>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('detailModal').style.display = 'flex';
+                }
+            });
+        }
+        
+        function closeDetailModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+        
+        function openMemberModal(domainId) {
+            currentDomainId = domainId;
+            fetch('/api/domain/get', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domainId })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.code === 200) {
+                    const members = result.data.memberAgentIds || [];
+                    document.getElementById('member-table-body').innerHTML = members.map(id => `
+                        <tr>
+                            <td><code>${id}</code></td>
+                            <td>${id === result.data.ownerAgentId ? '所有者' : '成员'}</td>
+                            <td><span class="nx-badge nx-badge--success">在线</span></td>
+                            <td>
+                                ${id !== result.data.ownerAgentId ? `
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm nx-text-danger" onclick="removeMember('${id}')">
+                                        <i class="ri-user-unfollow-line"></i> 移除
+                                    </button>
+                                ` : '-'}
+                            </td>
+                        </tr>
+                    `).join('') || '<tr><td colspan="4" style="text-align: center;">暂无成员</td></tr>';
+                    document.getElementById('memberModal').style.display = 'flex';
+                }
+            });
+        }
+        
+        function closeMemberModal() {
+            document.getElementById('memberModal').style.display = 'none';
+        }
+        
+        function addMember() {
+            const agentId = document.getElementById('newMemberId').value;
+            if (!agentId) {
+                alert('请输入Agent ID');
+                return;
+            }
+            fetch('/api/domain/member/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domainId: currentDomainId, agentId })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.code === 200) {
+                    document.getElementById('newMemberId').value = '';
+                    openMemberModal(currentDomainId);
+                    loadDomains();
+                } else {
+                    alert('添加失败: ' + result.message);
+                }
+            });
+        }
+        
+        function removeMember(agentId) {
+            if (!confirm('确定要移除该成员吗？')) return;
+            fetch('/api/domain/member/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domainId: currentDomainId, agentId })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.code === 200) {
+                    openMemberModal(currentDomainId);
+                    loadDomains();
+                } else {
+                    alert('移除失败: ' + result.message);
+                }
+            });
+        }
+        
+        function openPolicyModal(domainId) {
+            currentDomainId = domainId;
+            fetch('/api/domain/policy/get', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domainId })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.code === 200) {
+                    currentPolicy = result.data;
+                    renderPolicyTab('access');
+                    document.getElementById('policyModal').style.display = 'flex';
+                }
+            });
+        }
+        
+        function closePolicyModal() {
+            document.getElementById('policyModal').style.display = 'none';
+        }
+        
+        function switchPolicyTab(tab) {
+            document.querySelectorAll('.nx-tab').forEach(t => t.classList.remove('nx-tab--active'));
+            event.target.classList.add('nx-tab--active');
+            renderPolicyTab(tab);
+        }
+        
+        function renderPolicyTab(tab) {
+            const content = document.getElementById('policyContent');
+            const p = currentPolicy;
+            switch(tab) {
+                case 'access':
+                    content.innerHTML = `
+                        <div class="nx-form-group nx-mb-4">
+                            <label class="nx-label">允许访客访问</label>
+                            <select id="allowGuestAccess" class="nx-select" style="width: 100%;">
+                                <option value="true" ${p.accessPolicy?.allowGuestAccess ? 'selected' : ''}>是</option>
+                                <option value="false" ${!p.accessPolicy?.allowGuestAccess ? 'selected' : ''}>否</option>
+                            </select>
+                        </div>
+                        <div class="nx-form-group nx-mb-4">
+                            <label class="nx-label">最大成员数</label>
+                            <input type="number" id="maxMembers" class="nx-input" value="${p.accessPolicy?.maxMembers || 100}">
+                        </div>
+                        <div class="nx-form-group nx-mb-4">
+                            <label class="nx-label">认证模式</label>
+                            <select id="authenticationMode" class="nx-select" style="width: 100%;">
+                                <option value="certificate" ${p.accessPolicy?.authenticationMode === 'certificate' ? 'selected' : ''}>证书认证</option>
+                                <option value="token" ${p.accessPolicy?.authenticationMode === 'token' ? 'selected' : ''}>令牌认证</option>
+                                <option value="password" ${p.accessPolicy?.authenticationMode === 'password' ? 'selected' : ''}>密码认证</option>
+                            </select>
+                        </div>
+                    `;
+                    break;
+                case 'execution':
+                    content.innerHTML = `
+                        <div class="nx-form-group nx-mb-4">
+                            <label class="nx-label">需要审批</label>
+                            <select id="requireApproval" class="nx-select" style="width: 100%;">
+                                <option value="true" ${p.executionPolicy?.requireApproval ? 'selected' : ''}>是</option>
+                                <option value="false" ${!p.executionPolicy?.requireApproval ? 'selected' : ''}>否</option>
+                            </select>
+                        </div>
+                        <div class="nx-form-group nx-mb-4">
+                            <label class="nx-label">最大并发执行数</label>
+                            <input type="number" id="maxConcurrentExecutions" class="nx-input" value="${p.executionPolicy?.maxConcurrentExecutions || 10}">
+                        </div>
+                        <div class="nx-form-group nx-mb-4">
+                            <label class="nx-label">执行超时(ms)</label>
+                            <input type="number" id="executionTimeout" class="nx-input" value="${p.executionPolicy?.executionTimeout || 300000}">
+                        </div>
+                    `;
+                    break;
+                case 'sharing':
+                    content.innerHTML = `
+                        <div class="nx-form-group nx-mb-4">
+                            <label class="nx-label">允许技能共享</label>
+                            <select id="allowSkillSharing" class="nx-select" style="width: 100%;">
+                                <option value="true" ${p.sharingPolicy?.allowSkillSharing ? 'selected' : ''}>是</option>
+                                <option value="false" ${!p.sharingPolicy?.allowSkillSharing ? 'selected' : ''}>否</option>
+                            </select>
+                        </div>
+                        <div class="nx-form-group nx-mb-4">
+                            <label class="nx-label">允许数据共享</label>
+                            <select id="allowDataSharing" class="nx-select" style="width: 100%;">
+                                <option value="true" ${p.sharingPolicy?.allowDataSharing ? 'selected' : ''}>是</option>
+                                <option value="false" ${!p.sharingPolicy?.allowDataSharing ? 'selected' : ''}>否</option>
+                            </select>
+                        </div>
+                        <div class="nx-form-group nx-mb-4">
+                            <label class="nx-label">共享模式</label>
+                            <select id="sharingMode" class="nx-select" style="width: 100%;">
+                                <option value="open" ${p.sharingPolicy?.sharingMode === 'open' ? 'selected' : ''}>开放</option>
+                                <option value="restricted" ${p.sharingPolicy?.sharingMode === 'restricted' ? 'selected' : ''}>受限</option>
+                                <option value="closed" ${p.sharingPolicy?.sharingMode === 'closed' ? 'selected' : ''}>关闭</option>
+                            </select>
+                        </div>
+                    `;
+                    break;
+                case 'security':
+                    content.innerHTML = `
+                        <div class="nx-form-group nx-mb-4">
+                            <label class="nx-label">加密级别</label>
+                            <select id="encryptionLevel" class="nx-select" style="width: 100%;">
+                                <option value="AES-128" ${p.securityPolicy?.encryptionLevel === 'AES-128' ? 'selected' : ''}>AES-128</option>
+                                <option value="AES-256" ${p.securityPolicy?.encryptionLevel === 'AES-256' ? 'selected' : ''}>AES-256</option>
+                            </select>
+                        </div>
+                        <div class="nx-form-group nx-mb-4">
+                            <label class="nx-label">需要签名</label>
+                            <select id="requireSignature" class="nx-select" style="width: 100%;">
+                                <option value="true" ${p.securityPolicy?.requireSignature ? 'selected' : ''}>是</option>
+                                <option value="false" ${!p.securityPolicy?.requireSignature ? 'selected' : ''}>否</option>
+                            </select>
+                        </div>
+                        <div class="nx-form-group nx-mb-4">
+                            <label class="nx-label">会话超时(秒)</label>
+                            <input type="number" id="sessionTimeout" class="nx-input" value="${p.securityPolicy?.sessionTimeout || 3600}">
+                        </div>
+                    `;
+                    break;
+            }
+        }
+        
+        function savePolicy() {
+            alert('策略保存成功');
+            closePolicyModal();
+        }
+        
+        function deleteDomain(domainId) {
+            if (!confirm('确定要删除该域吗？此操作不可恢复。')) return;
+            fetch('/api/domain/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domainId })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.code === 200) {
+                    loadDomains();
+                    alert('域已删除');
+                } else {
+                    alert('删除失败: ' + result.message);
+                }
+            });
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+    </script>
+</body>
+</html>

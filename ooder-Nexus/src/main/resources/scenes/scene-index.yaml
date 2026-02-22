@@ -1,0 +1,152 @@
+apiVersion: scene.ooder.net/v1
+kind: SceneIndex
+
+metadata:
+  name: nexus-scenes
+  version: "1.0.0"
+  description: Nexus Platform Scene Index
+  author: Ooder Team
+  createdAt: "2026-02-18T00:00:00Z"
+  updatedAt: "2026-02-18T00:00:00Z"
+
+spec:
+  scenes:
+    - sceneId: vfs
+      name: Virtual File System
+      description: 虚拟文件系统场景，提供统一的文件存储、管理和共享能力
+      version: "1.0.0"
+      type: primary
+      required: true
+      category: infrastructure
+      capabilities:
+        - vfs-read
+        - vfs-write
+        - vfs-delete
+        - vfs-list
+        - vfs-mkdir
+        - vfs-exists
+        - vfs-copy
+        - vfs-move
+        - vfs-share
+        - vfs-search
+      configPath: scenes/vfs-scene.yaml
+      
+    - sceneId: auth
+      name: Authentication & Authorization
+      description: 认证授权场景，提供用户认证、权限管理和访问控制能力
+      version: "1.0.0"
+      type: primary
+      required: true
+      category: security
+      capabilities:
+        - auth-login
+        - auth-logout
+        - auth-validate
+        - auth-refresh
+        - auth-check-permission
+        - auth-grant
+        - auth-revoke
+      configPath: scenes/auth-scene.yaml
+      
+    - sceneId: msg
+      name: Message Service
+      description: 消息服务场景，提供消息推送、消息队列和消息路由能力
+      version: "1.0.0"
+      type: primary
+      required: false
+      category: communication
+      capabilities:
+        - msg-send
+        - msg-batch
+        - msg-template-create
+        - msg-template-get
+        - msg-status
+      configPath: scenes/msg-scene.yaml
+      
+    - sceneId: workflow
+      name: Workflow Management
+      description: 工作流管理场景，提供流程定义、流程执行和任务调度能力
+      version: "1.0.0"
+      type: primary
+      required: false
+      category: business
+      capabilities:
+        - wf-define
+        - wf-start
+        - wf-execute
+        - wf-query
+        - wf-cancel
+        - wf-task-complete
+        - wf-task-claim
+      configPath: scenes/workflow-scene.yaml
+      
+    - sceneId: a2ui
+      name: UI Generation
+      description: UI生成场景，提供图转代码、组件生成和UI预览能力
+      version: "1.0.0"
+      type: primary
+      required: false
+      category: development
+      capabilities:
+        - a2ui-generate
+        - a2ui-preview
+        - a2ui-component-create
+        - a2ui-component-list
+        - a2ui-export
+      configPath: scenes/a2ui-scene.yaml
+
+  sceneGroups:
+    - sceneGroupId: enterprise-nexus
+      name: Enterprise Nexus Platform
+      description: 企业级Nexus平台默认场景组
+      version: "1.0.0"
+      type: enterprise
+      scenes:
+        - vfs
+        - auth
+        - msg
+        - workflow
+        - a2ui
+      configPath: scenes/enterprise-nexus-group.yaml
+      
+    - sceneGroupId: personal-nexus
+      name: Personal Nexus
+      description: 个人版Nexus默认场景组
+      version: "1.0.0"
+      type: personal
+      scenes:
+        - vfs
+        - auth
+        - a2ui
+      configPath: scenes/personal-nexus-group.yaml
+
+  categories:
+    - id: infrastructure
+      name: Infrastructure
+      description: 基础设施场景
+      scenes:
+        - vfs
+        
+    - id: security
+      name: Security
+      description: 安全相关场景
+      scenes:
+        - auth
+        
+    - id: communication
+      name: Communication
+      description: 通信相关场景
+      scenes:
+        - msg
+        
+    - id: business
+      name: Business
+      description: 业务相关场景
+      scenes:
+        - workflow
+        
+    - id: development
+      name: Development
+      description: 开发相关场景
+      scenes:
+        - a2ui

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>群组管理 - Nexus</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .group-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .stat-icon.primary { background: rgba(59, 130, 246, 0.1); color: var(--nx-primary); }
+        .stat-icon.success { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .stat-icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        .stat-info h3 { font-size: 12px; color: var(--ns-secondary); margin-bottom: 4px; }
+        .stat-value { font-size: 24px; font-weight: 600; color: var(--ns-dark); }
+        .group-list { background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 8px; }
+        .group-list-header { padding: 16px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .group-list-header h2 { font-size: 16px; font-weight: 600; color: var(--ns-dark); }
+        .group-item { padding: 16px 20px; border-bottom: 1px solid var(--ns-border); display: flex; align-items: center; gap: 16px; cursor: pointer; transition: background 0.2s; }
+        .group-item:hover { background: var(--ns-bg-hover); }
+        .group-item:last-child { border-bottom: none; }
+        .group-avatar { width: 48px; height: 48px; border-radius: 8px; background: var(--nx-primary); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; }
+        .group-info { flex: 1; }
+        .group-name { font-size: 14px; font-weight: 500; color: var(--ns-dark); margin-bottom: 4px; }
+        .group-meta { font-size: 12px; color: var(--ns-secondary); }
+        .group-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .badge-org { background: rgba(59, 130, 246, 0.1); color: var(--nx-primary); }
+        .badge-personal { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--ns-card-bg); border-radius: 8px; width: 100%; max-width: 480px; }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 16px; font-weight: 600; color: var(--ns-dark); }
+        .modal-close { background: none; border: none; font-size: 20px; color: var(--ns-secondary); cursor: pointer; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid var(--ns-border); display: flex; justify-content: flex-end; gap: 8px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; color: var(--ns-dark); margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 8px 12px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); border-radius: 6px; color: var(--ns-dark); font-size: 14px; }
+        .form-control:focus { outline: none; border-color: var(--nx-primary); }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--ns-secondary); }
+        .empty-state i { font-size: 48px; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">群组管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="showCreateModal()">
+                        <i class="ri-add-line"></i> 创建群组
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="group-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon primary"><i class="ri-group-line"></i></div>
+                            <div class="stat-info">
+                                <h3>我的群组</h3>
+                                <div class="stat-value" id="stat-total">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon success"><i class="ri-building-line"></i></div>
+                            <div class="stat-info">
+                                <h3>组织群组</h3>
+                                <div class="stat-value" id="stat-org">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon warning"><i class="ri-user-line"></i></div>
+                            <div class="stat-info">
+                                <h3>个人群组</h3>
+                                <div class="stat-value" id="stat-personal">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="group-list">
+                        <div class="group-list-header">
+                            <h2>群组列表</h2>
+                            <div class="nx-flex nx-gap-2">
+                                <input type="text" class="form-control" placeholder="搜索群组..." id="searchInput" style="width: 200px;">
+                            </div>
+                        </div>
+                        <div id="groupList">
+                            <div class="empty-state">
+                                <i class="ri-group-line"></i>
+                                <p>暂无群组，点击上方按钮创建</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="createModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>创建群组</h3>
+                <button class="modal-close" onclick="hideCreateModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">群组名称</label>
+                    <input type="text" class="form-control" id="groupName" placeholder="请输入群组名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">群组描述</label>
+                    <textarea class="form-control" id="groupDesc" rows="3" placeholder="请输入群组描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">群组类型</label>
+                    <select class="form-control" id="groupType">
+                        <option value="personal">个人群组</option>
+                        <option value="org">组织群组</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">最大成员数</label>
+                    <input type="number" class="form-control" id="maxMembers" value="100">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="hideCreateModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createGroup()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var groups = [];
+        
+        window.onPageInit = function() {
+            loadGroups();
+            document.getElementById('searchInput').addEventListener('input', filterGroups);
+        };
+        
+        function loadGroups() {
+            var userId = 'user-001';
+            fetch('/api/org/group/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: userId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    groups = rs.data || [];
+                    renderGroups(groups);
+                    updateStats(groups);
+                }
+            })
+            .catch(function(err) { console.error('加载群组失败:', err); });
+        }
+        
+        function renderGroups(data) {
+            var container = document.getElementById('groupList');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="ri-group-line"></i><p>暂无群组，点击上方按钮创建</p></div>';
+                return;
+            }
+            var html = '';
+            data.forEach(function(g) {
+                var badgeClass = g.groupType === 'org' ? 'badge-org' : 'badge-personal';
+                var badgeText = g.groupType === 'org' ? '组织' : '个人';
+                html += '<div class="group-item" onclick="viewGroup(\'' + g.id + '\')">' +
+                    '<div class="group-avatar"><i class="ri-group-line"></i></div>' +
+                    '<div class="group-info">' +
+                    '<div class="group-name">' + g.name + '</div>' +
+                    '<div class="group-meta">' + g.memberCount + ' 成员 · ' + (g.description || '暂无描述') + '</div>' +
+                    '</div>' +
+                    '<span class="group-badge ' + badgeClass + '">' + badgeText + '</span>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function updateStats(data) {
+            var total = data.length;
+            var org = data.filter(function(g) { return g.groupType === 'org'; }).length;
+            var personal = data.filter(function(g) { return g.groupType === 'personal'; }).length;
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-org').textContent = org;
+            document.getElementById('stat-personal').textContent = personal;
+        }
+        
+        function filterGroups() {
+            var keyword = document.getElementById('searchInput').value.toLowerCase();
+            var filtered = groups.filter(function(g) {
+                return g.name.toLowerCase().indexOf(keyword) >= 0 || 
+                       (g.description && g.description.toLowerCase().indexOf(keyword) >= 0);
+            });
+            renderGroups(filtered);
+        }
+        
+        function showCreateModal() {
+            document.getElementById('createModal').classList.add('show');
+        }
+        
+        function hideCreateModal() {
+            document.getElementById('createModal').classList.remove('show');
+        }
+        
+        function createGroup() {
+            var name = document.getElementById('groupName').value;
+            var description = document.getElementById('groupDesc').value;
+            var groupType = document.getElementById('groupType').value;
+            var maxMembers = parseInt(document.getElementById('maxMembers').value) || 100;
+            
+            if (!name) {
+                alert('请输入群组名称');
+                return;
+            }
+            
+            fetch('/api/org/group/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name,
+                    description: description,
+                    groupType: groupType,
+                    maxMembers: maxMembers,
+                    ownerId: 'user-001',
+                    ownerName: '当前用户'
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    hideCreateModal();
+                    loadGroups();
+                } else {
+                    alert('创建失败: ' + rs.message);
+                }
+            })
+            .catch(function(err) { alert('创建失败: ' + err); });
+        }
+        
+        function viewGroup(groupId) {
+            window.location.href = '/console/pages/group/group-message.html?groupId=' + groupId;
+        }
+    </script>
+</body>
+</html>

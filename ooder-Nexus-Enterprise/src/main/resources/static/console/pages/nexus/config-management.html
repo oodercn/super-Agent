@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配置管理 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">配置管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="resetConfig()">
+                        <i class="ri-refresh-line"></i> 重置为默认
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="saveConfig()">
+                        <i class="ri-save-line"></i> 保存配置
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">系统配置</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-4 nx-mb-4">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">系统版本</label>
+                                    <input type="text" class="nx-input" id="systemVersion" value="v1.0.0" disabled>
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">系统名称</label>
+                                    <input type="text" class="nx-input" id="systemName" value="Nexus">
+                                </div>
+                            </div>
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">运行模式</label>
+                                    <select class="nx-input" id="systemMode">
+                                        <option value="normal">正常模式</option>
+                                        <option value="debug">调试模式</option>
+                                        <option value="maintenance">维护模式</option>
+                                    </select>
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">日志级别</label>
+                                    <select class="nx-input" id="logLevel">
+                                        <option value="ERROR">错误</option>
+                                        <option value="WARNING">警告</option>
+                                        <option value="INFO" selected>信息</option>
+                                        <option value="DEBUG">调试</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">网络配置</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-4 nx-mb-4">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">UDP端口</label>
+                                    <input type="number" class="nx-input" id="udpPort" value="8080">
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">心跳间隔 (毫秒)</label>
+                                    <input type="number" class="nx-input" id="heartbeatInterval" value="30000">
+                                </div>
+                            </div>
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">心跳超时 (毫秒)</label>
+                                    <input type="number" class="nx-input" id="heartbeatTimeout" value="60000">
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">网络超时 (毫秒)</label>
+                                    <input type="number" class="nx-input" id="networkTimeout" value="10000">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">终端配置</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-4 nx-mb-4">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">最大终端数</label>
+                                    <input type="number" class="nx-input" id="maxTerminals" value="100">
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">终端超时 (秒)</label>
+                                    <input type="number" class="nx-input" id="terminalTimeout" value="300">
+                                </div>
+                            </div>
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">重连尝试次数</label>
+                                    <input type="number" class="nx-input" id="terminalReconnectAttempts" value="3">
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">重连延迟 (秒)</label>
+                                    <input type="number" class="nx-input" id="terminalReconnectDelay" value="5">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">服务配置</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-4 nx-mb-4">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">API端口</label>
+                                    <input type="number" class="nx-input" id="apiPort" value="8081">
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">Web控制台端口</label>
+                                    <input type="number" class="nx-input" id="webConsolePort" value="8082">
+                                </div>
+                            </div>
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">服务超时 (秒)</label>
+                                    <input type="number" class="nx-input" id="serviceTimeout" value="60">
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">最大连接数</label>
+                                    <input type="number" class="nx-input" id="maxConnections" value="1000">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/nexus-config-management.js"></script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能分类 - Nexus</title>
+
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .content-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        .content-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .category-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 16px;
+        }
+        .category-item {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            gap: 16px;
+            transition: all 0.3s;
+        }
+        .category-item:hover { border-color: var(--nx-primary); }
+        .category-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--nx-primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .category-info { flex: 1; min-width: 0; }
+        .category-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+            margin-bottom: 4px;
+        }
+        .category-description {
+            font-size: 13px;
+            color: var(--ns-secondary);
+            margin-bottom: 8px;
+        }
+        .category-meta {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        .category-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .loading, .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--ns-secondary);
+            grid-column: 1 / -1;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--ns-card-bg);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--ns-border);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        .modal-header h3 { margin: 0; color: var(--ns-dark); }
+        .modal-body { padding: 20px; }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 20px;
+            border-top: 1px solid var(--ns-border);
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--ns-dark); }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--ns-border);
+            border-radius: 6px;
+            background: var(--ns-input-bg);
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        .form-textarea { resize: vertical; min-height: 80px; }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 10000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+        .notification.show { transform: translateX(0); }
+        .notification.success { background: rgba(34, 197, 94, 0.9); color: white; }
+        .notification.error { background: rgba(239, 68, 68, 0.9); color: white; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能分类</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="content-header">
+                        <h1>技能分类</h1>
+                        <div class="content-actions">
+                            <button class="nx-btn nx-btn--primary" onclick="showCreateCategoryModal()">
+                                <i class="ri-add-line"></i> 创建分类
+                            </button>
+                            <button class="nx-btn nx-btn--secondary" onclick="refreshCategories()">
+                                <i class="ri-refresh-line"></i> 刷新
+                            </button>
+                        </div>
+                    </div>
+                    <div class="category-list" id="category-list">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="create-category-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>创建分类</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal('create-category-modal')">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="create-category-form">
+                    <div class="form-group">
+                        <label>分类名称</label>
+                        <input type="text" id="category-name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>分类描述</label>
+                        <textarea id="category-description" class="form-textarea" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>图标</label>
+                        <select id="category-icon" class="form-select">
+                            <option value="ri-code-line">代码</option>
+                            <option value="ri-tools-line">工具</option>
+                            <option value="ri-robot-line">机器人</option>
+                            <option value="ri-database-line">数据库</option>
+                            <option value="ri-cloud-line">云端</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--primary" onclick="createCategory()">创建</button>
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('create-category-modal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/common/api-client.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/skillcenter-sync-api.js"></script>
+    <script src="/console/js/pages/skill-categories.js"></script>
+</body>
+</html>

@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云托管服务 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .provider-card {
+            background: var(--nx-bg-elevated);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .provider-card:hover {
+            border-color: var(--nx-primary-color);
+        }
+        .provider-card.selected {
+            border-color: var(--nx-primary-color);
+            background: linear-gradient(135deg, rgba(var(--nx-primary-color-rgb), 0.1) 0%, transparent 100%);
+        }
+        .provider-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+        .provider-aliyun { background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%); color: white; }
+        .provider-tencent { background: linear-gradient(135deg, #0052d9 0%, #00a4ff 100%); color: white; }
+        .provider-kubernetes { background: linear-gradient(135deg, #326ce5 0%, #00bcd4 100%); color: white; }
+        .cost-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .cost-card .cost-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        .instance-detail-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .instance-detail-modal .modal-content {
+            background: var(--nx-bg-elevated);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">云托管服务</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-tabs nx-mb-6">
+                        <button class="nx-tabs__tab nx-tabs__tab--active" data-tab="create" onclick="switchTab('create', this)">创建实例</button>
+                        <button class="nx-tabs__tab" data-tab="instances" onclick="switchTab('instances', this)">我的实例</button>
+                        <button class="nx-tabs__tab" data-tab="cost" onclick="switchTab('cost', this)">成本估算</button>
+                    </div>
+                    
+                    <div id="create-panel">
+                        <div class="nx-card nx-mb-6">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">选择云厂商</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-grid nx-grid-cols-3 nx-gap-4" id="provider-list">
+                                    <div class="provider-card" data-provider="aliyun" onclick="selectProvider('aliyun')">
+                                        <div class="provider-logo provider-aliyun"><i class="ri-cloud-line"></i></div>
+                                        <div class="nx-font-semibold">阿里云</div>
+                                        <div class="nx-text-secondary nx-text-sm">ACK / ACS</div>
+                                    </div>
+                                    <div class="provider-card" data-provider="tencent" onclick="selectProvider('tencent')">
+                                        <div class="provider-logo provider-tencent"><i class="ri-cloud-line"></i></div>
+                                        <div class="nx-font-semibold">腾讯云</div>
+                                        <div class="nx-text-secondary nx-text-sm">TKE / EKS</div>
+                                    </div>
+                                    <div class="provider-card" data-provider="kubernetes" onclick="selectProvider('kubernetes')">
+                                        <div class="provider-logo provider-kubernetes"><i class="ri-ship-line"></i></div>
+                                        <div class="nx-font-semibold">Kubernetes</div>
+                                        <div class="nx-text-secondary nx-text-sm">K8s / Minikube</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="config-panel" style="display: none;">
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-6 nx-mb-6">
+                                <div class="nx-card">
+                                    <div class="nx-card__header">
+                                        <h3 class="nx-card__title">基本配置</h3>
+                                    </div>
+                                    <div class="nx-card__body">
+                                        <div class="nx-form-group nx-mb-4">
+                                            <label class="nx-label">实例名称 <span style="color: red;">*</span></label>
+                                            <input type="text" class="nx-input" id="instance-name" placeholder="请输入实例名称">
+                                        </div>
+                                        <div class="nx-form-group nx-mb-4">
+                                            <label class="nx-label">服务类型</label>
+                                            <select class="nx-select" id="provider-type">
+                                                <option value="acs">Serverless容器 (推荐)</option>
+                                                <option value="ack">Kubernetes集群</option>
+                                            </select>
+                                        </div>
+                                        <div class="nx-form-group nx-mb-4">
+                                            <label class="nx-label">区域</label>
+                                            <select class="nx-select" id="region-select">
+                                            </select>
+                                        </div>
+                                        <div class="nx-form-group">
+                                            <label class="nx-label">容器镜像</label>
+                                            <input type="text" class="nx-input" id="container-image" placeholder="例如: nginx:latest">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="nx-card">
+                                    <div class="nx-card__header">
+                                        <h3 class="nx-card__title">资源配置</h3>
+                                    </div>
+                                    <div class="nx-card__body">
+                                        <div class="nx-form-group nx-mb-4">
+                                            <label class="nx-label">CPU (核)</label>
+                                            <input type="number" class="nx-input" id="cpu-limit" value="1" min="0.1" max="64" step="0.1">
+                                        </div>
+                                        <div class="nx-form-group nx-mb-4">
+                                            <label class="nx-label">内存 (MB)</label>
+                                            <input type="number" class="nx-input" id="memory-limit" value="512" min="128" max="65536" step="128">
+                                        </div>
+                                        <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                                            <div class="nx-form-group">
+                                                <label class="nx-label">最小副本数</label>
+                                                <input type="number" class="nx-input" id="min-replicas" value="1" min="0" max="100">
+                                            </div>
+                                            <div class="nx-form-group">
+                                                <label class="nx-label">最大副本数</label>
+                                                <input type="number" class="nx-input" id="max-replicas" value="5" min="1" max="100">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="nx-flex nx-justify-between nx-items-center">
+                                <div id="cost-preview" class="nx-text-secondary">
+                                    预估费用: 计算中...
+                                </div>
+                                <div class="nx-flex nx-gap-3">
+                                    <button class="nx-btn nx-btn--secondary" onclick="estimateCost()">
+                                        <i class="ri-calculator-line"></i> 估算成本
+                                    </button>
+                                    <button class="nx-btn nx-btn--primary" onclick="createInstance()">
+                                        <i class="ri-rocket-line"></i> 创建实例
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="instances-panel" style="display: none;">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">云托管实例列表</h3>
+                                <div class="nx-card__actions">
+                                    <select class="nx-select" id="filter-provider" onchange="loadInstances()">
+                                        <option value="">全部云厂商</option>
+                                        <option value="aliyun">阿里云</option>
+                                        <option value="tencent">腾讯云</option>
+                                        <option value="kubernetes">Kubernetes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>实例名称</th>
+                                                <th>云厂商</th>
+                                                <th>区域</th>
+                                                <th>状态</th>
+                                                <th>副本数</th>
+                                                <th>创建时间</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="instance-list">
+                                            <tr>
+                                                <td colspan="7" class="nx-text-center nx-text-secondary">加载中...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="cost-panel" style="display: none;">
+                        <div class="nx-grid nx-grid-cols-3 nx-gap-6 nx-mb-6">
+                            <div class="cost-card">
+                                <div class="nx-text-sm nx-opacity-80">每小时费用</div>
+                                <div class="cost-value" id="hourly-cost">¥0.00</div>
+                            </div>
+                            <div class="cost-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                                <div class="nx-text-sm nx-opacity-80">每日费用</div>
+                                <div class="cost-value" id="daily-cost">¥0.00</div>
+                            </div>
+                            <div class="cost-card" style="background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);">
+                                <div class="nx-text-sm nx-opacity-80">每月费用</div>
+                                <div class="cost-value" id="monthly-cost">¥0.00</div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">成本计算器</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-grid nx-grid-cols-3 nx-gap-4 nx-mb-4">
+                                    <div class="nx-form-group">
+                                        <label class="nx-label">云厂商</label>
+                                        <select class="nx-select" id="calc-provider" onchange="calculateCost()">
+                                            <option value="aliyun">阿里云</option>
+                                            <option value="tencent">腾讯云</option>
+                                            <option value="kubernetes">Kubernetes</option>
+                                        </select>
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-label">CPU (核)</label>
+                                        <input type="number" class="nx-input" id="calc-cpu" value="1" min="0.1" step="0.1" onchange="calculateCost()">
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-label">内存 (GB)</label>
+                                        <input type="number" class="nx-input" id="calc-memory" value="0.5" min="0.1" step="0.1" onchange="calculateCost()">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="instance-detail-modal" class="instance-detail-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="nx-flex nx-justify-between nx-items-center nx-mb-4">
+                <h3 class="nx-text-lg nx-font-semibold">实例详情</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeDetailModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div id="instance-detail-content"></div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('Cloud Hosting 页面初始化完成');
+            loadProviders();
+        };
+        
+        let selectedProvider = null;
+        let providers = [];
+        
+        async function loadProviders() {
+            try {
+                const result = await ApiClient.post('/api/cloud-hosting/providers/list', {});
+                if (result && result.data) {
+                    providers = result.data;
+                }
+            } catch (error) {
+                console.error('加载云厂商失败:', error);
+            }
+        }
+        
+        function selectProvider(provider) {
+            selectedProvider = provider;
+            document.querySelectorAll('.provider-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`.provider-card[data-provider="${provider}"]`).classList.add('selected');
+            
+            const providerInfo = providers.find(p => p.name === provider);
+            if (providerInfo) {
+                const regionSelect = document.getElementById('region-select');
+                regionSelect.innerHTML = providerInfo.regions.map(r => 
+                    `<option value="${r}">${r}</option>`
+                ).join('');
+                
+                const typeSelect = document.getElementById('provider-type');
+                typeSelect.innerHTML = providerInfo.instanceTypes.map(t => 
+                    `<option value="${t}">${t.toUpperCase()}</option>`
+                ).join('');
+            }
+            
+            document.getElementById('config-panel').style.display = 'block';
+        }
+        
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.nx-tabs__tab').forEach(t => t.classList.remove('nx-tabs__tab--active'));
+            btn.classList.add('nx-tabs__tab--active');
+            
+            document.getElementById('create-panel').style.display = tab === 'create' ? 'block' : 'none';
+            document.getElementById('instances-panel').style.display = tab === 'instances' ? 'block' : 'none';
+            document.getElementById('cost-panel').style.display = tab === 'cost' ? 'block' : 'none';
+            
+            if (tab === 'instances') loadInstances();
+            if (tab === 'cost') calculateCost();
+        }
+        
+        async function createInstance() {
+            if (!selectedProvider) {
+                ApiClient.showError('请先选择云厂商');
+                return;
+            }
+            
+            const name = document.getElementById('instance-name').value;
+            if (!name) {
+                ApiClient.showError('请输入实例名称');
+                return;
+            }
+            
+            const request = {
+                provider: selectedProvider,
+                providerType: document.getElementById('provider-type').value,
+                region: document.getElementById('region-select').value,
+                instanceName: name,
+                image: document.getElementById('container-image').value || 'nginx:latest',
+                cpuLimit: parseFloat(document.getElementById('cpu-limit').value),
+                memoryLimit: parseInt(document.getElementById('memory-limit').value) * 1024 * 1024,
+                minReplicas: parseInt(document.getElementById('min-replicas').value),
+                maxReplicas: parseInt(document.getElementById('max-replicas').value)
+            };
+            
+            try {
+                ApiClient.showLoading('创建实例中...');
+                const result = await ApiClient.post('/api/cloud-hosting/instances/create', request);
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('创建实例成功: ' + result.data.id);
+                document.getElementById('instance-name').value = '';
+                switchTab('instances', document.querySelector('.nx-tabs__tab[data-tab="instances"]'));
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('创建失败: ' + error.message);
+            }
+        }
+        
+        async function loadInstances() {
+            const container = document.getElementById('instance-list');
+            const filterProvider = document.getElementById('filter-provider').value;
+            
+            container.innerHTML = '<tr><td colspan="7" class="nx-text-center nx-text-secondary">加载中...</td></tr>';
+            
+            try {
+                const providersToLoad = filterProvider ? [filterProvider] : providers.map(p => p.name);
+                let allInstances = [];
+                
+                for (const provider of providersToLoad) {
+                    try {
+                        const result = await ApiClient.post('/api/cloud-hosting/instances/list', { provider: provider });
+                        if (result && result.data) {
+                            allInstances = allInstances.concat(result.data);
+                        }
+                    } catch (e) {
+                        console.error(`加载${provider}实例失败:`, e);
+                    }
+                }
+                
+                if (allInstances.length === 0) {
+                    container.innerHTML = '<tr><td colspan="7" class="nx-text-center nx-text-secondary">暂无实例</td></tr>';
+                    return;
+                }
+                
+                container.innerHTML = allInstances.map(inst => `
+                    <tr>
+                        <td>${inst.name || '-'}</td>
+                        <td><span class="nx-badge nx-badge--secondary">${inst.provider || '-'}</span></td>
+                        <td>${inst.region || '-'}</td>
+                        <td>
+                            <span class="nx-badge nx-badge--${getStatusBadge(inst.status)}">${getStatusText(inst.status)}</span>
+                        </td>
+                        <td>${inst.replicas || 0}</td>
+                        <td>${formatTime(inst.createdAt)}</td>
+                        <td>
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="viewInstance('${inst.provider}', '${inst.id}')" title="查看详情"><i class="ri-eye-line"></i></button>
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="startInstance('${inst.provider}', '${inst.id}')" title="启动"><i class="ri-play-line"></i></button>
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="stopInstance('${inst.provider}', '${inst.id}')" title="停止"><i class="ri-stop-line"></i></button>
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm nx-text-error" onclick="deleteInstance('${inst.provider}', '${inst.id}')" title="删除"><i class="ri-delete-bin-line"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('加载实例列表失败:', error);
+                container.innerHTML = '<tr><td colspan="7" class="nx-text-center nx-text-error">加载失败</td></tr>';
+            }
+        }
+        
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'running': return 'success';
+                case 'creating':
+                case 'starting':
+                case 'stopping': return 'warning';
+                case 'stopped':
+                case 'terminated': return 'secondary';
+                case 'error': return 'error';
+                default: return 'secondary';
+            }
+        }
+        
+        function getStatusText(status) {
+            const statusMap = {
+                'running': '运行中',
+                'creating': '创建中',
+                'starting': '启动中',
+                'stopping': '停止中',
+                'stopped': '已停止',
+                'terminated': '已终止',
+                'error': '错误'
+            };
+            return statusMap[status] || status;
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            return new Date(timestamp).toLocaleString();
+        }
+        
+        async function viewInstance(provider, instanceId) {
+            const modal = document.getElementById('instance-detail-modal');
+            const content = document.getElementById('instance-detail-content');
+            
+            content.innerHTML = '<div class="nx-text-center nx-py-4">加载中...</div>';
+            modal.style.display = 'flex';
+            
+            try {
+                const result = await ApiClient.post('/api/cloud-hosting/instances/get', {
+                    provider: provider,
+                    instanceId: instanceId
+                });
+                
+                const inst = result.data;
+                content.innerHTML = `
+                    <div class="nx-mb-4">
+                        <div class="nx-text-secondary nx-text-sm">实例ID</div>
+                        <div class="nx-font-mono">${inst.id}</div>
+                    </div>
+                    <div class="nx-grid nx-grid-cols-2 nx-gap-4 nx-mb-4">
+                        <div>
+                            <div class="nx-text-secondary nx-text-sm">名称</div>
+                            <div>${inst.name || '-'}</div>
+                        </div>
+                        <div>
+                            <div class="nx-text-secondary nx-text-sm">状态</div>
+                            <div><span class="nx-badge nx-badge--${getStatusBadge(inst.status)}">${getStatusText(inst.status)}</span></div>
+                        </div>
+                        <div>
+                            <div class="nx-text-secondary nx-text-sm">云厂商</div>
+                            <div>${inst.provider}</div>
+                        </div>
+                        <div>
+                            <div class="nx-text-secondary nx-text-sm">区域</div>
+                            <div>${inst.region}</div>
+                        </div>
+                        <div>
+                            <div class="nx-text-secondary nx-text-sm">服务类型</div>
+                            <div>${inst.providerType || '-'}</div>
+                        </div>
+                        <div>
+                            <div class="nx-text-secondary nx-text-sm">副本数</div>
+                            <div>${inst.replicas || 0}</div>
+                        </div>
+                    </div>
+                    ${inst.endpoint ? `
+                    <div class="nx-mb-4">
+                        <div class="nx-text-secondary nx-text-sm">访问端点</div>
+                        <div><a href="${inst.endpoint}" target="_blank">${inst.endpoint}</a></div>
+                    </div>
+                    ` : ''}
+                    <div class="nx-mb-4">
+                        <div class="nx-text-secondary nx-text-sm">创建时间</div>
+                        <div>${formatTime(inst.createdAt)}</div>
+                    </div>
+                `;
+            } catch (error) {
+                content.innerHTML = `<div class="nx-text-error">加载失败: ${error.message}</div>`;
+            }
+        }
+        
+        function closeDetailModal() {
+            document.getElementById('instance-detail-modal').style.display = 'none';
+        }
+        
+        async function deleteInstance(provider, instanceId) {
+            if (!confirm('确定要删除该实例吗？此操作不可恢复。')) return;
+            
+            try {
+                ApiClient.showLoading('删除实例中...');
+                await ApiClient.post('/api/cloud-hosting/instances/delete', {
+                    provider: provider,
+                    instanceId: instanceId
+                });
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('删除成功');
+                loadInstances();
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('删除失败: ' + error.message);
+            }
+        }
+        
+        async function startInstance(provider, instanceId) {
+            try {
+                ApiClient.showLoading('启动实例中...');
+                await ApiClient.post('/api/cloud-hosting/instances/start', {
+                    provider: provider,
+                    instanceId: instanceId
+                });
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('启动成功');
+                loadInstances();
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('启动失败: ' + error.message);
+            }
+        }
+        
+        async function stopInstance(provider, instanceId) {
+            if (!confirm('确定要停止该实例吗？')) return;
+            
+            try {
+                ApiClient.showLoading('停止实例中...');
+                await ApiClient.post('/api/cloud-hosting/instances/stop', {
+                    provider: provider,
+                    instanceId: instanceId
+                });
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('停止成功');
+                loadInstances();
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('停止失败: ' + error.message);
+            }
+        }
+        
+        async function estimateCost() {
+            if (!selectedProvider) {
+                ApiClient.showError('请先选择云厂商');
+                return;
+            }
+            
+            try {
+                const result = await ApiClient.post('/api/cloud-hosting/cost/estimate', {
+                    provider: selectedProvider,
+                    cpuLimit: parseFloat(document.getElementById('cpu-limit').value),
+                    memoryLimit: parseInt(document.getElementById('memory-limit').value) * 1024 * 1024
+                });
+                
+                if (result && result.data) {
+                    document.getElementById('cost-preview').innerHTML = 
+                        `预估费用: ¥${result.data.hourlyCost.toFixed(3)}/时 | ¥${result.data.dailyCost.toFixed(2)}/日 | ¥${result.data.monthlyCost.toFixed(2)}/月`;
+                }
+            } catch (error) {
+                console.error('估算成本失败:', error);
+            }
+        }
+        
+        async function calculateCost() {
+            const provider = document.getElementById('calc-provider').value;
+            const cpu = parseFloat(document.getElementById('calc-cpu').value);
+            const memory = parseFloat(document.getElementById('calc-memory').value);
+            
+            try {
+                const result = await ApiClient.post('/api/cloud-hosting/cost/estimate', {
+                    provider: provider,
+                    cpuLimit: cpu,
+                    memoryLimit: memory * 1024 * 1024 * 1024
+                });
+                
+                if (result && result.data) {
+                    document.getElementById('hourly-cost').textContent = '¥' + result.data.hourlyCost.toFixed(3);
+                    document.getElementById('daily-cost').textContent = '¥' + result.data.dailyCost.toFixed(2);
+                    document.getElementById('monthly-cost').textContent = '¥' + result.data.monthlyCost.toFixed(2);
+                }
+            } catch (error) {
+                console.error('计算成本失败:', error);
+            }
+        }
+        
+        document.getElementById('instance-detail-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDetailModal();
+            }
+        });
+    </script>
+</body>
+</html>

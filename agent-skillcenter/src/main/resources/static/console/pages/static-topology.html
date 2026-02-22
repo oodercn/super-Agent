@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>静态拓扑 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .topology-canvas {
+            background: var(--nx-bg-secondary);
+            border-radius: 8px;
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+        .topo-node {
+            position: absolute;
+            width: 120px;
+            padding: 12px;
+            background: var(--nx-bg-primary);
+            border: 2px solid var(--nx-border);
+            border-radius: 8px;
+            text-align: center;
+            cursor: move;
+            transition: all 0.2s ease;
+        }
+        .topo-node:hover {
+            border-color: var(--nx-primary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .topo-node.primary {
+            border-color: var(--nx-primary);
+            background: linear-gradient(135deg, var(--nx-primary) 0%, var(--nx-primary-dark) 100%);
+            color: white;
+        }
+        .topo-node.worker {
+            border-color: var(--nx-success);
+        }
+        .topo-node.observer {
+            border-color: var(--nx-info);
+            border-style: dashed;
+        }
+        .topo-node-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        .topo-node-name {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .topo-node-role {
+            font-size: 10px;
+            opacity: 0.7;
+        }
+        .edge-line {
+            stroke: var(--nx-border);
+            stroke-width: 2;
+            fill: none;
+        }
+        .edge-line.active {
+            stroke: var(--nx-success);
+            stroke-width: 3;
+        }
+        .phase-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+        }
+        .phase-defined { background: var(--nx-warning); color: white; }
+        .phase-deploying { background: var(--nx-info); color: white; }
+        .phase-deployed { background: var(--nx-success); color: white; }
+        .phase-failed { background: var(--nx-danger); color: white; }
+        .node-palette {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            background: var(--nx-bg-secondary);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .palette-item {
+            padding: 8px 16px;
+            background: var(--nx-bg-primary);
+            border: 1px dashed var(--nx-border);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .palette-item:hover {
+            border-color: var(--nx-primary);
+            background: var(--nx-bg-hover);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">静态拓扑</h2>
+                    <span class="phase-badge phase-defined" id="currentPhase">
+                        <i class="ri-edit-line"></i> 定义中
+                    </span>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--secondary" onclick="loadTopology()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="deployTopology()">
+                        <i class="ri-rocket-line"></i> 部署拓扑
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-gap-4 nx-mb-6">
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-2xl nx-font-bold" id="totalNodes">0</div>
+                                <div class="nx-text-sm nx-text-muted">节点总数</div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-2xl nx-font-bold nx-text-success" id="deployedNodes">0</div>
+                                <div class="nx-text-sm nx-text-muted">已部署</div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-2xl nx-font-bold" id="totalEdges">0</div>
+                                <div class="nx-text-sm nx-text-muted">连接数</div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-2xl nx-font-bold nx-text-info" id="activeEdges">0</div>
+                                <div class="nx-text-sm nx-text-muted">活跃连接</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                            <h3 class="nx-card__title">拓扑定义</h3>
+                            <div class="nx-flex nx-gap-2">
+                                <button class="nx-btn nx-btn--ghost" onclick="defineTopology()">
+                                    <i class="ri-add-line"></i> 新建定义
+                                </button>
+                                <button class="nx-btn nx-btn--ghost" onclick="exportTopology()">
+                                    <i class="ri-download-line"></i> 导出
+                                </button>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="node-palette">
+                                <div class="palette-item" onclick="addNode('primary')">
+                                    <i class="ri-server-line"></i> 主节点
+                                </div>
+                                <div class="palette-item" onclick="addNode('worker')">
+                                    <i class="ri-cpu-line"></i> 工作节点
+                                </div>
+                                <div class="palette-item" onclick="addNode('observer')">
+                                    <i class="ri-eye-line"></i> 观察节点
+                                </div>
+                                <div class="palette-item" onclick="addEdge()">
+                                    <i class="ri-link"></i> 添加连接
+                                </div>
+                            </div>
+                            
+                            <div class="topology-canvas" id="topologyCanvas">
+                                <svg id="edgesSvg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></svg>
+                                <div id="nodesContainer"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">节点列表</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <table class="nx-table nx-table--striped">
+                                    <thead>
+                                        <tr>
+                                            <th>节点ID</th>
+                                            <th>类型</th>
+                                            <th>角色</th>
+                                            <th>优先级</th>
+                                            <th>状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="node-table-body">
+                                        <tr><td colspan="6" style="text-align: center;">暂无节点</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">连接列表</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <table class="nx-table nx-table--striped">
+                                    <thead>
+                                        <tr>
+                                            <th>源节点</th>
+                                            <th>目标节点</th>
+                                            <th>类型</th>
+                                            <th>带宽</th>
+                                            <th>延迟</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="edge-table-body">
+                                        <tr><td colspan="6" style="text-align: center;">暂无连接</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="nodeModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h3 id="nodeModalTitle">添加节点</h3>
+                <button class="modal-close" onclick="closeNodeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">节点ID</label>
+                    <input type="text" id="nodeId" class="nx-input" placeholder="如: node-001">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">节点类型</label>
+                    <select id="nodeType" class="nx-select" style="width: 100%;">
+                        <option value="primary">主节点</option>
+                        <option value="worker">工作节点</option>
+                        <option value="observer">观察节点</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">角色</label>
+                    <select id="nodeRole" class="nx-select" style="width: 100%;">
+                        <option value="manager">管理者</option>
+                        <option value="executor">执行者</option>
+                        <option value="observer">观察者</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">优先级</label>
+                    <input type="number" id="nodePriority" class="nx-input" value="1" min="1" max="10">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">所需技能</label>
+                    <input type="text" id="requiredSkills" class="nx-input" placeholder="多个技能用逗号分隔">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeNodeModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="saveNode()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="edgeModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h3>添加连接</h3>
+                <button class="modal-close" onclick="closeEdgeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">源节点</label>
+                    <select id="sourceNode" class="nx-select" style="width: 100%;">
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">目标节点</label>
+                    <select id="targetNode" class="nx-select" style="width: 100%;">
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">连接类型</label>
+                    <select id="edgeType" class="nx-select" style="width: 100%;">
+                        <option value="data">数据连接</option>
+                        <option value="control">控制连接</option>
+                        <option value="hybrid">混合连接</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">带宽 (Mbps)</label>
+                    <input type="number" id="edgeBandwidth" class="nx-input" value="1000">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">延迟 (ms)</label>
+                    <input type="number" id="edgeLatency" class="nx-input" value="10">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-flex nx-items-center nx-gap-2">
+                        <input type="checkbox" id="edgeBidirectional" checked>
+                        <span>双向连接</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeEdgeModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="saveEdge()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="deployModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h3>部署拓扑</h3>
+                <button class="modal-close" onclick="closeDeployModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-text-center nx-py-6">
+                    <i class="ri-rocket-line" style="font-size: 48px; color: var(--nx-primary);"></i>
+                    <h4 class="nx-mt-4">确认部署拓扑？</h4>
+                    <p class="nx-text-muted nx-mt-2">部署后将按照定义的拓扑结构创建节点和连接</p>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">部署策略</label>
+                    <select id="deployStrategy" class="nx-select" style="width: 100%;">
+                        <option value="rolling">滚动部署</option>
+                        <option value="parallel">并行部署</option>
+                        <option value="sequential">顺序部署</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeDeployModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="confirmDeploy()">确认部署</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let topologyData = {
+            topologyId: null,
+            domainId: 'domain-001',
+            spec: {
+                nodes: [],
+                edges: []
+            },
+            status: { phase: 'defined' }
+        };
+        let nodePositions = {};
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTopology();
+        });
+        
+        function loadTopology() {
+            fetch('/api/observer/topology/static/get', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ topologyId: 'topo-static-001', domainId: 'domain-001' })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.code === 200) {
+                    topologyData = data.data;
+                    renderTopology();
+                    updateStats();
+                }
+            });
+        }
+        
+        function renderTopology() {
+            const nodes = topologyData.spec?.nodes || [];
+            const edges = topologyData.spec?.edges || [];
+            
+            renderNodesCanvas(nodes);
+            renderEdgesCanvas(edges);
+            renderNodesTable(nodes);
+            renderEdgesTable(edges);
+            updatePhaseBadge();
+        }
+        
+        function renderNodesCanvas(nodes) {
+            const container = document.getElementById('nodesContainer');
+            container.innerHTML = '';
+            
+            nodes.forEach((node, index) => {
+                const pos = nodePositions[node.nodeId] || {
+                    x: 50 + (index % 3) * 180,
+                    y: 50 + Math.floor(index / 3) * 120
+                };
+                nodePositions[node.nodeId] = pos;
+                
+                const nodeEl = document.createElement('div');
+                nodeEl.className = `topo-node ${node.nodeType}`;
+                nodeEl.style.left = pos.x + 'px';
+                nodeEl.style.top = pos.y + 'px';
+                nodeEl.innerHTML = `
+                    <div class="topo-node-icon">
+                        <i class="${getNodeIcon(node.nodeType)}"></i>
+                    </div>
+                    <div class="topo-node-name">${node.nodeId}</div>
+                    <div class="topo-node-role">${node.role || node.nodeType}</div>
+                `;
+                nodeEl.onclick = () => editNode(node.nodeId);
+                container.appendChild(nodeEl);
+            });
+        }
+        
+        function renderEdgesCanvas(edges) {
+            const svg = document.getElementById('edgesSvg');
+            svg.innerHTML = '';
+            
+            edges.forEach(edge => {
+                const sourcePos = nodePositions[edge.sourceNodeId];
+                const targetPos = nodePositions[edge.targetNodeId];
+                if (sourcePos && targetPos) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', sourcePos.x + 60);
+                    line.setAttribute('y1', sourcePos.y + 40);
+                    line.setAttribute('x2', targetPos.x + 60);
+                    line.setAttribute('y2', targetPos.y + 40);
+                    line.setAttribute('class', 'edge-line');
+                    svg.appendChild(line);
+                    
+                    if (edge.bidirectional) {
+                        const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                        const mx = (sourcePos.x + targetPos.x) / 2 + 60;
+                        const my = (sourcePos.y + targetPos.y) / 2 + 40;
+                        arrow.setAttribute('points', `${mx},${my-5} ${mx+5},${my+5} ${mx-5},${my+5}`);
+                        arrow.setAttribute('fill', 'var(--nx-border)');
+                        svg.appendChild(arrow);
+                    }
+                }
+            });
+        }
+        
+        function renderNodesTable(nodes) {
+            const tbody = document.getElementById('node-table-body');
+            if (nodes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">暂无节点</td></tr>';
+                return;
+            }
+            tbody.innerHTML = nodes.map(n => `
+                <tr>
+                    <td><code>${n.nodeId}</code></td>
+                    <td>${n.nodeType}</td>
+                    <td>${n.role || '-'}</td>
+                    <td>${n.priority || 1}</td>
+                    <td><span class="nx-badge nx-badge--success">就绪</span></td>
+                    <td>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="editNode('${n.nodeId}')">
+                            <i class="ri-edit-line"></i>
+                        </button>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm nx-text-danger" onclick="deleteNode('${n.nodeId}')">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function renderEdgesTable(edges) {
+            const tbody = document.getElementById('edge-table-body');
+            if (edges.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">暂无连接</td></tr>';
+                return;
+            }
+            tbody.innerHTML = edges.map((e, i) => `
+                <tr>
+                    <td><code>${e.sourceNodeId}</code></td>
+                    <td><code>${e.targetNodeId}</code></td>
+                    <td>${e.edgeType}</td>
+                    <td>${e.bandwidth || 1000} Mbps</td>
+                    <td>${e.latency || 10} ms</td>
+                    <td>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm nx-text-danger" onclick="deleteEdge(${i})">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function updateStats() {
+            const nodes = topologyData.spec?.nodes || [];
+            const edges = topologyData.spec?.edges || [];
+            const status = topologyData.status || {};
+            
+            document.getElementById('totalNodes').textContent = nodes.length;
+            document.getElementById('deployedNodes').textContent = status.deployedNodes || 0;
+            document.getElementById('totalEdges').textContent = edges.length;
+            document.getElementById('activeEdges').textContent = status.activeEdges || 0;
+        }
+        
+        function updatePhaseBadge() {
+            const phase = topologyData.status?.phase || 'defined';
+            const badge = document.getElementById('currentPhase');
+            const labels = {
+                defined: '<i class="ri-edit-line"></i> 定义中',
+                deploying: '<i class="ri-loader-line"></i> 部署中',
+                deployed: '<i class="ri-check-line"></i> 已部署',
+                failed: '<i class="ri-error-warning-line"></i> 失败'
+            };
+            badge.innerHTML = labels[phase] || labels.defined;
+            badge.className = `phase-badge phase-${phase}`;
+        }
+        
+        function addNode(type) {
+            document.getElementById('nodeModalTitle').textContent = '添加节点';
+            document.getElementById('nodeId').value = '';
+            document.getElementById('nodeType').value = type || 'worker';
+            document.getElementById('nodeRole').value = type === 'primary' ? 'manager' : 'executor';
+            document.getElementById('nodePriority').value = 1;
+            document.getElementById('requiredSkills').value = '';
+            document.getElementById('nodeModal').style.display = 'flex';
+        }
+        
+        function editNode(nodeId) {
+            const node = topologyData.spec.nodes.find(n => n.nodeId === nodeId);
+            if (!node) return;
+            document.getElementById('nodeModalTitle').textContent = '编辑节点';
+            document.getElementById('nodeId').value = node.nodeId;
+            document.getElementById('nodeType').value = node.nodeType;
+            document.getElementById('nodeRole').value = node.role || 'executor';
+            document.getElementById('nodePriority').value = node.priority || 1;
+            document.getElementById('requiredSkills').value = (node.requiredSkills || []).join(', ');
+            document.getElementById('nodeModal').style.display = 'flex';
+        }
+        
+        function closeNodeModal() {
+            document.getElementById('nodeModal').style.display = 'none';
+        }
+        
+        function saveNode() {
+            const nodeId = document.getElementById('nodeId').value;
+            if (!nodeId) {
+                alert('请输入节点ID');
+                return;
+            }
+            const node = {
+                nodeId: nodeId,
+                nodeType: document.getElementById('nodeType').value,
+                role: document.getElementById('nodeRole').value,
+                priority: parseInt(document.getElementById('nodePriority').value) || 1,
+                requiredSkills: document.getElementById('requiredSkills').value.split(',').map(s => s.trim()).filter(s => s)
+            };
+            
+            const existingIndex = topologyData.spec.nodes.findIndex(n => n.nodeId === nodeId);
+            if (existingIndex >= 0) {
+                topologyData.spec.nodes[existingIndex] = node;
+            } else {
+                topologyData.spec.nodes.push(node);
+            }
+            
+            closeNodeModal();
+            renderTopology();
+            updateStats();
+        }
+        
+        function deleteNode(nodeId) {
+            if (!confirm('确定要删除该节点吗？')) return;
+            topologyData.spec.nodes = topologyData.spec.nodes.filter(n => n.nodeId !== nodeId);
+            topologyData.spec.edges = topologyData.spec.edges.filter(e => 
+                e.sourceNodeId !== nodeId && e.targetNodeId !== nodeId
+            );
+            delete nodePositions[nodeId];
+            renderTopology();
+            updateStats();
+        }
+        
+        function addEdge() {
+            const nodes = topologyData.spec.nodes || [];
+            const sourceSelect = document.getElementById('sourceNode');
+            const targetSelect = document.getElementById('targetNode');
+            
+            sourceSelect.innerHTML = nodes.map(n => `<option value="${n.nodeId}">${n.nodeId}</option>`).join('');
+            targetSelect.innerHTML = nodes.map(n => `<option value="${n.nodeId}">${n.nodeId}</option>`).join('');
+            
+            document.getElementById('edgeType').value = 'data';
+            document.getElementById('edgeBandwidth').value = 1000;
+            document.getElementById('edgeLatency').value = 10;
+            document.getElementById('edgeBidirectional').checked = true;
+            document.getElementById('edgeModal').style.display = 'flex';
+        }
+        
+        function closeEdgeModal() {
+            document.getElementById('edgeModal').style.display = 'none';
+        }
+        
+        function saveEdge() {
+            const sourceNodeId = document.getElementById('sourceNode').value;
+            const targetNodeId = document.getElementById('targetNode').value;
+            
+            if (sourceNodeId === targetNodeId) {
+                alert('源节点和目标节点不能相同');
+                return;
+            }
+            
+            const edge = {
+                sourceNodeId: sourceNodeId,
+                targetNodeId: targetNodeId,
+                edgeType: document.getElementById('edgeType').value,
+                bandwidth: parseInt(document.getElementById('edgeBandwidth').value) || 1000,
+                latency: parseInt(document.getElementById('edgeLatency').value) || 10,
+                bidirectional: document.getElementById('edgeBidirectional').checked
+            };
+            
+            topologyData.spec.edges.push(edge);
+            closeEdgeModal();
+            renderTopology();
+            updateStats();
+        }
+        
+        function deleteEdge(index) {
+            if (!confirm('确定要删除该连接吗？')) return;
+            topologyData.spec.edges.splice(index, 1);
+            renderTopology();
+            updateStats();
+        }
+        
+        function defineTopology() {
+            fetch('/api/observer/topology/static/define', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    domainId: topologyData.domainId,
+                    spec: topologyData.spec
+                })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.code === 200) {
+                    alert('拓扑定义已保存');
+                    topologyData = result.data;
+                    renderTopology();
+                } else {
+                    alert('保存失败: ' + result.message);
+                }
+            });
+        }
+        
+        function deployTopology() {
+            if (topologyData.spec.nodes.length === 0) {
+                alert('请先添加节点');
+                return;
+            }
+            document.getElementById('deployModal').style.display = 'flex';
+        }
+        
+        function closeDeployModal() {
+            document.getElementById('deployModal').style.display = 'none';
+        }
+        
+        function confirmDeploy() {
+            fetch('/api/observer/topology/static/deploy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ topologyId: topologyData.topologyId })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.code === 200) {
+                    closeDeployModal();
+                    alert('拓扑部署已启动');
+                    topologyData = result.data;
+                    renderTopology();
+                    updateStats();
+                } else {
+                    alert('部署失败: ' + result.message);
+                }
+            });
+        }
+        
+        function exportTopology() {
+            const dataStr = JSON.stringify(topologyData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'topology-' + (topologyData.topologyId || 'export') + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function getNodeIcon(type) {
+            const icons = {
+                primary: 'ri-server-line',
+                worker: 'ri-cpu-line',
+                observer: 'ri-eye-line'
+            };
+            return icons[type] || 'ri-node-tree';
+        }
+    </script>
+</body>
+</html>

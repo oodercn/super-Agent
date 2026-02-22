@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>联系人 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .contact-container { display: flex; height: calc(100vh - 140px); gap: 16px; }
+        
+        .contact-sidebar { width: 280px; background: var(--ns-card-bg); border-radius: 12px; border: 1px solid var(--ns-border); display: flex; flex-direction: column; }
+        .sidebar-header { padding: 16px; border-bottom: 1px solid var(--ns-border); }
+        .sidebar-header h3 { margin: 0 0 12px 0; color: var(--ns-dark); }
+        
+        .search-box { display: flex; align-items: center; background: var(--ns-input-bg); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; }
+        .search-box i { color: var(--ns-secondary); margin-right: 8px; }
+        .search-box input { background: none; border: none; color: var(--ns-dark); width: 100%; outline: none; }
+        
+        .contact-groups { flex: 1; overflow-y: auto; }
+        .group-item { padding: 12px 16px; cursor: pointer; transition: background 0.2s; display: flex; justify-content: space-between; align-items: center; }
+        .group-item:hover { background: var(--ns-bg-hover); }
+        .group-item.active { background: rgba(59, 130, 246, 0.1); color: var(--nx-primary); }
+        .group-name { font-weight: 500; }
+        .group-count { font-size: 12px; color: var(--ns-secondary); background: var(--ns-input-bg); padding: 2px 8px; border-radius: 10px; }
+        
+        .contact-list { flex: 1; background: var(--ns-card-bg); border-radius: 12px; border: 1px solid var(--ns-border); display: flex; flex-direction: column; }
+        .list-header { padding: 16px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .list-header h3 { margin: 0; color: var(--ns-dark); }
+        
+        .contact-items { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; padding: 16px; }
+        
+        .contact-card { background: var(--ns-input-bg); border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
+        .contact-card:hover { border-color: var(--nx-primary); transform: translateY(-2px); }
+        
+        .contact-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--nx-primary); display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; margin: 0 auto 12px; }
+        .contact-avatar.online { box-shadow: 0 0 0 3px var(--ns-success); }
+        .contact-avatar.offline { box-shadow: 0 0 0 3px var(--ns-secondary); }
+        .contact-avatar.busy { box-shadow: 0 0 0 3px var(--ns-danger); }
+        
+        .contact-name { text-align: center; font-weight: 500; color: var(--ns-dark); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .contact-dept { text-align: center; font-size: 13px; color: var(--ns-secondary); margin-bottom: 8px; }
+        
+        .contact-status { display: flex; justify-content: center; gap: 4px; margin-top: 8px; }
+        .status-badge { font-size: 12px; padding: 2px 8px; border-radius: 4px; }
+        .status-online { background: rgba(34, 197, 94, 0.15); color: var(--ns-success); }
+        .status-offline { background: rgba(148, 163, 184, 0.15); color: var(--ns-secondary); }
+        .status-busy { background: rgba(239, 68, 68, 0.15); color: var(--ns-danger); }
+        
+        .contact-actions { display: flex; justify-content: center; gap: 8px; margin-top: 12px; }
+        .btn { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .btn-primary { background: var(--nx-primary); color: white; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-secondary { background: var(--ns-card-bg); color: var(--ns-dark); border: 1px solid var(--ns-border); }
+        .btn-secondary:hover { background: var(--ns-bg-hover); }
+        .btn-icon { padding: 6px; }
+        
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--ns-secondary); }
+        .empty-state i { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal.active { display: flex; justify-content: center; align-items: center; }
+        .modal-content { background: var(--ns-card-bg); border-radius: 12px; padding: 24px; width: 500px; max-width: 90%; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h3 { margin: 0; color: var(--ns-dark); }
+        .modal-close { background: none; border: none; color: var(--ns-secondary); font-size: 24px; cursor: pointer; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--ns-secondary); }
+        .form-group input, .form-group select { width: 100%; background: var(--ns-input-bg); border: 1px solid var(--ns-border); color: var(--ns-dark); padding: 10px 12px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold"><i class="ri-contacts-line"></i> 联系人</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="btn btn-primary" onclick="openAddModal()">
+                        <i class="ri-add-line"></i> 添加联系人
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="contact-container">
+                        <div class="contact-sidebar">
+                            <div class="sidebar-header">
+                                <h3><i class="ri-group-line"></i> 联系人分组</h3>
+                                <div class="search-box">
+                                    <i class="ri-search-line"></i>
+                                    <input type="text" placeholder="搜索联系人..." id="searchInput" oninput="filterContacts()">
+                                </div>
+                            </div>
+                            <div class="contact-groups" id="contactGroups">
+                                <div class="group-item active" onclick="filterByGroup('all')">
+                                    <span class="group-name">全部</span>
+                                    <span class="group-count" id="totalCount">0</span>
+                                </div>
+                                <div class="group-item" onclick="filterByGroup('online')">
+                                    <span class="group-name">在线</span>
+                                    <span class="group-count" id="onlineCount">0</span>
+                                </div>
+                                <div class="group-item" onclick="filterByGroup('colleague')">
+                                    <span class="group-name">同事</span>
+                                    <span class="group-count" id="colleagueCount">0</span>
+                                </div>
+                                <div class="group-item" onclick="filterByGroup('friend')">
+                                    <span class="group-name">好友</span>
+                                    <span class="group-count" id="friendCount">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-list">
+                            <div class="list-header">
+                                <h3 id="listTitle">全部联系人</h3>
+                            </div>
+                            <div class="contact-items" id="contactItems">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-add-line"></i> 添加联系人</h3>
+                <button class="modal-close" onclick="closeAddModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>联系人ID</label>
+                <input type="text" id="contactUserId" placeholder="输入用户ID">
+            </div>
+            <div class="form-group">
+                <label>联系人姓名</label>
+                <input type="text" id="contactName" placeholder="输入姓名">
+            </div>
+            <div class="form-group">
+                <label>所属部门</label>
+                <input type="text" id="contactDept" placeholder="输入部门">
+            </div>
+            <div class="form-group">
+                <label>关系</label>
+                <select id="contactRelation">
+                    <option value="colleague">同事</option>
+                    <option value="friend">好友</option>
+                    <option value="following">关注</option>
+                </select>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                <button class="btn btn-secondary" onclick="closeAddModal()">取消</button>
+                <button class="btn btn-primary" onclick="addContact()">添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var currentUserId = 'user-001';
+        var contacts = [];
+        var currentFilter = 'all';
+        
+        window.onPageInit = function() {
+            loadContacts();
+        };
+        
+        function loadContacts() {
+            fetch('/api/gateway/im/contact/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    contacts = data.data || [];
+                    updateCounts();
+                    renderContacts();
+                }
+            })
+            .catch(function(err) { console.error('加载联系人失败:', err); });
+        }
+        
+        function renderContacts() {
+            var container = document.getElementById('contactItems');
+            container.innerHTML = '';
+            
+            var filtered = filterContactsByGroup(contacts, currentFilter);
+            
+            filtered.forEach(function(contact) {
+                var card = document.createElement('div');
+                card.className = 'contact-card';
+                
+                var statusClass = contact.status === 'online' ? 'online' : (contact.status === 'busy' ? 'busy' : 'offline');
+                var statusLabel = contact.status === 'online' ? '在线' : (contact.status === 'busy' ? '忙碌' : '离线');
+                var avatarLetter = contact.contactName ? contact.contactName.charAt(0) : '?';
+                
+                card.innerHTML = 
+                    '<div class="contact-avatar ' + statusClass + '">' + avatarLetter + '</div>' +
+                    '<div class="contact-name">' + (contact.remark || contact.contactName) + '</div>' +
+                    '<div class="contact-dept">' + (contact.department || '未知部门') + '</div>' +
+                    '<div class="contact-status">' +
+                        '<span class="status-badge status-' + contact.status + '">' + statusLabel + '</span>' +
+                    '</div>' +
+                    '<div class="contact-actions">' +
+                        '<button class="btn btn-primary btn-sm" onclick="startChat(\'' + contact.contactId + '\')"><i class="ri-chat-1-line"></i> 聊天</button>' +
+                        '<button class="btn btn-secondary btn-icon" onclick="setRemark(\'' + contact.contactId + '\')"><i class="ri-edit-line"></i></button>' +
+                        '<button class="btn btn-secondary btn-icon" onclick="deleteContact(\'' + contact.contactId + '\')"><i class="ri-delete-bin-line"></i></button>' +
+                    '</div>';
+                
+                container.appendChild(card);
+            });
+        }
+        
+        function filterContactsByGroup(list, group) {
+            if (group === 'all') return list;
+            if (group === 'online') return list.filter(function(c) { return c.status === 'online'; });
+            return list.filter(function(c) { return c.relation === group; });
+        }
+        
+        function filterByGroup(group) {
+            currentFilter = group;
+            var items = document.querySelectorAll('.group-item');
+            items.forEach(function(item) { item.classList.remove('active'); });
+            event.currentTarget.classList.add('active');
+            
+            var titles = { all: '全部联系人', online: '在线联系人', colleague: '同事', friend: '好友' };
+            document.getElementById('listTitle').textContent = titles[group];
+            
+            renderContacts();
+        }
+        
+        function updateCounts() {
+            document.getElementById('totalCount').textContent = contacts.length;
+            document.getElementById('onlineCount').textContent = contacts.filter(function(c) { return c.status === 'online'; }).length;
+            document.getElementById('colleagueCount').textContent = contacts.filter(function(c) { return c.relation === 'colleague'; }).length;
+            document.getElementById('friendCount').textContent = contacts.filter(function(c) { return c.relation === 'friend'; }).length;
+        }
+        
+        function addContact() {
+            var contactUserId = document.getElementById('contactUserId').value;
+            var contactName = document.getElementById('contactName').value;
+            var dept = document.getElementById('contactDept').value;
+            var relation = document.getElementById('contactRelation').value;
+            
+            fetch('/api/im/contact/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId, contactUserId: contactUserId, contactName: contactName, department: dept, relation: relation })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    closeAddModal();
+                    loadContacts();
+                }
+            });
+        }
+        
+        function deleteContact(contactId) {
+            if (confirm('确定要删除这个联系人吗？')) {
+                fetch('/api/im/contact/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contactId: contactId })
+                })
+                .then(function() { loadContacts(); });
+            }
+        }
+        
+        function startChat(contactId) {
+            var contact = contacts.find(function(c) { return c.contactId === contactId; });
+            if (contact) {
+                alert('开始与 ' + (contact.remark || contact.contactName) + ' 聊天');
+            }
+        }
+        
+        function setRemark(contactId) {
+            var remark = prompt('输入备注名称:');
+            if (remark) {
+                fetch('/api/im/contact/remark', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUserId, contactUserId: contactId, remark: remark })
+                })
+                .then(function() { loadContacts(); });
+            }
+        }
+        
+        function openAddModal() { document.getElementById('addModal').classList.add('active'); }
+        function closeAddModal() { document.getElementById('addModal').classList.remove('active'); }
+        
+        function filterContacts() {
+            var keyword = document.getElementById('searchInput').value.toLowerCase();
+            var cards = document.querySelectorAll('.contact-card');
+            cards.forEach(function(card) {
+                var name = card.querySelector('.contact-name').textContent.toLowerCase();
+                card.style.display = name.indexOf(keyword) > -1 ? 'block' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

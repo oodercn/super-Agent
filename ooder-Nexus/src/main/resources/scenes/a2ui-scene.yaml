@@ -1,0 +1,159 @@
+apiVersion: scene.ooder.net/v1
+kind: SceneDefinition
+
+metadata:
+  sceneId: a2ui
+  name: UI Generation
+  description: |
+    UI生成场景，提供图转代码、组件生成和UI预览能力。
+    支持将设计图自动转换为前端代码，提高开发效率。
+  version: "1.0.0"
+  author: Ooder Team
+  createdAt: "2026-02-18T00:00:00Z"
+
+spec:
+  type: primary
+  scenePrefix: a2ui
+  
+  required: false
+  category: development
+  
+  capabilities:
+    - capId: a2ui-generate
+      name: Generate UI Code
+      description: 从设计图生成UI代码
+      parameters:
+        - name: designFile
+          type: file
+          required: true
+          description: 设计文件
+        - name: framework
+          type: string
+          required: false
+          default: vue
+          description: 目标框架 (vue/react/angular)
+        - name: componentLibrary
+          type: string
+          required: false
+          default: element-plus
+          description: 组件库
+        - name: options
+          type: object
+          required: false
+          description: 生成选项
+      returnType: object
+      async: true
+      
+    - capId: a2ui-preview
+      name: Preview UI
+      description: 预览生成的UI
+      parameters:
+        - name: code
+          type: string
+          required: true
+          description: UI代码
+        - name: framework
+          type: string
+          required: true
+          description: 框架类型
+      returnType: string
+      async: false
+      
+    - capId: a2ui-component-create
+      name: Create Component
+      description: 创建UI组件
+      parameters:
+        - name: name
+          type: string
+          required: true
+          description: 组件名称
+        - name: description
+          type: string
+          required: false
+          description: 组件描述
+        - name: props
+          type: list
+          required: false
+          description: 组件属性
+        - name: template
+          type: string
+          required: true
+          description: 组件模板
+      returnType: object
+      async: false
+      
+    - capId: a2ui-component-list
+      name: List Components
+      description: 列出可用组件
+      parameters:
+        - name: category
+          type: string
+          required: false
+          description: 组件分类
+        - name: keyword
+          type: string
+          required: false
+          description: 搜索关键词
+      returnType: list
+      async: false
+      
+    - capId: a2ui-export
+      name: Export Project
+      description: 导出项目代码
+      parameters:
+        - name: projectId
+          type: string
+          required: true
+          description: 项目ID
+        - name: format
+          type: string
+          required: false
+          default: zip
+          description: 导出格式
+      returnType: bytes
+      async: true
+
+  config:
+    supportedFrameworks:
+      - vue
+      - react
+      - angular
+      - mini-program
+    componentLibraries:
+      vue:
+        - element-plus
+        - ant-design-vue
+        - vant
+      react:
+        - ant-design
+        - material-ui
+        - chakra-ui
+    outputDir: ${user.home}/.ooder/a2ui/output
+    tempDir: ${user.home}/.ooder/a2ui/temp
+    maxFileSize: 10485760
+    enableCache: true
+    cacheTtl: 3600
+
+  collaborativeScenes:
+    - vfs
+
+  skills:
+    - skillId: skill-a2ui
+      required: true
+      capabilities:
+        - a2ui-generate
+        - a2ui-preview
+        - a2ui-component-create
+        - a2ui-component-list
+        - a2ui-export
+
+  deployment:
+    singleton: false
+    autoStart: false
+    healthCheck:
+      path: /api/health
+      interval: 30
+      timeout: 10
+    resources:
+      cpu: "1000m"
+      memory: "1Gi"

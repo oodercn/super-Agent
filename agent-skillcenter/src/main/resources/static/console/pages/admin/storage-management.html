@@ -3,266 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理中心 - 存储管理</title>
-    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
-    <link href="../../assets/css/remixicon/remixicon.css" rel="stylesheet">
-    <script src="/skillcenter/console/js/menu.js"></script>
-
+    <title>存储管理 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
 </head>
 <body>
-    <div class="container">
-        <aside class="sidebar" id="sidebar">
-            <!-- 菜单将通过menu.js动态加载 -->
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
         </aside>
-        <main class="main-content">
-            <header class="header">
-                <h1>存储管理</h1>
-                <div class="user-info">
-                    <span class="user-name">管理员</span>
-                    <i class="ri-user-line"></i>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">存储管理</h2>
                 </div>
-            </header>
-            <div class="admin-dashboard-content">
-                <div class="page-header">
-                    <button class="btn btn-primary" onclick="openAddStorageModal()">
-                        <i class="ri-database-add-line"></i> 添加存储
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <span class="nx-badge nx-badge--danger">管理员</span>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
                     </button>
                 </div>
-        
-        <!-- 存储统计 -->
-        <div class="admin-stats-grid">
-            <div class="admin-stat-card">
-                <div class="admin-stat-icon ri-database-fill" style="color: #27ae60;"></div>
-                <div class="admin-stat-info">
-                    <h3>总存储容量</h3>
-                    <div class="admin-stat-value">12.5 GB</div>
-                </div>
-            </div>
-            <div class="admin-stat-card">
-                <div class="admin-stat-icon ri-database-line" style="color: #3498db;"></div>
-                <div class="admin-stat-info">
-                    <h3>已使用容量</h3>
-                    <div class="admin-stat-value">8.2 GB</div>
-                </div>
-            </div>
-            <div class="admin-stat-card">
-                <div class="admin-stat-icon ri-database-2-line" style="color: #27ae60;"></div>
-                <div class="admin-stat-info">
-                    <h3>可用容量</h3>
-                    <div class="admin-stat-value">4.3 GB</div>
-                </div>
-            </div>
-            <div class="admin-stat-card">
-                <div class="admin-stat-icon ri-percent-line" style="color: #f39c12;"></div>
-                <div class="admin-stat-info">
-                    <h3>使用率</h3>
-                    <div class="admin-stat-value">65.6%</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 存储类型标签 -->
-        <div class="execution-tabs">
-            <button class="tab-btn active" onclick="switchTab('json')">JSON存储</button>
-            <button class="tab-btn" onclick="switchTab('vfs')">VFS存储</button>
-            <button class="tab-btn" onclick="switchTab('all')">所有存储</button>
-        </div>
-        
-        <!-- 存储内容 -->
-        <div class="system-info-card">
-            <h3>存储管理</h3>
-            <div class="storage-list" id="jsonStorageList">
-                <!-- JSON存储项目将通过JavaScript动态填充 -->
-            </div>
-        </div>
-    </div>
-    
-    <!-- 添加存储模态框 -->
-    <div id="storageModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>添加存储</h2>
-                <button class="close-btn" onclick="closeStorageModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="storageForm">
-                    <div class="form-group">
-                        <label for="storageName">存储名称</label>
-                        <input type="text" id="storageName" required class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="storageType">存储类型</label>
-                        <select id="storageType" required class="form-control">
-                            <option value="json">JSON存储</option>
-                            <option value="vfs">VFS存储</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="storagePath">存储路径</label>
-                        <input type="text" id="storagePath" required class="form-control">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeStorageModal()">取消</button>
-                <button type="submit" class="btn btn-primary" form="storageForm">添加</button>
-            </div>
-        </div>
-    </div>
-    
-    <script>
-        // 模拟存储数据
-        const storageItems = [
-            {
-                id: "json-001",
-                name: "技能元数据存储",
-                type: "json",
-                path: "./skill_metadata.json",
-                size: "2.5 MB",
-                lastModified: "2026-01-31 10:00:00"
-            },
-            {
-                id: "json-002",
-                name: "用户配置存储",
-                type: "json",
-                path: "./user_config.json",
-                size: "1.2 MB",
-                lastModified: "2026-01-30 15:30:00"
-            },
-            {
-                id: "json-003",
-                name: "执行历史存储",
-                type: "json",
-                path: "./execution_history.json",
-                size: "5.8 MB",
-                lastModified: "2026-01-29 09:15:00"
-            },
-            {
-                id: "vfs-001",
-                name: "技能代码存储",
-                type: "vfs",
-                path: "./vfs/skills",
-                size: "1.5 GB",
-                lastModified: "2026-01-28 14:45:00"
-            },
-            {
-                id: "vfs-002",
-                name: "资源文件存储",
-                type: "vfs",
-                path: "./vfs/resources",
-                size: "3.2 GB",
-                lastModified: "2026-01-27 11:20:00"
-            }
-        ];
-        
-        // 页面加载时渲染存储列表
-        document.addEventListener('DOMContentLoaded', function() {
-            renderStorageList('json');
-        });
-        
-        // 切换标签
-        function switchTab(tabType) {
-            // 更新标签状态
-            const tabButtons = document.querySelectorAll('.tab-btn');
-            tabButtons.forEach(button => button.classList.remove('active'));
-            event.target.classList.add('active');
+            </header>
             
-            // 渲染对应存储列表
-            renderStorageList(tabType);
-        }
-        
-        // 渲染存储列表
-        function renderStorageList(storageType) {
-            const storageList = document.getElementById('jsonStorageList');
-            storageList.innerHTML = '';
-            
-            const filteredItems = storageItems.filter(item => 
-                storageType === 'all' || item.type === storageType
-            );
-            
-            filteredItems.forEach(item => {
-                const storageItem = document.createElement('div');
-                storageItem.className = 'storage-item';
-                storageItem.innerHTML = `
-                    <div class="info">
-                        <div class="name">${item.name}</div>
-                        <div class="details">
-                            <span>类型: ${item.type.toUpperCase()}</span> | 
-                            <span>路径: ${item.path}</span> | 
-                            <span>修改时间: ${item.lastModified}</span>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-database-2-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">总存储</div>
+                                <div class="nx-stat-card__value">100 GB</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-folder-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">已使用</div>
+                                <div class="nx-stat-card__value">45 GB</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-user-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">用户数</div>
+                                <div class="nx-stat-card__value">32</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--info">
+                                <i class="ri-file-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">文件数</div>
+                                <div class="nx-stat-card__value">1,256</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="size">${item.size}</div>
-                    <div class="action-buttons">
-                        <button class="btn btn-secondary" onclick="viewStorageDetails('${item.id}')">
-                            <i class="ri-eye-line"></i> 查看
-                        </button>
-                        <button class="btn btn-danger" onclick="deleteStorage('${item.id}')">
-                            <i class="ri-delete-line"></i> 删除
-                        </button>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">用户存储配额</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>用户</th>
+                                            <th>已使用</th>
+                                            <th>配额</th>
+                                            <th>使用率</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>admin</td>
+                                            <td>5.2 GB</td>
+                                            <td>10 GB</td>
+                                            <td>
+                                                <div style="width: 100px; height: 8px; background: var(--nx-border); border-radius: 4px;">
+                                                    <div style="width: 52%; height: 100%; background: var(--nx-primary); border-radius: 4px;"></div>
+                                                </div>
+                                            </td>
+                                            <td><button class="nx-btn nx-btn--ghost nx-btn--sm">调整</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                `;
-                storageList.appendChild(storageItem);
-            });
-        }
-        
-        // 打开添加存储模态框
-        function openAddStorageModal() {
-            document.getElementById('storageForm').reset();
-            document.getElementById('storageModal').style.display = 'block';
-        }
-        
-        // 关闭存储模态框
-        function closeStorageModal() {
-            document.getElementById('storageModal').style.display = 'none';
-        }
-        
-        // 查看存储详情
-        function viewStorageDetails(storageId) {
-            const storage = storageItems.find(s => s.id === storageId);
-            if (storage) {
-                alert(`存储详情:\n\n名称: ${storage.name}\n类型: ${storage.type}\n路径: ${storage.path}\n大小: ${storage.size}\n修改时间: ${storage.lastModified}`);
-            }
-        }
-        
-        // 删除存储
-        function deleteStorage(storageId) {
-            if (confirm('确定要删除这个存储吗？')) {
-                const storageIndex = storageItems.findIndex(s => s.id === storageId);
-                if (storageIndex !== -1) {
-                    storageItems.splice(storageIndex, 1);
-                    renderStorageList('json');
-                }
-            }
-        }
-        
-        // 提交存储表单
-        document.getElementById('storageForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const storageName = document.getElementById('storageName').value;
-            const storageType = document.getElementById('storageType').value;
-            const storagePath = document.getElementById('storagePath').value;
-            
-            // 添加新存储
-            const newStorage = {
-                id: `${storageType}-${Date.now()}`,
-                name: storageName,
-                type: storageType,
-                path: storagePath,
-                size: "0 MB",
-                lastModified: new Date().toLocaleString()
-            };
-            storageItems.push(newStorage);
-            
-            renderStorageList('json');
-            closeStorageModal();
-        });
-        
-        // 初始化菜单
-        initMenu('storage-management');
-    </script>
+                </div>
+            </div>
         </main>
     </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('存储管理页面初始化完成');
+        };
+    </script>
 </body>
 </html>

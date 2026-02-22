@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能力注册 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">能力注册</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="openRegisterModal()">
+                        <i class="ri-add-line"></i> 注册能力
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-list-check-2"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">总能力数</div>
+                                <div class="nx-stat-card__value" id="totalCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">已启用</div>
+                                <div class="nx-stat-card__value" id="enabledCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-time-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">待审核</div>
+                                <div class="nx-stat-card__value" id="pendingCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--info">
+                                <i class="ri-apps-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">能力类型</div>
+                                <div class="nx-stat-card__value" id="typeCount">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">能力列表</h3>
+                            <div class="nx-flex nx-gap-2">
+                                <input type="text" class="nx-input" id="searchInput" placeholder="搜索能力..." style="width: 200px;">
+                                <select class="nx-select" id="typeFilter">
+                                    <option value="">全部类型</option>
+                                    <option value="SKILL">技能</option>
+                                    <option value="SCENE">场景</option>
+                                    <option value="SERVICE">服务</option>
+                                    <option value="RESOURCE">资源</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>能力ID</th>
+                                            <th>名称</th>
+                                            <th>类型</th>
+                                            <th>提供者</th>
+                                            <th>版本</th>
+                                            <th>状态</th>
+                                            <th>注册时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="capabilityTableBody">
+                                        <tr><td colspan="8" class="nx-text-center">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="nx-modal" id="registerModal">
+        <div class="nx-modal__backdrop" onclick="closeModal()"></div>
+        <div class="nx-modal__content">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">注册能力</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-mb-4">
+                    <label class="nx-label">能力名称</label>
+                    <input type="text" class="nx-input" id="capabilityName" placeholder="输入能力名称">
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">能力类型</label>
+                    <select class="nx-select" id="capabilityType">
+                        <option value="SKILL">技能</option>
+                        <option value="SCENE">场景</option>
+                        <option value="SERVICE">服务</option>
+                        <option value="RESOURCE">资源</option>
+                    </select>
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">版本</label>
+                    <input type="text" class="nx-input" id="capabilityVersion" placeholder="例如: 1.0.0">
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">描述</label>
+                    <textarea class="nx-textarea" id="capabilityDesc" rows="3" placeholder="能力描述"></textarea>
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">端点地址</label>
+                    <input type="text" class="nx-input" id="endpoint" placeholder="例如: http://localhost:8080/api">
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="registerCapability()">注册</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="nx-modal" id="detailModal">
+        <div class="nx-modal__backdrop" onclick="closeDetailModal()"></div>
+        <div class="nx-modal__content nx-modal__content--lg">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">能力详情</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeDetailModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body" id="detailBody">
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let allCapabilities = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCapabilities();
+        });
+
+        async function loadCapabilities() {
+            try {
+                const response = await fetch('/api/enexus/capability/list', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                const rs = await response.json();
+                allCapabilities = rs.data?.list || [];
+                renderTable(allCapabilities);
+                updateStats();
+            } catch (error) {
+                document.getElementById('capabilityTableBody').innerHTML = 
+                    '<tr><td colspan="8" class="nx-text-center nx-text-danger">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        function updateStats() {
+            let enabled = 0, pending = 0;
+            let types = new Set();
+            allCapabilities.forEach(c => {
+                if (c.status === 'ENABLED') enabled++;
+                else if (c.status === 'PENDING') pending++;
+                if (c.capabilityType) types.add(c.capabilityType);
+            });
+            document.getElementById('totalCount').textContent = allCapabilities.length;
+            document.getElementById('enabledCount').textContent = enabled;
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('typeCount').textContent = types.size;
+        }
+
+        function renderTable(capabilities) {
+            if (!capabilities || capabilities.length === 0) {
+                document.getElementById('capabilityTableBody').innerHTML = 
+                    '<tr><td colspan="8" class="nx-text-center">暂无数据</td></tr>';
+                return;
+            }
+
+            let html = '';
+            capabilities.forEach(cap => {
+                const statusBadge = getStatusBadge(cap.status);
+                const createdAt = formatTime(cap.createdAt);
+                
+                html += '<tr>';
+                html += '  <td>' + (cap.capabilityId || '-') + '</td>';
+                html += '  <td>' + (cap.capabilityName || '-') + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--info">' + (cap.capabilityType || '-') + '</span></td>';
+                html += '  <td>' + (cap.providerId || '-') + '</td>';
+                html += '  <td>' + (cap.version || '-') + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--' + statusBadge + '">' + (cap.status || '-') + '</span></td>';
+                html += '  <td>' + createdAt + '</td>';
+                html += '  <td>';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="viewCapability(\'' + cap.capabilityId + '\')">详情</button> ';
+                if (cap.status === 'ENABLED') {
+                    html += '    <button class="nx-btn nx-btn--sm nx-btn--warning" onclick="toggleCapability(\'' + cap.capabilityId + '\')">禁用</button>';
+                } else if (cap.status === 'DISABLED') {
+                    html += '    <button class="nx-btn nx-btn--sm nx-btn--success" onclick="toggleCapability(\'' + cap.capabilityId + '\')">启用</button>';
+                }
+                html += '  </td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('capabilityTableBody').innerHTML = html;
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'ENABLED': 'success',
+                'DISABLED': 'secondary',
+                'PENDING': 'warning'
+            };
+            return map[status] || 'secondary';
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function openRegisterModal() {
+            document.getElementById('capabilityName').value = '';
+            document.getElementById('capabilityType').value = 'SKILL';
+            document.getElementById('capabilityVersion').value = '';
+            document.getElementById('capabilityDesc').value = '';
+            document.getElementById('endpoint').value = '';
+            document.getElementById('registerModal').classList.add('nx-modal--open');
+        }
+
+        function closeModal() {
+            document.getElementById('registerModal').classList.remove('nx-modal--open');
+        }
+
+        async function registerCapability() {
+            const name = document.getElementById('capabilityName').value;
+            const type = document.getElementById('capabilityType').value;
+            const version = document.getElementById('capabilityVersion').value;
+            const desc = document.getElementById('capabilityDesc').value;
+            const endpoint = document.getElementById('endpoint').value;
+            
+            if (!name) {
+                alert('请输入能力名称');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/enexus/capability/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        capabilityName: name,
+                        capabilityType: type,
+                        version: version || '1.0.0',
+                        description: desc,
+                        endpoint: endpoint
+                    })
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    closeModal();
+                    loadCapabilities();
+                }
+            } catch (error) {
+                alert('注册失败: ' + error.message);
+            }
+        }
+
+        async function viewCapability(capabilityId) {
+            try {
+                const response = await fetch('/api/enexus/capability/get', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({capabilityId: capabilityId})
+                });
+                const rs = await response.json();
+                const cap = rs.data;
+                
+                let html = '';
+                html += '<div class="nx-grid nx-grid-cols-2 nx-gap-4">';
+                html += '  <div><strong>能力ID:</strong> ' + (cap.capabilityId || '-') + '</div>';
+                html += '  <div><strong>名称:</strong> ' + (cap.capabilityName || '-') + '</div>';
+                html += '  <div><strong>类型:</strong> <span class="nx-badge nx-badge--info">' + (cap.capabilityType || '-') + '</span></div>';
+                html += '  <div><strong>版本:</strong> ' + (cap.version || '-') + '</div>';
+                html += '  <div><strong>提供者:</strong> ' + (cap.providerId || '-') + '</div>';
+                html += '  <div><strong>状态:</strong> <span class="nx-badge nx-badge--' + getStatusBadge(cap.status) + '">' + (cap.status || '-') + '</span></div>';
+                html += '  <div><strong>端点:</strong> ' + (cap.endpoint || '-') + '</div>';
+                html += '  <div><strong>注册时间:</strong> ' + formatTime(cap.createdAt) + '</div>';
+                html += '</div>';
+                
+                if (cap.description) {
+                    html += '<div class="nx-mt-4"><strong>描述:</strong></div>';
+                    html += '<div class="nx-ml-4">' + cap.description + '</div>';
+                }
+                
+                if (cap.parameters && cap.parameters.length > 0) {
+                    html += '<div class="nx-mt-4"><strong>参数:</strong></div>';
+                    html += '<div class="nx-flex nx-flex-wrap nx-gap-2 nx-mt-2">';
+                    cap.parameters.forEach(param => {
+                        html += '<span class="nx-badge nx-badge--secondary">' + param + '</span>';
+                    });
+                    html += '</div>';
+                }
+                
+                document.getElementById('detailBody').innerHTML = html;
+                document.getElementById('detailModal').classList.add('nx-modal--open');
+            } catch (error) {
+                alert('获取详情失败: ' + error.message);
+            }
+        }
+
+        async function toggleCapability(capabilityId) {
+            if (!confirm('确定要执行此操作吗？')) return;
+            
+            try {
+                const response = await fetch('/api/enexus/capability/toggle', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({capabilityId: capabilityId})
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    loadCapabilities();
+                }
+            } catch (error) {
+                alert('操作失败: ' + error.message);
+            }
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('nx-modal--open');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterCapabilities();
+        });
+
+        document.getElementById('typeFilter').addEventListener('change', function() {
+            filterCapabilities();
+        });
+
+        function filterCapabilities() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const type = document.getElementById('typeFilter').value;
+            
+            let filtered = allCapabilities;
+            
+            if (search) {
+                filtered = filtered.filter(c => 
+                    (c.capabilityId && c.capabilityId.toLowerCase().includes(search)) ||
+                    (c.capabilityName && c.capabilityName.toLowerCase().includes(search)) ||
+                    (c.providerId && c.providerId.toLowerCase().includes(search))
+                );
+            }
+            
+            if (type) {
+                filtered = filtered.filter(c => c.capabilityType === type);
+            }
+            
+            renderTable(filtered);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>协作请求 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">协作请求</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="loadRequests()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-message-2-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">总请求</div>
+                                <div class="nx-stat-card__value" id="totalRequests">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-time-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">待处理</div>
+                                <div class="nx-stat-card__value" id="pendingRequests">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">已批准</div>
+                                <div class="nx-stat-card__value" id="approvedRequests">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--danger">
+                                <i class="ri-close-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">已拒绝</div>
+                                <div class="nx-stat-card__value" id="rejectedRequests">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-grid nx-grid-cols-3 nx-gap-6">
+                        <div class="nx-card" style="grid-column: span 2;">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">请求列表</h3>
+                                <span class="nx-badge nx-badge--secondary" id="requestCount">0</span>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container" style="max-height: 400px; overflow-y: auto;">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>请求ID</th>
+                                                <th>类型</th>
+                                                <th>优先级</th>
+                                                <th>来源</th>
+                                                <th>目标</th>
+                                                <th>状态</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="requestTableBody">
+                                            <tr><td colspan="7" class="nx-text-center">加载中...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">请求详情</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div id="requestDetails">
+                                    <p class="nx-text-secondary">选择请求查看详情</p>
+                                </div>
+                                <div class="nx-flex nx-gap-2 nx-mt-4" id="actionButtons" style="display: none;">
+                                    <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="approveRequest()">
+                                        <i class="ri-check-line"></i> 批准
+                                    </button>
+                                    <button class="nx-btn nx-btn--danger nx-btn--sm" onclick="rejectRequest()">
+                                        <i class="ri-close-line"></i> 拒绝
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">快速导航</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-flex nx-gap-3">
+                                <button class="nx-btn nx-btn--secondary" onclick="window.location.href='/console/pages/collaboration/task-distribution.html'">
+                                    <i class="ri-task-line"></i> 任务分配
+                                </button>
+                                <button class="nx-btn nx-btn--secondary" onclick="window.location.href='/console/pages/collaboration/status-tracking.html'">
+                                    <i class="ri-line-chart-line"></i> 状态跟踪
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/collaboration-api.js"></script>
+    <script>
+        let allRequests = [];
+        let selectedRequestId = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRequests();
+            loadStats();
+        });
+
+        async function loadRequests() {
+            try {
+                const rs = await CollaborationAPI.getRequests({});
+                allRequests = rs.data || [];
+                renderTable(allRequests);
+                document.getElementById('requestCount').textContent = allRequests.length;
+            } catch (error) {
+                document.getElementById('requestTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="nx-text-center nx-text-danger">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const rs = await CollaborationAPI.getStats();
+                const stats = rs.data;
+                if (stats) {
+                    document.getElementById('totalRequests').textContent = stats.totalRequests || 0;
+                    document.getElementById('pendingRequests').textContent = stats.pendingRequests || 0;
+                    document.getElementById('approvedRequests').textContent = stats.approvedRequests || 0;
+                    document.getElementById('rejectedRequests').textContent = stats.rejectedRequests || 0;
+                }
+            } catch (error) {
+                console.error('加载统计失败:', error);
+            }
+        }
+
+        function renderTable(requests) {
+            if (!requests || requests.length === 0) {
+                document.getElementById('requestTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="nx-text-center">暂无协作请求</td></tr>';
+                return;
+            }
+
+            let html = '';
+            requests.forEach(req => {
+                const status = CollaborationAPI.formatRequestStatus(req.status);
+                const selectedClass = selectedRequestId === req.requestId ? 'nx-table__row--selected' : '';
+                
+                html += '<tr class="' + selectedClass + '" onclick="selectRequest(\'' + req.requestId + '\')">';
+                html += '  <td>' + (req.requestId || '-') + '</td>';
+                html += '  <td>' + (req.type || '-') + '</td>';
+                html += '  <td>' + (req.priority || '-') + '</td>';
+                html += '  <td>' + (req.sourceNode || '-') + '</td>';
+                html += '  <td>' + (req.targetNode || '-') + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--' + getStatusBadge(req.status) + '">' + status.text + '</span></td>';
+                html += '  <td>';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="event.stopPropagation(); selectRequest(\'' + req.requestId + '\')">详情</button>';
+                html += '  </td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('requestTableBody').innerHTML = html;
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'PENDING': 'warning',
+                'APPROVED': 'success',
+                'REJECTED': 'danger',
+                'COMPLETED': 'info'
+            };
+            return map[status] || 'secondary';
+        }
+
+        function selectRequest(requestId) {
+            selectedRequestId = requestId;
+            
+            const req = allRequests.find(r => r.requestId === requestId);
+            if (req) {
+                renderRequestDetails(req);
+                renderTable(allRequests);
+            }
+        }
+
+        function renderRequestDetails(req) {
+            if (!req) return;
+            
+            const time = CollaborationAPI.formatTime(req.createdTime);
+            let html = '';
+            html += '<div class="nx-mb-2"><strong>请求ID:</strong> ' + (req.requestId || '-') + '</div>';
+            html += '<div class="nx-mb-2"><strong>类型:</strong> ' + (req.type || '-') + '</div>';
+            html += '<div class="nx-mb-2"><strong>优先级:</strong> ' + (req.priority || '-') + '</div>';
+            html += '<div class="nx-mb-2"><strong>状态:</strong> ' + (req.status || '-') + '</div>';
+            html += '<div class="nx-mb-2"><strong>来源节点:</strong> ' + (req.sourceNode || '-') + '</div>';
+            html += '<div class="nx-mb-2"><strong>目标节点:</strong> ' + (req.targetNode || '-') + '</div>';
+            html += '<div class="nx-mb-2"><strong>创建时间:</strong> ' + time + '</div>';
+            html += '<div class="nx-mb-2"><strong>描述:</strong> ' + (req.description || '-') + '</div>';
+            
+            document.getElementById('requestDetails').innerHTML = html;
+            
+            if (req.status === 'PENDING') {
+                document.getElementById('actionButtons').style.display = 'flex';
+            } else {
+                document.getElementById('actionButtons').style.display = 'none';
+            }
+        }
+
+        async function approveRequest() {
+            if (!selectedRequestId) return;
+            
+            try {
+                const rs = await CollaborationAPI.approveRequest(selectedRequestId);
+                if (rs.requestStatus === 200) {
+                    loadRequests();
+                    loadStats();
+                }
+            } catch (error) {
+                console.error('批准失败:', error);
+            }
+        }
+
+        async function rejectRequest() {
+            if (!selectedRequestId) return;
+            
+            try {
+                const rs = await CollaborationAPI.rejectRequest(selectedRequestId, '管理员拒绝');
+                if (rs.requestStatus === 200) {
+                    loadRequests();
+                    loadStats();
+                }
+            } catch (error) {
+                console.error('拒绝失败:', error);
+            }
+        }
+    </script>
+</body>
+</html>

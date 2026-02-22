@@ -3,388 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理中心 - 技能认证</title>
-    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
-    <link href="../../assets/css/remixicon/remixicon.css" rel="stylesheet">
-    <script src="/skillcenter/console/js/menu.js"></script>
-
+    <title>技能认证 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
 </head>
 <body>
-    <div class="container">
-        <aside class="sidebar" id="sidebar">
-            <!-- 菜单将通过menu.js动态加载 -->
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
         </aside>
-        <main class="main-content">
-            <header class="header">
-                <h1>技能认证管理</h1>
-                <div class="user-info">
-                    <span class="user-name">管理员</span>
-                    <i class="ri-user-line"></i>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能认证</h2>
                 </div>
-            </header>
-            <div class="skill-authentication-container">
-                <div class="page-header">
-                    <button class="btn btn-primary" onclick="openIssueCertificateModal()">
-                        <i class="ri-certificate-line"></i> 签发认证
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <span class="nx-badge nx-badge--danger">管理员</span>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
                     </button>
                 </div>
-        
-        <!-- 搜索和筛选 -->
-        <div class="search-box">
-            <input type="text" placeholder="搜索技能名称或ID" id="skillSearch" class="form-control">
-        </div>
-        
-        <div class="filter-box">
-            <select id="statusFilter" class="form-control">
-                <option value="all">全部状态</option>
-                <option value="pending">待审核</option>
-                <option value="approved">已批准</option>
-                <option value="rejected">已拒绝</option>
-            </select>
-        </div>
-        
-        <!-- 认证列表 -->
-        <div class="authentication-list">
-            <table>
-                <thead>
-                    <tr>
-                        <th>认证ID</th>
-                        <th>技能名称</th>
-                        <th>技能ID</th>
-                        <th>申请人</th>
-                        <th>申请时间</th>
-                        <th>状态</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="authTableBody">
-                    <!-- 认证数据将通过JavaScript动态填充 -->
-                </tbody>
-            </table>
-        </div>
-            </div>
+            </header>
             
-            <!-- 签发认证模态框 -->
-            <div id="certificateModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>签发技能认证</h2>
-                        <button class="close-btn" onclick="closeCertificateModal()">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="certificateForm">
-                            <div class="form-group">
-                                <label for="skillSelect">选择技能</label>
-                                <select id="skillSelect" required class="form-control">
-                                    <option value="">请选择技能</option>
-                                    <!-- 技能选项将通过JavaScript动态填充 -->
-                                </select>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">待认证技能</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>技能名称</th>
+                                            <th>提交者</th>
+                                            <th>提交时间</th>
+                                            <th>状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>天气查询</td>
+                                            <td>user1</td>
+                                            <td>2024-01-15</td>
+                                            <td><span class="nx-badge nx-badge--warning">待审核</span></td>
+                                            <td>
+                                                <button class="nx-btn nx-btn--primary nx-btn--sm">通过</button>
+                                                <button class="nx-btn nx-btn--danger nx-btn--sm">拒绝</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <div class="form-group">
-                                <label for="certificateType">认证类型</label>
-                                <select id="certificateType" required class="form-control">
-                                    <option value="standard">标准认证</option>
-                                    <option value="premium">高级认证</option>
-                                    <option value="enterprise">企业认证</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="certificateDescription">认证描述</label>
-                                <textarea id="certificateDescription" required class="form-control"></textarea>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="closeCertificateModal()">取消</button>
-                        <button type="submit" class="btn btn-primary" form="certificateForm">签发认证</button>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- 审核认证模态框 -->
-            <div id="reviewModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>审核技能认证</h2>
-                        <button class="close-btn" onclick="closeReviewModal()">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="reviewForm">
-                            <input type="hidden" id="authId">
-                            <div class="skill-details" id="skillDetails">
-                                <!-- 技能详情将通过JavaScript动态填充 -->
-                            </div>
-                            <div class="form-group">
-                                <label for="reviewStatus">审核结果</label>
-                                <select id="reviewStatus" required class="form-control">
-                                    <option value="approved">批准</option>
-                                    <option value="rejected">拒绝</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="reviewComments">审核意见</label>
-                                <textarea id="reviewComments" required class="form-control"></textarea>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="closeReviewModal()">取消</button>
-                        <button type="submit" class="btn btn-primary" form="reviewForm">提交审核</button>
-                    </div>
-                </div>
-            </div>
-            
-            <script>
-        // API基础URL
-        const API_BASE_URL = '/skillcenter/api';
-        
-        // 页面加载时渲染认证列表
-        document.addEventListener('DOMContentLoaded', function() {
-            renderAuthList();
-            populateSkillSelect();
-        });
-        
-        // 渲染认证列表
-        function renderAuthList() {
-            const tableBody = document.getElementById('authTableBody');
-            tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">加载中...</td></tr>';
-            
-            const searchTerm = document.getElementById('skillSearch').value.toLowerCase();
-            const statusFilter = document.getElementById('statusFilter').value;
-            
-            // 构建查询参数
-            const params = new URLSearchParams();
-            if (statusFilter !== 'all') params.append('status', statusFilter);
-            const queryString = params.toString();
-            
-            // 调用API获取认证列表
-            fetch(`${API_BASE_URL}/auth${queryString ? '?' + queryString : ''}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        let authRequests = data.data.items || [];
-                        
-                        // 客户端搜索过滤
-                        if (searchTerm) {
-                            authRequests = authRequests.filter(request => {
-                                return request.skillName.toLowerCase().includes(searchTerm) || 
-                                       request.skillId.toLowerCase().includes(searchTerm);
-                            });
-                        }
-                        
-                        tableBody.innerHTML = '';
-                        
-                        authRequests.forEach(request => {
-                            const row = document.createElement('tr');
-                            row.innerHTML = `
-                                <td>${request.id}</td>
-                                <td>${request.skillName}</td>
-                                <td>${request.skillId}</td>
-                                <td>${request.applicant}</td>
-                                <td>${request.appliedAt ? new Date(request.appliedAt).toLocaleString() : ''}</td>
-                                <td><span class="auth-status status-${request.status}">${getStatusText(request.status)}</span></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn btn-secondary" onclick="viewAuthDetails('${request.id}')">
-                                            <i class="ri-eye-line"></i> 查看
-                                        </button>
-                                        <button class="btn btn-success" onclick="reviewAuth('${request.id}')" ${request.status !== 'pending' ? 'disabled' : ''}>
-                                            <i class="ri-check-line"></i> 审核
-                                        </button>
-                                    </div>
-                                </td>
-                            `;
-                            tableBody.appendChild(row);
-                        });
-                    } else {
-                        tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: red;">获取认证列表失败</td></tr>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching auth requests:', error);
-                    tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: red;">获取认证列表失败</td></tr>';
-                });
-        }
-        
-        // 获取状态文本
-        function getStatusText(status) {
-            switch (status) {
-                case 'pending': return '待审核';
-                case 'approved': return '已批准';
-                case 'rejected': return '已拒绝';
-                default: return status;
-            }
-        }
-        
-        // 填充技能选择下拉框
-        function populateSkillSelect() {
-            const skillSelect = document.getElementById('skillSelect');
-            skillSelect.innerHTML = '<option value="">请选择技能</option>';
-            
-            // 调用API获取技能列表
-            fetch(`${API_BASE_URL}/skills`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const skills = data.data.items || [];
-                        skills.forEach(skill => {
-                            const option = document.createElement('option');
-                            option.value = skill.id;
-                            option.textContent = skill.name;
-                            skillSelect.appendChild(option);
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching skills:', error);
-                });
-        }
-        
-        // 打开签发认证模态框
-        function openIssueCertificateModal() {
-            document.getElementById('certificateForm').reset();
-            document.getElementById('certificateModal').style.display = 'block';
-        }
-        
-        // 关闭签发认证模态框
-        function closeCertificateModal() {
-            document.getElementById('certificateModal').style.display = 'none';
-        }
-        
-        // 打开审核认证模态框
-        function reviewAuth(authId) {
-            // 调用API获取认证详情
-            fetch(`${API_BASE_URL}/auth/${authId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const auth = data.data;
-                        document.getElementById('authId').value = auth.id;
-                        document.getElementById('skillDetails').innerHTML = `
-                            <h4>技能详情</h4>
-                            <p><strong>技能名称:</strong> ${auth.skillName}</p>
-                            <p><strong>技能ID:</strong> ${auth.skillId}</p>
-                            <p><strong>申请人:</strong> ${auth.applicant}</p>
-                            <p><strong>申请时间:</strong> ${auth.appliedAt ? new Date(auth.appliedAt).toLocaleString() : ''}</p>
-                        `;
-                        document.getElementById('reviewModal').style.display = 'block';
-                    } else {
-                        alert('获取认证详情失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching auth details:', error);
-                    alert('获取认证详情失败');
-                });
-        }
-        
-        // 关闭审核认证模态框
-        function closeReviewModal() {
-            document.getElementById('reviewModal').style.display = 'none';
-        }
-        
-        // 查看认证详情
-        function viewAuthDetails(authId) {
-            // 调用API获取认证详情
-            fetch(`${API_BASE_URL}/auth/${authId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const auth = data.data;
-                        alert(`认证详情:\n\n认证ID: ${auth.id}\n技能名称: ${auth.skillName}\n技能ID: ${auth.skillId}\n申请人: ${auth.applicant}\n申请时间: ${auth.appliedAt ? new Date(auth.appliedAt).toLocaleString() : ''}\n状态: ${getStatusText(auth.status)}`);
-                    } else {
-                        alert('获取认证详情失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching auth details:', error);
-                    alert('获取认证详情失败');
-                });
-        }
-        
-        // 提交签发认证表单
-        document.getElementById('certificateForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const skillId = document.getElementById('skillSelect').value;
-            const certificateType = document.getElementById('certificateType').value;
-            const certificateDescription = document.getElementById('certificateDescription').value;
-            
-            const certData = {
-                skillId: skillId,
-                type: certificateType,
-                description: certificateDescription
-            };
-            
-            // 调用API签发认证
-            fetch(`${API_BASE_URL}/auth/issue`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(certData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    renderAuthList();
-                    closeCertificateModal();
-                    alert('认证签发成功！');
-                } else {
-                    alert('认证签发失败');
-                }
-            })
-            .catch(error => {
-                console.error('Error issuing certificate:', error);
-                alert('认证签发失败');
-            });
-        });
-        
-        // 提交审核表单
-        document.getElementById('reviewForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const authId = document.getElementById('authId').value;
-            const reviewStatus = document.getElementById('reviewStatus').value;
-            const reviewComments = document.getElementById('reviewComments').value;
-            
-            const reviewData = {
-                status: reviewStatus,
-                comments: reviewComments
-            };
-            
-            // 调用API审核认证
-            fetch(`${API_BASE_URL}/auth/${authId}/review`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(reviewData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    renderAuthList();
-                    closeReviewModal();
-                    alert('审核完成！');
-                } else {
-                    alert('审核失败');
-                }
-            })
-            .catch(error => {
-                console.error('Error reviewing auth:', error);
-                alert('审核失败');
-            });
-        });
-        
-        // 搜索和筛选事件
-        document.getElementById('skillSearch').addEventListener('input', renderAuthList);
-        document.getElementById('statusFilter').addEventListener('change', renderAuthList);
-        
-        // 初始化菜单
-        initMenu('skill-authentication');
-            </script>
         </main>
     </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('技能认证页面初始化完成');
+        };
+    </script>
 </body>
 </html>

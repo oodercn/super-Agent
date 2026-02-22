@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Topic管理 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .topic-container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+            height: calc(100vh - 180px);
+        }
+        
+        .topic-tree-panel {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .tree-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+        
+        .tree-node {
+            user-select: none;
+        }
+        
+        .tree-node__content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .tree-node__content:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .tree-node__content.selected {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--nx-primary);
+        }
+        
+        .tree-node__toggle {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--ns-secondary);
+            transition: transform 0.2s ease;
+        }
+        
+        .tree-node__toggle.expanded {
+            transform: rotate(90deg);
+        }
+        
+        .tree-node__toggle.empty {
+            visibility: hidden;
+        }
+        
+        .tree-node__icon {
+            font-size: 16px;
+        }
+        
+        .tree-node__icon.folder { color: var(--ns-warning); }
+        .tree-node__icon.topic { color: var(--nx-primary); }
+        
+        .tree-node__name {
+            flex: 1;
+            font-size: 13px;
+        }
+        
+        .tree-node__badge {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--nx-primary);
+        }
+        
+        .tree-node__children {
+            padding-left: 20px;
+            display: none;
+        }
+        
+        .tree-node__children.expanded {
+            display: block;
+        }
+        
+        .detail-panel {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .detail-empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--ns-secondary);
+        }
+        
+        .detail-empty__icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .detail-content {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .detail-content.active {
+            display: flex;
+        }
+        
+        .detail-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .detail-header__path {
+            font-family: monospace;
+            font-size: 14px;
+            color: var(--nx-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .detail-header__stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: var(--ns-input-bg);
+            border-radius: 8px;
+        }
+        
+        .stat-item__value {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .stat-item__label {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .detail-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .detail-section {
+            margin-bottom: 24px;
+        }
+        
+        .detail-section__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .detail-section__title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .subscriber-list {
+            background: var(--ns-input-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .subscriber-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .subscriber-item:last-child {
+            border-bottom: none;
+        }
+        
+        .subscriber-item__info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .subscriber-item__avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--nx-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .subscriber-item__name {
+            font-size: 14px;
+            color: var(--ns-dark);
+        }
+        
+        .subscriber-item__time {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .subscriber-item__actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .message-list {
+            background: var(--ns-input-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .message-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .message-item:last-child {
+            border-bottom: none;
+        }
+        
+        .message-item__header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .message-item__sender {
+            font-size: 13px;
+            color: var(--ns-dark);
+        }
+        
+        .message-item__time {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .message-item__content {
+            font-size: 13px;
+            color: var(--ns-secondary);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .detail-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--ns-border);
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: var(--nx-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: var(--ns-card-bg);
+            color: var(--ns-dark);
+            border: 1px solid var(--ns-border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--ns-bg-hover);
+            border-color: var(--nx-primary);
+        }
+        
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--ns-danger);
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--ns-card-bg);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--ns-secondary);
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            padding: 24px;
+        }
+        
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ns-secondary);
+            margin-bottom: 6px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .search-box {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 6px;
+            color: var(--ns-dark);
+            font-size: 13px;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 4px;
+            padding: 4px;
+            background: var(--ns-input-bg);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--ns-secondary);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        
+        .tab:hover {
+            color: var(--ns-dark);
+        }
+        
+        .tab.active {
+            background: var(--nx-primary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold"><i class="ri-git-branch-line"></i> Topic管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="btn btn-primary" onclick="openCreateModal()">
+                        <i class="ri-add-line"></i> 创建Topic
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="topic-container">
+                        <div class="topic-tree-panel">
+                            <div class="panel-header">
+                                <span class="panel-title">Topic树</span>
+                                <button class="btn btn-secondary btn-sm" onclick="loadTopicTree()">
+                                    <i class="ri-refresh-line"></i>
+                                </button>
+                            </div>
+                            <div class="search-box">
+                                <input type="text" placeholder="搜索Topic..." oninput="searchTopics(this.value)">
+                            </div>
+                            <div class="tree-container" id="topicTree">
+                            </div>
+                        </div>
+                        
+                        <div class="detail-panel">
+                            <div class="detail-empty" id="detailEmpty">
+                                <div class="detail-empty__icon"><i class="ri-git-branch-line"></i></div>
+                                <div>选择一个Topic查看详情</div>
+                            </div>
+                            
+                            <div class="detail-content" id="detailContent">
+                                <div class="detail-header">
+                                    <div class="detail-header__path">
+                                        <i class="ri-git-branch-line"></i>
+                                        <span id="detailPath">ooder/system/alarm</span>
+                                    </div>
+                                    <div class="detail-header__stats">
+                                        <div class="stat-item">
+                                            <div class="stat-item__value" id="statSubscribers">12</div>
+                                            <div class="stat-item__label">订阅者</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-item__value" id="statMessages">1,234</div>
+                                            <div class="stat-item__label">消息数</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-item__value" id="statRate">45/s</div>
+                                            <div class="stat-item__label">消息速率</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-item__value" id="statRetention">7天</div>
+                                            <div class="stat-item__label">保留时间</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="detail-body">
+                                    <div class="tabs">
+                                        <div class="tab active" onclick="switchTab('subscribers')">订阅者</div>
+                                        <div class="tab" onclick="switchTab('messages')">消息记录</div>
+                                        <div class="tab" onclick="switchTab('publish')">发布消息</div>
+                                    </div>
+                                    
+                                    <div id="subscribersTab">
+                                        <div class="detail-section">
+                                            <div class="detail-section__header">
+                                                <span class="detail-section__title">订阅者列表</span>
+                                                <button class="btn btn-secondary btn-sm" onclick="openSubscribeModal()">
+                                                    <i class="ri-user-add-line"></i> 添加订阅
+                                                </button>
+                                            </div>
+                                            <div class="subscriber-list" id="subscriberList">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="messagesTab" style="display: none;">
+                                        <div class="detail-section">
+                                            <div class="detail-section__header">
+                                                <span class="detail-section__title">最近消息</span>
+                                                <button class="btn btn-secondary btn-sm" onclick="loadMessages()">
+                                                    <i class="ri-refresh-line"></i>
+                                                </button>
+                                            </div>
+                                            <div class="message-list" id="messageList">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="publishTab" style="display: none;">
+                                        <div class="detail-section">
+                                            <div class="detail-section__title">发布消息</div>
+                                            <div class="form-group">
+                                                <label>消息内容</label>
+                                                <textarea id="publishContent" placeholder="输入要发布的消息内容..."></textarea>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>消息类型</label>
+                                                <select id="publishType">
+                                                    <option value="text">文本消息</option>
+                                                    <option value="json">JSON数据</option>
+                                                    <option value="binary">二进制数据</option>
+                                                </select>
+                                            </div>
+                                            <button class="btn btn-primary" onclick="publishMessage()">
+                                                <i class="ri-send-plane-line"></i> 发布消息
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="detail-footer">
+                                    <button class="btn btn-danger btn-sm" onclick="deleteTopic()">
+                                        <i class="ri-delete-bin-line"></i> 删除Topic
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">创建Topic</span>
+                <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Topic路径</label>
+                    <input type="text" id="newTopicPath" placeholder="ooder/custom/topic">
+                </div>
+                <div class="form-group">
+                    <label>保留时间</label>
+                    <select id="newTopicRetention">
+                        <option value="86400">1天</option>
+                        <option value="604800" selected>7天</option>
+                        <option value="2592000">30天</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>最大订阅者</label>
+                    <input type="number" id="newTopicMaxSubscribers" value="100">
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea id="newTopicDesc" placeholder="Topic描述..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCreateModal()">取消</button>
+                <button class="btn btn-primary" onclick="createTopic()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="subscribeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">添加订阅者</span>
+                <button class="modal-close" onclick="closeSubscribeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>订阅者ID</label>
+                    <input type="text" id="subscriberId" placeholder="agent-001">
+                </div>
+                <div class="form-group">
+                    <label>订阅类型</label>
+                    <select id="subscribeType">
+                        <option value="shared">共享订阅</option>
+                        <option value="exclusive">独占订阅</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSubscribeModal()">取消</button>
+                <button class="btn btn-primary" onclick="addSubscriber()">添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let topicTree = null;
+        let selectedTopic = null;
+        
+        window.onPageInit = function() {
+            loadTopicTree();
+        };
+        
+        async function loadTopicTree() {
+            try {
+                const response = await fetch('/api/topic/tree');
+                const result = await response.json();
+                
+                if (result.success) {
+                    topicTree = result.data;
+                    renderTopicTree();
+                }
+            } catch (error) {
+                loadMockTopicTree();
+            }
+        }
+        
+        function loadMockTopicTree() {
+            topicTree = {
+                name: 'ooder',
+                path: 'ooder',
+                isFolder: true,
+                children: [
+                    {
+                        name: 'p2p',
+                        path: 'ooder/p2p',
+                        isFolder: true,
+                        children: [
+                            { name: 'user-001', path: 'ooder/p2p/user-001/inbox', isFolder: false, subscribers: 1, messages: 45 },
+                            { name: 'user-002', path: 'ooder/p2p/user-002/inbox', isFolder: false, subscribers: 1, messages: 23 }
+                        ]
+                    },
+                    {
+                        name: 'group',
+                        path: 'ooder/group',
+                        isFolder: true,
+                        children: [
+                            { name: 'dev-team', path: 'ooder/group/dev-team', isFolder: false, subscribers: 8, messages: 156 },
+                            { name: 'ops-team', path: 'ooder/group/ops-team', isFolder: false, subscribers: 5, messages: 89 }
+                        ]
+                    },
+                    {
+                        name: 'sensor',
+                        path: 'ooder/sensor',
+                        isFolder: true,
+                        children: [
+                            { name: 'temperature', path: 'ooder/sensor/temperature', isFolder: false, subscribers: 3, messages: 2345 },
+                            { name: 'humidity', path: 'ooder/sensor/humidity', isFolder: false, subscribers: 2, messages: 1234 }
+                        ]
+                    },
+                    {
+                        name: 'command',
+                        path: 'ooder/command',
+                        isFolder: true,
+                        children: [
+                            { name: 'device', path: 'ooder/command/device', isFolder: false, subscribers: 12, messages: 567 },
+                            { name: 'agent', path: 'ooder/command/agent', isFolder: false, subscribers: 5, messages: 234 }
+                        ]
+                    },
+                    {
+                        name: 'system',
+                        path: 'ooder/system',
+                        isFolder: true,
+                        children: [
+                            { name: 'alarm', path: 'ooder/system/alarm', isFolder: false, subscribers: 15, messages: 89 },
+                            { name: 'notification', path: 'ooder/system/notification', isFolder: false, subscribers: 20, messages: 456 },
+                            { name: 'event', path: 'ooder/system/event', isFolder: false, subscribers: 8, messages: 1234 }
+                        ]
+                    }
+                ]
+            };
+            renderTopicTree();
+        }
+        
+        function renderTopicTree() {
+            const container = document.getElementById('topicTree');
+            container.innerHTML = renderTreeNode(topicTree, true);
+        }
+        
+        function renderTreeNode(node, expanded = false) {
+            const hasChildren = node.children && node.children.length > 0;
+            const icon = node.isFolder ? 'ri-folder-fill' : 'ri-file-text-line';
+            const iconClass = node.isFolder ? 'folder' : 'topic';
+            
+            let html = `
+                <div class="tree-node">
+                    <div class="tree-node__content" onclick="selectTopicNode(event, '${node.path}', ${!node.isFolder})">
+                        <span class="tree-node__toggle ${hasChildren ? (expanded ? 'expanded' : '') : 'empty'}" onclick="toggleNode(event, this)">
+                            <i class="ri-arrow-right-s-line"></i>
+                        </span>
+                        <i class="tree-node__icon ${iconClass} ${icon}"></i>
+                        <span class="tree-node__name">${node.name}</span>
+                        ${!node.isFolder && node.subscribers ? `<span class="tree-node__badge">${node.subscribers}</span>` : ''}
+                    </div>
+            `;
+            
+            if (hasChildren) {
+                html += `<div class="tree-node__children ${expanded ? 'expanded' : ''}">`;
+                for (const child of node.children) {
+                    html += renderTreeNode(child);
+                }
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            return html;
+        }
+        
+        function toggleNode(event, toggle) {
+            event.stopPropagation();
+            const children = toggle.closest('.tree-node').querySelector('.tree-node__children');
+            if (children) {
+                toggle.classList.toggle('expanded');
+                children.classList.toggle('expanded');
+            }
+        }
+        
+        function selectTopicNode(event, path, isTopic) {
+            event.stopPropagation();
+            
+            document.querySelectorAll('.tree-node__content').forEach(el => el.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+            
+            if (isTopic) {
+                selectedTopic = path;
+                loadTopicDetail(path);
+            }
+        }
+        
+        async function loadTopicDetail(path) {
+            document.getElementById('detailEmpty').style.display = 'none';
+            document.getElementById('detailContent').classList.add('active');
+            
+            document.getElementById('detailPath').textContent = path;
+            
+            try {
+                const response = await fetch(`/api/topic/${encodeURIComponent(path)}/stats`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const stats = result.data;
+                    document.getElementById('statSubscribers').textContent = stats.subscribers || 0;
+                    document.getElementById('statMessages').textContent = formatNumber(stats.messages || 0);
+                    document.getElementById('statRate').textContent = (stats.rate || 0) + '/s';
+                    document.getElementById('statRetention').textContent = formatRetention(stats.retention || 604800);
+                }
+            } catch (error) {
+                document.getElementById('statSubscribers').textContent = Math.floor(Math.random() * 20) + 1;
+                document.getElementById('statMessages').textContent = formatNumber(Math.floor(Math.random() * 2000));
+                document.getElementById('statRate').textContent = Math.floor(Math.random() * 50) + '/s';
+                document.getElementById('statRetention').textContent = '7天';
+            }
+            
+            loadSubscribers(path);
+            loadMessages(path);
+        }
+        
+        async function loadSubscribers(path) {
+            try {
+                const response = await fetch(`/api/topic/${encodeURIComponent(path)}/subscribers`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    renderSubscribers(result.data);
+                }
+            } catch (error) {
+                renderMockSubscribers();
+            }
+        }
+        
+        function renderMockSubscribers() {
+            const mockSubscribers = [
+                { id: 'agent-001', time: '2026-02-20 10:00' },
+                { id: 'agent-002', time: '2026-02-20 09:30' },
+                { id: 'device-001', time: '2026-02-19 15:00' }
+            ];
+            renderSubscribers(mockSubscribers);
+        }
+        
+        function renderSubscribers(subscribers) {
+            const container = document.getElementById('subscriberList');
+            
+            if (!subscribers || subscribers.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--ns-secondary);">暂无订阅者</div>';
+                return;
+            }
+            
+            container.innerHTML = subscribers.map(sub => `
+                <div class="subscriber-item">
+                    <div class="subscriber-item__info">
+                        <div class="subscriber-item__avatar"><i class="ri-user-line"></i></div>
+                        <div>
+                            <div class="subscriber-item__name">${sub.id}</div>
+                            <div class="subscriber-item__time">订阅于 ${sub.time}</div>
+                        </div>
+                    </div>
+                    <div class="subscriber-item__actions">
+                        <button class="btn btn-secondary btn-sm" onclick="removeSubscriber('${sub.id}')">取消订阅</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function loadMessages(path) {
+            try {
+                const response = await fetch(`/api/topic/${encodeURIComponent(path)}/messages?limit=10`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    renderMessages(result.data);
+                }
+            } catch (error) {
+                renderMockMessages();
+            }
+        }
+        
+        function renderMockMessages() {
+            const mockMessages = [
+                { sender: 'system', time: '10:30:00', content: '{"type":"alarm","level":"warning","message":"CPU使用率超过80%"}' },
+                { sender: 'sensor-001', time: '10:25:00', content: '{"temperature":25.5,"humidity":60}' },
+                { sender: 'agent-002', time: '10:20:00', content: '{"status":"running","progress":75}' }
+            ];
+            renderMessages(mockMessages);
+        }
+        
+        function renderMessages(messages) {
+            const container = document.getElementById('messageList');
+            
+            if (!messages || messages.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--ns-secondary);">暂无消息</div>';
+                return;
+            }
+            
+            container.innerHTML = messages.map(msg => `
+                <div class="message-item">
+                    <div class="message-item__header">
+                        <span class="message-item__sender">${msg.sender}</span>
+                        <span class="message-item__time">${msg.time}</span>
+                    </div>
+                    <div class="message-item__content">${msg.content}</div>
+                </div>
+            `).join('');
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('subscribersTab').style.display = tabName === 'subscribers' ? 'block' : 'none';
+            document.getElementById('messagesTab').style.display = tabName === 'messages' ? 'block' : 'none';
+            document.getElementById('publishTab').style.display = tabName === 'publish' ? 'block' : 'none';
+        }
+        
+        function openCreateModal() {
+            document.getElementById('createModal').classList.add('active');
+        }
+        
+        function closeCreateModal() {
+            document.getElementById('createModal').classList.remove('active');
+        }
+        
+        function openSubscribeModal() {
+            if (!selectedTopic) {
+                alert('请先选择一个Topic');
+                return;
+            }
+            document.getElementById('subscribeModal').classList.add('active');
+        }
+        
+        function closeSubscribeModal() {
+            document.getElementById('subscribeModal').classList.remove('active');
+        }
+        
+        async function createTopic() {
+            const path = document.getElementById('newTopicPath').value.trim();
+            if (!path) {
+                alert('请输入Topic路径');
+                return;
+            }
+            
+            const topic = {
+                path: path,
+                retention: parseInt(document.getElementById('newTopicRetention').value),
+                maxSubscribers: parseInt(document.getElementById('newTopicMaxSubscribers').value),
+                description: document.getElementById('newTopicDesc').value
+            };
+            
+            try {
+                const response = await fetch('/api/topic/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(topic)
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Topic创建成功');
+                    closeCreateModal();
+                    loadTopicTree();
+                } else {
+                    alert('创建失败: ' + (result.error || '未知错误'));
+                }
+            } catch (error) {
+                alert('创建失败: ' + error.message);
+            }
+        }
+        
+        async function addSubscriber() {
+            const subscriberId = document.getElementById('subscriberId').value.trim();
+            if (!subscriberId) {
+                alert('请输入订阅者ID');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/topic/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        topic: selectedTopic,
+                        subscriber: subscriberId,
+                        type: document.getElementById('subscribeType').value
+                    })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('订阅成功');
+                    closeSubscribeModal();
+                    loadSubscribers(selectedTopic);
+                } else {
+                    alert('订阅失败: ' + (result.error || '未知错误'));
+                }
+            } catch (error) {
+                alert('订阅失败: ' + error.message);
+            }
+        }
+        
+        async function removeSubscriber(subscriberId) {
+            if (!confirm(`确定要取消 ${subscriberId} 的订阅吗？`)) return;
+            
+            try {
+                const response = await fetch('/api/topic/unsubscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        topic: selectedTopic,
+                        subscriber: subscriberId
+                    })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadSubscribers(selectedTopic);
+                }
+            } catch (error) {
+                alert('取消订阅失败: ' + error.message);
+            }
+        }
+        
+        async function publishMessage() {
+            const content = document.getElementById('publishContent').value.trim();
+            if (!content) {
+                alert('请输入消息内容');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/topic/publish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        topic: selectedTopic,
+                        message: content,
+                        type: document.getElementById('publishType').value
+                    })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('消息发布成功');
+                    document.getElementById('publishContent').value = '';
+                    loadMessages(selectedTopic);
+                } else {
+                    alert('发布失败: ' + (result.error || '未知错误'));
+                }
+            } catch (error) {
+                alert('发布失败: ' + error.message);
+            }
+        }
+        
+        async function deleteTopic() {
+            if (!selectedTopic) return;
+            if (!confirm(`确定要删除Topic "${selectedTopic}" 吗？此操作不可撤销。`)) return;
+            
+            try {
+                const response = await fetch(`/api/topic/${encodeURIComponent(selectedTopic)}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Topic已删除');
+                    selectedTopic = null;
+                    document.getElementById('detailEmpty').style.display = 'flex';
+                    document.getElementById('detailContent').classList.remove('active');
+                    loadTopicTree();
+                } else {
+                    alert('删除失败: ' + (result.error || '未知错误'));
+                }
+            } catch (error) {
+                alert('删除失败: ' + error.message);
+            }
+        }
+        
+        function searchTopics(keyword) {
+            const nodes = document.querySelectorAll('.tree-node');
+            nodes.forEach(node => {
+                const name = node.querySelector('.tree-node__name').textContent.toLowerCase();
+                if (keyword && !name.includes(keyword.toLowerCase())) {
+                    node.style.display = 'none';
+                } else {
+                    node.style.display = '';
+                }
+            });
+        }
+        
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+        
+        function formatRetention(seconds) {
+            if (seconds >= 2592000) return (seconds / 2592000).toFixed(0) + '月';
+            if (seconds >= 604800) return (seconds / 604800).toFixed(0) + '周';
+            if (seconds >= 86400) return (seconds / 86400).toFixed(0) + '天';
+            if (seconds >= 3600) return (seconds / 3600).toFixed(0) + '小时';
+            return seconds + '秒';
+        }
+    </script>
+</body>
+</html>

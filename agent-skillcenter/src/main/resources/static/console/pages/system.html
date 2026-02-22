@@ -3,492 +3,766 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>系统管理 - SkillCenter 控制台</title>
-    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
-    <link href="../assets/css/remixicon/remixicon.css" rel="stylesheet">
-    <script src="/skillcenter/console/js/menu.js"></script>
+    <title>系统配置 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .system-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--nx-bg-elevated);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--nx-primary);
+        }
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: var(--nx-text-secondary);
+            margin-top: 4px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--nx-border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .progress-success { background: var(--nx-success); }
+        .progress-warning { background: var(--nx-warning); }
+        .progress-danger { background: var(--nx-danger); }
+        .progress-primary { background: var(--nx-primary); }
+        
+        .health-check-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--nx-border);
+        }
+        .health-check-item:last-child {
+            border-bottom: none;
+        }
+        .health-status-ok { color: var(--nx-success); }
+        .health-status-warn { color: var(--nx-warning); }
+        .health-status-error { color: var(--nx-danger); }
+        
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--nx-border);
+        }
+        .config-item:last-child {
+            border-bottom: none;
+        }
+        .config-label {
+            color: var(--nx-text-secondary);
+            min-width: 150px;
+        }
+        .config-value {
+            font-weight: 500;
+        }
+        
+        .log-level-INFO { color: var(--nx-primary); }
+        .log-level-WARN { color: var(--nx-warning); }
+        .log-level-ERROR { color: var(--nx-danger); }
+        .log-level-DEBUG { color: var(--nx-text-secondary); }
+        
+        .operation-status-SUCCESS { color: var(--nx-success); }
+        .operation-status-FAILED { color: var(--nx-danger); }
+        
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <!-- 侧边导航栏 -->
-        <aside class="sidebar" id="sidebar">
-            <!-- 菜单将通过menu.js动态加载 -->
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
         </aside>
         
-        <!-- 主内容区 -->
-        <main class="main-content">
-            <div class="header">
-                <h1><i class="ri-server-line"></i> 系统管理</h1>
-                <div class="user-info">
-                    <span class="user-name">管理员</span>
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">系统配置</h2>
                 </div>
-            </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
             
-            <!-- 标签页导航 -->
-            <div class="section" style="padding-bottom: 0;">
-                <div style="display: flex; border-bottom: 1px solid var(--ooder-border); margin-bottom: 0;">
-                    <button class="btn btn-secondary" style="border-radius: var(--ooder-radius) var(--ooder-radius) 0 0; border-bottom: none; margin-right: 0;" onclick="switchTab('system-status')">系统状态</button>
-                    <button class="btn btn-secondary" style="border-radius: 0; border-bottom: none; margin-right: 0;" onclick="switchTab('system-config')">系统配置</button>
-                    <button class="btn btn-secondary" style="border-radius: 0; border-bottom: none; margin-right: 0;" onclick="switchTab('system-control')">系统控制</button>
-                    <button class="btn btn-secondary" style="border-radius: 0 var(--ooder-radius) 0 0; border-bottom: none; margin-right: 0;" onclick="switchTab('system-logs')">系统日志</button>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-tabs nx-mb-6">
+                        <div class="nx-tabs__list">
+                            <button class="nx-tabs__tab active" data-tab="status">系统状态</button>
+                            <button class="nx-tabs__tab" data-tab="config">系统配置</button>
+                            <button class="nx-tabs__tab" data-tab="resources">资源监控</button>
+                            <button class="nx-tabs__tab" data-tab="logs">日志管理</button>
+                            <button class="nx-tabs__tab" data-tab="operations">操作记录</button>
+                        </div>
+                    </div>
+
+                    <div id="tab-status" class="tab-content active">
+                        <div class="system-stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="stat-version">-</div>
+                                <div class="stat-label">系统版本</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="stat-uptime">-</div>
+                                <div class="stat-label">运行时间</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="stat-status">-</div>
+                                <div class="stat-label">系统状态</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="stat-health">-</div>
+                                <div class="stat-label">健康状态</div>
+                            </div>
+                        </div>
+
+                        <div class="nx-card">
+                            <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                                <h3 class="nx-card__title">系统信息</h3>
+                                <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="refreshStatus()">
+                                    <i class="ri-refresh-line"></i> 刷新
+                                </button>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="config-item">
+                                    <span class="config-label">服务名称</span>
+                                    <span class="config-value" id="info-service">-</span>
+                                </div>
+                                <div class="config-item">
+                                    <span class="config-label">版本号</span>
+                                    <span class="config-value" id="info-version">-</span>
+                                </div>
+                                <div class="config-item">
+                                    <span class="config-label">供应商</span>
+                                    <span class="config-value" id="info-vendor">-</span>
+                                </div>
+                                <div class="config-item">
+                                    <span class="config-label">构建时间</span>
+                                    <span class="config-value" id="info-build">-</span>
+                                </div>
+                                <div class="config-item">
+                                    <span class="config-label">Java版本</span>
+                                    <span class="config-value" id="info-java">-</span>
+                                </div>
+                                <div class="config-item">
+                                    <span class="config-label">操作系统</span>
+                                    <span class="config-value" id="info-os">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="nx-card nx-mt-6">
+                            <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                                <h3 class="nx-card__title">健康检查</h3>
+                                <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="runHealthCheck()">
+                                    <i class="ri-heart-pulse-line"></i> 健康检查
+                                </button>
+                            </div>
+                            <div class="nx-card__body">
+                                <div id="health-checks">
+                                    <div class="health-check-item">
+                                        <span>CPU状态</span>
+                                        <span id="health-cpu" class="health-status-ok">正常</span>
+                                    </div>
+                                    <div class="health-check-item">
+                                        <span>内存状态</span>
+                                        <span id="health-memory" class="health-status-ok">正常</span>
+                                    </div>
+                                    <div class="health-check-item">
+                                        <span>磁盘状态</span>
+                                        <span id="health-disk" class="health-status-ok">正常</span>
+                                    </div>
+                                    <div class="health-check-item">
+                                        <span>网络状态</span>
+                                        <span id="health-network" class="health-status-ok">正常</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="nx-flex nx-gap-3 nx-mt-6">
+                            <button class="nx-btn nx-btn--secondary" onclick="exportReport()">
+                                <i class="ri-file-download-line"></i> 导出报告
+                            </button>
+                            <button class="nx-btn nx-btn--warning" onclick="clearCache()">
+                                <i class="ri-delete-bin-line"></i> 清除缓存
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="tab-config" class="tab-content">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">基本配置</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">系统名称</label>
+                                    <input type="text" id="config-system-name" class="nx-input" value="SkillCenter" style="max-width: 400px;">
+                                </div>
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">系统描述</label>
+                                    <input type="text" id="config-system-desc" class="nx-input" value="技能管理和执行平台" style="max-width: 400px;">
+                                </div>
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">默认语言</label>
+                                    <select id="config-language" class="nx-select" style="max-width: 400px;">
+                                        <option value="zh-CN">简体中文</option>
+                                        <option value="en-US">English</option>
+                                    </select>
+                                </div>
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">主题模式</label>
+                                    <select id="config-theme" class="nx-select" style="max-width: 400px;">
+                                        <option value="dark">深色模式</option>
+                                        <option value="light">浅色模式</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="nx-card nx-mt-6">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">安全配置</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">会话超时 (分钟)</label>
+                                    <input type="number" id="config-session-timeout" class="nx-input" value="30" style="max-width: 200px;">
+                                </div>
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">最大登录失败次数</label>
+                                    <input type="number" id="config-max-login-attempts" class="nx-input" value="5" style="max-width: 200px;">
+                                </div>
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">密码最小长度</label>
+                                    <input type="number" id="config-min-password-length" class="nx-input" value="8" style="max-width: 200px;">
+                                </div>
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">启用双因素认证</label>
+                                    <select id="config-2fa" class="nx-select" style="max-width: 200px;">
+                                        <option value="false">否</option>
+                                        <option value="true">是</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="nx-flex nx-gap-3 nx-mt-6">
+                            <button class="nx-btn nx-btn--primary" onclick="saveConfig()">
+                                <i class="ri-save-line"></i> 保存配置
+                            </button>
+                            <button class="nx-btn nx-btn--ghost" onclick="resetConfig()">
+                                <i class="ri-refresh-line"></i> 重置默认
+                            </button>
+                            <button class="nx-btn nx-btn--secondary" onclick="exportConfig()">
+                                <i class="ri-download-line"></i> 导出配置
+                            </button>
+                            <button class="nx-btn nx-btn--secondary" onclick="importConfig()">
+                                <i class="ri-upload-line"></i> 导入配置
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="tab-resources" class="tab-content">
+                        <div class="system-stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="res-cpu-cores">-</div>
+                                <div class="stat-label">CPU核心数</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="res-memory-used">-</div>
+                                <div class="stat-label">已用内存</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="res-memory-total">-</div>
+                                <div class="stat-label">总内存</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="res-memory-max">-</div>
+                                <div class="stat-label">最大内存</div>
+                            </div>
+                        </div>
+
+                        <div class="nx-card">
+                            <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                                <h3 class="nx-card__title">内存使用</h3>
+                                <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="refreshResources()">
+                                    <i class="ri-refresh-line"></i> 刷新
+                                </button>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-mb-4">
+                                    <div class="nx-flex nx-justify-between nx-mb-2">
+                                        <span>已用内存</span>
+                                        <span id="memory-percent">-</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill progress-primary" id="memory-bar" style="width: 0%;"></div>
+                                    </div>
+                                </div>
+                                <div class="config-item">
+                                    <span class="config-label">已用内存</span>
+                                    <span class="config-value" id="mem-used">-</span>
+                                </div>
+                                <div class="config-item">
+                                    <span class="config-label">空闲内存</span>
+                                    <span class="config-value" id="mem-free">-</span>
+                                </div>
+                                <div class="config-item">
+                                    <span class="config-label">总内存</span>
+                                    <span class="config-value" id="mem-total">-</span>
+                                </div>
+                                <div class="config-item">
+                                    <span class="config-label">最大可用内存</span>
+                                    <span class="config-value" id="mem-max">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="nx-card nx-mt-6">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">运行时间</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="config-item">
+                                    <span class="config-label">运行时长</span>
+                                    <span class="config-value" id="res-uptime">-</span>
+                                </div>
+                                <div class="config-item">
+                                    <span class="config-label">可用处理器</span>
+                                    <span class="config-value" id="res-processors">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="nx-flex nx-gap-3 nx-mt-6">
+                            <button class="nx-btn nx-btn--warning" onclick="restartSystem()">
+                                <i class="ri-restart-line"></i> 重启系统
+                            </button>
+                            <button class="nx-btn nx-btn--danger" onclick="shutdownSystem()">
+                                <i class="ri-shut-down-line"></i> 关闭系统
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="tab-logs" class="tab-content">
+                        <div class="nx-card">
+                            <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                                <h3 class="nx-card__title">系统日志</h3>
+                                <div class="nx-flex nx-gap-2">
+                                    <select id="log-level-filter" class="nx-select" style="width: 120px;" onchange="loadLogs()">
+                                        <option value="">全部级别</option>
+                                        <option value="INFO">INFO</option>
+                                        <option value="WARN">WARN</option>
+                                        <option value="ERROR">ERROR</option>
+                                        <option value="DEBUG">DEBUG</option>
+                                    </select>
+                                    <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="loadLogs()">
+                                        <i class="ri-refresh-line"></i> 刷新
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="nx-card__body">
+                                <table class="nx-table nx-table--striped">
+                                    <thead>
+                                        <tr>
+                                            <th>时间</th>
+                                            <th>级别</th>
+                                            <th>来源</th>
+                                            <th>消息</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="log-table-body">
+                                        <tr><td colspan="4" style="text-align: center;">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="nx-flex nx-gap-3 nx-mt-6">
+                            <button class="nx-btn nx-btn--secondary" onclick="exportLogs()">
+                                <i class="ri-download-line"></i> 导出日志
+                            </button>
+                            <button class="nx-btn nx-btn--danger" onclick="clearLogs()">
+                                <i class="ri-delete-bin-line"></i> 清除日志
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="tab-operations" class="tab-content">
+                        <div class="nx-card">
+                            <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                                <h3 class="nx-card__title">操作记录</h3>
+                                <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="loadOperations()">
+                                    <i class="ri-refresh-line"></i> 刷新
+                                </button>
+                            </div>
+                            <div class="nx-card__body">
+                                <table class="nx-table nx-table--striped">
+                                    <thead>
+                                        <tr>
+                                            <th>时间</th>
+                                            <th>类型</th>
+                                            <th>描述</th>
+                                            <th>状态</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="operation-table-body">
+                                        <tr><td colspan="4" style="text-align: center;">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="nx-flex nx-gap-3 nx-mt-6">
+                            <button class="nx-btn nx-btn--secondary" onclick="exportOperations()">
+                                <i class="ri-download-line"></i> 导出记录
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <!-- 标签页内容 -->
-            <div class="section">
-                <!-- 系统状态标签页 -->
-                <div id="system-status-tab" class="tab-content">
-                    <h3>系统状态</h3>
-                    <div class="status-grid">
-                        <div class="status-item ok">
-                            <div class="key">系统版本</div>
-                            <div class="value">v0.6.5</div>
-                        </div>
-                        <div class="status-item ok">
-                            <div class="key">Java版本</div>
-                            <div class="value">1.8.0_302</div>
-                        </div>
-                        <div class="status-item ok">
-                            <div class="key">服务端口</div>
-                            <div class="value">8081</div>
-                        </div>
-                        <div class="status-item ok">
-                            <div class="key">运行时间</div>
-                            <div class="value">24天</div>
-                        </div>
-                    </div>
-                    <div style="margin-top: 16px;">
-                        <h4>系统资源</h4>
-                        <div class="status-grid" style="margin-top: 8px;">
-                            <div class="status-item ok">
-                                <div class="key">CPU使用率</div>
-                                <div class="value">25%</div>
-                            </div>
-                            <div class="status-item ok">
-                                <div class="key">内存使用率</div>
-                                <div class="value">45%</div>
-                            </div>
-                            <div class="status-item ok">
-                                <div class="key">磁盘使用率</div>
-                                <div class="value">30%</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 系统配置标签页 -->
-                <div id="system-config-tab" class="tab-content hidden">
-                    <h3>系统配置</h3>
-                    <div style="margin-bottom: 16px;">
-                        <label style="display: block; margin-bottom: 8px;">服务端口</label>
-                        <input type="number" id="server-port" value="8081" style="padding: 10px; border: 1px solid var(--ooder-border); border-radius: var(--ooder-radius); background-color: #1a1a1a; color: var(--ooder-dark); width: 100px;">
-                    </div>
-                    <div style="margin-bottom: 16px;">
-                        <label style="display: block; margin-bottom: 8px;">API路径</label>
-                        <input type="text" id="api-path" value="/skillcenter/api" style="padding: 10px; border: 1px solid var(--ooder-border); border-radius: var(--ooder-radius); background-color: #1a1a1a; color: var(--ooder-dark); width: 300px;">
-                    </div>
-                    <div style="margin-bottom: 16px;">
-                        <label style="display: block; margin-bottom: 8px;">最大技能数</label>
-                        <input type="number" id="max-skills" value="100" style="padding: 10px; border: 1px solid var(--ooder-border); border-radius: var(--ooder-radius); background-color: #1a1a1a; color: var(--ooder-dark); width: 100px;">
-                    </div>
-                    <button class="btn btn-primary" onclick="saveSystemConfig()">保存配置</button>
-                </div>
-                
-                <!-- 系统控制标签页 -->
-                <div id="system-control-tab" class="tab-content hidden">
-                    <h3>系统控制</h3>
-                    <div style="margin-bottom: 16px;">
-                        <button class="btn btn-primary" onclick="restartSystem()">重启系统</button>
-                        <button class="btn btn-danger" onclick="shutdownSystem()">关闭系统</button>
-                        <button class="btn btn-secondary" onclick="clearSystemCache()">清理缓存</button>
-                    </div>
-                    <div style="margin-top: 16px;">
-                        <h4>系统操作日志</h4>
-                        <div id="system-operation-log">
-                            <!-- 系统操作日志将在这里显示 -->
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 系统日志标签页 -->
-                <div id="system-logs-tab" class="tab-content hidden">
-                    <h3>系统日志</h3>
-                    <div style="margin-bottom: 16px;">
-                        <select id="log-level" style="padding: 10px; border: 1px solid var(--ooder-border); border-radius: var(--ooder-radius); background-color: #1a1a1a; color: var(--ooder-dark); margin-right: 12px;">
-                            <option value="ALL">全部</option>
-                            <option value="ERROR">错误</option>
-                            <option value="WARN">警告</option>
-                            <option value="INFO">信息</option>
-                            <option value="DEBUG">调试</option>
-                        </select>
-                        <button class="btn btn-primary" onclick="loadSystemLogs()">加载日志</button>
-                        <button class="btn btn-danger" onclick="clearSystemLogs()">清空日志</button>
-                    </div>
-                    <div id="system-logs-content" style="max-height: 400px; overflow-y: auto; background-color: #1a1a1a; padding: 16px; border-radius: var(--ooder-radius); font-family: 'Courier New', monospace; font-size: 12px;">
-                        <!-- 系统日志将在这里显示 -->
-                    </div>
-                </div>
-            </div>
-        </div>
+        </main>
     </div>
-    
+
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
     <script>
-        // API基础URL
-        const API_BASE_URL = '/skillcenter/api';
-        
-        // 初始化页面
-        function init() {
-            loadSystemStatus();
-        }
-        
-        // 更新时间戳
-        function updateTimestamp() {
-            const now = new Date();
-            const timestamp = document.getElementById('timestamp');
-            if (timestamp) {
-                timestamp.textContent = now.toLocaleString('zh-CN');
-            }
-        }
-        
-        // 系统管理相关函数
-        
-        // 加载系统状态
-        async function loadSystemStatus() {
-            try {
-                // 获取系统状态
-                const statusResponse = await fetch(`${API_BASE_URL}/system/status`);
-                if (!statusResponse.ok) {
-                    throw new Error('获取系统状态失败');
-                }
-                const status = await statusResponse.json();
-                
-                // 获取系统配置
-                const configResponse = await fetch(`${API_BASE_URL}/system/config`);
-                if (!configResponse.ok) {
-                    throw new Error('获取系统配置失败');
-                }
-                const config = await configResponse.json();
-                
-                // 获取系统资源使用情况
-                const resourcesResponse = await fetch(`${API_BASE_URL}/system/resources`);
-                if (!resourcesResponse.ok) {
-                    throw new Error('获取系统资源使用情况失败');
-                }
-                const resources = await resourcesResponse.json();
-                
-                // 获取系统版本
-                const versionResponse = await fetch(`${API_BASE_URL}/system/version`);
-                if (!versionResponse.ok) {
-                    throw new Error('获取系统版本失败');
-                }
-                const version = await versionResponse.json();
-                
-                // 渲染系统状态
-                renderSystemStatus(status, config, resources, version);
-            } catch (error) {
-                console.error('加载系统状态错误:', error);
-                alert('加载系统状态失败: ' + error.message);
-            }
-        }
-        
-        // 渲染系统状态
-        function renderSystemStatus(status, config, resources, version) {
-            const statusGrid = document.querySelector('.status-grid');
-            statusGrid.innerHTML = '';
-            
-            // 系统版本
-            const versionItem = document.createElement('div');
-            versionItem.className = 'status-item ok';
-            versionItem.innerHTML = `
-                <div class="key">系统版本</div>
-                <div class="value">${version.version || '未知'}</div>
-            `;
-            statusGrid.appendChild(versionItem);
-            
-            // Java版本
-            const javaItem = document.createElement('div');
-            javaItem.className = 'status-item ok';
-            javaItem.innerHTML = `
-                <div class="key">Java版本</div>
-                <div class="value">${config.javaVersion || '未知'}</div>
-            `;
-            statusGrid.appendChild(javaItem);
-            
-            // 服务端口
-            const portItem = document.createElement('div');
-            portItem.className = 'status-item ok';
-            portItem.innerHTML = `
-                <div class="key">服务端口</div>
-                <div class="value">8080</div>
-            `;
-            statusGrid.appendChild(portItem);
-            
-            // 运行时间
-            const uptimeItem = document.createElement('div');
-            uptimeItem.className = 'status-item ok';
-            uptimeItem.innerHTML = `
-                <div class="key">运行时间</div>
-                <div class="value">${resources.uptimeHuman || '未知'}</div>
-            `;
-            statusGrid.appendChild(uptimeItem);
-        }
-        
-        // 重启系统
-        async function restartSystem() {
-            if (!confirm('确定要重启系统吗? 这将导致服务暂时不可用。')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/system/restart`, {
-                    method: 'POST'
-                });
-                if (!response.ok) {
-                    throw new Error('重启系统失败');
-                }
-                const result = await response.json();
-                if (result.success) {
-                    alert('系统重启命令已发出，请等待系统重启完成。');
-                } else {
-                    alert('重启系统失败: ' + result.message);
-                }
-            } catch (error) {
-                console.error('重启系统错误:', error);
-                alert('重启系统失败: ' + error.message);
-            }
-        }
-        
-        // 关闭系统
-        async function shutdownSystem() {
-            if (!confirm('确定要关闭系统吗? 这将导致服务完全不可用。')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/system/shutdown`, {
-                    method: 'POST'
-                });
-                if (!response.ok) {
-                    throw new Error('关闭系统失败');
-                }
-                const result = await response.json();
-                if (result.success) {
-                    alert('系统关闭命令已发出，系统将在短时间内关闭。');
-                } else {
-                    alert('关闭系统失败: ' + result.message);
-                }
-            } catch (error) {
-                console.error('关闭系统错误:', error);
-                alert('关闭系统失败: ' + error.message);
-            }
-        }
-        
-        // 标签页切换函数
-        function switchTab(tabId) {
-            // 隐藏所有标签页内容
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.add('hidden');
-            });
-            
-            // 显示选中的标签页内容
-            document.getElementById(`${tabId}-tab`).classList.remove('hidden');
-            
-            // 更新标签页按钮状态
-            document.querySelectorAll('.btn-secondary').forEach(btn => {
-                btn.style.backgroundColor = '#1a1a1a';
-                btn.style.color = 'var(--ooder-secondary)';
-            });
-            
-            // 高亮当前标签页按钮
-            event.target.style.backgroundColor = 'var(--ooder-primary)';
-            event.target.style.color = 'white';
-            
-            // 根据标签页ID加载相应的数据
-            if (tabId === 'system-status') {
-                loadSystemStatus();
-            } else if (tabId === 'system-logs') {
-                loadSystemLogs();
-            } else if (tabId === 'system-control') {
-                loadSystemOperationLog();
-            }
-        }
-        
-        // 保存系统配置
-        async function saveSystemConfig() {
-            const serverPort = document.getElementById('server-port').value;
-            const apiPath = document.getElementById('api-path').value;
-            const maxSkills = document.getElementById('max-skills').value;
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/system/config`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        serverPort: parseInt(serverPort),
-                        apiPath: apiPath,
-                        maxSkills: parseInt(maxSkills)
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('保存系统配置失败');
-                }
-                
-                const result = await response.json();
-                if (result.success) {
-                    alert('系统配置保存成功!');
-                } else {
-                    alert('系统配置保存失败: ' + result.message);
-                }
-            } catch (error) {
-                console.error('保存系统配置错误:', error);
-                alert('系统配置保存失败: ' + error.message);
-            }
-        }
-        
-        // 清理系统缓存
-        async function clearSystemCache() {
-            if (!confirm('确定要清理系统缓存吗? 这将清除所有临时缓存数据。')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/system/cache`, {
-                    method: 'DELETE'
-                });
-                
-                if (!response.ok) {
-                    throw new Error('清理系统缓存失败');
-                }
-                
-                const result = await response.json();
-                if (result.success) {
-                    alert('系统缓存清理成功!');
-                    loadSystemOperationLog();
-                } else {
-                    alert('系统缓存清理失败: ' + result.message);
-                }
-            } catch (error) {
-                console.error('清理系统缓存错误:', error);
-                alert('系统缓存清理失败: ' + error.message);
-            }
-        }
-        
-        // 加载系统操作日志
-        async function loadSystemOperationLog() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/system/operations`);
-                if (!response.ok) {
-                    throw new Error('获取系统操作日志失败');
-                }
-                const operations = await response.json();
-                const operationLog = document.getElementById('system-operation-log');
-                
-                if (operations.length === 0) {
-                    operationLog.innerHTML = '<p>没有系统操作日志</p>';
-                    return;
-                }
-                
-                operationLog.innerHTML = `
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>操作时间</th>
-                                    <th>操作类型</th>
-                                    <th>操作结果</th>
-                                    <th>操作描述</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${operations.map(op => `
-                                    <tr>
-                                        <td>${new Date(op.timestamp).toLocaleString('zh-CN')}</td>
-                                        <td>${op.type}</td>
-                                        <td>${op.success ? '成功' : '失败'}</td>
-                                        <td>${op.description}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('获取系统操作日志错误:', error);
-                document.getElementById('system-operation-log').innerHTML = '<p style="color: var(--ooder-danger);">获取系统操作日志失败: ' + error.message + '</p>';
-            }
-        }
-        
-        // 加载系统日志
-        async function loadSystemLogs() {
-            const logLevel = document.getElementById('log-level').value;
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/system/logs?level=${logLevel}`);
-                if (!response.ok) {
-                    throw new Error('获取系统日志失败');
-                }
-                const logs = await response.json();
-                const logsContent = document.getElementById('system-logs-content');
-                
-                if (logs.length === 0) {
-                    logsContent.innerHTML = '<p>没有系统日志</p>';
-                    return;
-                }
-                
-                logsContent.innerHTML = logs.map(log => `
-                    <div style="margin-bottom: 8px; padding: 4px 0; border-bottom: 1px solid var(--ooder-border);">
-                        <span style="color: var(--ooder-secondary);">${new Date(log.timestamp).toLocaleString('zh-CN')}</span> 
-                        <span style="color: ${log.level === 'ERROR' ? 'var(--ooder-danger)' : log.level === 'WARN' ? 'var(--ooder-warning)' : 'var(--ooder-primary)' };">${log.level}</span> 
-                        <span>${log.message}</span>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('获取系统日志错误:', error);
-                document.getElementById('system-logs-content').innerHTML = '<p style="color: var(--ooder-danger);">获取系统日志失败: ' + error.message + '</p>';
-            }
-        }
-        
-        // 清空系统日志
-        async function clearSystemLogs() {
-            if (!confirm('确定要清空系统日志吗? 这将删除所有系统日志记录。')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/system/logs`, {
-                    method: 'DELETE'
-                });
-                
-                if (!response.ok) {
-                    throw new Error('清空系统日志失败');
-                }
-                
-                const result = await response.json();
-                if (result.success) {
-                    alert('系统日志清空成功!');
-                    document.getElementById('system-logs-content').innerHTML = '';
-                } else {
-                    alert('系统日志清空失败: ' + result.message);
-                }
-            } catch (error) {
-                console.error('清空系统日志错误:', error);
-                alert('系统日志清空失败: ' + error.message);
-            }
-        }
-        
-        // 初始化页面
-        function init() {
-            loadSystemStatus();
-        }
-        
-        // 页面加载完成后初始化
-        window.onload = function() {
-            initMenu('system');
-            init();
+        let systemStatus = null;
+        let systemConfig = null;
+        let systemResources = null;
+        let systemLogs = [];
+        let systemOperations = [];
+
+        window.onPageInit = function() {
+            initTabs();
+            loadStatus();
+            loadConfig();
+            loadResources();
+            loadLogs();
+            loadOperations();
         };
+
+        function initTabs() {
+            document.querySelectorAll('.nx-tabs__tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.nx-tabs__tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    const tabId = 'tab-' + this.dataset.tab;
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+
+        function postApi(url, data) {
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data || {})
+            }).then(res => res.json());
+        }
+
+        function loadStatus() {
+            postApi('/api/system/version').then(res => {
+                if (res.code === 200 && res.data) {
+                    document.getElementById('stat-version').textContent = res.data.version || '-';
+                    document.getElementById('info-version').textContent = res.data.version || '-';
+                    document.getElementById('info-service').textContent = res.data.name || '-';
+                    document.getElementById('info-vendor').textContent = res.data.vendor || '-';
+                    document.getElementById('info-build').textContent = res.data.buildTimestamp || '-';
+                }
+            });
+
+            postApi('/api/system/status').then(res => {
+                if (res.code === 200 && res.data) {
+                    systemStatus = res.data;
+                    document.getElementById('stat-status').textContent = res.data.status || '-';
+                }
+            });
+
+            postApi('/api/system/health').then(res => {
+                if (res.code === 200 && res.data) {
+                    document.getElementById('stat-health').textContent = res.data.status || '-';
+                    document.getElementById('health-cpu').textContent = res.data.cpu || '正常';
+                    document.getElementById('health-memory').textContent = res.data.memory || '正常';
+                    document.getElementById('health-disk').textContent = res.data.disk || '正常';
+                    document.getElementById('health-network').textContent = res.data.network || '正常';
+                }
+            });
+
+            postApi('/api/system/config').then(res => {
+                if (res.code === 200 && res.data) {
+                    document.getElementById('info-java').textContent = res.data.javaVersion || '-';
+                    document.getElementById('info-os').textContent = (res.data.osName || '') + ' ' + (res.data.osVersion || '');
+                }
+            });
+        }
+
+        function loadConfig() {
+            postApi('/api/system/config').then(res => {
+                if (res.code === 200 && res.data) {
+                    systemConfig = res.data;
+                }
+            });
+        }
+
+        function loadResources() {
+            postApi('/api/system/resources').then(res => {
+                if (res.code === 200 && res.data) {
+                    systemResources = res.data;
+                    
+                    document.getElementById('res-cpu-cores').textContent = res.data.availableProcessors || '-';
+                    document.getElementById('res-memory-used').textContent = res.data.usedMemoryHuman || '-';
+                    document.getElementById('res-memory-total').textContent = res.data.totalMemoryHuman || '-';
+                    document.getElementById('res-memory-max').textContent = res.data.maxMemoryHuman || '-';
+                    
+                    document.getElementById('res-uptime').textContent = res.data.uptimeHuman || '-';
+                    document.getElementById('res-processors').textContent = res.data.availableProcessors || '-';
+                    
+                    document.getElementById('mem-used').textContent = res.data.usedMemoryHuman || '-';
+                    document.getElementById('mem-free').textContent = res.data.freeMemoryHuman || '-';
+                    document.getElementById('mem-total').textContent = res.data.totalMemoryHuman || '-';
+                    document.getElementById('mem-max').textContent = res.data.maxMemoryHuman || '-';
+                    
+                    if (res.data.totalMemory > 0) {
+                        const percent = Math.round((res.data.usedMemory / res.data.totalMemory) * 100);
+                        document.getElementById('memory-percent').textContent = percent + '%';
+                        document.getElementById('memory-bar').style.width = percent + '%';
+                        
+                        if (percent > 80) {
+                            document.getElementById('memory-bar').className = 'progress-fill progress-danger';
+                        } else if (percent > 60) {
+                            document.getElementById('memory-bar').className = 'progress-fill progress-warning';
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadLogs() {
+            const level = document.getElementById('log-level-filter').value;
+            postApi('/api/system/logs', { level: level }).then(res => {
+                if (res.code === 200 && res.data) {
+                    systemLogs = res.data;
+                    renderLogs();
+                }
+            });
+        }
+
+        function renderLogs() {
+            const tbody = document.getElementById('log-table-body');
+            if (!systemLogs || systemLogs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">暂无日志</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = systemLogs.map(log => {
+                const time = new Date(log.timestamp).toLocaleString();
+                const levelClass = 'log-level-' + (log.level || 'INFO');
+                return `
+                    <tr>
+                        <td>${time}</td>
+                        <td><span class="${levelClass}">${log.level || 'INFO'}</span></td>
+                        <td>${log.source || '-'}</td>
+                        <td>${log.message || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function loadOperations() {
+            postApi('/api/system/operations').then(res => {
+                if (res.code === 200 && res.data) {
+                    systemOperations = res.data;
+                    renderOperations();
+                }
+            });
+        }
+
+        function renderOperations() {
+            const tbody = document.getElementById('operation-table-body');
+            if (!systemOperations || systemOperations.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">暂无操作记录</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = systemOperations.map(op => {
+                const time = new Date(op.timestamp).toLocaleString();
+                const statusClass = 'operation-status-' + (op.status || 'SUCCESS');
+                return `
+                    <tr>
+                        <td>${time}</td>
+                        <td>${op.type || '-'}</td>
+                        <td>${op.description || '-'}</td>
+                        <td><span class="${statusClass}">${op.status || 'SUCCESS'}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function refreshStatus() {
+            loadStatus();
+        }
+
+        function refreshResources() {
+            loadResources();
+        }
+
+        function runHealthCheck() {
+            postApi('/api/system/health').then(res => {
+                if (res.code === 200) {
+                    alert('健康检查完成');
+                    loadStatus();
+                }
+            });
+        }
+
+        function exportReport() {
+            alert('系统报告导出功能');
+        }
+
+        function clearCache() {
+            if (confirm('确定要清除系统缓存吗？')) {
+                postApi('/api/system/cache/clear').then(res => {
+                    if (res.code === 200) {
+                        alert('缓存清除成功: ' + (res.data.message || ''));
+                    } else {
+                        alert('清除失败: ' + res.message);
+                    }
+                });
+            }
+        }
+
+        function saveConfig() {
+            const config = {
+                systemName: document.getElementById('config-system-name').value,
+                systemDescription: document.getElementById('config-system-desc').value,
+                language: document.getElementById('config-language').value,
+                theme: document.getElementById('config-theme').value,
+                sessionTimeout: parseInt(document.getElementById('config-session-timeout').value),
+                maxLoginAttempts: parseInt(document.getElementById('config-max-login-attempts').value),
+                minPasswordLength: parseInt(document.getElementById('config-min-password-length').value),
+                enable2FA: document.getElementById('config-2fa').value === 'true'
+            };
+
+            postApi('/api/system/config/update', config).then(res => {
+                if (res.code === 200) {
+                    alert('配置保存成功');
+                } else {
+                    alert('保存失败: ' + res.message);
+                }
+            });
+        }
+
+        function resetConfig() {
+            if (confirm('确定要重置为默认配置吗？')) {
+                document.getElementById('config-system-name').value = 'SkillCenter';
+                document.getElementById('config-system-desc').value = '技能管理和执行平台';
+                document.getElementById('config-language').value = 'zh-CN';
+                document.getElementById('config-theme').value = 'dark';
+                document.getElementById('config-session-timeout').value = '30';
+                document.getElementById('config-max-login-attempts').value = '5';
+                document.getElementById('config-min-password-length').value = '8';
+                document.getElementById('config-2fa').value = 'false';
+                alert('已重置为默认配置');
+            }
+        }
+
+        function exportConfig() {
+            alert('配置导出功能');
+        }
+
+        function importConfig() {
+            alert('配置导入功能');
+        }
+
+        function restartSystem() {
+            if (confirm('确定要重启系统吗？')) {
+                postApi('/api/system/restart').then(res => {
+                    if (res.code === 200) {
+                        alert('重启命令已发出');
+                    } else {
+                        alert('重启失败: ' + res.message);
+                    }
+                });
+            }
+        }
+
+        function shutdownSystem() {
+            if (confirm('确定要关闭系统吗？此操作不可撤销！')) {
+                postApi('/api/system/shutdown').then(res => {
+                    if (res.code === 200) {
+                        alert('关闭命令已发出');
+                    } else {
+                        alert('关闭失败: ' + res.message);
+                    }
+                });
+            }
+        }
+
+        function exportLogs() {
+            alert('日志导出功能');
+        }
+
+        function clearLogs() {
+            if (confirm('确定要清除所有日志吗？')) {
+                postApi('/api/system/logs/clear').then(res => {
+                    if (res.code === 200) {
+                        alert('日志清除成功');
+                        loadLogs();
+                    } else {
+                        alert('清除失败: ' + res.message);
+                    }
+                });
+            }
+        }
+
+        function exportOperations() {
+            alert('操作记录导出功能');
+        }
     </script>
 </body>
 </html>

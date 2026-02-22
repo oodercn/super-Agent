@@ -67,8 +67,8 @@ public class SkillHistoryCommand extends AbstractCommand {
             return;
         }
         
-        if (statusFilter != null) {
-            final String finalStatusFilter = statusFilter;
+        String finalStatusFilter = statusFilter;
+        if (finalStatusFilter != null) {
             records.removeIf(record -> !record.getStatus().equalsIgnoreCase(finalStatusFilter));
         }
         
@@ -80,8 +80,8 @@ public class SkillHistoryCommand extends AbstractCommand {
         println("技能执行历史: " + skillId);
         println("==============================================");
         
-        if (statusFilter != null) {
-            println("状态筛选: " + statusFilter);
+        if (finalStatusFilter != null) {
+            println("状态筛选: " + finalStatusFilter);
         }
         
         println(String.format("%-20s %-15s %-15s %-15s %-10s", 

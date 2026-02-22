@@ -1,7 +1,15 @@
+/*
+ * Copyright (c) 2024 Ooder Team
+ *
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
 package net.ooder.skillcenter.market;
 
 import net.ooder.skillcenter.model.Skill;
 import net.ooder.skillcenter.model.SkillException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,10 +20,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 技能市场管理器，负责技能市场的核心功能
- * 包括技能的发布、搜索、评分等
+ * Skill Market Manager - Core functionality for skill marketplace
+ * Handles skill publishing, searching, rating, etc.
  */
 public class SkillMarketManager {
+    private static final Logger logger = LoggerFactory.getLogger(SkillMarketManager.class);
+
     // 单例实例
     private static SkillMarketManager instance;
     
@@ -87,10 +97,9 @@ public class SkillMarketManager {
                 }
             }
             
-            System.out.println("Loaded " + skillListings.size() + " skills from storage");
+            logger.info("Loaded {} skills from storage", skillListings.size());
         } catch (Exception e) {
-            System.err.println("Failed to load data from storage: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to load data from storage: {}", e.getMessage(), e);
         }
     }
     
@@ -98,24 +107,32 @@ public class SkillMarketManager {
      * 初始化市场数据
      */
     private void initializeMarketData() {
-        // 模拟初始化一些技能列表项
-        addSkillListing(createMockSkillListing("code-generation-skill", "代码生成技能", 
-            "生成各种编程语言的代码", "development", "1.0.0", "https://example.com/skills/code-generation"));
-        
-        addSkillListing(createMockSkillListing("text-to-uppercase-skill", "文本转大写技能", 
-            "将文本转换为大写格式", "utilities", "1.0.0", "https://example.com/skills/text-to-uppercase"));
-        
-        addSkillListing(createMockSkillListing("media-streaming-skill", "媒体流技能", 
-            "提供媒体流服务", "media", "1.0.0", "https://example.com/skills/media-streaming"));
-        
-        addSkillListing(createMockSkillListing("file-storage-skill", "文件存储技能", 
-            "提供文件存储服务", "storage", "1.0.0", "https://example.com/skills/file-storage"));
-        
-        addSkillListing(createMockSkillListing("device-control-skill", "设备控制技能", 
-            "控制智能设备", "iot", "1.0.0", "https://example.com/skills/device-control"));
-        
-        // 生成更多测试技能数据
-        generateTestSkills();
+        // 仅在存储为空时初始化默认技能
+        if (skillListings.isEmpty()) {
+            addSkillListing(createMockSkillListing("code-generation-skill", "代码生成技能", 
+                "生成各种编程语言的代码", "development", "1.0.0", "https://example.com/skills/code-generation"));
+            
+            addSkillListing(createMockSkillListing("text-to-uppercase-skill", "文本转大写技能", 
+                "将文本转换为大写格式", "utilities", "1.0.0", "https://example.com/skills/text-to-uppercase"));
+            
+            addSkillListing(createMockSkillListing("media-streaming-skill", "媒体流技能", 
+                "提供媒体流服务", "media", "1.0.0", "https://example.com/skills/media-streaming"));
+            
+            addSkillListing(createMockSkillListing("file-storage-skill", "文件存储技能", 
+                "提供文件存储服务", "storage", "1.0.0", "https://example.com/skills/file-storage"));
+            
+            addSkillListing(createMockSkillListing("device-control-skill", "设备控制技能", 
+                "控制智能设备", "iot", "1.0.0", "https://example.com/skills/device-control"));
+            
+            // 保存初始数据
+            for (SkillListing listing : skillListings.values()) {
+                skillStorage.saveSkillListing(listing);
+            }
+            
+            logger.info("Initialized 5 default skills");
+        } else {
+            logger.info("Loaded {} existing skills from storage, skipping initialization", skillListings.size());
+        }
     }
     
     /**
@@ -173,7 +190,7 @@ public class SkillMarketManager {
             generateSkillReviews(skillId, random.nextInt(5) + 1);
         }
         
-        System.out.println("Generated 50 test skills with reviews");
+        logger.info("Generated 50 test skills with reviews");
     }
     
     /**
@@ -204,13 +221,13 @@ public class SkillMarketManager {
             try {
                 rateSkill(skillId, rating, comment, userId);
             } catch (Exception e) {
-                System.err.println("Failed to generate review for skill " + skillId + ": " + e.getMessage());
+                logger.error("Failed to generate review for skill {}: {}", skillId, e.getMessage());
             }
         }
     }
     
     /**
-     * 创建模拟技能列表项
+     * 创建模拟技能列表项 - 符合v0.7.0协议规范
      */
     private SkillListing createMockSkillListing(String id, String name, String description, 
                                                String category, String version, String url) {
@@ -227,7 +244,64 @@ public class SkillMarketManager {
         listing.setReviewCount(50);
         listing.setLastUpdated(System.currentTimeMillis());
         
+        String type = inferSkillType(category);
+        listing.setType(type);
+        listing.setCapabilities(generateCapabilities(category));
+        listing.setScenes(generateScenes(type));
+        listing.setEndpoint("https://skillcenter.ooder.net/skills/" + id);
+        listing.setHomepage("https://github.com/ooder/" + id);
+        listing.setRepository("https://github.com/ooder/" + id + ".git");
+        listing.setLicense("Apache-2.0");
+        
         return listing;
+    }
+    
+    private String inferSkillType(String category) {
+        if ("development".equals(category) || "ai".equals(category)) {
+            return "tool-skill";
+        } else if ("iot".equals(category) || "storage".equals(category)) {
+            return "infrastructure-skill";
+        } else if ("finance".equals(category) || "education".equals(category) || "health".equals(category)) {
+            return "enterprise-skill";
+        }
+        return "tool-skill";
+    }
+    
+    private java.util.List<String> generateCapabilities(String category) {
+        java.util.List<String> caps = new java.util.ArrayList<>();
+        if ("development".equals(category)) {
+            caps.add("code-generation");
+            caps.add("code-analysis");
+        } else if ("ai".equals(category)) {
+            caps.add("data-analysis");
+            caps.add("prediction");
+        } else if ("iot".equals(category)) {
+            caps.add("device-control");
+            caps.add("data-collection");
+        } else if ("storage".equals(category)) {
+            caps.add("file-read");
+            caps.add("file-write");
+        } else if ("finance".equals(category)) {
+            caps.add("org-data-read");
+            caps.add("user-auth");
+        } else {
+            caps.add("data-processing");
+        }
+        return caps;
+    }
+    
+    private java.util.List<String> generateScenes(String type) {
+        java.util.List<String> scenes = new java.util.ArrayList<>();
+        if ("enterprise-skill".equals(type)) {
+            scenes.add("auth");
+            scenes.add("messaging");
+        } else if ("infrastructure-skill".equals(type)) {
+            scenes.add("storage");
+            scenes.add("network");
+        } else {
+            scenes.add("processing");
+        }
+        return scenes;
     }
     
     /**
@@ -402,6 +476,14 @@ public class SkillMarketManager {
     }
     
     /**
+     * 获取技能总数
+     * @return 技能总数
+     */
+    public int getSkillCount() {
+        return skillListings.size();
+    }
+    
+    /**
      * 获取技能详情
      * @param skillId 技能ID
      * @return 技能列表项
@@ -425,7 +507,7 @@ public class SkillMarketManager {
         
         // 实际项目中，这里应该从下载URL获取技能数据
         // 这里模拟下载
-        System.out.println("Downloading skill: " + skillId + " from " + listing.getDownloadUrl());
+        logger.info("Downloading skill: {} from {}", skillId, listing.getDownloadUrl());
         
         // 增加下载计数
         listing.setDownloadCount(listing.getDownloadCount() + 1);
@@ -554,11 +636,11 @@ public class SkillMarketManager {
                      try {
                          Files.delete(file);
                      } catch (IOException e) {
-                         System.err.println("Failed to delete file: " + file + ": " + e.getMessage());
+                         logger.error("Failed to delete file: {}: {}", file, e.getMessage());
                      }
                  });
         } catch (IOException e) {
-            System.err.println("Failed to clear storage: " + e.getMessage());
+            logger.error("Failed to clear storage: {}", e.getMessage());
         }
     }
     

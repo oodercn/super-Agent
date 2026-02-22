@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes集群管理 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .stat-card {
+            background: var(--nx-bg-elevated);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--nx-primary-color);
+        }
+        .stat-card .stat-label {
+            color: var(--nx-text-secondary);
+            margin-top: 8px;
+        }
+        .status-healthy { color: #10b981; }
+        .status-warning { color: #f59e0b; }
+        .status-error { color: #ef4444; }
+        .progress-bar {
+            height: 8px;
+            background: var(--nx-border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar .progress {
+            height: 100%;
+            border-radius: 4px;
+        }
+        .progress-cpu { background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+        .progress-memory { background: linear-gradient(90deg, #10b981, #06b6d4); }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">Kubernetes集群管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-tabs nx-mb-6">
+                        <button class="nx-tabs__tab nx-tabs__tab--active" onclick="location.href='k8s-cluster.html'">集群概览</button>
+                        <button class="nx-tabs__tab" onclick="location.href='k8s-workloads.html'">工作负载</button>
+                        <button class="nx-tabs__tab" onclick="location.href='k8s-skill-deploy.html'">技能部署</button>
+                    </div>
+                    
+                    <div class="nx-grid nx-grid-cols-4 nx-gap-4 nx-mb-6">
+                        <div class="stat-card">
+                            <div class="stat-value" id="cluster-status">
+                                <i class="ri-checkbox-blank-circle-fill status-healthy"></i>
+                            </div>
+                            <div class="stat-label">集群状态</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="node-count">-</div>
+                            <div class="stat-label">节点数量</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="pod-count">-</div>
+                            <div class="stat-label">Pod总数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="service-count">-</div>
+                            <div class="stat-label">服务数量</div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">集群信息</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid-cols-3 nx-gap-4">
+                                <div>
+                                    <div class="nx-text-secondary nx-text-sm">集群版本</div>
+                                    <div id="cluster-version" class="nx-font-semibold">-</div>
+                                </div>
+                                <div>
+                                    <div class="nx-text-secondary nx-text-sm">API端点</div>
+                                    <div id="cluster-endpoint" class="nx-font-semibold">-</div>
+                                </div>
+                                <div>
+                                    <div class="nx-text-secondary nx-text-sm">命名空间</div>
+                                    <div id="namespace-count" class="nx-font-semibold">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">节点列表</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>节点名称</th>
+                                            <th>状态</th>
+                                            <th>角色</th>
+                                            <th>CPU使用</th>
+                                            <th>内存使用</th>
+                                            <th>Pod数量</th>
+                                            <th>版本</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="node-list">
+                                        <tr>
+                                            <td colspan="7" class="nx-text-center nx-text-secondary">加载中...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">命名空间</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div id="namespace-list" class="nx-flex nx-flex-wrap nx-gap-2">
+                                <span class="nx-text-secondary">加载中...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('K8S Cluster 页面初始化完成');
+            loadClusterInfo();
+            loadNodes();
+            loadNamespaces();
+        };
+        
+        async function loadClusterInfo() {
+            try {
+                const result = await ApiClient.post('/api/k8s/clusters/info', { cluster: 'default' });
+                if (result && result.data) {
+                    const info = result.data;
+                    
+                    document.getElementById('cluster-version').textContent = info.version || '-';
+                    document.getElementById('cluster-endpoint').textContent = info.endpoint || '-';
+                    document.getElementById('node-count').textContent = info.nodeCount || 0;
+                    document.getElementById('pod-count').textContent = info.podCount || 0;
+                    document.getElementById('service-count').textContent = info.serviceCount || 0;
+                    
+                    const statusEl = document.getElementById('cluster-status');
+                    if (info.status === 'healthy') {
+                        statusEl.innerHTML = '<i class="ri-checkbox-blank-circle-fill status-healthy"></i> 健康';
+                    } else if (info.status === 'mock') {
+                        statusEl.innerHTML = '<i class="ri-checkbox-blank-circle-fill status-warning"></i> Mock';
+                    } else {
+                        statusEl.innerHTML = '<i class="ri-checkbox-blank-circle-fill status-error"></i> 异常';
+                    }
+                    
+                    document.getElementById('namespace-count').textContent = 
+                        info.namespaces ? info.namespaces.length : 0;
+                }
+            } catch (error) {
+                console.error('加载集群信息失败:', error);
+            }
+        }
+        
+        async function loadNodes() {
+            try {
+                const result = await ApiClient.post('/api/k8s/clusters/nodes', { cluster: 'default' });
+                const container = document.getElementById('node-list');
+                
+                if (result && result.data && result.data.length > 0) {
+                    container.innerHTML = result.data.map(node => `
+                        <tr>
+                            <td>${node.name}</td>
+                            <td>
+                                <span class="nx-badge nx-badge--${node.status === 'Ready' ? 'success' : 'error'}">
+                                    ${node.status}
+                                </span>
+                            </td>
+                            <td>${node.role || '-'}</td>
+                            <td>
+                                <div class="nx-flex nx-items-center nx-gap-2">
+                                    <div class="progress-bar" style="width: 100px;">
+                                        <div class="progress progress-cpu" style="width: ${Math.min(node.cpuUsage / node.cpuCapacity * 100, 100)}%"></div>
+                                    </div>
+                                    <span class="nx-text-sm">${(node.cpuUsage || 0).toFixed(1)}/${node.cpuCapacity || 0} 核</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="nx-flex nx-items-center nx-gap-2">
+                                    <div class="progress-bar" style="width: 100px;">
+                                        <div class="progress progress-memory" style="width: ${Math.min(node.memoryUsage / node.memoryCapacity * 100, 100)}%"></div>
+                                    </div>
+                                    <span class="nx-text-sm">${formatMemory(node.memoryUsage)}/${formatMemory(node.memoryCapacity)}</span>
+                                </div>
+                            </td>
+                            <td>${node.podCount || 0}/${node.podCapacity || 110}</td>
+                            <td>${node.version || '-'}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<tr><td colspan="7" class="nx-text-center nx-text-secondary">暂无节点</td></tr>';
+                }
+            } catch (error) {
+                console.error('加载节点列表失败:', error);
+                document.getElementById('node-list').innerHTML = 
+                    '<tr><td colspan="7" class="nx-text-center nx-text-error">加载失败</td></tr>';
+            }
+        }
+        
+        async function loadNamespaces() {
+            try {
+                const result = await ApiClient.post('/api/k8s/clusters/namespaces', { cluster: 'default' });
+                const container = document.getElementById('namespace-list');
+                
+                if (result && result.data && result.data.length > 0) {
+                    container.innerHTML = result.data.map(ns => `
+                        <span class="nx-badge nx-badge--secondary">${ns}</span>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<span class="nx-text-secondary">暂无命名空间</span>';
+                }
+            } catch (error) {
+                console.error('加载命名空间失败:', error);
+            }
+        }
+        
+        function formatMemory(bytes) {
+            if (!bytes) return '0B';
+            const gb = bytes / (1024 * 1024 * 1024);
+            if (gb >= 1) return gb.toFixed(1) + 'GB';
+            const mb = bytes / (1024 * 1024);
+            return mb.toFixed(0) + 'MB';
+        }
+    </script>
+</body>
+</html>

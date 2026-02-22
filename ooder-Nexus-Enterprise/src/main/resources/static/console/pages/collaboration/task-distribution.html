@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务分配 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">任务分配</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="loadTasks()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-time-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">待执行</div>
+                                <div class="nx-stat-card__value" id="pendingCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-play-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">执行中</div>
+                                <div class="nx-stat-card__value" id="runningCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">已完成</div>
+                                <div class="nx-stat-card__value" id="completedCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--danger">
+                                <i class="ri-close-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">失败</div>
+                                <div class="nx-stat-card__value" id="failedCount">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-grid nx-grid-cols-3 nx-gap-6">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">待执行</h3>
+                                <span class="nx-badge nx-badge--warning" id="pendingColCount">0</span>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container" style="max-height: 400px; overflow-y: auto;">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>任务ID</th>
+                                                <th>名称</th>
+                                                <th>优先级</th>
+                                                <th>分配节点</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pendingTasks">
+                                            <tr><td colspan="5" class="nx-text-center">加载中...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">执行中</h3>
+                                <span class="nx-badge nx-badge--primary" id="runningColCount">0</span>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container" style="max-height: 400px; overflow-y: auto;">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>任务ID</th>
+                                                <th>名称</th>
+                                                <th>优先级</th>
+                                                <th>分配节点</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="runningTasks">
+                                            <tr><td colspan="5" class="nx-text-center">加载中...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">已完成/失败</h3>
+                                <span class="nx-badge nx-badge--secondary" id="doneColCount">0</span>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container" style="max-height: 400px; overflow-y: auto;">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>任务ID</th>
+                                                <th>名称</th>
+                                                <th>状态</th>
+                                                <th>分配节点</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="doneTasks">
+                                            <tr><td colspan="5" class="nx-text-center">加载中...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">快速导航</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-flex nx-gap-3">
+                                <button class="nx-btn nx-btn--secondary" onclick="window.location.href='/console/pages/collaboration/collab-requests.html'">
+                                    <i class="ri-message-2-line"></i> 协作请求
+                                </button>
+                                <button class="nx-btn nx-btn--secondary" onclick="window.location.href='/console/pages/collaboration/status-tracking.html'">
+                                    <i class="ri-line-chart-line"></i> 状态跟踪
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/collaboration-api.js"></script>
+    <script>
+        let allTasks = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTasks();
+        });
+
+        async function loadTasks() {
+            try {
+                const rs = await CollaborationAPI.getTasks({});
+                allTasks = rs.data || [];
+                renderTasks();
+                updateStats();
+            } catch (error) {
+                document.getElementById('pendingTasks').innerHTML = 
+                    '<tr><td colspan="5" class="nx-text-center nx-text-danger">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        function renderTasks() {
+            const pending = allTasks.filter(t => t.status === 'PENDING');
+            const running = allTasks.filter(t => t.status === 'RUNNING');
+            const done = allTasks.filter(t => t.status === 'COMPLETED' || t.status === 'FAILED');
+
+            renderTaskColumn('pendingTasks', pending);
+            renderTaskColumn('runningTasks', running);
+            renderDoneColumn('doneTasks', done);
+
+            document.getElementById('pendingColCount').textContent = pending.length;
+            document.getElementById('runningColCount').textContent = running.length;
+            document.getElementById('doneColCount').textContent = done.length;
+        }
+
+        function renderTaskColumn(containerId, tasks) {
+            if (!tasks || tasks.length === 0) {
+                document.getElementById(containerId).innerHTML = 
+                    '<tr><td colspan="5" class="nx-text-center">暂无任务</td></tr>';
+                return;
+            }
+
+            let html = '';
+            tasks.forEach(task => {
+                const priority = CollaborationAPI.formatPriority(task.priority);
+                const time = CollaborationAPI.formatTime(task.createdTime);
+                
+                html += '<tr>';
+                html += '  <td>' + (task.taskId || '-') + '</td>';
+                html += '  <td>' + (task.name || task.taskId) + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--' + getPriorityBadge(task.priority) + '">' + priority.text + '</span></td>';
+                html += '  <td>' + (task.assignedNode || '未分配') + '</td>';
+                html += '  <td>';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--primary" onclick="viewTask(\'' + task.taskId + '\')">详情</button>';
+                html += '  </td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById(containerId).innerHTML = html;
+        }
+
+        function renderDoneColumn(containerId, tasks) {
+            if (!tasks || tasks.length === 0) {
+                document.getElementById(containerId).innerHTML = 
+                    '<tr><td colspan="5" class="nx-text-center">暂无任务</td></tr>';
+                return;
+            }
+
+            let html = '';
+            tasks.forEach(task => {
+                const time = CollaborationAPI.formatTime(task.createdTime);
+                const statusBadge = task.status === 'COMPLETED' ? 'success' : 'danger';
+                
+                html += '<tr>';
+                html += '  <td>' + (task.taskId || '-') + '</td>';
+                html += '  <td>' + (task.name || task.taskId) + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--' + statusBadge + '">' + (task.status || '-') + '</span></td>';
+                html += '  <td>' + (task.assignedNode || '未分配') + '</td>';
+                html += '  <td>';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="viewTask(\'' + task.taskId + '\')">详情</button>';
+                html += '  </td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById(containerId).innerHTML = html;
+        }
+
+        function getPriorityBadge(priority) {
+            const map = { 'HIGH': 'danger', 'MEDIUM': 'warning', 'LOW': 'info' };
+            return map[priority] || 'secondary';
+        }
+
+        function updateStats() {
+            let pending = 0, running = 0, completed = 0, failed = 0;
+            
+            allTasks.forEach(task => {
+                if ('PENDING' === task.status) pending++;
+                else if ('RUNNING' === task.status) running++;
+                else if ('COMPLETED' === task.status) completed++;
+                else if ('FAILED' === task.status) failed++;
+            });
+            
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('runningCount').textContent = running;
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('failedCount').textContent = failed;
+        }
+
+        function viewTask(taskId) {
+            window.location.href = '/console/pages/collaboration/status-tracking.html?id=' + taskId;
+        }
+    </script>
+</body>
+</html>

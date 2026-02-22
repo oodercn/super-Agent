@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景管理 - MCP Agent</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/scenario-management.css">
+</head>
+<body>
+    <div class="scene-management-container">
+        <header class="scene-header">
+            <h1>MCP 场景管理中心</h1>
+            <div class="header-actions">
+                <button id="create-scene-btn" class="btn btn-primary">创建场景</button>
+                <button id="refresh-btn" class="btn btn-secondary">刷新</button>
+                <button id="export-btn" class="btn btn-success">导出场景</button>
+            </div>
+        </header>
+
+        <div class="scene-content">
+            <!-- 场景概览 -->
+            <div class="scene-overview">
+                <div class="overview-card">
+                    <h3>总场景数</h3>
+                    <div class="overview-value" id="total-scenes">0</div>
+                </div>
+                <div class="overview-card">
+                    <h3>活跃场景</h3>
+                    <div class="overview-value" id="active-scenes">0</div>
+                </div>
+                <div class="overview-card">
+                    <h3>总成员数</h3>
+                    <div class="overview-value" id="total-members">0</div>
+                </div>
+                <div class="overview-card">
+                    <h3>Route Agent数</h3>
+                    <div class="overview-value" id="total-routes">0</div>
+                </div>
+            </div>
+
+            <!-- 场景列表 -->
+            <div class="scene-section">
+                <h2>场景管理</h2>
+                <div class="scene-list" id="scene-list">
+                    <!-- 场景项将通过 JS 动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建场景模态框 -->
+    <div id="create-scene-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>创建场景</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="create-scene-form">
+                    <div class="form-group">
+                        <label for="scene-id">场景ID</label>
+                        <input type="text" id="scene-id" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="scene-name">场景名称</label>
+                        <input type="text" id="scene-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="scene-description">场景描述</label>
+                        <textarea id="scene-description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="scene-type">场景类型</label>
+                        <select id="scene-type" class="form-control">
+                            <option value="GENERAL">通用场景</option>
+                            <option value="SMART_HOME">智能家庭</option>
+                            <option value="OFFICE">办公场景</option>
+                            <option value="INDUSTRY">工业场景</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-create">取消</button>
+                <button class="btn btn-primary" id="confirm-create">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/common.js"></script>
+    <script src="../js/scenario-management.js"></script>
+    <script>
+        // 初始化场景管理
+        document.addEventListener('DOMContentLoaded', function() {
+            initSceneManagement();
+        });
+
+        function initSceneManagement() {
+            loadOverview();
+            loadScenes();
+
+            // 创建场景按钮事件
+            document.getElementById('create-scene-btn').addEventListener('click', function() {
+                document.getElementById('create-scene-modal').style.display = 'block';
+            });
+
+            // 关闭模态框
+            document.querySelector('.close-btn').addEventListener('click', function() {
+                document.getElementById('create-scene-modal').style.display = 'none';
+            });
+
+            document.getElementById('cancel-create').addEventListener('click', function() {
+                document.getElementById('create-scene-modal').style.display = 'none';
+            });
+
+            // 确认创建场景
+            document.getElementById('confirm-create').addEventListener('click', function() {
+                createScene();
+            });
+
+            // 刷新按钮事件
+            document.getElementById('refresh-btn').addEventListener('click', function() {
+                loadOverview();
+                loadScenes();
+            });
+
+            // 导出按钮事件
+            document.getElementById('export-btn').addEventListener('click', function() {
+                exportScenes();
+            });
+        }
+
+        function loadOverview() {
+            // 模拟加载概览数据
+            setTimeout(function() {
+                document.getElementById('total-scenes').textContent = '15';
+                document.getElementById('active-scenes').textContent = '12';
+                document.getElementById('total-members').textContent = '45';
+                document.getElementById('total-routes').textContent = '5';
+            }, 300);
+        }
+
+        function loadScenes() {
+            const sceneList = document.getElementById('scene-list');
+            sceneList.innerHTML = '<div class="loading">加载中...</div>';
+
+            // 模拟加载场景数据
+            setTimeout(function() {
+                const scenes = [
+                    {
+                        sceneId: 'scene-001',
+                        name: '智能家庭中心',
+                        description: '家庭自动化控制场景',
+                        type: 'SMART_HOME',
+                        creator: 'admin',
+                        createdTime: new Date().toLocaleString(),
+                        status: 'ACTIVE',
+                        memberCount: 8,
+                        routeCount: 2
+                    },
+                    {
+                        sceneId: 'scene-002',
+                        name: '企业办公网络',
+                        description: '企业内部办公场景',
+                        type: 'OFFICE',
+                        creator: 'admin',
+                        createdTime: new Date().toLocaleString(),
+                        status: 'ACTIVE',
+                        memberCount: 15,
+                        routeCount: 3
+                    },
+                    {
+                        sceneId: 'scene-003',
+                        name: '工业控制系统',
+                        description: '工业设备监控场景',
+                        type: 'INDUSTRY',
+                        creator: 'admin',
+                        createdTime: new Date().toLocaleString(),
+                        status: 'INACTIVE',
+                        memberCount: 5,
+                        routeCount: 1
+                    }
+                ];
+
+                sceneList.innerHTML = '';
+                scenes.forEach(scene => {
+                    const sceneItem = document.createElement('div');
+                    sceneItem.className = 'scene-item';
+                    sceneItem.innerHTML = `
+                        <div class="scene-info">
+                            <div class="scene-header-info">
+                                <h4>${scene.name}</h4>
+                                <span class="scene-type-tag">${scene.type}</span>
+                                <span class="scene-status-tag ${scene.status.toLowerCase()}">${scene.status}</span>
+                            </div>
+                            <p>${scene.description}</p>
+                            <div class="scene-meta">
+                                <span>创建者: ${scene.creator}</span>
+                                <span>创建时间: ${scene.createdTime}</span>
+                                <span>成员: ${scene.memberCount}</span>
+                                <span>Route Agent: ${scene.routeCount}</span>
+                            </div>
+                        </div>
+                        <div class="scene-actions">
+                            <button class="btn btn-sm btn-info view-scene" data-scene-id="${scene.sceneId}">查看</button>
+                            <button class="btn btn-sm btn-warning edit-scene" data-scene-id="${scene.sceneId}">编辑</button>
+                            <button class="btn btn-sm btn-danger delete-scene" data-scene-id="${scene.sceneId}">删除</button>
+                            <button class="btn btn-sm btn-primary ${scene.status === 'ACTIVE' ? 'deactivate-scene' : 'activate-scene'}" data-scene-id="${scene.sceneId}">
+                                ${scene.status === 'ACTIVE' ? '停用' : '激活'}
+                            </button>
+                        </div>
+                    `;
+                    sceneList.appendChild(sceneItem);
+                });
+
+                // 添加事件监听器
+                document.querySelectorAll('.view-scene').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const sceneId = this.getAttribute('data-scene-id');
+                        viewScene(sceneId);
+                    });
+                });
+
+                document.querySelectorAll('.edit-scene').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const sceneId = this.getAttribute('data-scene-id');
+                        editScene(sceneId);
+                    });
+                });
+
+                document.querySelectorAll('.delete-scene').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const sceneId = this.getAttribute('data-scene-id');
+                        deleteScene(sceneId);
+                    });
+                });
+
+                document.querySelectorAll('.deactivate-scene, .activate-scene').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const sceneId = this.getAttribute('data-scene-id');
+                        const action = this.classList.contains('deactivate-scene') ? 'deactivate' : 'activate';
+                        updateSceneStatus(sceneId, action);
+                    });
+                });
+            }, 500);
+        }
+
+        function createScene() {
+            const sceneId = document.getElementById('scene-id').value;
+            const sceneName = document.getElementById('scene-name').value;
+            const sceneDescription = document.getElementById('scene-description').value;
+            const sceneType = document.getElementById('scene-type').value;
+
+            // 模拟创建场景
+            console.log('创建场景:', { sceneId, sceneName, sceneDescription, sceneType });
+
+            // 关闭模态框
+            document.getElementById('create-scene-modal').style.display = 'none';
+            
+            // 刷新场景列表
+            loadOverview();
+            loadScenes();
+        }
+
+        function viewScene(sceneId) {
+            console.log('查看场景:', sceneId);
+            alert('查看场景详情: ' + sceneId);
+        }
+
+        function editScene(sceneId) {
+            console.log('编辑场景:', sceneId);
+            alert('编辑场景: ' + sceneId);
+        }
+
+        function deleteScene(sceneId) {
+            if (confirm('确定要删除这个场景吗？')) {
+                console.log('删除场景:', sceneId);
+                loadOverview();
+                loadScenes();
+            }
+        }
+
+        function updateSceneStatus(sceneId, action) {
+            console.log(`${action}场景:`, sceneId);
+            loadOverview();
+            loadScenes();
+        }
+
+        function exportScenes() {
+            console.log('导出场景');
+            alert('场景导出功能开发中');
+        }
+    </script>
+</body>
+</html>

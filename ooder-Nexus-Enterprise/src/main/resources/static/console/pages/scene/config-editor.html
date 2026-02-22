@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景配置编辑器 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .config-tabs { display: flex; border-bottom: 1px solid var(--ns-border); margin-bottom: 20px; }
+        .config-tab { padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--ns-secondary); }
+        .config-tab.active { border-bottom-color: var(--nx-primary); color: var(--ns-dark); }
+        .config-section { background: var(--ns-card-bg); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .config-section-title { font-weight: 600; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--ns-border); }
+        .config-row { display: flex; gap: 20px; margin-bottom: 15px; }
+        .config-row .form-group { flex: 1; }
+        .capability-item { display: flex; align-items: center; padding: 10px; background: var(--ns-input-bg); border-radius: 6px; margin-bottom: 10px; }
+        .capability-item .name { flex: 1; font-weight: 500; }
+        .capability-item .status { margin-right: 15px; }
+        .capability-item .actions { display: flex; gap: 5px; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">场景配置编辑器</h2>
+                    <span class="nx-badge nx-badge--secondary" id="sceneStatus">新建</span>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="validateConfig()">
+                        <i class="ri-check-line"></i> 验证
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="saveConfig()">
+                        <i class="ri-save-line"></i> 保存
+                    </button>
+                    <button class="nx-btn nx-btn--success" onclick="deployConfig()">
+                        <i class="ri-rocket-line"></i> 部署
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="config-section">
+                        <div class="config-section-title">基本信息</div>
+                        <div class="config-row">
+                            <div class="form-group">
+                                <label class="nx-label">场景ID</label>
+                                <input type="text" class="nx-input" id="sceneId" placeholder="自动生成" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="nx-label">场景名称</label>
+                                <input type="text" class="nx-input" id="sceneName" placeholder="输入场景名称">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="nx-label">描述</label>
+                            <textarea class="nx-textarea" id="sceneDesc" rows="2" placeholder="场景描述"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="config-tabs">
+                        <div class="config-tab active" onclick="switchTab('org')">组织配置</div>
+                        <div class="config-tab" onclick="switchTab('vfs')">文件配置</div>
+                        <div class="config-tab" onclick="switchTab('msg')">消息配置</div>
+                        <div class="config-tab" onclick="switchTab('jds')">会话配置</div>
+                    </div>
+                    
+                    <div id="orgConfig" class="config-panel">
+                        <div class="config-section">
+                            <div class="config-section-title">数据库配置</div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label class="nx-label">驱动</label>
+                                    <select class="nx-select" id="orgDbDriver">
+                                        <option value="org.hsqldb.jdbcDriver">HSQLDB</option>
+                                        <option value="com.mysql.cj.jdbc.Driver">MySQL</option>
+                                        <option value="org.postgresql.Driver">PostgreSQL</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="nx-label">连接URL</label>
+                                    <input type="text" class="nx-input" id="orgDbUrl" placeholder="jdbc:hsqldb:mem:devdb">
+                                </div>
+                            </div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label class="nx-label">用户名</label>
+                                    <input type="text" class="nx-input" id="orgDbUser" placeholder="sa">
+                                </div>
+                                <div class="form-group">
+                                    <label class="nx-label">密码</label>
+                                    <input type="password" class="nx-input" id="orgDbPassword" placeholder="密码">
+                                </div>
+                            </div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <button class="nx-btn nx-btn--secondary" onclick="testConnection('database')">
+                                        <i class="ri-link"></i> 测试连接
+                                    </button>
+                                    <span id="dbTestResult" class="nx-ml-2"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="config-section">
+                            <div class="config-section-title">缓存配置</div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label class="nx-checkbox">
+                                        <input type="checkbox" id="orgCacheEnabled" checked> 启用缓存
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label class="nx-label">过期时间(ms)</label>
+                                    <input type="number" class="nx-input" id="orgCacheExpire" value="3600000">
+                                </div>
+                                <div class="form-group">
+                                    <label class="nx-label">缓存大小(B)</label>
+                                    <input type="number" class="nx-input" id="orgCacheSize" value="5242880">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="config-section">
+                            <div class="config-section-title">
+                                能力服务配置
+                                <button class="nx-btn nx-btn--sm nx-btn--primary nx-ml-2" onclick="addCapability('org')">
+                                    <i class="ri-add-line"></i> 添加能力
+                                </button>
+                            </div>
+                            <div id="orgCapabilities"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="vfsConfig" class="config-panel" style="display:none;">
+                        <div class="config-section">
+                            <div class="config-section-title">存储配置</div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label class="nx-label">存储类型</label>
+                                    <select class="nx-select" id="vfsStorageType" onchange="toggleVfsConfig()">
+                                        <option value="local">本地存储</option>
+                                        <option value="oss">OSS对象存储</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="nx-label">基础路径</label>
+                                    <input type="text" class="nx-input" id="vfsBasePath" placeholder="./data/vfs">
+                                </div>
+                            </div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label class="nx-label">最大文件大小(B)</label>
+                                    <input type="number" class="nx-input" id="vfsMaxFileSize" value="52428800">
+                                </div>
+                                <div class="form-group">
+                                    <label class="nx-label">允许的文件类型</label>
+                                    <input type="text" class="nx-input" id="vfsAllowedTypes" placeholder="*">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="ossConfig" class="config-section" style="display:none;">
+                            <div class="config-section-title">OSS配置</div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label class="nx-label">Endpoint</label>
+                                    <input type="text" class="nx-input" id="vfsOssEndpoint" placeholder="https://oss.example.com">
+                                </div>
+                                <div class="form-group">
+                                    <label class="nx-label">Bucket</label>
+                                    <input type="text" class="nx-input" id="vfsOssBucket" placeholder="my-bucket">
+                                </div>
+                            </div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label class="nx-label">AccessKey</label>
+                                    <input type="text" class="nx-input" id="vfsOssAccessKey">
+                                </div>
+                                <div class="form-group">
+                                    <label class="nx-label">SecretKey</label>
+                                    <input type="password" class="nx-input" id="vfsOssSecretKey">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="config-section">
+                            <div class="config-section-title">
+                                能力服务配置
+                                <button class="nx-btn nx-btn--sm nx-btn--primary nx-ml-2" onclick="addCapability('vfs')">
+                                    <i class="ri-add-line"></i> 添加能力
+                                </button>
+                            </div>
+                            <div id="vfsCapabilities"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="msgConfig" class="config-panel" style="display:none;">
+                        <div class="config-section">
+                            <div class="config-section-title">MQTT配置</div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label class="nx-label">Broker地址</label>
+                                    <input type="text" class="nx-input" id="msgMqttBroker" placeholder="tcp://localhost:1883">
+                                </div>
+                                <div class="form-group">
+                                    <label class="nx-label">端口</label>
+                                    <input type="number" class="nx-input" id="msgMqttPort" value="1883">
+                                </div>
+                            </div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label class="nx-label">ClientId</label>
+                                    <input type="text" class="nx-input" id="msgMqttClientId" placeholder="自动生成">
+                                </div>
+                                <div class="form-group">
+                                    <label class="nx-label">QoS</label>
+                                    <select class="nx-select" id="msgQos">
+                                        <option value="0">0 - 最多一次</option>
+                                        <option value="1" selected>1 - 至少一次</option>
+                                        <option value="2">2 - 恰好一次</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label class="nx-label">用户名</label>
+                                    <input type="text" class="nx-input" id="msgMqttUsername">
+                                </div>
+                                <div class="form-group">
+                                    <label class="nx-label">密码</label>
+                                    <input type="password" class="nx-input" id="msgMqttPassword">
+                                </div>
+                            </div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <button class="nx-btn nx-btn--secondary" onclick="testConnection('mqtt')">
+                                        <i class="ri-link"></i> 测试连接
+                                    </button>
+                                    <span id="mqttTestResult" class="nx-ml-2"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="config-section">
+                            <div class="config-section-title">
+                                能力服务配置
+                                <button class="nx-btn nx-btn--sm nx-btn--primary nx-ml-2" onclick="addCapability('msg')">
+                                    <i class="ri-add-line"></i> 添加能力
+                                </button>
+                            </div>
+                            <div id="msgCapabilities"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="jdsConfig" class="config-panel" style="display:none;">
+                        <div class="config-section">
+                            <div class="config-section-title">会话配置</div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label class="nx-label">管理端口</label>
+                                    <input type="number" class="nx-input" id="jdsAdminPort" value="9090">
+                                </div>
+                                <div class="form-group">
+                                    <label class="nx-label">管理密钥</label>
+                                    <input type="text" class="nx-input" id="jdsAdminKey" value="jds-admin">
+                                </div>
+                            </div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label class="nx-checkbox">
+                                        <input type="checkbox" id="jdsSingleLogin" checked> 单点登录
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label class="nx-checkbox">
+                                        <input type="checkbox" id="jdsSessionEnabled" checked> 启用会话
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label class="nx-label">会话过期时间(ms)</label>
+                                    <input type="number" class="nx-input" id="jdsSessionExpire" value="1800000">
+                                </div>
+                                <div class="form-group">
+                                    <label class="nx-label">检查间隔(ms)</label>
+                                    <input type="number" class="nx-input" id="jdsSessionCheck" value="300000">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="config-section">
+                            <div class="config-section-title">
+                                能力服务配置
+                                <button class="nx-btn nx-btn--sm nx-btn--primary nx-ml-2" onclick="addCapability('jds')">
+                                    <i class="ri-add-line"></i> 添加能力
+                                </button>
+                            </div>
+                            <div id="jdsCapabilities"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="nx-modal" id="capabilityModal">
+        <div class="nx-modal__backdrop" onclick="closeCapabilityModal()"></div>
+        <div class="nx-modal__content">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">能力配置</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeCapabilityModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <input type="hidden" id="capServiceType">
+                <input type="hidden" id="capEditIndex" value="-1">
+                <div class="nx-mb-4">
+                    <label class="nx-label">能力ID</label>
+                    <input type="text" class="nx-input" id="capId" placeholder="例如: org-query">
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">能力名称</label>
+                    <input type="text" class="nx-input" id="capName" placeholder="例如: 组织查询服务">
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">接口ID</label>
+                    <input type="text" class="nx-input" id="capInterfaceId" placeholder="例如: OrgWebManager">
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">端点地址</label>
+                    <input type="text" class="nx-input" id="capEndpoint" placeholder="例如: http://localhost:8080/api">
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">系统代码</label>
+                    <input type="text" class="nx-input" id="capSystemCode" placeholder="例如: ORG">
+                </div>
+                <div class="config-row">
+                    <div class="form-group">
+                        <label class="nx-label">超时时间(ms)</label>
+                        <input type="number" class="nx-input" id="capTimeout" value="30000">
+                    </div>
+                    <div class="form-group">
+                        <label class="nx-label">重试次数</label>
+                        <input type="number" class="nx-input" id="capRetryCount" value="3">
+                    </div>
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-checkbox">
+                        <input type="checkbox" id="capEnabled" checked> 启用此能力
+                    </label>
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="testCapability()">
+                    <i class="ri-link"></i> 测试连接
+                </button>
+                <button class="nx-btn nx-btn--secondary" onclick="closeCapabilityModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="saveCapability()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let sceneConfig = {};
+        let capabilities = { org: {}, vfs: {}, msg: {}, jds: {} };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sceneId = urlParams.get('sceneId');
+            if (sceneId) {
+                loadScene(sceneId);
+            }
+        });
+
+        async function loadScene(sceneId) {
+            try {
+                const response = await fetch('/api/enexus/scene/get', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({sceneId: sceneId})
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    sceneConfig = rs.data;
+                    populateForm();
+                }
+            } catch (error) {
+                alert('加载失败: ' + error.message);
+            }
+        }
+
+        function populateForm() {
+            document.getElementById('sceneId').value = sceneConfig.sceneId || '';
+            document.getElementById('sceneName').value = sceneConfig.sceneName || '';
+            document.getElementById('sceneDesc').value = sceneConfig.description || '';
+            document.getElementById('sceneStatus').textContent = sceneConfig.status || '新建';
+            
+            if (sceneConfig.org) {
+                document.getElementById('orgDbDriver').value = sceneConfig.org.dbDriver || 'org.hsqldb.jdbcDriver';
+                document.getElementById('orgDbUrl').value = sceneConfig.org.dbUrl || '';
+                document.getElementById('orgDbUser').value = sceneConfig.org.dbUser || '';
+                document.getElementById('orgDbPassword').value = sceneConfig.org.dbPassword || '';
+                document.getElementById('orgCacheEnabled').checked = sceneConfig.org.cacheEnabled !== false;
+                document.getElementById('orgCacheExpire').value = sceneConfig.org.cacheExpireTime || 3600000;
+                document.getElementById('orgCacheSize').value = sceneConfig.org.cacheSize || 5242880;
+                capabilities.org = sceneConfig.org.capabilities || {};
+                renderCapabilities('org');
+            }
+            
+            if (sceneConfig.vfs) {
+                document.getElementById('vfsStorageType').value = sceneConfig.vfs.storageType || 'local';
+                document.getElementById('vfsBasePath').value = sceneConfig.vfs.basePath || '';
+                document.getElementById('vfsMaxFileSize').value = sceneConfig.vfs.maxFileSize || 52428800;
+                document.getElementById('vfsAllowedTypes').value = sceneConfig.vfs.allowedTypes || '*';
+                toggleVfsConfig();
+                capabilities.vfs = sceneConfig.vfs.capabilities || {};
+                renderCapabilities('vfs');
+            }
+            
+            if (sceneConfig.msg) {
+                document.getElementById('msgMqttBroker').value = sceneConfig.msg.mqttBroker || '';
+                document.getElementById('msgMqttPort').value = sceneConfig.msg.mqttPort || 1883;
+                document.getElementById('msgMqttClientId').value = sceneConfig.msg.mqttClientId || '';
+                document.getElementById('msgMqttUsername').value = sceneConfig.msg.mqttUsername || '';
+                document.getElementById('msgMqttPassword').value = sceneConfig.msg.mqttPassword || '';
+                document.getElementById('msgQos').value = sceneConfig.msg.qos || 1;
+                capabilities.msg = sceneConfig.msg.capabilities || {};
+                renderCapabilities('msg');
+            }
+            
+            if (sceneConfig.jds) {
+                document.getElementById('jdsAdminPort').value = sceneConfig.jds.adminPort || 9090;
+                document.getElementById('jdsAdminKey').value = sceneConfig.jds.adminKey || 'jds-admin';
+                document.getElementById('jdsSingleLogin').checked = sceneConfig.jds.singleLogin !== false;
+                document.getElementById('jdsSessionEnabled').checked = sceneConfig.jds.sessionEnabled !== false;
+                document.getElementById('jdsSessionExpire').value = sceneConfig.jds.sessionExpireTime || 1800000;
+                document.getElementById('jdsSessionCheck').value = sceneConfig.jds.sessionCheckInterval || 300000;
+                capabilities.jds = sceneConfig.jds.capabilities || {};
+                renderCapabilities('jds');
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.config-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.config-panel').forEach(p => p.style.display = 'none');
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Config').style.display = 'block';
+        }
+
+        function toggleVfsConfig() {
+            const type = document.getElementById('vfsStorageType').value;
+            document.getElementById('ossConfig').style.display = type === 'oss' ? 'block' : 'none';
+        }
+
+        async function testConnection(type) {
+            let resultEl, endpoint;
+            
+            if (type === 'database') {
+                resultEl = document.getElementById('dbTestResult');
+                endpoint = document.getElementById('orgDbUrl').value;
+            } else if (type === 'mqtt') {
+                resultEl = document.getElementById('mqttTestResult');
+                endpoint = document.getElementById('msgMqttBroker').value;
+            }
+            
+            resultEl.innerHTML = '<span style="color: var(--ns-secondary);">测试中...</span>';
+            
+            try {
+                const response = await fetch('/api/enexus/scene/config/test-connection', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({type: type, endpoint: endpoint})
+                });
+                const rs = await response.json();
+                if (rs.data && rs.data.success) {
+                    resultEl.innerHTML = '<span style="color: var(--ns-success);">✓ 连接成功 (' + rs.data.latency + 'ms)</span>';
+                } else {
+                    resultEl.innerHTML = '<span style="color: var(--ns-danger);">✗ 连接失败</span>';
+                }
+            } catch (error) {
+                resultEl.innerHTML = '<span style="color: var(--ns-danger);">✗ 测试失败</span>';
+            }
+        }
+
+        function addCapability(serviceType) {
+            document.getElementById('capServiceType').value = serviceType;
+            document.getElementById('capEditIndex').value = '-1';
+            document.getElementById('capId').value = '';
+            document.getElementById('capName').value = '';
+            document.getElementById('capInterfaceId').value = '';
+            document.getElementById('capEndpoint').value = '';
+            document.getElementById('capSystemCode').value = '';
+            document.getElementById('capTimeout').value = '30000';
+            document.getElementById('capRetryCount').value = '3';
+            document.getElementById('capEnabled').checked = true;
+            document.getElementById('capabilityModal').classList.add('nx-modal--open');
+        }
+
+        function editCapability(serviceType, capId) {
+            const cap = capabilities[serviceType][capId];
+            if (!cap) return;
+            
+            document.getElementById('capServiceType').value = serviceType;
+            document.getElementById('capEditIndex').value = capId;
+            document.getElementById('capId').value = capId;
+            document.getElementById('capName').value = cap.capabilityName || '';
+            document.getElementById('capInterfaceId').value = cap.interfaceId || '';
+            document.getElementById('capEndpoint').value = cap.endpoint || '';
+            document.getElementById('capSystemCode').value = cap.systemCode || '';
+            document.getElementById('capTimeout').value = cap.timeout || 30000;
+            document.getElementById('capRetryCount').value = cap.retryCount || 3;
+            document.getElementById('capEnabled').checked = cap.enabled !== false;
+            document.getElementById('capabilityModal').classList.add('nx-modal--open');
+        }
+
+        function closeCapabilityModal() {
+            document.getElementById('capabilityModal').classList.remove('nx-modal--open');
+        }
+
+        function saveCapability() {
+            const serviceType = document.getElementById('capServiceType').value;
+            const editIndex = document.getElementById('capEditIndex').value;
+            const capId = document.getElementById('capId').value;
+            
+            if (!capId) {
+                alert('请输入能力ID');
+                return;
+            }
+            
+            const cap = {
+                capabilityName: document.getElementById('capName').value,
+                interfaceId: document.getElementById('capInterfaceId').value,
+                endpoint: document.getElementById('capEndpoint').value,
+                systemCode: document.getElementById('capSystemCode').value,
+                timeout: parseInt(document.getElementById('capTimeout').value) || 30000,
+                retryCount: parseInt(document.getElementById('capRetryCount').value) || 3,
+                enabled: document.getElementById('capEnabled').checked
+            };
+            
+            if (editIndex !== '-1' && editIndex !== capId) {
+                delete capabilities[serviceType][editIndex];
+            }
+            
+            capabilities[serviceType][capId] = cap;
+            renderCapabilities(serviceType);
+            closeCapabilityModal();
+        }
+
+        function deleteCapability(serviceType, capId) {
+            if (!confirm('确定要删除此能力吗？')) return;
+            delete capabilities[serviceType][capId];
+            renderCapabilities(serviceType);
+        }
+
+        function renderCapabilities(serviceType) {
+            const container = document.getElementById(serviceType + 'Capabilities');
+            const caps = capabilities[serviceType];
+            
+            if (!caps || Object.keys(caps).length === 0) {
+                container.innerHTML = '<div class="nx-text-center" style="color: var(--ns-secondary); padding: 20px;">暂无能力配置</div>';
+                return;
+            }
+            
+            let html = '';
+            for (const [id, cap] of Object.entries(caps)) {
+                html += '<div class="capability-item">';
+                html += '  <div class="name">' + (cap.capabilityName || id) + '</div>';
+                html += '  <div class="status"><span class="nx-badge nx-badge--' + (cap.enabled !== false ? 'success' : 'secondary') + '">' + (cap.enabled !== false ? '启用' : '禁用') + '</span></div>';
+                html += '  <div class="actions">';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--ghost" onclick="editCapability(\'' + serviceType + '\', \'' + id + '\')"><i class="ri-edit-line"></i></button>';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--ghost" onclick="deleteCapability(\'' + serviceType + '\', \'' + id + '\')"><i class="ri-delete-bin-line"></i></button>';
+                html += '  </div>';
+                html += '</div>';
+            }
+            container.innerHTML = html;
+        }
+
+        async function testCapability() {
+            const endpoint = document.getElementById('capEndpoint').value;
+            if (!endpoint) {
+                alert('请输入端点地址');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/enexus/scene/config/test-connection', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({type: 'capability', endpoint: endpoint})
+                });
+                const rs = await response.json();
+                if (rs.data && rs.data.success) {
+                    alert('连接成功 (' + rs.data.latency + 'ms)');
+                } else {
+                    alert('连接失败');
+                }
+            } catch (error) {
+                alert('测试失败: ' + error.message);
+            }
+        }
+
+        async function validateConfig() {
+            const config = buildConfig();
+            
+            try {
+                const response = await fetch('/api/enexus/scene/config/validate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(config)
+                });
+                const rs = await response.json();
+                if (rs.data && rs.data.valid) {
+                    alert('配置验证通过');
+                } else {
+                    alert('配置验证失败');
+                }
+            } catch (error) {
+                alert('验证失败: ' + error.message);
+            }
+        }
+
+        function buildConfig() {
+            const config = {
+                sceneId: document.getElementById('sceneId').value || undefined,
+                sceneName: document.getElementById('sceneName').value,
+                description: document.getElementById('sceneDesc').value,
+                createdBy: 'admin'
+            };
+            
+            config.org = {
+                dbDriver: document.getElementById('orgDbDriver').value,
+                dbUrl: document.getElementById('orgDbUrl').value,
+                dbUser: document.getElementById('orgDbUser').value,
+                dbPassword: document.getElementById('orgDbPassword').value,
+                cacheEnabled: document.getElementById('orgCacheEnabled').checked,
+                cacheExpireTime: parseInt(document.getElementById('orgCacheExpire').value) || 3600000,
+                cacheSize: parseInt(document.getElementById('orgCacheSize').value) || 5242880,
+                capabilities: capabilities.org
+            };
+            
+            config.vfs = {
+                storageType: document.getElementById('vfsStorageType').value,
+                basePath: document.getElementById('vfsBasePath').value,
+                maxFileSize: parseInt(document.getElementById('vfsMaxFileSize').value) || 52428800,
+                allowedTypes: document.getElementById('vfsAllowedTypes').value,
+                capabilities: capabilities.vfs
+            };
+            
+            if (config.vfs.storageType === 'oss') {
+                config.vfs.ossEndpoint = document.getElementById('vfsOssEndpoint').value;
+                config.vfs.ossBucket = document.getElementById('vfsOssBucket').value;
+                config.vfs.ossAccessKey = document.getElementById('vfsOssAccessKey').value;
+                config.vfs.ossSecretKey = document.getElementById('vfsOssSecretKey').value;
+            }
+            
+            config.msg = {
+                mqttBroker: document.getElementById('msgMqttBroker').value,
+                mqttPort: parseInt(document.getElementById('msgMqttPort').value) || 1883,
+                mqttClientId: document.getElementById('msgMqttClientId').value,
+                mqttUsername: document.getElementById('msgMqttUsername').value,
+                mqttPassword: document.getElementById('msgMqttPassword').value,
+                qos: parseInt(document.getElementById('msgQos').value) || 1,
+                capabilities: capabilities.msg
+            };
+            
+            config.jds = {
+                adminPort: parseInt(document.getElementById('jdsAdminPort').value) || 9090,
+                adminKey: document.getElementById('jdsAdminKey').value,
+                singleLogin: document.getElementById('jdsSingleLogin').checked,
+                sessionEnabled: document.getElementById('jdsSessionEnabled').checked,
+                sessionExpireTime: parseInt(document.getElementById('jdsSessionExpire').value) || 1800000,
+                sessionCheckInterval: parseInt(document.getElementById('jdsSessionCheck').value) || 300000,
+                capabilities: capabilities.jds
+            };
+            
+            return config;
+        }
+
+        async function saveConfig() {
+            const config = buildConfig();
+            
+            try {
+                const url = config.sceneId ? '/api/enexus/scene/update' : '/api/enexus/scene/create';
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(config)
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    alert('保存成功');
+                    if (!config.sceneId && rs.data.sceneId) {
+                        document.getElementById('sceneId').value = rs.data.sceneId;
+                    }
+                }
+            } catch (error) {
+                alert('保存失败: ' + error.message);
+            }
+        }
+
+        async function deployConfig() {
+            const config = buildConfig();
+            
+            if (!config.sceneId) {
+                alert('请先保存场景配置');
+                return;
+            }
+            
+            if (!confirm('确定要部署此场景吗？')) return;
+            
+            try {
+                const response = await fetch('/api/enexus/scene/flow/start', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({sceneId: config.sceneId})
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    window.location.href = '/console/pages/scene/flow-tracker.html?flowId=' + rs.data.flowId;
+                }
+            } catch (error) {
+                alert('部署失败: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

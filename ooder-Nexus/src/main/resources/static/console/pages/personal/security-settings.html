@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全设置 - Nexus</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .security-section { background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 8px; margin-bottom: 20px; }
+        .security-header { padding: 16px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .security-title { font-size: 16px; font-weight: 600; color: var(--ns-dark); display: flex; align-items: center; gap: 8px; }
+        .security-title i { color: var(--nx-primary); }
+        .security-body { padding: 20px; }
+        
+        .security-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--ns-border); }
+        .security-item:last-child { border-bottom: none; }
+        .security-item-info { flex: 1; }
+        .security-item-title { font-size: 14px; font-weight: 500; color: var(--ns-dark); margin-bottom: 4px; }
+        .security-item-desc { font-size: 13px; color: var(--ns-secondary); }
+        .security-item-status { display: flex; align-items: center; gap: 8px; }
+        
+        .toggle-switch { position: relative; width: 48px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--ns-border); transition: .3s; border-radius: 24px; }
+        .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        .toggle-switch input:checked + .toggle-slider { background-color: var(--nx-primary); }
+        .toggle-switch input:checked + .toggle-slider:before { transform: translateX(24px); }
+        
+        .risk-level { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 4px; font-size: 12px; }
+        .risk-level.low { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .risk-level.medium { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        .risk-level.high { background: rgba(239, 68, 68, 0.1); color: var(--ns-danger); }
+        
+        .permission-list { display: flex; flex-direction: column; gap: 12px; }
+        .permission-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--ns-input-bg); border-radius: 8px; }
+        .permission-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .permission-icon.file { background: rgba(59, 130, 246, 0.1); color: var(--nx-primary); }
+        .permission-icon.message { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .permission-icon.network { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        .permission-info { flex: 1; }
+        .permission-name { font-size: 14px; color: var(--ns-dark); }
+        .permission-count { font-size: 12px; color: var(--ns-secondary); }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">安全设置</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="security-section">
+                        <div class="security-header">
+                            <div class="security-title"><i class="ri-shield-check-line"></i> 安全状态</div>
+                            <span class="risk-level low"><i class="ri-check-line"></i> 安全</span>
+                        </div>
+                        <div class="security-body">
+                            <div class="security-item">
+                                <div class="security-item-info">
+                                    <div class="security-item-title">两步验证</div>
+                                    <div class="security-item-desc">使用手机验证码进行二次验证</div>
+                                </div>
+                                <div class="security-item-status">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="twoFactor">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="security-item">
+                                <div class="security-item-info">
+                                    <div class="security-item-title">登录通知</div>
+                                    <div class="security-item-desc">新设备登录时发送通知</div>
+                                </div>
+                                <div class="security-item-status">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="loginNotify" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="security-item">
+                                <div class="security-item-info">
+                                    <div class="security-item-title">会话超时</div>
+                                    <div class="security-item-desc">闲置30分钟后自动退出</div>
+                                </div>
+                                <div class="security-item-status">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="sessionTimeout" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="security-section">
+                        <div class="security-header">
+                            <div class="security-title"><i class="ri-key-2-line"></i> 权限管理</div>
+                        </div>
+                        <div class="security-body">
+                            <div class="permission-list">
+                                <div class="permission-item">
+                                    <div class="permission-icon file"><i class="ri-file-text-line"></i></div>
+                                    <div class="permission-info">
+                                        <div class="permission-name">文件访问权限</div>
+                                        <div class="permission-count">3个技能已授权</div>
+                                    </div>
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm">管理</button>
+                                </div>
+                                <div class="permission-item">
+                                    <div class="permission-icon message"><i class="ri-message-2-line"></i></div>
+                                    <div class="permission-info">
+                                        <div class="permission-name">消息发送权限</div>
+                                        <div class="permission-count">2个技能已授权</div>
+                                    </div>
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm">管理</button>
+                                </div>
+                                <div class="permission-item">
+                                    <div class="permission-icon network"><i class="ri-wifi-line"></i></div>
+                                    <div class="permission-info">
+                                        <div class="permission-name">网络访问权限</div>
+                                        <div class="permission-count">1个技能已授权</div>
+                                    </div>
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm">管理</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="security-section">
+                        <div class="security-header">
+                            <div class="security-title"><i class="ri-device-line"></i> 设备管理</div>
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm">查看全部</button>
+                        </div>
+                        <div class="security-body">
+                            <div class="security-item">
+                                <div class="security-item-info">
+                                    <div class="security-item-title">当前设备</div>
+                                    <div class="security-item-desc">Windows PC · 北京 · 最后活动: 刚刚</div>
+                                </div>
+                                <span class="risk-level low">当前</span>
+                            </div>
+                            <div class="security-item">
+                                <div class="security-item-info">
+                                    <div class="security-item-title">iPhone 15</div>
+                                    <div class="security-item-desc">iOS · 上海 · 最后活动: 2小时前</div>
+                                </div>
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm">移除</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+        };
+    </script>
+</body>
+</html>

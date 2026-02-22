@@ -3,524 +3,510 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>执行管理 - SkillCenter 控制台</title>
-    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
-    <link href="/skillcenter/console/assets/css/remixicon/remixicon.css" rel="stylesheet">
-    <script src="/skillcenter/console/js/menu.js"></script>
-
+    <title>技能执行 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .exec-status-pending { background: var(--nx-warning); color: white; }
+        .exec-status-running { background: var(--nx-primary); color: white; }
+        .exec-status-success { background: var(--nx-success); color: white; }
+        .exec-status-failed { background: var(--nx-danger); color: white; }
+        .exec-status-cancelled { background: var(--nx-text-secondary); color: white; }
+        .result-box {
+            background: var(--nx-bg-secondary);
+            border: 1px solid var(--nx-border);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .param-input-group {
+            margin-bottom: 12px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <aside class="sidebar" id="sidebar">
-            <!-- 菜单将通过menu.js动态加载 -->
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
         </aside>
-        <main class="main-content">
-            <div class="header">
-                <h1><i class="ri-play-circle-line"></i> 执行管理</h1>
-                <div class="user-info">
-                    <span class="user-name">管理员</span>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能执行</h2>
                 </div>
-            </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
             
-            <!-- 标签页导航 -->
-            <div class="section execution-tabs">
-                <button class="btn btn-secondary tab-btn active" onclick="switchTab('execute-run')">执行技能</button>
-                <button class="btn btn-secondary tab-btn" onclick="switchTab('execute-history')">执行历史</button>
-                <button class="btn btn-secondary tab-btn" onclick="switchTab('execute-status')">执行状态</button>
-                <button class="btn btn-secondary tab-btn" onclick="switchTab('execute-result')">执行结果</button>
-            </div>
-            
-            <!-- 标签页内容 -->
-            <div class="section">
-                <!-- 执行技能标签页 -->
-                <div id="execute-run-tab" class="tab-content">
-                    <div class="form-group">
-                        <h3>执行技能</h3>
-                        <div style="margin-top: 8px;">
-                            <select id="skill-select" class="form-control" style="margin-right: 12px;">
-                                <option value="">选择技能</option>
-                            </select>
-                            <button class="btn btn-primary" onclick="executeSkillFromForm()">执行</button>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-2 nx-gap-6 nx-mb-6">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">执行技能</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">选择技能</label>
+                                    <select id="skillSelect" class="nx-select" style="width: 100%;" onchange="loadSkillParams()">
+                                        <option value="">请选择技能</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">执行模式</label>
+                                    <div class="nx-flex nx-gap-4">
+                                        <label class="nx-flex nx-items-center nx-gap-2">
+                                            <input type="radio" name="execMode" value="sync" checked>
+                                            <span>同步执行</span>
+                                        </label>
+                                        <label class="nx-flex nx-items-center nx-gap-2">
+                                            <input type="radio" name="execMode" value="async">
+                                            <span>异步执行</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div id="paramsContainer">
+                                </div>
+                                
+                                <div class="nx-form-group nx-mb-4">
+                                    <label class="nx-label">超时时间 (秒)</label>
+                                    <input type="number" id="timeout" class="nx-input" value="30" min="1" max="300">
+                                </div>
+                                
+                                <div class="nx-flex nx-gap-2">
+                                    <button class="nx-btn nx-btn--primary" onclick="executeSkill()">
+                                        <i class="ri-play-line"></i> 执行
+                                    </button>
+                                    <button class="nx-btn nx-btn--ghost" onclick="clearResult()">
+                                        <i class="ri-delete-bin-line"></i> 清空
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">执行结果</h3>
+                                <span id="execStatus" class="nx-badge"></span>
+                            </div>
+                            <div class="nx-card__body">
+                                <div id="resultBox" class="result-box">
+                                    执行结果将在此显示...
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div id="execution-parameters" style="margin-top: 16px;">
-                        <!-- 执行参数将在这里显示 -->
-                    </div>
-                </div>
-                
-                <!-- 执行历史标签页 -->
-                <div id="execute-history-tab" class="tab-content hidden">
-                    <div class="table-container">
-                        <table id="execution-history-table">
-                            <thead>
-                                <tr>
-                                    <th>执行ID</th>
-                                    <th>技能ID</th>
-                                    <th>执行时间</th>
-                                    <th>状态</th>
-                                    <th>执行时间</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- 执行历史将在这里显示 -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <!-- 执行状态标签页 -->
-                <div id="execute-status-tab" class="tab-content hidden">
-                    <div class="form-group">
-                        <input type="text" class="form-control" id="status-execution-id" placeholder="输入执行ID" style="margin-right: 12px;">
-                        <button class="btn btn-primary" onclick="getStatus()">获取状态</button>
-                    </div>
-                    <div id="execution-status-result">
-                        <!-- 执行状态将在这里显示 -->
-                    </div>
-                </div>
-                
-                <!-- 执行结果标签页 -->
-                <div id="execute-result-tab" class="tab-content hidden">
-                    <div class="form-group">
-                        <input type="text" class="form-control" id="result-execution-id" placeholder="输入执行ID" style="margin-right: 12px;">
-                        <button class="btn btn-primary" onclick="getResult()">获取结果</button>
-                        <button class="btn btn-danger" onclick="cleanResult()">清理结果</button>
-                    </div>
-                    <div id="execution-result-content">
-                        <!-- 执行结果将在这里显示 -->
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                            <h3 class="nx-card__title">执行历史</h3>
+                            <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="loadHistory()">
+                                <i class="ri-refresh-line"></i> 刷新
+                            </button>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>执行ID</th>
+                                            <th>技能名称</th>
+                                            <th>执行时间</th>
+                                            <th>状态</th>
+                                            <th>耗时</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="history-body">
+                                        <tr><td colspan="6" style="text-align: center;">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
     
+    <div id="detailModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 700px;">
+            <div class="modal-header">
+                <h3>执行详情</h3>
+                <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="detailContent">
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/utils.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
     <script>
-        // API基础URL
-        const API_BASE_URL = '/skillcenter/api';
+        var skillsData = [];
+        var currentExecId = null;
         
-        // 初始化页面
-        function init() {
-            updateTimestamp();
-            loadExecutionHistory();
-            setInterval(updateTimestamp, 60000); // 每分钟更新时间戳
-        }
-        
-        // 更新时间戳
-        function updateTimestamp() {
-            const now = new Date();
-            const timestamp = document.getElementById('timestamp');
-            if (timestamp) {
-                timestamp.textContent = now.toLocaleString('zh-CN');
+        window.onPageInit = function() {
+            console.log('[Execution] 页面初始化');
+            if (typeof initMenu === 'function') {
+                initMenu('skill-execution');
             }
-        }
-        
-        // 执行管理相关函数
-        
-        // 加载执行历史
-        async function loadExecutionHistory() {
-            try {
-                // 由于后端API没有直接提供执行历史的接口，我们需要从其他接口获取数据
-                // 这里我们暂时使用模拟数据
-                const executions = [
-                    {
-                        executionId: 'exec-12345',
-                        skillId: 'text-uppercase',
-                        timestamp: new Date().toLocaleString('zh-CN'),
-                        status: 'SUCCESS',
-                        executionTime: '0.5s'
-                    },
-                    {
-                        executionId: 'exec-12344',
-                        skillId: 'code-generation',
-                        timestamp: new Date().toLocaleString('zh-CN'),
-                        status: 'SUCCESS',
-                        executionTime: '3.2s'
-                    },
-                    {
-                        executionId: 'exec-12343',
-                        skillId: 'local-deployment',
-                        timestamp: new Date().toLocaleString('zh-CN'),
-                        status: 'FAILED',
-                        executionTime: '1.8s'
-                    }
-                ];
-                renderExecutionHistory(executions);
-            } catch (error) {
-                console.error('加载执行历史错误:', error);
-                alert('加载执行历史失败: ' + error.message);
-            }
-        }
-        
-        // 渲染执行历史
-        function renderExecutionHistory(executions) {
-            const tbody = document.querySelector('table tbody');
-            tbody.innerHTML = '';
+            loadSkills();
+            loadHistory();
             
-            executions.forEach(execution => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${execution.executionId}</td>
-                    <td>${execution.skillId}</td>
-                    <td>${execution.timestamp}</td>
-                    <td>${execution.status === 'SUCCESS' ? '成功' : '失败'}</td>
-                    <td>${execution.executionTime}</td>
-                    <td>
-                        <button class="btn btn-secondary" onclick="showExecutionDetail('${execution.executionId}')">详情</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-        
-        // 显示执行详情
-        async function showExecutionDetail(executionId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/execution/result/${executionId}`);
-                if (!response.ok) {
-                    throw new Error('获取执行详情失败');
-                }
-                const result = await response.json();
-                alert(`执行详情:\n执行ID: ${executionId}\n状态: ${result.status === 'SUCCESS' ? '成功' : '失败'}\n结果: ${result.output || result.errorMessage}\n执行时间: ${result.executionTime || '未知'}`);
-            } catch (error) {
-                console.error('获取执行详情错误:', error);
-                alert('获取执行详情失败: ' + error.message);
+            var urlParams = new URLSearchParams(window.location.search);
+            var skillId = urlParams.get('skillId');
+            if (skillId) {
+                setTimeout(function() {
+                    document.getElementById('skillSelect').value = skillId;
+                    loadSkillParams();
+                }, 500);
             }
-        }
-        
-        // 获取执行状态
-        async function getExecutionStatus(executionId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/execution/status/${executionId}`);
-                if (!response.ok) {
-                    throw new Error('获取执行状态失败');
-                }
-                const status = await response.text();
-                alert(`执行状态: ${status}`);
-            } catch (error) {
-                console.error('获取执行状态错误:', error);
-                alert('获取执行状态失败: ' + error.message);
-            }
-        }
-        
-        // 清理执行结果
-        async function clearExecutionResult(executionId) {
-            if (!confirm('确定要清理执行结果 ' + executionId + ' 吗?')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/execution/result/${executionId}`, {
-                    method: 'DELETE'
-                });
-                if (!response.ok) {
-                    throw new Error('清理执行结果失败');
-                }
-                const result = await response.json();
-                if (result) {
-                    alert('执行结果清理成功!');
-                    loadExecutionHistory();
-                } else {
-                    alert('执行结果清理失败!');
-                }
-            } catch (error) {
-                console.error('清理执行结果错误:', error);
-                alert('清理执行结果失败: ' + error.message);
-            }
-        }
-        
-        // 标签页切换函数
-        function switchTab(tabId) {
-            // 隐藏所有标签页内容
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.add('hidden');
-            });
-            
-            // 显示选中的标签页内容
-            document.getElementById(`${tabId}-tab`).classList.remove('hidden');
-            
-            // 更新标签页按钮状态
-            document.querySelectorAll('.btn-secondary').forEach(btn => {
-                btn.style.backgroundColor = '#1a1a1a';
-                btn.style.color = 'var(--ooder-secondary)';
-            });
-            
-            // 高亮当前标签页按钮
-            event.target.style.backgroundColor = 'var(--ooder-primary)';
-            event.target.style.color = 'white';
-            
-            // 根据标签页ID加载相应的数据
-            if (tabId === 'execute-history') {
-                loadExecutionHistory();
-            } else if (tabId === 'execute-run') {
-                loadSkillsForExecution();
-            }
-        }
-        
-        // 加载技能列表供执行选择
-        async function loadSkillsForExecution() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/skills`);
-                if (!response.ok) {
-                    throw new Error('加载技能列表失败');
-                }
-                const skills = await response.json();
-                const skillSelect = document.getElementById('skill-select');
-                skillSelect.innerHTML = '<option value="">选择技能</option>';
-                
-                skills.forEach(skill => {
-                    const option = document.createElement('option');
-                    option.value = skill.id;
-                    option.textContent = skill.name;
-                    skillSelect.appendChild(option);
-                });
-                
-                // 添加技能选择事件监听器
-                skillSelect.addEventListener('change', function() {
-                    const skillId = this.value;
-                    if (skillId) {
-                        loadSkillParameters(skillId);
-                    } else {
-                        document.getElementById('execution-parameters').innerHTML = '';
-                    }
-                });
-            } catch (error) {
-                console.error('加载技能列表错误:', error);
-                alert('加载技能列表失败: ' + error.message);
-            }
-        }
-        
-        // 加载技能参数
-        async function loadSkillParameters(skillId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/skills/${skillId}`);
-                if (!response.ok) {
-                    throw new Error('获取技能详情失败');
-                }
-                const skill = await response.json();
-                const parametersContainer = document.getElementById('execution-parameters');
-                parametersContainer.innerHTML = `
-                    <h4>执行参数</h4>
-                    <div style="margin-top: 8px;">
-                        <p>技能: ${skill.name}</p>
-                        <p>分类: ${skill.category || '未分类'}</p>
-                        <p>描述: ${skill.description || '无描述'}</p>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('获取技能详情错误:', error);
-                alert('获取技能详情失败: ' + error.message);
-            }
-        }
-        
-        // 从表单执行技能
-        async function executeSkillFromForm() {
-            const skillId = document.getElementById('skill-select').value;
-            if (!skillId) {
-                alert('请选择技能');
-                return;
-            }
-            
-            try {
-                const parameters = {};
-                if (skillId === 'text-uppercase') {
-                    parameters.text = prompt('请输入要转换的文本:');
-                } else if (skillId === 'code-generation') {
-                    parameters.language = prompt('请输入语言:');
-                    parameters.prompt = prompt('请输入代码生成提示:');
-                } else if (skillId === 'local-deployment') {
-                    parameters.appName = prompt('请输入应用名称:');
-                    parameters.appPath = prompt('请输入应用路径:');
-                }
-                
-                const response = await fetch(`${API_BASE_URL}/skills/${skillId}/execute`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ parameters })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('执行技能失败');
-                }
-                
-                const result = await response.json();
-                if (result.status === 'SUCCESS') {
-                    alert('执行成功!\n结果: ' + result.output);
-                } else {
-                    alert('执行失败!\n错误: ' + result.errorMessage);
-                }
-            } catch (error) {
-                console.error('执行技能错误:', error);
-                alert('执行技能失败: ' + error.message);
-            }
-        }
-        
-        // 加载执行历史
-        async function loadExecutionHistory() {
-            try {
-                // 由于后端API没有直接提供执行历史的接口，我们需要从其他接口获取数据
-                // 这里我们暂时使用模拟数据
-                const executions = [
-                    {
-                        executionId: 'exec-12345',
-                        skillId: 'text-uppercase',
-                        timestamp: new Date().toLocaleString('zh-CN'),
-                        status: 'SUCCESS',
-                        executionTime: '0.5s'
-                    },
-                    {
-                        executionId: 'exec-12344',
-                        skillId: 'code-generation',
-                        timestamp: new Date().toLocaleString('zh-CN'),
-                        status: 'SUCCESS',
-                        executionTime: '3.2s'
-                    },
-                    {
-                        executionId: 'exec-12343',
-                        skillId: 'local-deployment',
-                        timestamp: new Date().toLocaleString('zh-CN'),
-                        status: 'FAILED',
-                        executionTime: '1.8s'
-                    }
-                ];
-                renderExecutionHistory(executions);
-            } catch (error) {
-                console.error('加载执行历史错误:', error);
-                alert('加载执行历史失败: ' + error.message);
-            }
-        }
-        
-        // 渲染执行历史
-        function renderExecutionHistory(executions) {
-            const tbody = document.querySelector('#execution-history-table tbody');
-            tbody.innerHTML = '';
-            
-            executions.forEach(execution => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${execution.executionId}</td>
-                    <td>${execution.skillId}</td>
-                    <td>${execution.timestamp}</td>
-                    <td>${execution.status === 'SUCCESS' ? '成功' : '失败'}</td>
-                    <td>${execution.executionTime}</td>
-                    <td>
-                        <button class="btn btn-secondary" onclick="showExecutionDetail('${execution.executionId}')">详情</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-        
-        // 显示执行详情
-        async function showExecutionDetail(executionId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/execution/result/${executionId}`);
-                if (!response.ok) {
-                    throw new Error('获取执行详情失败');
-                }
-                const result = await response.json();
-                alert(`执行详情:\n执行ID: ${executionId}\n状态: ${result.status === 'SUCCESS' ? '成功' : '失败'}\n结果: ${result.output || result.errorMessage}\n执行时间: ${result.executionTime || '未知'}`);
-            } catch (error) {
-                console.error('获取执行详情错误:', error);
-                alert('获取执行详情失败: ' + error.message);
-            }
-        }
-        
-        // 获取执行状态
-        async function getStatus() {
-            const executionId = document.getElementById('status-execution-id').value;
-            if (!executionId) {
-                alert('请输入执行ID');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/execution/status/${executionId}`);
-                if (!response.ok) {
-                    throw new Error('获取执行状态失败');
-                }
-                const status = await response.text();
-                const statusResult = document.getElementById('execution-status-result');
-                statusResult.innerHTML = `
-                    <div style="padding: 12px; background-color: #1a1a1a; border-radius: var(--ooder-radius);">
-                        <p>执行ID: ${executionId}</p>
-                        <p>状态: ${status}</p>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('获取执行状态错误:', error);
-                alert('获取执行状态失败: ' + error.message);
-            }
-        }
-        
-        // 获取执行结果
-        async function getResult() {
-            const executionId = document.getElementById('result-execution-id').value;
-            if (!executionId) {
-                alert('请输入执行ID');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/execution/result/${executionId}`);
-                if (!response.ok) {
-                    throw new Error('获取执行结果失败');
-                }
-                const result = await response.json();
-                const resultContent = document.getElementById('execution-result-content');
-                resultContent.innerHTML = `
-                    <div style="padding: 12px; background-color: #1a1a1a; border-radius: var(--ooder-radius);">
-                        <p>执行ID: ${executionId}</p>
-                        <p>状态: ${result.status === 'SUCCESS' ? '成功' : '失败'}</p>
-                        <p>结果: ${result.output || result.errorMessage}</p>
-                        <p>执行时间: ${result.executionTime || '未知'}</p>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('获取执行结果错误:', error);
-                alert('获取执行结果失败: ' + error.message);
-            }
-        }
-        
-        // 清理执行结果
-        async function cleanResult() {
-            const executionId = document.getElementById('result-execution-id').value;
-            if (!executionId) {
-                alert('请输入执行ID');
-                return;
-            }
-            
-            if (!confirm('确定要清理执行结果 ' + executionId + ' 吗?')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/execution/result/${executionId}`, {
-                    method: 'DELETE'
-                });
-                if (!response.ok) {
-                    throw new Error('清理执行结果失败');
-                }
-                const result = await response.json();
-                if (result) {
-                    alert('执行结果清理成功!');
-                    document.getElementById('execution-result-content').innerHTML = '';
-                } else {
-                    alert('执行结果清理失败!');
-                }
-            } catch (error) {
-                console.error('清理执行结果错误:', error);
-                alert('清理执行结果失败: ' + error.message);
-            }
-        }
-        
-        // 页面加载完成后初始化
-        window.onload = function() {
-            initMenu('execution');
-            init();
         };
+        
+        async function loadSkills() {
+            try {
+                const result = await utils.api.post('/api/skills/list', { pageNum: 1, pageSize: 100 });
+                
+                if (result.code === 200 && result.data) {
+                    skillsData = result.data.content || result.data.items || result.data || [];
+                    const select = document.getElementById('skillSelect');
+                    
+                    select.innerHTML = '<option value="">请选择技能</option>';
+                    skillsData.forEach(skill => {
+                        const option = document.createElement('option');
+                        option.value = skill.id || skill.skillId;
+                        option.textContent = skill.name || skill.id || skill.skillId;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('[Execution] 加载技能列表错误:', error);
+            }
+        }
+        
+        window.loadSkillParams = function() {
+            const skillId = document.getElementById('skillSelect').value;
+            const container = document.getElementById('paramsContainer');
+            
+            if (!skillId) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            const skill = skillsData.find(s => (s.id || s.skillId) === skillId);
+            if (skill && skill.params && skill.params.length > 0) {
+                container.innerHTML = '<label class="nx-label">执行参数</label>' +
+                    skill.params.map(param => `
+                        <div class="param-input-group">
+                            <label class="nx-text-sm">${param.name || param} ${param.required ? '<span class="nx-text-danger">*</span>' : ''}</label>
+                            <input type="${param.type || 'text'}" 
+                                   id="param_${param.name || param}" 
+                                   class="nx-input" 
+                                   placeholder="${param.description || ''}"
+                                   value="${param.default || ''}">
+                        </div>
+                    `).join('');
+            } else {
+                container.innerHTML = `
+                    <div class="nx-form-group nx-mb-4">
+                        <label class="nx-label">执行参数 (JSON格式)</label>
+                        <textarea id="execParams" class="nx-textarea" rows="4" placeholder='{"key": "value"}'></textarea>
+                    </div>
+                `;
+            }
+        };
+        
+        window.executeSkill = async function() {
+            const skillId = document.getElementById('skillSelect').value;
+            const mode = document.querySelector('input[name="execMode"]:checked').value;
+            const timeout = parseInt(document.getElementById('timeout').value) || 30;
+            
+            if (!skillId) {
+                utils.msg.error('请选择技能');
+                return;
+            }
+            
+            let params = {};
+            const skill = skillsData.find(s => (s.id || s.skillId) === skillId);
+            
+            if (skill && skill.params && skill.params.length > 0) {
+                skill.params.forEach(param => {
+                    const input = document.getElementById('param_' + (param.name || param));
+                    if (input) {
+                        params[param.name || param] = input.value;
+                    }
+                });
+            } else {
+                const paramsText = document.getElementById('execParams').value;
+                if (paramsText) {
+                    try {
+                        params = JSON.parse(paramsText);
+                    } catch (e) {
+                        utils.msg.error('参数JSON格式错误');
+                        return;
+                    }
+                }
+            }
+            
+            const statusBadge = document.getElementById('execStatus');
+            statusBadge.className = 'nx-badge exec-status-running';
+            statusBadge.textContent = '执行中...';
+            
+            document.getElementById('resultBox').textContent = '正在执行...';
+            
+            try {
+                let result;
+                if (mode === 'async') {
+                    result = await utils.api.post('/api/execution/execute-async/' + skillId, {
+                        params: params,
+                        timeout: timeout
+                    });
+                    
+                    if (result.code === 200) {
+                        currentExecId = result.data;
+                        statusBadge.className = 'nx-badge exec-status-pending';
+                        statusBadge.textContent = '异步执行中';
+                        document.getElementById('resultBox').textContent = '异步执行已提交，执行ID: ' + currentExecId;
+                        pollExecutionStatus(currentExecId);
+                    }
+                } else {
+                    result = await utils.api.post('/api/execution/execute/' + skillId, {
+                        params: params,
+                        timeout: timeout
+                    });
+                    
+                    displayResult(result);
+                }
+                
+                loadHistory();
+            } catch (error) {
+                console.error('[Execution] 执行错误:', error);
+                statusBadge.className = 'nx-badge exec-status-failed';
+                statusBadge.textContent = '执行失败';
+                document.getElementById('resultBox').textContent = '执行错误: ' + error.message;
+            }
+        };
+        
+        async function pollExecutionStatus(execId) {
+            const maxPolls = 60;
+            let polls = 0;
+            
+            const poll = async () => {
+                if (polls >= maxPolls) {
+                    document.getElementById('execStatus').className = 'nx-badge exec-status-pending';
+                    document.getElementById('execStatus').textContent = '超时';
+                    return;
+                }
+                
+                try {
+                    const result = await utils.api.post('/api/execution/status/' + execId);
+                    
+                    if (result.code === 200 && result.data) {
+                        const status = result.data.status;
+                        
+                        if (status === 'SUCCESS') {
+                            const resultData = await utils.api.post('/api/execution/result/' + execId);
+                            displayResult(resultData);
+                            return;
+                        } else if (status === 'FAILED') {
+                            document.getElementById('execStatus').className = 'nx-badge exec-status-failed';
+                            document.getElementById('execStatus').textContent = '失败';
+                            document.getElementById('resultBox').textContent = result.data.error || '执行失败';
+                            return;
+                        } else if (status === 'RUNNING' || status === 'PENDING') {
+                            polls++;
+                            setTimeout(poll, 1000);
+                        }
+                    }
+                } catch (error) {
+                    console.error('[Execution] 轮询状态错误:', error);
+                }
+            };
+            
+            poll();
+        }
+        
+        function displayResult(result) {
+            const statusBadge = document.getElementById('execStatus');
+            const resultBox = document.getElementById('resultBox');
+            
+            if (result.code === 200) {
+                const data = result.data;
+                
+                if (data.success !== false) {
+                    statusBadge.className = 'nx-badge exec-status-success';
+                    statusBadge.textContent = '成功';
+                } else {
+                    statusBadge.className = 'nx-badge exec-status-failed';
+                    statusBadge.textContent = '失败';
+                }
+                
+                if (typeof data === 'object') {
+                    resultBox.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultBox.textContent = data;
+                }
+                
+                currentExecId = data.executionId || data.id;
+            } else {
+                statusBadge.className = 'nx-badge exec-status-failed';
+                statusBadge.textContent = '失败';
+                resultBox.textContent = '错误: ' + (result.message || '未知错误');
+            }
+        }
+        
+        window.clearResult = function() {
+            document.getElementById('resultBox').textContent = '执行结果将在此显示...';
+            document.getElementById('execStatus').className = 'nx-badge';
+            document.getElementById('execStatus').textContent = '';
+            currentExecId = null;
+        };
+        
+        async function loadHistory() {
+            const tbody = document.getElementById('history-body');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">加载中...</td></tr>';
+            
+            try {
+                const result = await utils.api.post('/execution/history', { pageNum: 1, pageSize: 20 });
+                
+                if (result.code === 200 && result.data) {
+                    const history = result.data.content || result.data.items || result.data || [];
+                    
+                    if (history.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--nx-text-secondary);">暂无执行记录</td></tr>';
+                        return;
+                    }
+                    
+                    tbody.innerHTML = history.map(record => `
+                        <tr>
+                            <td>${record.id || record.executionId || '-'}</td>
+                            <td>${record.skillName || record.skillId || '-'}</td>
+                            <td>${record.startTime || record.executedAt || '-'}</td>
+                            <td><span class="nx-badge exec-status-${getStatusClass(record.status)}">${getStatusText(record.status)}</span></td>
+                            <td>${record.duration ? record.duration + 'ms' : '-'}</td>
+                            <td>
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="viewExecDetail('${record.id || record.executionId}')">详情</button>
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm nx-text-danger" onclick="clearExecHistory('${record.id || record.executionId}')">清除</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--nx-danger);">加载失败</td></tr>';
+                }
+            } catch (error) {
+                console.error('[Execution] 加载历史错误:', error);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--nx-danger);">加载失败</td></tr>';
+            }
+        }
+        
+        window.viewExecDetail = async function(execId) {
+            try {
+                const result = await utils.api.post('/api/execution/result/' + execId);
+                
+                if (result.code === 200 && result.data) {
+                    const data = result.data;
+                    document.getElementById('detailContent').innerHTML = `
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-4 nx-mb-4">
+                            <div class="nx-form-group">
+                                <label class="nx-label">执行ID</label>
+                                <p>${data.id || data.executionId || '-'}</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">技能</label>
+                                <p>${data.skillName || data.skillId || '-'}</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">状态</label>
+                                <p><span class="nx-badge exec-status-${getStatusClass(data.status)}">${getStatusText(data.status)}</span></p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">耗时</label>
+                                <p>${data.duration ? data.duration + 'ms' : '-'}</p>
+                            </div>
+                        </div>
+                        <div class="nx-form-group nx-mb-4">
+                            <label class="nx-label">输入参数</label>
+                            <div class="result-box">${JSON.stringify(data.params || data.input || {}, null, 2)}</div>
+                        </div>
+                        <div class="nx-form-group">
+                            <label class="nx-label">输出结果</label>
+                            <div class="result-box">${typeof data.result === 'object' ? JSON.stringify(data.result, null, 2) : (data.result || data.output || '-')}</div>
+                        </div>
+                    `;
+                    document.getElementById('detailModal').style.display = 'block';
+                }
+            } catch (error) {
+                utils.msg.error('获取详情失败');
+            }
+        };
+        
+        window.closeDetailModal = function() {
+            document.getElementById('detailModal').style.display = 'none';
+        };
+        
+        window.clearExecHistory = async function(execId) {
+            if (!confirm('确定要清除该执行记录吗？')) return;
+            
+            try {
+                const result = await utils.api.post('/api/execution/clear/' + execId);
+                
+                if (result.code === 200) {
+                    utils.msg.success('已清除');
+                    loadHistory();
+                } else {
+                    utils.msg.error('清除失败');
+                }
+            } catch (error) {
+                utils.msg.error('清除失败');
+            }
+        };
+        
+        function getStatusClass(status) {
+            const map = {
+                'PENDING': 'pending',
+                'RUNNING': 'running',
+                'SUCCESS': 'success',
+                'FAILED': 'failed',
+                'CANCELLED': 'cancelled'
+            };
+            return map[status] || 'pending';
+        }
+        
+        function getStatusText(status) {
+            const map = {
+                'PENDING': '等待中',
+                'RUNNING': '执行中',
+                'SUCCESS': '成功',
+                'FAILED': '失败',
+                'CANCELLED': '已取消'
+            };
+            return map[status] || status || '未知';
+        }
     </script>
 </body>
 </html>

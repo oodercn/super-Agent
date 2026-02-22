@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>访问控制 - Nexus</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/access-control.js"></script>
+        .rule-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            padding: 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .rule-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .rule-icon.allow {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--ns-success);
+        }
+        .rule-icon.block {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--ns-danger);
+        }
+        .rule-info {
+            flex: 1;
+        }
+        .rule-name {
+            font-weight: 600;
+            color: var(--ns-dark);
+            margin-bottom: 4px;
+        }
+        .rule-desc {
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        .rule-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .switch {
+            position: relative;
+            width: 44px;
+            height: 22px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--ns-border);
+            transition: 0.3s;
+            border-radius: 22px;
+        }
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        .switch input:checked + .switch-slider {
+            background-color: var(--nx-primary);
+        }
+        .switch input:checked + .switch-slider:before {
+            transform: translateX(22px);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">访问控制</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="showAddRule()">
+                        <i class="ri-add-line"></i> 添加规则
+                    </button>
+                </div>
+            </header>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <!-- 统计卡片 -->
+                    <div class="rule-stats" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+                        <div class="rule-stat-card">
+                            <div class="rule-stat-value">0</div>
+                            <div class="rule-stat-label">总规则数</div>
+                        </div>
+                        <div class="rule-stat-card">
+                            <div class="rule-stat-value" style="color: var(--ns-success);">0</div>
+                            <div class="rule-stat-label">已启用</div>
+                        </div>
+                        <div class="rule-stat-card">
+                            <div class="rule-stat-value" style="color: var(--ns-warning);">0</div>
+                            <div class="rule-stat-label">已禁用</div>
+                        </div>
+                        <div class="rule-stat-card">
+                            <div class="rule-stat-value" style="color: var(--ns-danger);">0</div>
+                            <div class="rule-stat-label">拦截次数</div>
+                        </div>
+                    </div>
+
+                    <!-- 访问控制规则 -->
+                    <div class="card" style="margin-bottom: 24px;">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="ri-shield-check-line"></i> 访问控制规则</h2>
+                        </div>
+                    </div>
+
+                    <!-- 规则列表表格 -->
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>规则名称</th>
+                                        <th>动作</th>
+                                        <th>协议</th>
+                                        <th>源IP</th>
+                                        <th>目标端口</th>
+                                        <th>状态</th>
+                                        <th>描述</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+
+    <!-- 添加/编辑规则模态框 -->
+    <div id="ruleModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 id="ruleModalTitle">添加规则</h3>
+                <button class="modal-close" onclick="closeRuleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="ruleForm">
+                    <div class="form-group">
+                        <label class="form-label">规则名称 *</label>
+                        <input type="text" id="ruleName" class="form-control" placeholder="输入规则名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">动作</label>
+                        <select id="ruleAction" class="form-control">
+                            <option value="allow">允许</option>
+                            <option value="deny">阻止</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">协议</label>
+                        <select id="ruleProtocol" class="form-control">
+                            <option value="all">全部</option>
+                            <option value="tcp">TCP</option>
+                            <option value="udp">UDP</option>
+                            <option value="icmp">ICMP</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">源 IP</label>
+                        <input type="text" id="ruleSourceIp" class="form-control" placeholder="例如: 192.168.1.0/24 或 任何">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">目标端口</label>
+                        <input type="text" id="ruleDestPort" class="form-control" placeholder="例如: 80, 443 或 任何">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">描述</label>
+                        <textarea id="ruleDescription" class="form-control" rows="2" placeholder="规则描述"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--primary" onclick="saveRule()">保存</button>
+                <button class="nx-btn nx-btn--secondary" onclick="closeRuleModal()">取消</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

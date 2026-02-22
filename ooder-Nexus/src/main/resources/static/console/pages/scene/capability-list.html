@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能力约束 - Nexus</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .capability-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .stat-icon.primary { background: rgba(59, 130, 246, 0.1); color: var(--nx-primary); }
+        .stat-icon.success { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .stat-icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        .stat-icon.info { background: rgba(148, 163, 184, 0.1); color: var(--ns-secondary); }
+        .stat-info h3 { font-size: 12px; color: var(--ns-secondary); margin-bottom: 4px; }
+        .stat-value { font-size: 22px; font-weight: 600; color: var(--ns-dark); }
+        
+        .capability-table {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .table-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .table-header h3 { font-size: 16px; font-weight: 600; color: var(--ns-dark); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--ns-border); }
+        th { font-size: 12px; font-weight: 600; color: var(--ns-secondary); text-transform: uppercase; background: var(--ns-bg-hover); }
+        td { font-size: 14px; color: var(--ns-dark); }
+        tr:hover td { background: var(--ns-bg-hover); }
+        .cap-id { font-family: monospace; color: var(--nx-primary); }
+        .cap-name { font-weight: 500; }
+        .cap-scene { display: inline-flex; align-items: center; gap: 4px; background: var(--ns-bg-hover); border-radius: 4px; padding: 4px 8px; font-size: 12px; }
+        .cap-type { font-size: 12px; padding: 2px 6px; border-radius: 4px; }
+        .type-sync { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .type_async { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        .cap-params { font-size: 12px; color: var(--ns-secondary); }
+        .param-count { background: var(--ns-bg-hover); border-radius: 4px; padding: 2px 6px; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--ns-card-bg); border-radius: 8px; width: 100%; max-width: 600px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 16px; font-weight: 600; color: var(--ns-dark); }
+        .modal-close { background: none; border: none; font-size: 20px; color: var(--ns-secondary); cursor: pointer; }
+        .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+        
+        .param-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        .param-table th, .param-table td { padding: 8px 12px; font-size: 13px; }
+        .param-table th { background: var(--ns-bg-hover); font-weight: 500; color: var(--ns-secondary); }
+        .param-name { font-family: monospace; color: var(--nx-primary); }
+        .param-type { color: var(--ns-success); }
+        .param-required { color: #ef4444; font-size: 12px; }
+        .param-optional { color: var(--ns-secondary); font-size: 12px; }
+        
+        .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+        .filter-select { padding: 8px 12px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); border-radius: 6px; color: var(--ns-dark); font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">能力约束</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="capability-stats" id="capStats">
+                        <div class="stat-card">
+                            <div class="stat-icon primary"><i class="ri-flashlight-line"></i></div>
+                            <div class="stat-info"><h3>总能力数</h3><div class="stat-value" id="stat-total">0</div></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon success"><i class="ri-refresh-line"></i></div>
+                            <div class="stat-info"><h3>同步能力</h3><div class="stat-value" id="stat-sync">0</div></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon warning"><i class="ri-time-line"></i></div>
+                            <div class="stat-info"><h3>异步能力</h3><div class="stat-value" id="stat-async">0</div></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon info"><i class="ri-list-check"></i></div>
+                            <div class="stat-info"><h3>总参数数</h3><div class="stat-value" id="stat-params">0</div></div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-bar">
+                        <select class="filter-select" id="sceneFilter" onchange="filterCapabilities()">
+                            <option value="all">全部场景</option>
+                            <option value="vfs">VFS 场景</option>
+                            <option value="auth">认证场景</option>
+                            <option value="org">组织场景</option>
+                            <option value="msg">消息场景</option>
+                            <option value="workflow">工作流场景</option>
+                            <option value="a2ui">UI生成场景</option>
+                        </select>
+                        <input type="text" class="form-control" placeholder="搜索能力..." id="searchInput" style="width: 200px;" oninput="filterCapabilities()">
+                    </div>
+                    
+                    <div class="capability-table">
+                        <div class="table-header">
+                            <h3>能力列表</h3>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>能力ID</th>
+                                    <th>名称</th>
+                                    <th>所属场景</th>
+                                    <th>类型</th>
+                                    <th>参数</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="capabilityList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">能力详情</h3>
+                <button class="modal-close" onclick="hideDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var allCapabilities = [];
+        var filteredCapabilities = [];
+        
+        window.onPageInit = function() {
+            loadAllCapabilities();
+        };
+        
+        function loadAllCapabilities() {
+            var sceneIds = ['vfs', 'auth', 'org', 'msg', 'workflow', 'a2ui'];
+            var promises = sceneIds.map(function(sceneId) {
+                return fetch('/api/scene/capabilities', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sceneId: sceneId })
+                }).then(function(res) { return res.json(); })
+                .then(function(rs) {
+                    var caps = rs.data || [];
+                    caps.forEach(function(c) { c.sceneId = sceneId; });
+                    return caps;
+                });
+            });
+            
+            Promise.all(promises).then(function(results) {
+                allCapabilities = [];
+                results.forEach(function(caps) {
+                    allCapabilities = allCapabilities.concat(caps);
+                });
+                filteredCapabilities = allCapabilities;
+                renderCapabilities(filteredCapabilities);
+                updateStats();
+            });
+        }
+        
+        function updateStats() {
+            var total = allCapabilities.length;
+            var sync = allCapabilities.filter(function(c) { return !c.async; }).length;
+            var async = allCapabilities.filter(function(c) { return c.async; }).length;
+            var params = 0;
+            allCapabilities.forEach(function(c) {
+                if (c.parameters) params += c.parameters.length;
+            });
+            
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-sync').textContent = sync;
+            document.getElementById('stat-async').textContent = async;
+            document.getElementById('stat-params').textContent = params;
+        }
+        
+        function renderCapabilities(data) {
+            var container = document.getElementById('capabilityList');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--ns-secondary); padding: 40px;">暂无能力</td></tr>';
+                return;
+            }
+            
+            var html = '';
+            data.forEach(function(c) {
+                var typeClass = c.async ? 'type_async' : 'type_sync';
+                var typeText = c.async ? '异步' : '同步';
+                var paramCount = c.parameters ? c.parameters.length : 0;
+                
+                html += '<tr>' +
+                    '<td><span class="cap-id">' + c.capId + '</span></td>' +
+                    '<td><span class="cap-name">' + c.name + '</span></td>' +
+                    '<td><span class="cap-scene">' + getSceneName(c.sceneId) + '</span></td>' +
+                    '<td><span class="cap-type ' + typeClass + '">' + typeText + '</span></td>' +
+                    '<td><span class="cap-params"><span class="param-count">' + paramCount + '</span> 参数</span></td>' +
+                    '<td><button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="showDetail(\'' + c.sceneId + '\',\'' + c.capId + '\')">详情</button></td>' +
+                    '</tr>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function filterCapabilities() {
+            var sceneFilter = document.getElementById('sceneFilter').value;
+            var keyword = document.getElementById('searchInput').value.toLowerCase();
+            
+            filteredCapabilities = allCapabilities.filter(function(c) {
+                var matchScene = sceneFilter === 'all' || c.sceneId === sceneFilter;
+                var matchKeyword = c.capId.toLowerCase().indexOf(keyword) >= 0 ||
+                                   c.name.toLowerCase().indexOf(keyword) >= 0 ||
+                                   (c.description && c.description.toLowerCase().indexOf(keyword) >= 0);
+                return matchScene && matchKeyword;
+            });
+            
+            renderCapabilities(filteredCapabilities);
+        }
+        
+        function showDetail(sceneId, capId) {
+            var cap = allCapabilities.find(function(c) { return c.sceneId === sceneId && c.capId === capId; });
+            if (!cap) return;
+            
+            document.getElementById('modalTitle').textContent = cap.name;
+            
+            var html = '<div style="margin-bottom: 16px">' +
+                '<p style="font-size: 13px; color: var(--ns-secondary); margin-bottom: 8px"><strong>能力ID:</strong> <code style="color: var(--nx-primary)">' + cap.capId + '</code></p>' +
+                '<p style="font-size: 13px; color: var(--ns-secondary); margin-bottom: 8px"><strong>描述:</strong> ' + (cap.description || '-') + '</p>' +
+                '<p style="font-size: 13px; color: var(--ns-secondary); margin-bottom: 8px"><strong>返回类型:</strong> <code style="color: var(--ns-success)">' + (cap.returnType || 'void') + '</code></p>' +
+                '<p style="font-size: 13px; color: var(--ns-secondary)"><strong>执行方式:</strong> ' + (cap.async ? '异步' : '同步') + '</p>' +
+                '</div>';
+            
+            if (cap.parameters && cap.parameters.length > 0) {
+                html += '<h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ns-dark)">参数列表</h4>';
+                html += '<table class="param-table">' +
+                    '<thead><tr><th>参数名</th><th>类型</th><th>必需</th><th>默认值</th><th>描述</th></tr></thead><tbody>';
+                
+                cap.parameters.forEach(function(p) {
+                    var reqClass = p.required ? 'param-required' : 'param-optional';
+                    var reqText = p.required ? '必需' : '可选';
+                    var defaultVal = p.default !== undefined ? p.default : '-';
+                    html += '<tr>' +
+                        '<td class="param-name">' + p.name + '</td>' +
+                        '<td class="param-type">' + p.type + '</td>' +
+                        '<td class="' + reqClass + '">' + reqText + '</td>' +
+                        '<td>' + defaultVal + '</td>' +
+                        '<td style="color: var(--ns-secondary)">' + (p.description || '-') + '</td>' +
+                        '</tr>';
+                });
+                
+                html += '</tbody></table>';
+            }
+            
+            if (cap.mapsTo) {
+                html += '<div style="margin-top: 16px; padding: 12px; background: var(--ns-bg-hover); border-radius: 6px;">' +
+                    '<p style="font-size: 12px; color: var(--ns-secondary); margin-bottom: 4px">映射方法</p>' +
+                    '<code style="font-size: 13px; color: var(--nx-primary)">' + cap.mapsTo + '</code>' +
+                    '</div>';
+            }
+            
+            document.getElementById('modalBody').innerHTML = html;
+            document.getElementById('detailModal').classList.add('show');
+        }
+        
+        function hideDetailModal() {
+            document.getElementById('detailModal').classList.remove('show');
+        }
+        
+        function getSceneName(sceneId) {
+            var names = {
+                'vfs': 'VFS',
+                'auth': '认证',
+                'org': '组织',
+                'msg': '消息',
+                'workflow': '工作流',
+                'a2ui': 'UI生成'
+            };
+            return names[sceneId] || sceneId;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件共享 - Nexus</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .files-container { display: flex; height: calc(100vh - 140px); background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 8px; overflow: hidden; }
+        
+        .files-sidebar { width: 240px; border-right: 1px solid var(--ns-border); }
+        .files-sidebar-header { padding: 16px; border-bottom: 1px solid var(--ns-border); }
+        .files-sidebar-header h3 { font-size: 14px; font-weight: 600; color: var(--ns-dark); }
+        .folder-list { padding: 8px; }
+        .folder-item { padding: 10px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-radius: 6px; transition: background 0.2s; }
+        .folder-item:hover { background: var(--ns-bg-hover); }
+        .folder-item.active { background: rgba(59, 130, 246, 0.1); }
+        .folder-icon { font-size: 18px; color: var(--nx-primary); }
+        .folder-name { font-size: 13px; color: var(--ns-dark); flex: 1; }
+        .folder-count { font-size: 11px; color: var(--ns-secondary); }
+        
+        .files-main { flex: 1; display: flex; flex-direction: column; }
+        .files-header { padding: 16px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .files-header h3 { font-size: 16px; font-weight: 600; color: var(--ns-dark); }
+        .files-toolbar { padding: 12px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .files-filter { display: flex; gap: 8px; }
+        .filter-btn { padding: 6px 12px; background: var(--ns-bg-hover); border: 1px solid var(--ns-border); border-radius: 6px; font-size: 13px; color: var(--ns-dark); cursor: pointer; }
+        .filter-btn:hover { border-color: var(--nx-primary); }
+        .filter-btn.active { background: var(--nx-primary); color: white; border-color: var(--nx-primary); }
+        .files-search { padding: 8px 12px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); border-radius: 6px; color: var(--ns-dark); font-size: 13px; width: 200px; }
+        
+        .files-grid { flex: 1; overflow-y: auto; padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; align-content: start; }
+        
+        .file-card { background: var(--ns-bg-hover); border: 1px solid var(--ns-border); border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+        .file-card:hover { border-color: var(--nx-primary); transform: translateY(-2px); }
+        .file-icon { width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 12px; }
+        .file-icon.pdf { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .file-icon.doc { background: rgba(59, 130, 246, 0.1); color: var(--nx-primary); }
+        .file-icon.xls { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .file-icon.img { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        .file-icon.other { background: rgba(148, 163, 184, 0.1); color: var(--ns-secondary); }
+        .file-name { font-size: 13px; font-weight: 500; color: var(--ns-dark); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-meta { font-size: 11px; color: var(--ns-secondary); }
+        .file-source { font-size: 11px; color: var(--ns-secondary); margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+        
+        .storage-info { padding: 16px 20px; border-top: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .storage-bar { flex: 1; height: 8px; background: var(--ns-bg-hover); border-radius: 4px; margin: 0 16px; overflow: hidden; }
+        .storage-used { height: 100%; background: var(--nx-primary); border-radius: 4px; }
+        
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--ns-secondary); grid-column: 1 / -1; }
+        .empty-state i { font-size: 48px; margin-bottom: 16px; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--ns-card-bg); border-radius: 8px; width: 100%; max-width: 400px; }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 16px; font-weight: 600; color: var(--ns-dark); }
+        .modal-close { background: none; border: none; font-size: 20px; color: var(--ns-secondary); cursor: pointer; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid var(--ns-border); display: flex; justify-content: flex-end; gap: 8px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; color: var(--ns-dark); margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 8px 12px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); border-radius: 6px; color: var(--ns-dark); font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">文件共享</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="showUploadModal()">
+                        <i class="ri-upload-2-line"></i> 上传文件
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="files-container">
+                        <div class="files-sidebar">
+                            <div class="files-sidebar-header">
+                                <h3>文件分类</h3>
+                            </div>
+                            <div class="folder-list">
+                                <div class="folder-item active" onclick="filterFolder('all')">
+                                    <i class="folder-icon ri-folder-line"></i>
+                                    <span class="folder-name">全部文件</span>
+                                    <span class="folder-count" id="count-all">0</span>
+                                </div>
+                                <div class="folder-item" onclick="filterFolder('recent')">
+                                    <i class="folder-icon ri-time-line"></i>
+                                    <span class="folder-name">最近文件</span>
+                                </div>
+                                <div class="folder-item" onclick="filterFolder('shared')">
+                                    <i class="folder-icon ri-share-line"></i>
+                                    <span class="folder-name">共享给我</span>
+                                </div>
+                                <div class="folder-item" onclick="filterFolder('mine')">
+                                    <i class="folder-icon ri-user-line"></i>
+                                    <span class="folder-name">我的文件</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="files-main">
+                            <div class="files-header">
+                                <h3 id="filesTitle">全部文件</h3>
+                            </div>
+                            <div class="files-toolbar">
+                                <div class="files-filter">
+                                    <button class="filter-btn active" onclick="filterType('all')">全部</button>
+                                    <button class="filter-btn" onclick="filterType('pdf')">PDF</button>
+                                    <button class="filter-btn" onclick="filterType('doc')">文档</button>
+                                    <button class="filter-btn" onclick="filterType('xls')">表格</button>
+                                    <button class="filter-btn" onclick="filterType('img')">图片</button>
+                                </div>
+                                <input type="text" class="files-search" placeholder="搜索文件..." id="searchInput" oninput="searchFiles()">
+                            </div>
+                            <div class="files-grid" id="filesGrid"></div>
+                            <div class="storage-info">
+                                <span>已使用: 0 B</span>
+                                <div class="storage-bar"><div class="storage-used" style="width: 0%"></div></div>
+                                <span>共 10 GB</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>上传文件</h3>
+                <button class="modal-close" onclick="hideUploadModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">文件名称</label>
+                    <input type="text" class="form-control" id="fileName" placeholder="请输入文件名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">文件大小 (字节)</label>
+                    <input type="number" class="form-control" id="fileSize" placeholder="请输入文件大小">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">文件类型</label>
+                    <select class="form-control" id="fileType">
+                        <option value="pdf">PDF</option>
+                        <option value="doc">文档</option>
+                        <option value="xls">表格</option>
+                        <option value="img">图片</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="hideUploadModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="uploadFile()">上传</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var files = [];
+        var currentFolder = 'all';
+        var currentType = 'all';
+        var currentUserId = 'user-001';
+        var storageStats = { usedSpace: 0, totalSpace: 10737418240, fileCount: 0 };
+        
+        window.onPageInit = function() {
+            loadFiles();
+            loadStorageStats();
+        };
+        
+        function loadFiles() {
+            fetch('/api/im/file/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    userId: currentUserId, 
+                    folder: currentFolder,
+                    fileType: currentType !== 'all' ? currentType : null
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    files = rs.data || [];
+                    renderFiles(files);
+                    document.getElementById('count-all').textContent = files.length;
+                }
+            })
+            .catch(function(err) {
+                console.error('加载文件失败:', err);
+                files = getDefaultFiles();
+                renderFiles(files);
+            });
+        }
+        
+        function loadStorageStats() {
+            fetch('/api/im/file/storage/stats', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    storageStats = rs.data;
+                    updateStorageDisplay();
+                }
+            });
+        }
+        
+        function updateStorageDisplay() {
+            var usedSpan = document.querySelector('.storage-info span:first-child');
+            var usedBar = document.querySelector('.storage-used');
+            var totalSpan = document.querySelector('.storage-info span:last-child');
+            
+            if (usedSpan) usedSpan.textContent = '已使用: ' + formatSize(storageStats.usedSpace);
+            if (usedBar) usedBar.style.width = storageStats.usedPercent + '%';
+            if (totalSpan) totalSpan.textContent = '共 ' + formatSize(storageStats.totalSpace);
+        }
+        
+        function getDefaultFiles() {
+            return [
+                { fileId: 'f1', fileName: '项目计划书.pdf', fileSize: 204800, fileType: 'pdf', source: '张三', sourceType: 'user', uploadTime: Date.now() - 3600000 },
+                { fileId: 'f2', fileName: '需求文档.docx', fileSize: 102400, fileType: 'doc', source: '李四', sourceType: 'user', uploadTime: Date.now() - 7200000 },
+                { fileId: 'f3', fileName: '数据分析表.xlsx', fileSize: 51200, fileType: 'xls', source: '技术群组', sourceType: 'group', uploadTime: Date.now() - 86400000 },
+                { fileId: 'f4', fileName: '产品截图.png', fileSize: 307200, fileType: 'img', source: '王五', sourceType: 'user', uploadTime: Date.now() - 172800000 },
+                { fileId: 'f5', fileName: '会议纪要.pdf', fileSize: 81920, fileType: 'pdf', source: '部门群组', sourceType: 'department', uploadTime: Date.now() - 259200000 }
+            ];
+        }
+        
+        function renderFiles(data) {
+            var container = document.getElementById('filesGrid');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="ri-folder-line"></i><p>暂无文件</p></div>';
+                return;
+            }
+            
+            var html = '';
+            data.forEach(function(f) {
+                var iconClass = getFileIconClass(f.fileType);
+                var icon = getFileIcon(f.fileType);
+                
+                html += '<div class="file-card" onclick="downloadFile(\'' + f.fileId + '\')">' +
+                    '<div class="file-icon ' + iconClass + '"><i class="' + icon + '"></i></div>' +
+                    '<div class="file-name" title="' + f.fileName + '">' + f.fileName + '</div>' +
+                    '<div class="file-meta">' + formatSize(f.fileSize) + ' · ' + formatTime(f.uploadTime) + '</div>' +
+                    '<div class="file-source"><i class="ri-' + (f.sourceType === 'group' ? 'group' : (f.sourceType === 'department' ? 'building' : 'user')) + '-line"></i> ' + f.source + '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function filterFolder(folder) {
+            currentFolder = folder;
+            document.querySelectorAll('.folder-item').forEach(function(item) { item.classList.remove('active'); });
+            event.currentTarget.classList.add('active');
+            
+            var titles = { all: '全部文件', recent: '最近文件', shared: '共享给我', mine: '我的文件' };
+            document.getElementById('filesTitle').textContent = titles[folder];
+            
+            loadFiles();
+        }
+        
+        function filterType(type) {
+            currentType = type;
+            document.querySelectorAll('.filter-btn').forEach(function(btn) { btn.classList.remove('active'); });
+            event.target.classList.add('active');
+            
+            loadFiles();
+        }
+        
+        function searchFiles() {
+            var keyword = document.getElementById('searchInput').value.toLowerCase();
+            var filtered = files.filter(function(f) {
+                return f.fileName.toLowerCase().indexOf(keyword) >= 0;
+            });
+            renderFiles(filtered);
+        }
+        
+        function showUploadModal() {
+            document.getElementById('uploadModal').classList.add('show');
+        }
+        
+        function hideUploadModal() {
+            document.getElementById('uploadModal').classList.remove('show');
+        }
+        
+        function uploadFile() {
+            var fileName = document.getElementById('fileName').value;
+            var fileSize = parseInt(document.getElementById('fileSize').value) || 0;
+            var fileType = document.getElementById('fileType').value;
+            
+            if (!fileName) {
+                alert('请输入文件名称');
+                return;
+            }
+            
+            fetch('/api/im/file/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fileName: fileName,
+                    fileSize: fileSize,
+                    fileType: fileType,
+                    uploaderId: currentUserId,
+                    uploaderName: '当前用户',
+                    sourceType: 'user'
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    hideUploadModal();
+                    loadFiles();
+                    loadStorageStats();
+                    document.getElementById('fileName').value = '';
+                    document.getElementById('fileSize').value = '';
+                } else {
+                    alert('上传失败: ' + rs.message);
+                }
+            })
+            .catch(function(err) {
+                console.error('上传失败:', err);
+                alert('上传失败');
+            });
+        }
+        
+        function downloadFile(fileId) {
+            var file = files.find(function(f) { return f.fileId === fileId; });
+            if (file) {
+                alert('下载文件: ' + file.fileName);
+            }
+        }
+        
+        function getFileIconClass(type) {
+            var classes = { pdf: 'pdf', doc: 'doc', xls: 'xls', img: 'img' };
+            return classes[type] || 'other';
+        }
+        
+        function getFileIcon(type) {
+            var icons = { pdf: 'ri-file-pdf-line', doc: 'ri-file-word-line', xls: 'ri-file-excel-line', img: 'ri-image-line' };
+            return icons[type] || 'ri-file-line';
+        }
+        
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+            return (bytes / 1024 / 1024 / 1024).toFixed(1) + ' GB';
+        }
+        
+        function formatTime(timestamp) {
+            var d = new Date(timestamp);
+            var now = new Date();
+            var diff = now - d;
+            
+            if (diff < 86400000) {
+                return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+            } else if (diff < 604800000) {
+                return Math.floor(diff / 86400000) + '天前';
+            } else {
+                return (d.getMonth() + 1) + '/' + d.getDate();
+            }
+        }
+    </script>
+</body>
+</html>

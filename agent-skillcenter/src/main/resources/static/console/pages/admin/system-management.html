@@ -3,278 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理中心 - 系统管理</title>
-    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
-    <link href="../../assets/css/remixicon/remixicon.css" rel="stylesheet">
-    <script src="/skillcenter/console/js/menu.js"></script>
-
+    <title>系统管理 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
 </head>
 <body>
-    <div class="container">
-        <aside class="sidebar" id="sidebar">
-            <!-- 菜单将通过menu.js动态加载 -->
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
         </aside>
-        <main class="main-content">
-            <header class="header">
-                <h1>系统管理</h1>
-                <div class="user-info">
-                    <span class="user-name">管理员</span>
-                    <i class="ri-user-line"></i>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">系统管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <span class="nx-badge nx-badge--danger">管理员</span>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
                 </div>
             </header>
-            <div class="admin-dashboard-content">
-                <div class="page-header">
-                    <div>
-                        <button class="btn btn-secondary" onclick="restartSystem()">
-                            <i class="ri-refresh-line"></i> 重启系统
-                        </button>
-                        <button class="btn btn-danger" onclick="shutdownSystem()" style="margin-left: 10px;">
-                            <i class="ri-power-off-line"></i> 关闭系统
-                        </button>
-                    </div>
-                </div>
-        
-        <!-- 系统统计 -->
-        <div class="admin-stats-grid">
-            <div class="admin-stat-card">
-                <div class="admin-stat-icon ri-cpu-fill" style="color: #27ae60;"></div>
-                <div class="admin-stat-info">
-                    <h3>CPU使用率</h3>
-                    <div class="admin-stat-value">4.2%</div>
-                </div>
-            </div>
-            <div class="admin-stat-card">
-                <div class="admin-stat-icon ri-memory-card-fill" style="color: #3498db;"></div>
-                <div class="admin-stat-info">
-                    <h3>内存使用率</h3>
-                    <div class="admin-stat-value">35%</div>
-                </div>
-            </div>
-            <div class="admin-stat-card">
-                <div class="admin-stat-icon ri-hard-drive-fill" style="color: #f39c12;"></div>
-                <div class="admin-stat-info">
-                    <h3>磁盘使用率</h3>
-                    <div class="admin-stat-value">65%</div>
-                </div>
-            </div>
-            <div class="admin-stat-card">
-                <div class="admin-stat-icon ri-clock-fill" style="color: #9b59b6;"></div>
-                <div class="admin-stat-info">
-                    <h3>运行时间</h3>
-                    <div class="admin-stat-value">24d 12h</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 系统标签 -->
-        <div class="execution-tabs">
-            <button class="tab-btn active" onclick="switchTab('info')">系统信息</button>
-            <button class="tab-btn" onclick="switchTab('config')">系统配置</button>
-            <button class="tab-btn" onclick="switchTab('logs')">系统日志</button>
-            <button class="tab-btn" onclick="switchTab('monitor')">系统监控</button>
-        </div>
-        
-        <!-- 系统内容 -->
-        <div class="system-info-card">
-            <!-- 系统信息 -->
-            <div id="infoTab">
-                <h3>系统信息</h3>
-                <div class="system-info">
-                    <div class="info-item">
-                        <span class="label">系统名称:</span>
-                        <span class="value">SkillCenter</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">系统版本:</span>
-                        <span class="value">0.6.5</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">开发语言:</span>
-                        <span class="value">Java 8</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">运行环境:</span>
-                        <span class="value">JDK 1.8.0_301</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">操作系统:</span>
-                        <span class="value">Windows 10 Pro 64-bit</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">服务器IP:</span>
-                        <span class="value">192.168.1.100</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">服务器端口:</span>
-                        <span class="value">8080</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">启动时间:</span>
-                        <span class="value">2026-01-07 10:30:00</span>
-                    </div>
-                </div>
-            </div>
             
-            <!-- 系统配置 -->
-            <div id="configTab" style="display: none;">
-                <h3>系统配置</h3>
-                <form class="config-form">
-                    <div class="form-group">
-                        <label for="serverPort">服务器端口</label>
-                        <input type="text" id="serverPort" value="8080" class="form-control">
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">系统配置</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-form-group nx-mb-4">
+                                <label class="nx-form-label">系统名称</label>
+                                <input type="text" class="nx-input" value="SkillCenter" style="max-width: 400px;">
+                            </div>
+                            <div class="nx-form-group nx-mb-4">
+                                <label class="nx-form-label">服务器地址</label>
+                                <input type="text" class="nx-input" value="http://localhost:8081" style="max-width: 400px;">
+                            </div>
+                            <div class="nx-form-group nx-mb-4">
+                                <label class="nx-form-label">最大上传大小 (MB)</label>
+                                <input type="number" class="nx-input" value="100" style="max-width: 200px;">
+                            </div>
+                            <button class="nx-btn nx-btn--primary">保存配置</button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="maxMemory">最大内存 (MB)</label>
-                        <input type="text" id="maxMemory" value="2048" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="logLevel">日志级别</label>
-                        <select id="logLevel" class="form-control">
-                            <option value="debug">DEBUG</option>
-                            <option value="info" selected>INFO</option>
-                            <option value="warn">WARN</option>
-                            <option value="error">ERROR</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="storagePath">存储路径</label>
-                        <input type="text" id="storagePath" value="./storage" class="form-control">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="resetConfig()">重置</button>
-                        <button type="button" class="btn btn-primary" onclick="saveConfig()">保存配置</button>
-                    </div>
-                </form>
-            </div>
-            
-            <!-- 系统日志 -->
-            <div id="logsTab" style="display: none;">
-                <h3>系统日志</h3>
-                <div class="log-list" id="logList">
-                    <!-- 日志内容将通过JavaScript动态填充 -->
-                </div>
-            </div>
-            
-            <!-- 系统监控 -->
-            <div id="monitorTab" style="display: none;">
-                <h3>系统监控</h3>
-                <div class="system-info">
-                    <div class="info-item">
-                        <span class="label">CPU核心数:</span>
-                        <span class="value">8</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">总内存:</span>
-                        <span class="value">16 GB</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">可用内存:</span>
-                        <span class="value">10.4 GB</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">总磁盘空间:</span>
-                        <span class="value">500 GB</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">可用磁盘空间:</span>
-                        <span class="value">175 GB</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">网络连接数:</span>
-                        <span class="value">12</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">系统负载:</span>
-                        <span class="value">0.85</span>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">系统状态</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                                <div class="nx-flex nx-items-center nx-gap-3 nx-p-3" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                    <i class="ri-server-line nx-text-primary"></i>
+                                    <span>服务状态</span>
+                                    <span class="nx-badge nx-badge--success nx-ml-auto">运行中</span>
+                                </div>
+                                <div class="nx-flex nx-items-center nx-gap-3 nx-p-3" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                    <i class="ri-database-2-line nx-text-success"></i>
+                                    <span>数据库</span>
+                                    <span class="nx-badge nx-badge--success nx-ml-auto">正常</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <script>
-        // 模拟日志数据
-        const logData = [
-            { level: "info", timestamp: "2026-01-31 10:30:00", message: "系统启动成功" },
-            { level: "info", timestamp: "2026-01-31 10:30:05", message: "加载技能管理模块" },
-            { level: "info", timestamp: "2026-01-31 10:30:10", message: "加载市场管理模块" },
-            { level: "warn", timestamp: "2026-01-31 10:30:15", message: "存储路径权限警告" },
-            { level: "info", timestamp: "2026-01-31 10:30:20", message: "系统初始化完成" },
-            { level: "info", timestamp: "2026-01-31 10:35:00", message: "用户登录: admin" },
-            { level: "error", timestamp: "2026-01-31 10:40:00", message: "技能执行失败: text-to-uppercase-skill" },
-            { level: "info", timestamp: "2026-01-31 10:45:00", message: "技能发布成功: code-generation-skill" },
-            { level: "info", timestamp: "2026-01-31 10:50:00", message: "用户登出: admin" }
-        ];
-        
-        // 页面加载时渲染日志
-        document.addEventListener('DOMContentLoaded', function() {
-            renderLogs();
-        });
-        
-        // 切换标签
-        function switchTab(tabType) {
-            // 更新标签状态
-            const tabButtons = document.querySelectorAll('.tab-btn');
-            tabButtons.forEach(button => button.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            // 隐藏所有内容
-            document.getElementById('infoTab').style.display = 'none';
-            document.getElementById('configTab').style.display = 'none';
-            document.getElementById('logsTab').style.display = 'none';
-            document.getElementById('monitorTab').style.display = 'none';
-            
-            // 显示选中的内容
-            document.getElementById(tabType + 'Tab').style.display = 'block';
-        }
-        
-        // 渲染日志
-        function renderLogs() {
-            const logList = document.getElementById('logList');
-            logList.innerHTML = '';
-            
-            logData.forEach(log => {
-                const logItem = document.createElement('div');
-                logItem.className = `log-item ${log.level}`;
-                logItem.innerHTML = `
-                    <div><strong>[${log.timestamp}]</strong> [${log.level.toUpperCase()}]</div>
-                    <div>${log.message}</div>
-                `;
-                logList.appendChild(logItem);
-            });
-        }
-        
-        // 保存配置
-        function saveConfig() {
-            alert('配置已保存！');
-        }
-        
-        // 重置配置
-        function resetConfig() {
-            document.getElementById('serverPort').value = '8080';
-            document.getElementById('maxMemory').value = '2048';
-            document.getElementById('logLevel').value = 'info';
-            document.getElementById('storagePath').value = './storage';
-        }
-        
-        // 重启系统
-        function restartSystem() {
-            if (confirm('确定要重启系统吗？')) {
-                alert('系统正在重启...');
-            }
-        }
-        
-        // 关闭系统
-        function shutdownSystem() {
-            if (confirm('确定要关闭系统吗？')) {
-                alert('系统正在关闭...');
-            }
-        }
-        
-        // 初始化菜单
-        initMenu('system-management');
-    </script>
         </main>
     </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('系统管理页面初始化完成');
+        };
+    </script>
 </body>
 </html>

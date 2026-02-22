@@ -1,8 +1,16 @@
+/*
+ * Copyright (c) 2024 Ooder Team
+ *
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
 package net.ooder.skillcenter.market;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -12,11 +20,12 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * SDK技能存储实现，基于文件系统的持久化方案
- * 使用JSON格式存储技能市场数据
+ * SDK Skill Storage Implementation - File system based persistence
+ * Uses JSON format to store skill marketplace data
  */
 public class SDKSkillStorage implements SkillStorage {
-    
+    private static final Logger logger = LoggerFactory.getLogger(SDKSkillStorage.class);
+
     public static final String STORAGE_DIR = "skillcenter/storage";
     public static final String SKILL_LISTINGS_FILE = "skill_listings.json";
     public static final String SKILL_RATINGS_FILE = "skill_ratings.json";
@@ -50,13 +59,12 @@ public class SDKSkillStorage implements SkillStorage {
             loadSkillReviews();
             
             initialized = true;
-            System.out.println("SDK skill storage initialized successfully");
+            logger.info("SDK skill storage initialized successfully");
         } catch (IOException e) {
-            System.err.println("Failed to initialize SDK skill storage: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to initialize SDK skill storage: {}", e.getMessage(), e);
         }
     }
-    
+
     @Override
     public void close() {
         try {
@@ -64,11 +72,10 @@ public class SDKSkillStorage implements SkillStorage {
             saveSkillListings();
             saveSkillRatings();
             saveSkillReviews();
-            
-            System.out.println("SDK skill storage closed successfully");
+
+            logger.info("SDK skill storage closed successfully");
         } catch (IOException e) {
-            System.err.println("Failed to close SDK skill storage: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to close SDK skill storage: {}", e.getMessage(), e);
         }
     }
     
@@ -89,32 +96,30 @@ public class SDKSkillStorage implements SkillStorage {
         try {
             saveSkillListings();
         } catch (IOException e) {
-            System.err.println("Failed to save skill listing: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to save skill listing: {}", e.getMessage(), e);
         }
     }
-    
+
     @Override
     public void saveSkillListings(List<SkillListing> listings) {
         if (listings == null || listings.isEmpty()) {
             return;
         }
-        
+
         for (SkillListing listing : listings) {
             skillListingsCache.put(listing.getSkillId(), listing);
-            
+
             // 更新分类缓存
             String category = listing.getCategory();
             categoryCache.computeIfAbsent(category, k -> new ArrayList<>())
                        .removeIf(item -> item.getSkillId().equals(listing.getSkillId()));
             categoryCache.computeIfAbsent(category, k -> new ArrayList<>()).add(listing);
         }
-        
+
         try {
             saveSkillListings();
         } catch (IOException e) {
-            System.err.println("Failed to save skill listings: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to save skill listings: {}", e.getMessage(), e);
         }
     }
     
@@ -156,25 +161,23 @@ public class SDKSkillStorage implements SkillStorage {
                 saveSkillRatings();
                 saveSkillReviews();
             } catch (IOException e) {
-                System.err.println("Failed to delete skill listing: " + e.getMessage());
-                e.printStackTrace();
+                logger.error("Failed to delete skill listing: {}", e.getMessage(), e);
             }
         }
     }
-    
+
     @Override
     public void saveSkillRatingInfo(SkillRatingInfo ratingInfo) {
         if (ratingInfo == null) {
             return;
         }
-        
+
         skillRatingsCache.put(ratingInfo.getSkillId(), ratingInfo);
-        
+
         try {
             saveSkillRatings();
         } catch (IOException e) {
-            System.err.println("Failed to save skill rating info: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to save skill rating info: {}", e.getMessage(), e);
         }
     }
     
@@ -192,31 +195,29 @@ public class SDKSkillStorage implements SkillStorage {
             saveSkillRatings();
             saveSkillReviews();
         } catch (IOException e) {
-            System.err.println("Failed to delete skill rating info: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to delete skill rating info: {}", e.getMessage(), e);
         }
     }
-    
+
     @Override
     public void saveSkillReview(SkillReview review) {
         if (review == null) {
             return;
         }
-        
+
         String skillId = review.getSkillId();
         skillReviewsCache.computeIfAbsent(skillId, k -> new ArrayList<>()).add(review);
-        
+
         // 更新评分信息
         SkillRatingInfo ratingInfo = skillRatingsCache.computeIfAbsent(skillId, k -> new SkillRatingInfo());
         ratingInfo.setSkillId(skillId);
         ratingInfo.addReview(review);
-        
+
         try {
             saveSkillRatings();
             saveSkillReviews();
         } catch (IOException e) {
-            System.err.println("Failed to save skill review: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to save skill review: {}", e.getMessage(), e);
         }
     }
     
@@ -230,15 +231,25 @@ public class SDKSkillStorage implements SkillStorage {
         if (Files.exists(filePath)) {
             try (Reader reader = Files.newBufferedReader(filePath)) {
                 String content = readAll(reader);
-                JSONArray jsonArray = JSON.parseArray(content);
-                for (Object obj : jsonArray) {
-                    JSONObject jsonObject = (JSONObject) obj;
-                    SkillListing listing = JSON.toJavaObject(jsonObject, SkillListing.class);
-                    skillListingsCache.put(listing.getSkillId(), listing);
-                    
-                    // 更新分类缓存
-                    String category = listing.getCategory();
-                    categoryCache.computeIfAbsent(category, k -> new ArrayList<>()).add(listing);
+                if (content != null && !content.trim().isEmpty()) {
+                    JSONArray jsonArray = JSON.parseArray(content);
+                    if (jsonArray != null) {
+                        for (Object obj : jsonArray) {
+                            if (obj != null) {
+                                JSONObject jsonObject = (JSONObject) obj;
+                                SkillListing listing = JSON.toJavaObject(jsonObject, SkillListing.class);
+                                if (listing != null && listing.getSkillId() != null) {
+                                    skillListingsCache.put(listing.getSkillId(), listing);
+                                    
+                                    // 更新分类缓存
+                                    String category = listing.getCategory();
+                                    if (category != null) {
+                                        categoryCache.computeIfAbsent(category, k -> new ArrayList<>()).add(listing);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -259,11 +270,19 @@ public class SDKSkillStorage implements SkillStorage {
         if (Files.exists(filePath)) {
             try (Reader reader = Files.newBufferedReader(filePath)) {
                 String content = readAll(reader);
-                JSONArray jsonArray = JSON.parseArray(content);
-                for (Object obj : jsonArray) {
-                    JSONObject jsonObject = (JSONObject) obj;
-                    SkillRatingInfo ratingInfo = JSON.toJavaObject(jsonObject, SkillRatingInfo.class);
-                    skillRatingsCache.put(ratingInfo.getSkillId(), ratingInfo);
+                if (content != null && !content.trim().isEmpty()) {
+                    JSONArray jsonArray = JSON.parseArray(content);
+                    if (jsonArray != null) {
+                        for (Object obj : jsonArray) {
+                            if (obj != null) {
+                                JSONObject jsonObject = (JSONObject) obj;
+                                SkillRatingInfo ratingInfo = JSON.toJavaObject(jsonObject, SkillRatingInfo.class);
+                                if (ratingInfo != null && ratingInfo.getSkillId() != null) {
+                                    skillRatingsCache.put(ratingInfo.getSkillId(), ratingInfo);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -284,12 +303,20 @@ public class SDKSkillStorage implements SkillStorage {
         if (Files.exists(filePath)) {
             try (Reader reader = Files.newBufferedReader(filePath)) {
                 String content = readAll(reader);
-                JSONArray jsonArray = JSON.parseArray(content);
-                for (Object obj : jsonArray) {
-                    JSONObject jsonObject = (JSONObject) obj;
-                    SkillReview review = JSON.toJavaObject(jsonObject, SkillReview.class);
-                    String skillId = review.getSkillId();
-                    skillReviewsCache.computeIfAbsent(skillId, k -> new ArrayList<>()).add(review);
+                if (content != null && !content.trim().isEmpty()) {
+                    JSONArray jsonArray = JSON.parseArray(content);
+                    if (jsonArray != null) {
+                        for (Object obj : jsonArray) {
+                            if (obj != null) {
+                                JSONObject jsonObject = (JSONObject) obj;
+                                SkillReview review = JSON.toJavaObject(jsonObject, SkillReview.class);
+                                if (review != null && review.getSkillId() != null) {
+                                    String skillId = review.getSkillId();
+                                    skillReviewsCache.computeIfAbsent(skillId, k -> new ArrayList<>()).add(review);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

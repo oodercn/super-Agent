@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P网络 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .p2p-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--nx-bg-elevated);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--nx-primary);
+        }
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: var(--nx-text-secondary);
+            margin-top: 4px;
+        }
+        .node-status-online { color: var(--nx-success); }
+        .node-status-offline { color: var(--nx-text-secondary); }
+        .node-status-syncing { color: var(--nx-warning); }
+        
+        .p2p-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 24px;
+        }
+        .local-node-card {
+            background: var(--nx-bg-elevated);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .local-node-card h4 {
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .node-info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--nx-border);
+        }
+        .node-info-item:last-child {
+            border-bottom: none;
+        }
+        .node-info-label {
+            color: var(--nx-text-secondary);
+        }
+        .node-info-value {
+            font-weight: 500;
+        }
+        .skill-share-card {
+            background: var(--nx-bg-elevated);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .skill-share-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--nx-border);
+        }
+        .skill-share-item:last-child {
+            border-bottom: none;
+        }
+        .event-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--nx-border);
+        }
+        .event-item:last-child {
+            border-bottom: none;
+        }
+        .event-level-INFO { color: var(--nx-primary); }
+        .event-level-WARN { color: var(--nx-warning); }
+        .event-level-ERROR { color: var(--nx-danger); }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">P2P网络</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="discoverNodes()">
+                        <i class="ri-radar-line"></i> 发现节点
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="p2p-stats-grid" id="p2p-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-total-nodes">-</div>
+                            <div class="stat-label">总节点数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-active-nodes">-</div>
+                            <div class="stat-label">活跃节点</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-network-status">-</div>
+                            <div class="stat-label">网络状态</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-connections">-</div>
+                            <div class="stat-label">连接数</div>
+                        </div>
+                    </div>
+
+                    <div class="p2p-layout">
+                        <div class="p2p-sidebar">
+                            <div class="local-node-card">
+                                <h4><i class="ri-server-line"></i> 本节点信息</h4>
+                                <div class="node-info-item">
+                                    <span class="node-info-label">节点ID</span>
+                                    <span class="node-info-value" id="local-node-id">-</span>
+                                </div>
+                                <div class="node-info-item">
+                                    <span class="node-info-label">地址</span>
+                                    <span class="node-info-value" id="local-node-address">-</span>
+                                </div>
+                                <div class="node-info-item">
+                                    <span class="node-info-label">端口</span>
+                                    <span class="node-info-value" id="local-node-port">-</span>
+                                </div>
+                                <div class="node-info-item">
+                                    <span class="node-info-label">状态</span>
+                                    <span class="node-info-value" id="local-node-status">-</span>
+                                </div>
+                                <div class="node-info-item">
+                                    <span class="node-info-label">连接数</span>
+                                    <span class="node-info-value" id="local-connections">-</span>
+                                </div>
+                                <div class="nx-flex nx-gap-2 nx-mt-4">
+                                    <button class="nx-btn nx-btn--success nx-btn--sm" onclick="startP2PNetwork()">
+                                        <i class="ri-play-line"></i> 启动服务
+                                    </button>
+                                    <button class="nx-btn nx-btn--danger nx-btn--sm" onclick="stopP2PNetwork()">
+                                        <i class="ri-stop-line"></i> 停止服务
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="skill-share-card">
+                                <h4><i class="ri-share-line"></i> 技能共享</h4>
+                                <div id="shareable-skills">
+                                    <div class="skill-share-item">
+                                        <span>加载中...</span>
+                                    </div>
+                                </div>
+                                <div class="nx-flex nx-gap-2 nx-mt-4">
+                                    <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="shareSelectedSkills()">
+                                        <i class="ri-share-forward-line"></i> 共享选中
+                                    </button>
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="cancelShareSkills()">
+                                        <i class="ri-close-line"></i> 取消共享
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p2p-main">
+                            <div class="nx-card">
+                                <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                                    <h3 class="nx-card__title">节点列表</h3>
+                                    <div class="nx-flex nx-gap-2">
+                                        <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="broadcastDiscover()">
+                                            <i class="ri-broadcast-line"></i> 广播发现
+                                        </button>
+                                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="refreshNodeList()">
+                                            <i class="ri-refresh-line"></i> 刷新
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="nx-card__body">
+                                    <table class="nx-table nx-table--striped">
+                                        <thead>
+                                            <tr>
+                                                <th><input type="checkbox" id="select-all-nodes"></th>
+                                                <th>节点ID</th>
+                                                <th>类型</th>
+                                                <th>地址</th>
+                                                <th>端口</th>
+                                                <th>状态</th>
+                                                <th>最后可见</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="node-table-body">
+                                            <tr><td colspan="8" style="text-align: center;">加载中...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="nx-card nx-mt-6">
+                                <div class="nx-card__header">
+                                    <h3 class="nx-card__title">网络事件日志</h3>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div id="p2p-events">
+                                        <div class="event-item">加载中...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="connectModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 400px;">
+            <div class="modal-header">
+                <h3>连接节点</h3>
+                <button class="modal-close" onclick="closeConnectModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">节点地址</label>
+                    <input type="text" id="connect-address" class="nx-input" placeholder="例如: 192.168.1.100">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">端口</label>
+                    <input type="number" id="connect-port" class="nx-input" placeholder="例如: 8080" value="8080">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeConnectModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="connectToNode()">连接</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="nodeDetailModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h3>节点详情</h3>
+                <button class="modal-close" onclick="closeNodeDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="node-info-item">
+                    <span class="node-info-label">节点ID</span>
+                    <span class="node-info-value" id="detail-node-id">-</span>
+                </div>
+                <div class="node-info-item">
+                    <span class="node-info-label">节点类型</span>
+                    <span class="node-info-value" id="detail-node-type">-</span>
+                </div>
+                <div class="node-info-item">
+                    <span class="node-info-label">地址</span>
+                    <span class="node-info-value" id="detail-node-address">-</span>
+                </div>
+                <div class="node-info-item">
+                    <span class="node-info-label">端口</span>
+                    <span class="node-info-value" id="detail-node-port">-</span>
+                </div>
+                <div class="node-info-item">
+                    <span class="node-info-label">状态</span>
+                    <span class="node-info-value" id="detail-node-status">-</span>
+                </div>
+                <div class="node-info-item">
+                    <span class="node-info-label">最后可见</span>
+                    <span class="node-info-value" id="detail-node-lastseen">-</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeNodeDetailModal()">关闭</button>
+                <button class="nx-btn nx-btn--primary" id="detail-action-btn">操作</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let p2pStats = null;
+        let nodeList = [];
+        let p2pEvents = [];
+        let shareableSkills = [];
+
+        window.onPageInit = function() {
+            loadP2PStats();
+            loadNodeList();
+            loadP2PEvents();
+            loadShareableSkills();
+            
+            document.getElementById('select-all-nodes').addEventListener('change', function(e) {
+                document.querySelectorAll('.node-checkbox').forEach(cb => {
+                    cb.checked = e.target.checked;
+                });
+            });
+        };
+
+        function postApi(url, data) {
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data || {})
+            }).then(res => res.json());
+        }
+
+        function loadP2PStats() {
+            postApi('/api/p2p/stats').then(res => {
+                if (res.code === 200 && res.data) {
+                    p2pStats = res.data;
+                    document.getElementById('stat-total-nodes').textContent = res.data.totalNodes || 0;
+                    document.getElementById('stat-active-nodes').textContent = res.data.activeNodes || 0;
+                    document.getElementById('stat-network-status').textContent = res.data.networkStatus || '-';
+                    document.getElementById('stat-inactive-nodes').textContent = res.data.inactiveNodes || 0;
+                }
+            });
+
+            postApi('/api/p2p/status').then(res => {
+                if (res.code === 200 && res.data) {
+                    document.getElementById('stat-connections').textContent = res.data.connectedNodes || 0;
+                    document.getElementById('local-node-id').textContent = res.data.networkId || '-';
+                }
+            });
+        }
+
+        function loadNodeList() {
+            postApi('/api/p2p/nodes').then(res => {
+                if (res.code === 200 && res.data) {
+                    nodeList = res.data;
+                    renderNodeTable();
+                } else {
+                    document.getElementById('node-table-body').innerHTML = 
+                        '<tr><td colspan="8" style="text-align: center;">暂无节点</td></tr>';
+                }
+            }).catch(err => {
+                document.getElementById('node-table-body').innerHTML = 
+                    '<tr><td colspan="8" style="text-align: center; color: red;">加载失败</td></tr>';
+            });
+        }
+
+        function renderNodeTable() {
+            const tbody = document.getElementById('node-table-body');
+            if (!nodeList || nodeList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">暂无节点</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = nodeList.map(node => {
+                const statusClass = node.status === 'ONLINE' ? 'node-status-online' : 
+                                   node.status === 'SYNCING' ? 'node-status-syncing' : 'node-status-offline';
+                const statusText = node.status === 'ONLINE' ? '在线' : 
+                                  node.status === 'SYNCING' ? '同步中' : '离线';
+                const lastSeen = node.lastSeen ? new Date(node.lastSeen).toLocaleTimeString() : '-';
+                const actionBtn = node.status === 'ONLINE' ? 
+                    `<button class="nx-btn nx-btn--danger nx-btn--sm" onclick="disconnectNode('${node.nodeId}')">断开</button>` :
+                    `<button class="nx-btn nx-btn--primary nx-btn--sm" onclick="connectNode('${node.nodeId}')">连接</button>`;
+
+                return `
+                    <tr>
+                        <td><input type="checkbox" class="node-checkbox" data-node-id="${node.nodeId}"></td>
+                        <td>${node.nodeId || '-'}</td>
+                        <td>${node.nodeType || '-'}</td>
+                        <td>${node.address || '-'}</td>
+                        <td>${node.port || '-'}</td>
+                        <td><span class="${statusClass}">${statusText}</span></td>
+                        <td>${lastSeen}</td>
+                        <td>
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="viewNodeDetail('${node.nodeId}')">详情</button>
+                            ${actionBtn}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function loadP2PEvents() {
+            postApi('/api/p2p/events').then(res => {
+                if (res.code === 200 && res.data) {
+                    p2pEvents = res.data;
+                    renderEvents();
+                }
+            });
+        }
+
+        function renderEvents() {
+            const container = document.getElementById('p2p-events');
+            if (!p2pEvents || p2pEvents.length === 0) {
+                container.innerHTML = '<div class="event-item">暂无事件</div>';
+                return;
+            }
+
+            container.innerHTML = p2pEvents.map(event => {
+                const time = new Date(event.timestamp).toLocaleString();
+                const levelClass = `event-level-${event.level || 'INFO'}`;
+                return `
+                    <div class="event-item">
+                        <div class="nx-flex nx-justify-between nx-items-center">
+                            <span class="${levelClass}">[${event.level || 'INFO'}]</span>
+                            <span style="color: var(--nx-text-secondary); font-size: 12px;">${time}</span>
+                        </div>
+                        <div style="margin-top: 4px;">${event.description || event.type}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function loadShareableSkills() {
+            postApi('/api/skills/list', { status: 'installed', pageNum: 1, pageSize: 10 }).then(res => {
+                if (res.code === 200 && res.data && res.data.list) {
+                    shareableSkills = res.data.list;
+                    renderShareableSkills();
+                }
+            });
+        }
+
+        function renderShareableSkills() {
+            const container = document.getElementById('shareable-skills');
+            if (!shareableSkills || shareableSkills.length === 0) {
+                container.innerHTML = '<div class="skill-share-item"><span>暂无可共享技能</span></div>';
+                return;
+            }
+
+            container.innerHTML = shareableSkills.map(skill => `
+                <div class="skill-share-item">
+                    <div class="nx-flex nx-items-center nx-gap-2">
+                        <input type="checkbox" class="skill-checkbox" data-skill-id="${skill.skillId}">
+                        <span>${skill.name}</span>
+                    </div>
+                    <span class="nx-badge nx-badge--success">可共享</span>
+                </div>
+            `).join('');
+        }
+
+        function discoverNodes() {
+            postApi('/api/p2p/discover').then(res => {
+                if (res.code === 200) {
+                    alert(res.data.message || '节点发现完成');
+                    loadNodeList();
+                    loadP2PStats();
+                } else {
+                    alert('发现失败: ' + res.message);
+                }
+            });
+        }
+
+        function broadcastDiscover() {
+            postApi('/api/p2p/discover').then(res => {
+                if (res.code === 200) {
+                    alert('广播发现完成: ' + (res.data.message || ''));
+                    loadNodeList();
+                } else {
+                    alert('广播失败: ' + res.message);
+                }
+            });
+        }
+
+        function refreshNodeList() {
+            loadNodeList();
+            loadP2PStats();
+        }
+
+        function startP2PNetwork() {
+            postApi('/api/p2p/start').then(res => {
+                if (res.code === 200) {
+                    alert('P2P网络启动成功');
+                    document.getElementById('local-node-status').textContent = '运行中';
+                    loadP2PStats();
+                } else {
+                    alert('启动失败: ' + res.message);
+                }
+            });
+        }
+
+        function stopP2PNetwork() {
+            postApi('/api/p2p/stop').then(res => {
+                if (res.code === 200) {
+                    alert('P2P网络停止成功');
+                    document.getElementById('local-node-status').textContent = '已停止';
+                    loadP2PStats();
+                } else {
+                    alert('停止失败: ' + res.message);
+                }
+            });
+        }
+
+        function openConnectModal() {
+            document.getElementById('connectModal').style.display = 'flex';
+        }
+
+        function closeConnectModal() {
+            document.getElementById('connectModal').style.display = 'none';
+        }
+
+        function connectToNode() {
+            const address = document.getElementById('connect-address').value;
+            const port = parseInt(document.getElementById('connect-port').value);
+
+            if (!address || !port) {
+                alert('请填写节点地址和端口');
+                return;
+            }
+
+            postApi('/api/p2p/connect', { address: address, port: port }).then(res => {
+                if (res.code === 200) {
+                    alert('连接成功');
+                    closeConnectModal();
+                    loadNodeList();
+                } else {
+                    alert('连接失败: ' + res.message);
+                }
+            });
+        }
+
+        function connectNode(nodeId) {
+            const node = nodeList.find(n => n.nodeId === nodeId);
+            if (node) {
+                document.getElementById('connect-address').value = node.address || '';
+                document.getElementById('connect-port').value = node.port || 8080;
+                openConnectModal();
+            }
+        }
+
+        function disconnectNode(nodeId) {
+            if (confirm('确定要断开与该节点的连接吗？')) {
+                postApi('/api/p2p/disconnect/' + nodeId).then(res => {
+                    if (res.code === 200) {
+                        alert('断开连接成功');
+                        loadNodeList();
+                    } else {
+                        alert('断开失败: ' + res.message);
+                    }
+                });
+            }
+        }
+
+        function viewNodeDetail(nodeId) {
+            const node = nodeList.find(n => n.nodeId === nodeId);
+            if (node) {
+                document.getElementById('detail-node-id').textContent = node.nodeId || '-';
+                document.getElementById('detail-node-type').textContent = node.nodeType || '-';
+                document.getElementById('detail-node-address').textContent = node.address || '-';
+                document.getElementById('detail-node-port').textContent = node.port || '-';
+                document.getElementById('detail-node-status').textContent = node.status || '-';
+                document.getElementById('detail-node-lastseen').textContent = 
+                    node.lastSeen ? new Date(node.lastSeen).toLocaleString() : '-';
+                
+                const actionBtn = document.getElementById('detail-action-btn');
+                if (node.status === 'ONLINE') {
+                    actionBtn.textContent = '断开连接';
+                    actionBtn.className = 'nx-btn nx-btn--danger';
+                    actionBtn.onclick = function() {
+                        disconnectNode(nodeId);
+                        closeNodeDetailModal();
+                    };
+                } else {
+                    actionBtn.textContent = '连接';
+                    actionBtn.className = 'nx-btn nx-btn--primary';
+                    actionBtn.onclick = function() {
+                        connectNode(nodeId);
+                        closeNodeDetailModal();
+                    };
+                }
+                
+                document.getElementById('nodeDetailModal').style.display = 'flex';
+            }
+        }
+
+        function closeNodeDetailModal() {
+            document.getElementById('nodeDetailModal').style.display = 'none';
+        }
+
+        function shareSelectedSkills() {
+            const selectedSkills = [];
+            document.querySelectorAll('.skill-checkbox:checked').forEach(cb => {
+                selectedSkills.push(cb.dataset.skillId);
+            });
+
+            if (selectedSkills.length === 0) {
+                alert('请选择要共享的技能');
+                return;
+            }
+
+            postApi('/api/skills/share', { skillIds: selectedSkills }).then(res => {
+                if (res.code === 200) {
+                    alert('技能共享成功');
+                    loadShareableSkills();
+                } else {
+                    alert('共享失败: ' + res.message);
+                }
+            });
+        }
+
+        function cancelShareSkills() {
+            const selectedSkills = [];
+            document.querySelectorAll('.skill-checkbox:checked').forEach(cb => {
+                selectedSkills.push(cb.dataset.skillId);
+            });
+
+            if (selectedSkills.length === 0) {
+                alert('请选择要取消共享的技能');
+                return;
+            }
+
+            postApi('/api/skills/share/cancel', { skillIds: selectedSkills }).then(res => {
+                if (res.code === 200) {
+                    alert('取消共享成功');
+                    loadShareableSkills();
+                } else {
+                    alert('取消失败: ' + res.message);
+                }
+            });
+        }
+
+        function pullSkill(skillId) {
+            postApi('/api/skills/pull', { skillId: skillId }).then(res => {
+                if (res.code === 200) {
+                    alert('技能拉取成功');
+                } else {
+                    alert('拉取失败: ' + res.message);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

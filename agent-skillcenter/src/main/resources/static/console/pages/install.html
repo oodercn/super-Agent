@@ -3,379 +3,350 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkillCenter 初始化安装</title>
+    <title>技能发现 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        .radar-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
         }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #ffffff;
-        }
-        
-        .install-container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 40px;
-            width: 100%;
-            max-width: 600px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .install-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
-        .install-header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-            color: #4facfe;
-        }
-        
-        .install-header p {
-            font-size: 16px;
-            color: #b0b0b0;
-        }
-        
-        .install-steps {
-            margin-bottom: 30px;
-        }
-        
-        .step {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .step:hover {
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateY(-2px);
-        }
-        
-        .step-number {
-            width: 32px;
-            height: 32px;
+        .radar-circle {
+            position: absolute;
+            border: 2px solid var(--nx-primary);
             border-radius: 50%;
-            background: #4facfe;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            margin-right: 15px;
-            flex-shrink: 0;
+            opacity: 0.3;
+        }
+        .radar-circle:nth-child(1) { width: 50px; height: 50px; top: 75px; left: 75px; }
+        .radar-circle:nth-child(2) { width: 100px; height: 100px; top: 50px; left: 50px; }
+        .radar-circle:nth-child(3) { width: 150px; height: 150px; top: 25px; left: 25px; }
+        .radar-circle:nth-child(4) { width: 200px; height: 200px; top: 0; left: 0; }
+        
+        .radar-sweep {
+            position: absolute;
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--nx-primary), transparent);
+            top: 99px;
+            left: 100px;
+            transform-origin: left center;
+            animation: radar-sweep 3s linear infinite;
         }
         
-        .step-content {
-            flex: 1;
+        @keyframes radar-sweep {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
         
-        .step-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        
-        .step-description {
-            font-size: 14px;
-            color: #b0b0b0;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #e0e0e0;
-        }
-        
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-            color: #ffffff;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #4facfe;
-            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.2);
-        }
-        
-        .form-group input::placeholder {
-            color: #666666;
-        }
-        
-        .button-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-        }
-        
-        .btn {
-            flex: 1;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(45deg, #4facfe, #00f2fe);
-            color: #1a1a2e;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
-        }
-        
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-        }
-        
-        .progress-container {
-            margin: 30px 0;
-            display: none;
-        }
-        
-        .progress-bar {
-            width: 100%;
+        .radar-dot {
+            position: absolute;
+            width: 8px;
             height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 10px;
+            background: var(--nx-success);
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
         }
         
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(45deg, #4facfe, #00f2fe);
-            border-radius: 4px;
-            width: 0%;
-            transition: width 0.3s ease;
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
         }
         
-        .progress-text {
-            font-size: 14px;
-            color: #b0b0b0;
+        .source-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .source-card:hover {
+            border-color: var(--nx-primary);
+        }
+        .source-card.active {
+            border-color: var(--nx-success);
+            background: var(--nx-bg-elevated);
+        }
+        .source-card.scanning {
+            animation: scan-pulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes scan-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(var(--nx-primary-rgb), 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(var(--nx-primary-rgb), 0); }
+        }
+        
+        .discovery-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
             text-align: center;
+            padding: 16px;
+            background: var(--nx-bg-elevated);
+            border-radius: var(--nx-radius-lg);
         }
         
-        .success-message {
-            text-align: center;
-            margin-top: 30px;
-            display: none;
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--nx-primary);
         }
         
-        .success-icon {
-            font-size: 64px;
-            color: #4facfe;
-            margin-bottom: 20px;
-        }
-        
-        .success-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-        
-        .success-description {
-            font-size: 14px;
-            color: #b0b0b0;
-            margin-bottom: 30px;
-        }
-        
-        @media (max-width: 768px) {
-            .install-container {
-                padding: 30px;
-                margin: 20px;
-            }
-            
-            .install-header h1 {
-                font-size: 24px;
-            }
-            
-            .button-group {
-                flex-direction: column;
-            }
+        .stat-label {
+            font-size: 12px;
+            color: var(--nx-text-secondary);
+            margin-top: 4px;
         }
     </style>
 </head>
 <body>
-    <div class="install-container">
-        <div class="install-header">
-            <h1>SkillCenter 初始化安装</h1>
-            <p>欢迎使用 SkillCenter，请完成以下配置步骤</p>
-        </div>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
         
-        <div class="install-steps">
-            <div class="step">
-                <div class="step-number">1</div>
-                <div class="step-content">
-                    <div class="step-title">系统配置</div>
-                    <div class="step-description">设置基本的系统参数</div>
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能雷达发现</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="startRadarScan()">
+                        <i class="ri-radar-line"></i> 开始扫描
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <!-- 发现统计 -->
+                    <div class="discovery-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="statTotal">0</div>
+                            <div class="stat-label">发现技能总数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statSources">0/5</div>
+                            <div class="stat-label">活跃发现源</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statInstalled">0</div>
+                            <div class="stat-label">已安装技能</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statLastScan">-</div>
+                            <div class="stat-label">上次扫描</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 雷达动画和发现源 -->
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">技能雷达</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid--cols-2 nx-gap-6">
+                                <!-- 雷达动画 -->
+                                <div style="text-align: center;">
+                                    <div class="radar-container" id="radarContainer">
+                                        <div class="radar-circle"></div>
+                                        <div class="radar-circle"></div>
+                                        <div class="radar-circle"></div>
+                                        <div class="radar-circle"></div>
+                                        <div class="radar-sweep" id="radarSweep"></div>
+                                    </div>
+                                    <p style="margin-top: 16px; color: var(--nx-text-secondary);">
+                                        <span id="scanStatus">点击"开始扫描"启动技能雷达</span>
+                                    </p>
+                                </div>
+                                
+                                <!-- 发现源列表 -->
+                                <div>
+                                    <h4 class="nx-text-sm nx-font-semibold nx-mb-3">发现源</h4>
+                                    <div class="nx-grid nx-grid--cols-1 nx-gap-3">
+                                        <div class="source-card nx-card" id="source-github" onclick="toggleSource('github')">
+                                            <div class="nx-card__body nx-flex nx-items-center nx-gap-3">
+                                                <i class="ri-github-fill" style="font-size: 24px; color: #333;"></i>
+                                                <div>
+                                                    <div class="nx-font-semibold">GitHub</div>
+                                                    <div class="nx-text-sm" style="color: var(--nx-text-secondary);">GitHub仓库技能发现</div>
+                                                </div>
+                                                <div class="nx-ml-auto">
+                                                    <span class="nx-badge nx-badge--success" id="badge-github">就绪</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="source-card nx-card" id="source-gitee" onclick="toggleSource('gitee')">
+                                            <div class="nx-card__body nx-flex nx-items-center nx-gap-3">
+                                                <i class="ri-git-repository-line" style="font-size: 24px; color: #c71d23;"></i>
+                                                <div>
+                                                    <div class="nx-font-semibold">Gitee</div>
+                                                    <div class="nx-text-sm" style="color: var(--nx-text-secondary);">Gitee仓库技能发现</div>
+                                                </div>
+                                                <div class="nx-ml-auto">
+                                                    <span class="nx-badge nx-badge--success" id="badge-gitee">就绪</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="source-card nx-card" id="source-skill-center" onclick="toggleSource('skill_center')">
+                                            <div class="nx-card__body nx-flex nx-items-center nx-gap-3">
+                                                <i class="ri-store-2-line" style="font-size: 24px; color: var(--nx-primary);"></i>
+                                                <div>
+                                                    <div class="nx-font-semibold">技能中心</div>
+                                                    <div class="nx-text-sm" style="color: var(--nx-text-secondary);">SkillCenter API发现</div>
+                                                </div>
+                                                <div class="nx-ml-auto">
+                                                    <span class="nx-badge" id="badge-skill-center">就绪</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="source-card nx-card" id="source-udp-broadcast" onclick="toggleSource('udp_broadcast')">
+                                            <div class="nx-card__body nx-flex nx-items-center nx-gap-3">
+                                                <i class="ri-broadcast-line" style="font-size: 24px; color: var(--nx-warning);"></i>
+                                                <div>
+                                                    <div class="nx-font-semibold">UDP广播</div>
+                                                    <div class="nx-text-sm" style="color: var(--nx-text-secondary);">局域网广播发现</div>
+                                                </div>
+                                                <div class="nx-ml-auto">
+                                                    <span class="nx-badge" id="badge-udp-broadcast">就绪</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="source-card nx-card" id="source-local-fs" onclick="toggleSource('local_fs')">
+                                            <div class="nx-card__body nx-flex nx-items-center nx-gap-3">
+                                                <i class="ri-folder-line" style="font-size: 24px; color: var(--nx-success);"></i>
+                                                <div>
+                                                    <div class="nx-font-semibold">本地文件系统</div>
+                                                    <div class="nx-text-sm" style="color: var(--nx-text-secondary);">本地技能扫描</div>
+                                                </div>
+                                                <div class="nx-ml-auto">
+                                                    <span class="nx-badge" id="badge-local-fs">就绪</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="source-card nx-card" id="source-mdns-dns-sd" onclick="toggleSource('mdns_dns_sd')">
+                                            <div class="nx-card__body nx-flex nx-items-center nx-gap-3">
+                                                <i class="ri-wifi-line" style="font-size: 24px; color: var(--nx-info);"></i>
+                                                <div>
+                                                    <div class="nx-font-semibold">mDNS/DNS-SD</div>
+                                                    <div class="nx-text-sm" style="color: var(--nx-text-secondary);">服务发现协议</div>
+                                                </div>
+                                                <div class="nx-ml-auto">
+                                                    <span class="nx-badge" id="badge-mdns-dns-sd">就绪</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="source-card nx-card" id="source-dht-kademlia" onclick="toggleSource('dht_kademlia')">
+                                            <div class="nx-card__body nx-flex nx-items-center nx-gap-3">
+                                                <i class="ri-node-tree" style="font-size: 24px; color: var(--nx-danger);"></i>
+                                                <div>
+                                                    <div class="nx-font-semibold">DHT/Kademlia</div>
+                                                    <div class="nx-text-sm" style="color: var(--nx-text-secondary);">分布式哈希表发现</div>
+                                                </div>
+                                                <div class="nx-ml-auto">
+                                                    <span class="nx-badge" id="badge-dht-kademlia">就绪</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 发现结果筛选 -->
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                            <h3 class="nx-card__title">发现结果</h3>
+                            <div class="nx-flex nx-gap-3">
+                                <select id="filterSource" class="nx-select" style="width: 150px;">
+                                    <option value="">全部来源</option>
+                                    <option value="github">GitHub</option>
+                                    <option value="gitee">Gitee</option>
+                                    <option value="skill_center">技能中心</option>
+                                    <option value="udp_broadcast">UDP广播</option>
+                                    <option value="local_fs">本地文件</option>
+                                    <option value="mdns_dns_sd">mDNS</option>
+                                    <option value="dht_kademlia">DHT</option>
+                                </select>
+                                <select id="filterType" class="nx-select" style="width: 150px;">
+                                    <option value="">全部类型</option>
+                                    <option value="api">API集成</option>
+                                    <option value="data-processing">数据处理</option>
+                                    <option value="text-processing">文本处理</option>
+                                    <option value="automation">自动化</option>
+                                </select>
+                                <input type="text" id="searchKeyword" class="nx-input" placeholder="搜索技能..." style="width: 200px;">
+                                <button class="nx-btn nx-btn--primary" onclick="filterResults()">
+                                    <i class="ri-filter-line"></i> 筛选
+                                </button>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <table class="nx-table nx-table--striped">
+                                <thead>
+                                    <tr>
+                                        <th>技能ID</th>
+                                        <th>名称</th>
+                                        <th>来源</th>
+                                        <th>类型</th>
+                                        <th>能力标签</th>
+                                        <th>发现时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="discoveryResultsBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="step">
-                <div class="step-number">2</div>
-                <div class="step-content">
-                    <div class="step-title">数据库配置</div>
-                    <div class="step-description">配置数据库连接信息（可选）</div>
-                </div>
+        </main>
+    </div>
+    
+    <div id="skillDetailModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 600px;">
+            <div class="modal-header">
+                <h3>技能详情</h3>
+                <button class="modal-close" onclick="closeSkillDetailModal()">&times;</button>
             </div>
-            <div class="step">
-                <div class="step-number">3</div>
-                <div class="step-content">
-                    <div class="step-title">管理员账号</div>
-                    <div class="step-description">创建系统管理员账号</div>
-                </div>
+            <div class="modal-body" id="skillDetailContent">
             </div>
-            <div class="step">
-                <div class="step-number">4</div>
-                <div class="step-content">
-                    <div class="step-title">完成安装</div>
-                    <div class="step-description">验证配置并完成安装</div>
-                </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeSkillDetailModal()">关闭</button>
+                <button class="nx-btn nx-btn--primary" id="installFromDetailBtn">
+                    <i class="ri-download-line"></i> 安装
+                </button>
             </div>
-        </div>
-        
-        <div class="form-group">
-            <label for="system-name">系统名称</label>
-            <input type="text" id="system-name" placeholder="请输入系统名称" value="SkillCenter">
-        </div>
-        
-        <div class="form-group">
-            <label for="database-type">数据库类型</label>
-            <select id="database-type">
-                <option value="h2">H2 (嵌入式)</option>
-                <option value="mysql">MySQL</option>
-                <option value="postgresql">PostgreSQL</option>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="admin-username">管理员用户名</label>
-            <input type="text" id="admin-username" placeholder="请输入管理员用户名" value="admin">
-        </div>
-        
-        <div class="form-group">
-            <label for="admin-password">管理员密码</label>
-            <input type="password" id="admin-password" placeholder="请输入管理员密码">
-        </div>
-        
-        <div class="form-group">
-            <label for="admin-email">管理员邮箱</label>
-            <input type="email" id="admin-email" placeholder="请输入管理员邮箱">
-        </div>
-        
-        <div class="progress-container" id="progress-container">
-            <div class="progress-bar">
-                <div class="progress-fill" id="progress-fill"></div>
-            </div>
-            <div class="progress-text" id="progress-text">正在安装，请稍候...</div>
-        </div>
-        
-        <div class="success-message" id="success-message">
-            <div class="success-icon">✓</div>
-            <div class="success-title">安装成功！</div>
-            <div class="success-description">SkillCenter 已成功安装并初始化完成</div>
-        </div>
-        
-        <div class="button-group" id="button-group">
-            <button class="btn btn-secondary" onclick="cancelInstall()">取消</button>
-            <button class="btn btn-primary" onclick="startInstall()">开始安装</button>
         </div>
     </div>
     
-    <script>
-        function startInstall() {
-            // 显示进度条
-            document.getElementById('progress-container').style.display = 'block';
-            document.getElementById('button-group').style.display = 'none';
-            
-            // 模拟安装过程
-            let progress = 0;
-            const progressFill = document.getElementById('progress-fill');
-            const progressText = document.getElementById('progress-text');
-            
-            const interval = setInterval(() => {
-                progress += 5;
-                progressFill.style.width = progress + '%';
-                
-                if (progress < 25) {
-                    progressText.textContent = '正在初始化系统...';
-                } else if (progress < 50) {
-                    progressText.textContent = '正在配置数据库...';
-                } else if (progress < 75) {
-                    progressText.textContent = '正在创建管理员账号...';
-                } else {
-                    progressText.textContent = '正在完成安装...';
-                }
-                
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        document.getElementById('progress-container').style.display = 'none';
-                        document.getElementById('success-message').style.display = 'block';
-                    }, 1000);
-                }
-            }, 200);
-        }
-        
-        function cancelInstall() {
-            if (confirm('确定要取消安装吗？')) {
-                window.location.href = 'index.html';
-            }
-        }
-        
-        // 点击成功页面的按钮跳转到登录页
-        document.addEventListener('DOMContentLoaded', function() {
-            const successMessage = document.getElementById('success-message');
-            if (successMessage) {
-                const button = document.createElement('button');
-                button.className = 'btn btn-primary';
-                button.textContent = '进入系统';
-                button.onclick = function() {
-                    window.location.href = 'login.html';
-                };
-                successMessage.appendChild(button);
-            }
-        });
-    </script>
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/utils.js"></script>
+    <script src="/skillcenter/console/js/skill-discovery.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
 </body>
 </html>

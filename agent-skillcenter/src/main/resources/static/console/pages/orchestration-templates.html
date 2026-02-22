@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能编排 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能编排</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="showCreateTemplate()">
+                        <i class="ri-add-line"></i> 新建模板
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-tabs nx-mb-6">
+                        <button class="nx-tabs__tab nx-tabs__tab--active" data-tab="templates" onclick="switchTab('templates', this)">编排模板</button>
+                        <button class="nx-tabs__tab" data-tab="executions" onclick="switchTab('executions', this)">执行历史</button>
+                        <button class="nx-tabs__tab" data-tab="schedules" onclick="switchTab('schedules', this)">执行计划</button>
+                    </div>
+                    
+                    <div id="templates-panel">
+                        <div class="nx-card nx-mb-6">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">编排模板列表</h3>
+                                <div class="nx-card__actions">
+                                    <select class="nx-select" id="category-filter" onchange="loadTemplates()">
+                                        <option value="">全部分类</option>
+                                        <option value="data-processing">数据处理</option>
+                                        <option value="automation">自动化</option>
+                                        <option value="integration">集成</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>模板名称</th>
+                                                <th>分类</th>
+                                                <th>技能数</th>
+                                                <th>状态</th>
+                                                <th>创建时间</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="template-list">
+                                            <tr>
+                                                <td colspan="6" class="nx-text-center nx-text-secondary">
+                                                    加载中...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="executions-panel" style="display: none;">
+                        <div class="nx-card nx-mb-6">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">执行历史</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>执行ID</th>
+                                                <th>模板名称</th>
+                                                <th>状态</th>
+                                                <th>开始时间</th>
+                                                <th>耗时</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="execution-list">
+                                            <tr>
+                                                <td colspan="6" class="nx-text-center nx-text-secondary">
+                                                    加载中...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="schedules-panel" style="display: none;">
+                        <div class="nx-card nx-mb-6">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">执行计划</h3>
+                                <div class="nx-card__actions">
+                                    <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="showCreateSchedule()">
+                                        <i class="ri-add-line"></i> 新建计划
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>计划名称</th>
+                                                <th>模板</th>
+                                                <th>Cron表达式</th>
+                                                <th>状态</th>
+                                                <th>执行次数</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="schedule-list">
+                                            <tr>
+                                                <td colspan="6" class="nx-text-center nx-text-secondary">
+                                                    加载中...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="create-template-modal" class="nx-modal" style="display: none;">
+        <div class="nx-modal__backdrop" onclick="closeModal('create-template-modal')"></div>
+        <div class="nx-modal__content">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">新建编排模板</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal('create-template-modal')">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-form-group">
+                    <label class="nx-label">模板名称</label>
+                    <input type="text" class="nx-input" id="template-name" placeholder="请输入模板名称">
+                </div>
+                <div class="nx-form-group">
+                    <label class="nx-label">描述</label>
+                    <textarea class="nx-textarea" id="template-desc" placeholder="请输入模板描述"></textarea>
+                </div>
+                <div class="nx-form-group">
+                    <label class="nx-label">分类</label>
+                    <select class="nx-select" id="template-category">
+                        <option value="data-processing">数据处理</option>
+                        <option value="automation">自动化</option>
+                        <option value="integration">集成</option>
+                    </select>
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('create-template-modal')">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createTemplate()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="create-schedule-modal" class="nx-modal" style="display: none;">
+        <div class="nx-modal__backdrop" onclick="closeModal('create-schedule-modal')"></div>
+        <div class="nx-modal__content">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">新建执行计划</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal('create-schedule-modal')">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-form-group">
+                    <label class="nx-label">计划名称</label>
+                    <input type="text" class="nx-input" id="schedule-name" placeholder="请输入计划名称">
+                </div>
+                <div class="nx-form-group">
+                    <label class="nx-label">选择模板</label>
+                    <select class="nx-select" id="schedule-template">
+                        <option value="">请选择模板</option>
+                    </select>
+                </div>
+                <div class="nx-form-group">
+                    <label class="nx-label">Cron表达式</label>
+                    <input type="text" class="nx-input" id="schedule-cron" placeholder="0 0 2 * * ?">
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('create-schedule-modal')">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createSchedule()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/api-client.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('Orchestration 页面初始化完成');
+            loadTemplates();
+        };
+        
+        let currentTab = 'templates';
+        
+        function switchTab(tab, btnElement) {
+            currentTab = tab;
+            document.querySelectorAll('.nx-tabs__tab').forEach(t => t.classList.remove('nx-tabs__tab--active'));
+            if (btnElement) {
+                btnElement.classList.add('nx-tabs__tab--active');
+            } else {
+                document.querySelector(`.nx-tabs__tab[data-tab="${tab}"]`)?.classList.add('nx-tabs__tab--active');
+            }
+            
+            document.getElementById('templates-panel').style.display = tab === 'templates' ? 'block' : 'none';
+            document.getElementById('executions-panel').style.display = tab === 'executions' ? 'block' : 'none';
+            document.getElementById('schedules-panel').style.display = tab === 'schedules' ? 'block' : 'none';
+            
+            if (tab === 'executions') loadExecutions();
+            if (tab === 'schedules') loadSchedules();
+        }
+        
+        async function loadTemplates() {
+            try {
+                const category = document.getElementById('category-filter').value;
+                const result = await ApiClient.post('/api/orchestration/templates', { category });
+                if (result && result.data) {
+                    renderTemplateList(result.data.list || []);
+                }
+            } catch (error) {
+                console.error('加载模板失败:', error);
+            }
+        }
+        
+        function renderTemplateList(templates) {
+            const tbody = document.getElementById('template-list');
+            if (!templates || templates.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="nx-text-center nx-text-secondary">暂无数据</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = templates.map(t => `
+                <tr>
+                    <td>
+                        <div class="nx-flex nx-items-center nx-gap-2">
+                            <i class="ri-flow-chart nx-text-primary"></i>
+                            <span>${t.name}</span>
+                        </div>
+                    </td>
+                    <td><span class="nx-badge nx-badge--secondary">${t.category || '未分类'}</span></td>
+                    <td>${t.skills ? t.skills.length : 0}</td>
+                    <td>
+                        <span class="nx-badge nx-badge--${t.status === 'active' ? 'success' : 'secondary'}">
+                            ${t.status === 'active' ? '启用' : '禁用'}
+                        </span>
+                    </td>
+                    <td>${formatTime(t.createdAt)}</td>
+                    <td>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="executeTemplate('${t.templateId}')" title="执行">
+                            <i class="ri-play-line"></i>
+                        </button>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="editTemplate('${t.templateId}')" title="编辑">
+                            <i class="ri-edit-line"></i>
+                        </button>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm nx-text-error" onclick="deleteTemplate('${t.templateId}')" title="删除">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        async function loadExecutions() {
+            try {
+                const result = await ApiClient.post('/api/orchestration/executions', {});
+                if (result && result.data) {
+                    renderExecutionList(result.data.list || []);
+                }
+            } catch (error) {
+                console.error('加载执行历史失败:', error);
+            }
+        }
+        
+        function renderExecutionList(executions) {
+            const tbody = document.getElementById('execution-list');
+            if (!executions || executions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="nx-text-center nx-text-secondary">暂无数据</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = executions.map(e => `
+                <tr>
+                    <td><code>${e.executionId}</code></td>
+                    <td>${e.name}</td>
+                    <td>
+                        <span class="nx-badge nx-badge--${e.status === 'success' ? 'success' : (e.status === 'running' ? 'primary' : 'error')}">
+                            ${e.status === 'success' ? '成功' : (e.status === 'running' ? '运行中' : '失败')}
+                        </span>
+                    </td>
+                    <td>${formatTime(e.startTime)}</td>
+                    <td>${e.duration ? (e.duration / 1000).toFixed(2) + 's' : '-'}</td>
+                    <td>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="viewExecution('${e.executionId}')">
+                            <i class="ri-eye-line"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        async function loadSchedules() {
+            try {
+                const result = await ApiClient.post('/api/orchestration/schedules', {});
+                if (result && result.data) {
+                    renderScheduleList(result.data.list || []);
+                }
+            } catch (error) {
+                console.error('加载执行计划失败:', error);
+            }
+        }
+        
+        function renderScheduleList(schedules) {
+            const tbody = document.getElementById('schedule-list');
+            if (!schedules || schedules.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="nx-text-center nx-text-secondary">暂无数据</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = schedules.map(s => `
+                <tr>
+                    <td>${s.name}</td>
+                    <td>${s.templateId}</td>
+                    <td><code>${s.cronExpression}</code></td>
+                    <td>
+                        <span class="nx-badge nx-badge--${s.enabled ? 'success' : 'secondary'}">
+                            ${s.enabled ? '启用' : '禁用'}
+                        </span>
+                    </td>
+                    <td>${s.executionCount || 0}</td>
+                    <td>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="toggleSchedule('${s.scheduleId}')">
+                            <i class="ri-${s.enabled ? 'pause' : 'play'}-line"></i>
+                        </button>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm nx-text-error" onclick="deleteSchedule('${s.scheduleId}')">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function showCreateTemplate() {
+            document.getElementById('create-template-modal').style.display = 'flex';
+        }
+        
+        function showCreateSchedule() {
+            loadTemplatesForSelect();
+            document.getElementById('create-schedule-modal').style.display = 'flex';
+        }
+        
+        async function loadTemplatesForSelect() {
+            try {
+                const result = await ApiClient.post('/api/orchestration/templates', {});
+                if (result && result.data) {
+                    const select = document.getElementById('schedule-template');
+                    select.innerHTML = '<option value="">请选择模板</option>' + 
+                        (result.data.list || []).map(t => `<option value="${t.templateId}">${t.name}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('加载模板列表失败:', error);
+            }
+        }
+        
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+        
+        async function createTemplate() {
+            const name = document.getElementById('template-name').value;
+            const desc = document.getElementById('template-desc').value;
+            const category = document.getElementById('template-category').value;
+            
+            if (!name) {
+                ApiClient.showError('请输入模板名称');
+                return;
+            }
+            
+            try {
+                ApiClient.showLoading('创建中...');
+                await ApiClient.post('/api/orchestration/templates/create', {
+                    name,
+                    description: desc,
+                    category,
+                    skills: [],
+                    dataFlows: []
+                });
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('创建模板成功');
+                closeModal('create-template-modal');
+                loadTemplates();
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('创建失败: ' + error.message);
+            }
+        }
+        
+        async function createSchedule() {
+            const name = document.getElementById('schedule-name').value;
+            const templateId = document.getElementById('schedule-template').value;
+            const cron = document.getElementById('schedule-cron').value;
+            
+            if (!name || !templateId || !cron) {
+                ApiClient.showError('请填写完整信息');
+                return;
+            }
+            
+            try {
+                ApiClient.showLoading('创建中...');
+                await ApiClient.post('/api/orchestration/schedules/create', {
+                    name,
+                    templateId,
+                    cronExpression: cron
+                });
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('创建计划成功');
+                closeModal('create-schedule-modal');
+                loadSchedules();
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('创建失败: ' + error.message);
+            }
+        }
+        
+        async function executeTemplate(templateId) {
+            try {
+                ApiClient.showLoading('正在执行编排...');
+                const result = await ApiClient.post('/api/orchestration/execute', { templateId });
+                ApiClient.hideLoading();
+                if (result && result.data) {
+                    ApiClient.showSuccess('执行已启动: ' + result.data);
+                    switchTab('executions', document.querySelector('.nx-tabs__tab[data-tab="executions"]'));
+                }
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('执行失败: ' + error.message);
+            }
+        }
+        
+        async function toggleSchedule(scheduleId) {
+            try {
+                const result = await ApiClient.post('/api/orchestration/schedules/toggle', { scheduleId });
+                if (result && result.message) {
+                    ApiClient.showSuccess(result.message);
+                }
+                loadSchedules();
+            } catch (error) {
+                ApiClient.showError('操作失败: ' + error.message);
+            }
+        }
+        
+        async function deleteTemplate(templateId) {
+            if (!confirm('确定要删除该模板吗？')) return;
+            try {
+                ApiClient.showLoading('删除中...');
+                await ApiClient.post('/api/orchestration/templates/delete', { templateId });
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('删除成功');
+                loadTemplates();
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('删除失败: ' + error.message);
+            }
+        }
+        
+        async function deleteSchedule(scheduleId) {
+            if (!confirm('确定要删除该计划吗？')) return;
+            try {
+                ApiClient.showLoading('删除中...');
+                await ApiClient.post('/api/orchestration/schedules/delete', { scheduleId });
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('删除成功');
+                loadSchedules();
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('删除失败: ' + error.message);
+            }
+        }
+        
+        function editTemplate(templateId) {
+            window.location.href = 'flow-design.html?id=' + templateId;
+        }
+        
+        function viewExecution(executionId) {
+            showExecutionDetailModal(executionId);
+        }
+        
+        async function showExecutionDetailModal(executionId) {
+            const modal = document.createElement('div');
+            modal.className = 'nx-modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="nx-modal__backdrop" onclick="this.parentElement.remove()"></div>
+                <div class="nx-modal__content" style="width: 900px; max-width: 90%;">
+                    <div class="nx-modal__header">
+                        <h3 class="nx-modal__title">执行详情 - ${executionId}</h3>
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="this.closest('.nx-modal').remove()">
+                            <i class="ri-close-line"></i>
+                        </button>
+                    </div>
+                    <div class="nx-modal__body" id="execution-detail-content">
+                        <div class="nx-text-center nx-text-secondary nx-p-4">加载中...</div>
+                    </div>
+                    <div class="nx-modal__footer">
+                        <button class="nx-btn nx-btn--secondary" onclick="this.closest('.nx-modal').remove()">关闭</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            try {
+                const result = await ApiClient.post(`/api/orchestration/status/${executionId}`, {});
+                if (result && result.data) {
+                    renderExecutionDetail(result.data);
+                }
+            } catch (error) {
+                document.getElementById('execution-detail-content').innerHTML = 
+                    '<div class="nx-text-error nx-p-4">加载失败: ' + error.message + '</div>';
+            }
+        }
+        
+        function renderExecutionDetail(execution) {
+            const container = document.getElementById('execution-detail-content');
+            let html = `
+                <div class="nx-grid nx-grid-cols-3 nx-gap-4 nx-mb-4">
+                    <div class="nx-text-center nx-p-3" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                        <div class="nx-text-lg nx-font-bold">${execution.status || '-'}</div>
+                        <div class="nx-text-secondary nx-text-sm">状态</div>
+                    </div>
+                    <div class="nx-text-center nx-p-3" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                        <div class="nx-text-lg nx-font-bold">${execution.duration ? (execution.duration/1000).toFixed(2) + 's' : '-'}</div>
+                        <div class="nx-text-secondary nx-text-sm">耗时</div>
+                    </div>
+                    <div class="nx-text-center nx-p-3" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                        <div class="nx-text-lg nx-font-bold">${execution.stats ? execution.stats.completedNodes : 0}/${execution.stats ? execution.stats.totalNodes : 0}</div>
+                        <div class="nx-text-secondary nx-text-sm">节点进度</div>
+                    </div>
+                </div>
+                <h4 class="nx-font-semibold nx-mb-2">节点执行详情</h4>
+                <div class="nx-table-container">
+                    <table class="nx-table nx-table--sm">
+                        <thead>
+                            <tr>
+                                <th>节点</th>
+                                <th>技能</th>
+                                <th>状态</th>
+                                <th>耗时</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            if (execution.nodeExecutions && execution.nodeExecutions.length > 0) {
+                execution.nodeExecutions.forEach(node => {
+                    html += `
+                        <tr>
+                            <td>${node.nodeId}</td>
+                            <td>${node.skillId}</td>
+                            <td>
+                                <span class="nx-badge nx-badge--${node.status === 'success' ? 'success' : (node.status === 'running' ? 'primary' : 'secondary')}">
+                                    ${node.status}
+                                </span>
+                            </td>
+                            <td>${node.duration ? (node.duration/1000).toFixed(2) + 's' : '-'}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html += '<tr><td colspan="4" class="nx-text-center nx-text-secondary">暂无节点数据</td></tr>';
+            }
+            
+            html += '</tbody></table></div>';
+            
+            if (execution.errorMessage) {
+                html += `<div class="nx-alert nx-alert--error nx-mt-4"><i class="ri-error-warning-line"></i> ${execution.errorMessage}</div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>即时通讯 - Nexus</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .im-container { display: flex; height: calc(100vh - 140px); background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 8px; overflow: hidden; }
+        
+        .im-sidebar { width: 280px; border-right: 1px solid var(--ns-border); display: flex; flex-direction: column; }
+        .im-sidebar-header { padding: 12px 16px; border-bottom: 1px solid var(--ns-border); }
+        .im-tabs { display: flex; gap: 4px; }
+        .im-tab { flex: 1; padding: 8px; text-align: center; font-size: 13px; color: var(--ns-secondary); background: transparent; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .im-tab:hover { background: var(--ns-bg-hover); }
+        .im-tab.active { background: var(--nx-primary); color: white; }
+        .im-search { padding: 12px 16px; border-bottom: 1px solid var(--ns-border); }
+        .im-search input { width: 100%; padding: 8px 12px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); border-radius: 6px; color: var(--ns-dark); font-size: 13px; }
+        .im-list { flex: 1; overflow-y: auto; }
+        
+        .conv-item { padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid var(--ns-border); transition: background 0.2s; }
+        .conv-item:hover { background: var(--ns-bg-hover); }
+        .conv-item.active { background: rgba(59, 130, 246, 0.1); }
+        .conv-avatar { width: 44px; height: 44px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .conv-avatar.private { background: rgba(59, 130, 246, 0.1); color: var(--nx-primary); }
+        .conv-avatar.group { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .conv-avatar.department { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        .conv-info { flex: 1; min-width: 0; }
+        .conv-name { font-size: 14px; font-weight: 500; color: var(--ns-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .conv-preview { font-size: 12px; color: var(--ns-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .conv-meta { text-align: right; }
+        .conv-time { font-size: 11px; color: var(--ns-secondary); }
+        .conv-badge { background: var(--nx-primary); color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-top: 4px; display: inline-block; }
+        
+        .im-main { flex: 1; display: flex; flex-direction: column; }
+        .im-header { padding: 12px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .im-title { font-size: 16px; font-weight: 600; color: var(--ns-dark); }
+        .im-actions { display: flex; gap: 8px; }
+        
+        .im-messages { flex: 1; overflow-y: auto; padding: 16px 20px; }
+        .message { display: flex; gap: 10px; margin-bottom: 16px; }
+        .message-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--ns-bg-hover); display: flex; align-items: center; justify-content: center; color: var(--ns-secondary); font-size: 14px; flex-shrink: 0; }
+        .message-content { flex: 1; }
+        .message-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .message-sender { font-size: 13px; font-weight: 500; color: var(--ns-dark); }
+        .message-time { font-size: 11px; color: var(--ns-secondary); }
+        .message-text { font-size: 14px; color: var(--ns-dark); line-height: 1.5; background: var(--ns-bg-hover); padding: 10px 14px; border-radius: 8px; display: inline-block; max-width: 70%; word-break: break-word; }
+        .message-own { flex-direction: row-reverse; }
+        .message-own .message-text { background: var(--nx-primary); color: white; }
+        .message-own .message-header { flex-direction: row-reverse; }
+        .message-file { display: flex; align-items: center; gap: 10px; background: var(--ns-bg-hover); padding: 12px; border-radius: 8px; max-width: 300px; cursor: pointer; }
+        .message-file:hover { background: var(--ns-border); }
+        .message-file-icon { width: 40px; height: 40px; background: var(--nx-primary); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; }
+        .message-file-info { flex: 1; }
+        .message-file-name { font-size: 13px; color: var(--ns-dark); margin-bottom: 2px; }
+        .message-file-size { font-size: 11px; color: var(--ns-secondary); }
+        
+        .im-input { padding: 12px 20px; border-top: 1px solid var(--ns-border); display: flex; gap: 12px; align-items: flex-end; }
+        .im-input textarea { flex: 1; padding: 10px 14px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); border-radius: 8px; color: var(--ns-dark); font-size: 14px; resize: none; min-height: 40px; max-height: 120px; }
+        .im-input textarea:focus { outline: none; border-color: var(--nx-primary); }
+        .im-input-actions { display: flex; gap: 8px; }
+        
+        .im-right { width: 260px; border-left: 1px solid var(--ns-border); display: flex; flex-direction: column; }
+        .im-right-header { padding: 12px 16px; border-bottom: 1px solid var(--ns-border); font-size: 14px; font-weight: 600; color: var(--ns-dark); }
+        .im-right-body { flex: 1; overflow-y: auto; padding: 12px; }
+        .member-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 6px; cursor: pointer; }
+        .member-item:hover { background: var(--ns-bg-hover); }
+        .member-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--ns-bg-hover); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--ns-secondary); }
+        .member-name { font-size: 13px; color: var(--ns-dark); }
+        .member-status { width: 8px; height: 8px; border-radius: 50%; margin-left: auto; }
+        .member-status.online { background: var(--ns-success); }
+        .member-status.offline { background: var(--ns-secondary); }
+        
+        .empty-chat { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--ns-secondary); }
+        .empty-chat i { font-size: 64px; margin-bottom: 16px; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--ns-card-bg); border-radius: 8px; width: 100%; max-width: 400px; }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 16px; font-weight: 600; color: var(--ns-dark); }
+        .modal-close { background: none; border: none; font-size: 20px; color: var(--ns-secondary); cursor: pointer; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid var(--ns-border); display: flex; justify-content: flex-end; gap: 8px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; color: var(--ns-dark); margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 8px 12px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); border-radius: 6px; color: var(--ns-dark); font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">即时通讯</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <div class="nx-flex nx-gap-2">
+                        <a href="/console/pages/storage/storage-management.html" class="nx-btn nx-btn--ghost" title="存储管理">
+                            <i class="ri-folder-5-line"></i> 存储
+                        </a>
+                        <a href="/console/pages/scene/scene-list.html" class="nx-btn nx-btn--ghost" title="场景协作">
+                            <i class="ri-apps-2-line"></i> 场景
+                        </a>
+                        <button class="nx-btn nx-btn--primary" onclick="showCreateGroupModal()">
+                            <i class="ri-add-line"></i> 创建群组
+                        </button>
+                    </div>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="im-container">
+                        <div class="im-sidebar">
+                            <div class="im-sidebar-header">
+                                <div class="im-tabs">
+                                    <button class="im-tab active" onclick="switchTab('all')">全部</button>
+                                    <button class="im-tab" onclick="switchTab('private')">私聊</button>
+                                    <button class="im-tab" onclick="switchTab('group')">群组</button>
+                                    <button class="im-tab" onclick="switchTab('department')">部门</button>
+                                </div>
+                            </div>
+                            <div class="im-search">
+                                <input type="text" placeholder="搜索联系人或群组..." id="searchInput" oninput="searchConversations()">
+                            </div>
+                            <div class="im-list" id="conversationList"></div>
+                        </div>
+                        
+                        <div class="im-main" id="chatMain">
+                            <div class="empty-chat">
+                                <i class="ri-message-3-line"></i>
+                                <p>选择一个会话开始聊天</p>
+                            </div>
+                        </div>
+                        
+                        <div class="im-right" id="imRight" style="display: none;">
+                            <div class="im-right-header" id="rightHeader">成员列表</div>
+                            <div class="im-right-body" id="memberList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="createGroupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>创建群组</h3>
+                <button class="modal-close" onclick="hideCreateGroupModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">群组名称</label>
+                    <input type="text" class="form-control" id="groupName" placeholder="请输入群组名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">群组类型</label>
+                    <select class="form-control" id="groupType">
+                        <option value="group">项目群组</option>
+                        <option value="department">部门群组</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="hideCreateGroupModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createGroup()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var conversations = [];
+        var currentConversation = null;
+        var messages = [];
+        var currentTab = 'all';
+        var currentUserId = 'user-001';
+        
+        window.onPageInit = function() {
+            loadConversations();
+        };
+        
+        function loadConversations() {
+            fetch('/api/im/conversation/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    conversations = rs.data || [];
+                    renderConversations(conversations);
+                }
+            });
+        }
+        
+        function renderConversations(data) {
+            var container = document.getElementById('conversationList');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--ns-secondary);">暂无会话</div>';
+                return;
+            }
+            
+            var html = '';
+            data.forEach(function(c) {
+                var avatarClass = c.conversationType || 'private';
+                var icon = avatarClass === 'group' ? 'ri-group-line' : (avatarClass === 'department' ? 'ri-building-line' : 'ri-user-line');
+                var isActive = currentConversation && currentConversation.conversationId === c.conversationId;
+                
+                html += '<div class="conv-item' + (isActive ? ' active' : '') + '" onclick="selectConversation(\'' + c.conversationId + '\')">' +
+                    '<div class="conv-avatar ' + avatarClass + '"><i class="' + icon + '"></i></div>' +
+                    '<div class="conv-info">' +
+                    '<div class="conv-name">' + c.name + '</div>' +
+                    '<div class="conv-preview">' + (c.lastMessage || '暂无消息') + '</div>' +
+                    '</div>' +
+                    '<div class="conv-meta">' +
+                    '<div class="conv-time">' + formatTime(c.lastMessageTime) + '</div>' +
+                    (c.unreadCount > 0 ? '<div class="conv-badge">' + c.unreadCount + '</div>' : '') +
+                    '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.im-tab').forEach(function(t) { t.classList.remove('active'); });
+            event.target.classList.add('active');
+            
+            var filtered = conversations;
+            if (tab !== 'all') {
+                filtered = conversations.filter(function(c) { return c.conversationType === tab; });
+            }
+            renderConversations(filtered);
+        }
+        
+        function searchConversations() {
+            var keyword = document.getElementById('searchInput').value.toLowerCase();
+            var filtered = conversations.filter(function(c) {
+                return c.name.toLowerCase().indexOf(keyword) >= 0 ||
+                       (c.lastMessage && c.lastMessage.toLowerCase().indexOf(keyword) >= 0);
+            });
+            if (currentTab !== 'all') {
+                filtered = filtered.filter(function(c) { return c.conversationType === currentTab; });
+            }
+            renderConversations(filtered);
+        }
+        
+        function selectConversation(conversationId) {
+            currentConversation = conversations.find(function(c) { return c.conversationId === conversationId; });
+            renderConversations(conversations);
+            loadMessages(conversationId);
+            renderChatArea();
+            
+            if (currentConversation && (currentConversation.conversationType === 'group' || currentConversation.conversationType === 'department')) {
+                loadMembers(conversationId);
+                document.getElementById('imRight').style.display = 'flex';
+            } else {
+                document.getElementById('imRight').style.display = 'none';
+            }
+        }
+        
+        function renderChatArea() {
+            var container = document.getElementById('chatMain');
+            if (!currentConversation) {
+                container.innerHTML = '<div class="empty-chat"><i class="ri-message-3-line"></i><p>选择一个会话开始聊天</p></div>';
+                return;
+            }
+            
+            var typeText = currentConversation.conversationType === 'private' ? '私聊' : 
+                           (currentConversation.conversationType === 'group' ? '群聊' : '部门');
+            
+            container.innerHTML = 
+                '<div class="im-header">' +
+                '<div class="im-title">' + currentConversation.name + '</div>' +
+                '<div class="im-actions">' +
+                '<span style="font-size: 13px; color: var(--ns-secondary);">' + typeText + '</span>' +
+                '</div>' +
+                '</div>' +
+                '<div class="im-messages" id="messageList"></div>' +
+                '<div class="im-input">' +
+                '<textarea id="messageInput" placeholder="输入消息..." rows="1" onkeydown="handleKeydown(event)"></textarea>' +
+                '<div class="im-input-actions">' +
+                '<button class="nx-btn nx-btn--ghost nx-btn--icon" title="发送文件" onclick="sendFileMessage()"><i class="ri-attachment-2"></i></button>' +
+                '<button class="nx-btn nx-btn--primary" onclick="sendMessage()">发送</button>' +
+                '</div>' +
+                '</div>';
+        }
+        
+        function loadMessages(conversationId) {
+            fetch('/api/im/message/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ conversationId: conversationId, limit: 50 })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    messages = rs.data || [];
+                    renderMessages(messages);
+                }
+            });
+        }
+        
+        function renderMessages(data) {
+            var container = document.getElementById('messageList');
+            if (!container) return;
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--ns-secondary); padding: 40px;">暂无消息</div>';
+                return;
+            }
+            
+            var html = '';
+            data.forEach(function(m) {
+                var isOwn = m.senderId === currentUserId;
+                
+                html += '<div class="message' + (isOwn ? ' message-own' : '') + '">' +
+                    '<div class="message-avatar">' + (m.senderName ? m.senderName.charAt(0) : '?') + '</div>' +
+                    '<div class="message-content">' +
+                    '<div class="message-header">' +
+                    '<span class="message-sender">' + m.senderName + '</span>' +
+                    '<span class="message-time">' + formatTime(m.sendTime) + '</span>' +
+                    '</div>';
+                
+                if (m.msgType === 'file') {
+                    html += '<div class="message-file">' +
+                        '<div class="message-file-icon"><i class="ri-file-line"></i></div>' +
+                        '<div class="message-file-info">' +
+                        '<div class="message-file-name">' + m.fileName + '</div>' +
+                        '<div class="message-file-size">' + formatSize(m.fileSize) + '</div>' +
+                        '</div>' +
+                        '</div>';
+                } else {
+                    html += '<div class="message-text">' + (m.recalled ? '<em style="color: var(--ns-secondary)">' + m.content + '</em>' : m.content) + '</div>';
+                }
+                
+                html += '</div></div>';
+            });
+            
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function loadMembers(conversationId) {
+            fetch('/api/im/group/members', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ conversationId: conversationId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    var members = rs.data || [];
+                    document.getElementById('rightHeader').textContent = '成员 (' + members.length + ')';
+                    renderMembers(members);
+                }
+            });
+        }
+        
+        function renderMembers(members) {
+            var container = document.getElementById('memberList');
+            var html = '';
+            members.forEach(function(m) {
+                html += '<div class="member-item">' +
+                    '<div class="member-avatar">' + (m.name ? m.name.charAt(0) : '?') + '</div>' +
+                    '<div class="member-name">' + m.name + '</div>' +
+                    '<div class="member-status ' + (m.online ? 'online' : 'offline') + '"></div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function sendMessage() {
+            var input = document.getElementById('messageInput');
+            var content = input.value.trim();
+            if (!content || !currentConversation) return;
+            
+            fetch('/api/im/message/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    conversationId: currentConversation.conversationId,
+                    senderId: currentUserId,
+                    senderName: '当前用户',
+                    msgType: 'text',
+                    content: content
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    input.value = '';
+                    loadMessages(currentConversation.conversationId);
+                    loadConversations();
+                }
+            });
+        }
+        
+        function sendFileMessage() {
+            var fileName = prompt('请输入文件名:');
+            if (!fileName) return;
+            
+            fetch('/api/im/message/sendFile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    conversationId: currentConversation.conversationId,
+                    senderId: currentUserId,
+                    senderName: '当前用户',
+                    fileName: fileName,
+                    filePath: '/files/' + fileName,
+                    fileSize: Math.floor(Math.random() * 100000) + 1000
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    loadMessages(currentConversation.conversationId);
+                }
+            });
+        }
+        
+        function handleKeydown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        function showCreateGroupModal() {
+            document.getElementById('createGroupModal').classList.add('show');
+        }
+        
+        function hideCreateGroupModal() {
+            document.getElementById('createGroupModal').classList.remove('show');
+        }
+        
+        function createGroup() {
+            var name = document.getElementById('groupName').value;
+            var type = document.getElementById('groupType').value;
+            
+            if (!name) {
+                alert('请输入群组名称');
+                return;
+            }
+            
+            fetch('/api/im/group/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name,
+                    ownerId: currentUserId,
+                    ownerName: '当前用户',
+                    memberIds: []
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    hideCreateGroupModal();
+                    loadConversations();
+                } else {
+                    alert('创建失败: ' + rs.message);
+                }
+            });
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            var d = new Date(timestamp);
+            return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+        }
+        
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+        }
+    </script>
+</body>
+</html>

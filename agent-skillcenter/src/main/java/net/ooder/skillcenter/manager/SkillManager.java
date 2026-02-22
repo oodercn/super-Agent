@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2024 Ooder Team
+ *
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
 package net.ooder.skillcenter.manager;
 
 import net.ooder.skillcenter.execution.SkillExecutorEngine;
@@ -8,6 +14,8 @@ import net.ooder.skillcenter.model.SkillParam;
 import net.ooder.skillcenter.model.SkillResult;
 import net.ooder.skillcenter.p2p.P2PSkillExecutor;
 import net.ooder.skillcenter.p2p.P2PNodeManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -18,9 +26,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * 技能管理器，负责技能的注册、发现和执行
+ * Skill Manager - Responsible for skill registration, discovery, and execution
  */
 public class SkillManager {
+    private static final Logger logger = LoggerFactory.getLogger(SkillManager.class);
+    
     // 单例实例映射
     private static Map<String, SkillManager> instances = new HashMap<>();
     
@@ -189,7 +199,7 @@ public class SkillManager {
         
         // 本地没有找到技能或技能不可用，尝试在P2P网络中执行
         try {
-            System.out.println("Local skill not found or unavailable, trying P2P network...");
+            logger.debug("Local skill not found or unavailable, trying P2P network...");
             P2PSkillExecutor p2pExecutor = P2PSkillExecutor.getInstance();
             return p2pExecutor.executeSkill(skillId, context);
         } catch (SkillException e) {
@@ -228,9 +238,9 @@ public class SkillManager {
         
         // 添加默认技能数据
         addDefaultSkills();
-        
-        System.out.println("Loaded " + skillMap.size() + " built-in skills");
-        
+
+        logger.info("Loaded {} built-in skills", skillMap.size());
+
         // 启动P2P服务
         startP2PService();
     }
@@ -258,8 +268,8 @@ public class SkillManager {
             skill.setStatus("active");
             registerSkill(skill);
         }
-        
-        System.out.println("Added " + defaultSkills.length + " default skills");
+
+        logger.info("Added {} default skills", defaultSkills.length);
     }
     
     /**
@@ -269,10 +279,9 @@ public class SkillManager {
         try {
             P2PNodeManager p2pManager = P2PNodeManager.getInstance();
             p2pManager.start();
-            System.out.println("P2P service started successfully");
+            logger.info("P2P service started successfully");
         } catch (Exception e) {
-            System.err.println("Failed to start P2P service: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to start P2P service: {}", e.getMessage(), e);
         }
     }
 
@@ -292,11 +301,10 @@ public class SkillManager {
             
             P2PSkillExecutor p2pExecutor = P2PSkillExecutor.getInstance();
             p2pExecutor.shutdown();
-            
-            System.out.println("P2P services shutdown successfully");
+
+            logger.info("P2P services shutdown successfully");
         } catch (Exception e) {
-            System.err.println("Failed to shutdown P2P services: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Failed to shutdown P2P services: {}", e.getMessage(), e);
         }
     }
 

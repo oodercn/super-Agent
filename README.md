@@ -190,12 +190,15 @@ packageManager.install(request).join();
 
 ```
 super-Agent/
-├── agent-skillcenter/            # 技能中心
-│   ├── src/main/java/net/ooder/skillcenter/
-│   │   ├── controller/           # 控制器
-│   │   ├── service/              # 服务层
-│   │   ├── market/               # 技能市场
-│   │   └── p2p/                  # P2P 网络
+├── agent-skillcenter/            # 技能中心 (v2.1)
+│   ├── src/main/java/net/ooder/
+│   │   ├── nexus/skillcenter/    # 控制器和 DTO 层
+│   │   └── skillcenter/          # 核心服务层
+│   │       ├── sdk/              # SDK 适配器
+│   │       ├── service/          # 业务服务
+│   │       ├── market/           # 技能市场
+│   │       ├── p2p/              # P2P 网络
+│   │       └── storage/          # 存储管理
 │   └── pom.xml
 │
 ├── ooder-Nexus/                  # 分发枢纽 (个人版)
@@ -210,11 +213,6 @@ super-Agent/
 │   │   ├── scenes/               # 场景配置
 │   │   └── static/               # 静态资源
 │   └── pom.xml
-│
-├── examples/                     # 示例代码
-│   ├── end-agent/
-│   ├── mcp-agent/
-│   └── route-agent/
 │
 ├── docs/                         # 文档
 │   ├── overview/

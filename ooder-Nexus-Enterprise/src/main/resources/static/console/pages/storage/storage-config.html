@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>存储配置 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .config-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 4px;
+        }
+        
+        .config-tab {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--ns-secondary);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .config-tab:hover {
+            color: var(--ns-dark);
+            background: var(--ns-bg-hover);
+        }
+        
+        .config-tab.active {
+            color: white;
+            background: var(--nx-primary);
+        }
+        
+        .config-section {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .config-section__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .config-section__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .config-section__title i {
+            color: var(--nx-primary);
+        }
+        
+        .config-section__body {
+            padding: 20px;
+        }
+        
+        .config-form {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+        
+        .form-label {
+            font-size: 14px;
+            color: var(--ns-dark);
+            padding-top: 10px;
+        }
+        
+        .form-label__hint {
+            font-size: 12px;
+            color: var(--ns-secondary);
+            margin-top: 4px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            color: var(--ns-dark);
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .form-switch {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: var(--ns-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .switch.active {
+            background: var(--nx-primary);
+        }
+        
+        .switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        
+        .switch.active::after {
+            transform: translateX(20px);
+        }
+        
+        .switch-label {
+            font-size: 14px;
+            color: var(--ns-secondary);
+        }
+        
+        .storage-type-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .storage-type-card {
+            padding: 20px;
+            background: var(--ns-input-bg);
+            border: 2px solid var(--ns-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .storage-type-card:hover {
+            border-color: var(--nx-primary);
+        }
+        
+        .storage-type-card.selected {
+            border-color: var(--nx-primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .storage-type-card__icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .storage-type-card__icon.local { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .storage-type-card__icon.s3 { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .storage-type-card__icon.oss { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        
+        .storage-type-card__name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+            margin-bottom: 4px;
+        }
+        
+        .storage-type-card__desc {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .quota-config {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .quota-input-group {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .quota-input-group input {
+            flex: 1;
+        }
+        
+        .quota-input-group select {
+            width: 80px;
+        }
+        
+        .cache-config {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .cache-item {
+            padding: 16px;
+            background: var(--ns-input-bg);
+            border-radius: 8px;
+        }
+        
+        .cache-item__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .cache-item__name {
+            font-size: 14px;
+            color: var(--ns-dark);
+        }
+        
+        .cache-item__value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--nx-primary);
+        }
+        
+        .cache-item__slider {
+            width: 100%;
+            height: 4px;
+            background: var(--ns-border);
+            border-radius: 2px;
+            appearance: none;
+            cursor: pointer;
+        }
+        
+        .cache-item__slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--nx-primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .policy-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .policy-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--ns-input-bg);
+            border-radius: 8px;
+        }
+        
+        .policy-item__info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .policy-item__icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--nx-primary);
+        }
+        
+        .policy-item__name {
+            font-size: 14px;
+            color: var(--ns-dark);
+        }
+        
+        .policy-item__desc {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .policy-item__actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: var(--ns-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-icon:hover {
+            background: var(--ns-bg-hover);
+            color: var(--ns-dark);
+        }
+        
+        .btn-icon.danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--ns-danger);
+        }
+        
+        .config-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding-top: 20px;
+            border-top: 1px solid var(--ns-border);
+            margin-top: 20px;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal__content {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow: hidden;
+        }
+        
+        .modal__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .modal__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .modal__close {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--ns-secondary);
+            background: transparent;
+            border: none;
+        }
+        
+        .modal__close:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .modal__body {
+            padding: 20px;
+        }
+        
+        .modal__footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 20px;
+            border-top: 1px solid var(--ns-border);
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: var(--ns-success);
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            z-index: 3000;
+        }
+        
+        .toast.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">存储配置</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="resetConfig()">
+                        <i class="ri-refresh-line"></i> 重置
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="saveConfig()">
+                        <i class="ri-save-line"></i> 保存配置
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="config-tabs">
+                        <div class="config-tab active" onclick="switchTab('basic')">基本配置</div>
+                        <div class="config-tab" onclick="switchTab('quota')">配额管理</div>
+                        <div class="config-tab" onclick="switchTab('cache')">缓存设置</div>
+                        <div class="config-tab" onclick="switchTab('policy')">存储策略</div>
+                    </div>
+                    
+                    <div id="tab-basic">
+                        <div class="config-section">
+                            <div class="config-section__header">
+                                <span class="config-section__title">
+                                    <i class="ri-hard-drive-2-line"></i> 存储类型
+                                </span>
+                            </div>
+                            <div class="config-section__body">
+                                <div class="storage-type-cards">
+                                    <div class="storage-type-card selected" onclick="selectStorageType('local', this)">
+                                        <div class="storage-type-card__icon local">
+                                            <i class="ri-hard-drive-line"></i>
+                                        </div>
+                                        <div class="storage-type-card__name">本地存储</div>
+                                        <div class="storage-type-card__desc">使用本地文件系统存储</div>
+                                    </div>
+                                    <div class="storage-type-card" onclick="selectStorageType('s3', this)">
+                                        <div class="storage-type-card__icon s3">
+                                            <i class="ri-cloud-line"></i>
+                                        </div>
+                                        <div class="storage-type-card__name">S3 存储</div>
+                                        <div class="storage-type-card__desc">Amazon S3 兼容存储</div>
+                                    </div>
+                                    <div class="storage-type-card" onclick="selectStorageType('oss', this)">
+                                        <div class="storage-type-card__icon oss">
+                                            <i class="ri-cloud-line"></i>
+                                        </div>
+                                        <div class="storage-type-card__name">阿里云 OSS</div>
+                                        <div class="storage-type-card__desc">阿里云对象存储服务</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="config-section" id="localConfig">
+                            <div class="config-section__header">
+                                <span class="config-section__title">
+                                    <i class="ri-folder-line"></i> 本地存储配置
+                                </span>
+                            </div>
+                            <div class="config-section__body">
+                                <div class="config-form">
+                                    <div class="form-row">
+                                        <div class="form-label">
+                                            存储路径
+                                            <div class="form-label__hint">文件存储的根目录</div>
+                                        </div>
+                                        <input type="text" class="form-input" id="storagePath" value="/data/storage">
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-label">
+                                            临时目录
+                                            <div class="form-label__hint">临时文件存储目录</div>
+                                        </div>
+                                        <input type="text" class="form-input" id="tempPath" value="/data/temp">
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-label">
+                                            目录权限
+                                            <div class="form-label__hint">新建目录的默认权限</div>
+                                        </div>
+                                        <input type="text" class="form-input" id="dirPermission" value="755" style="width: 150px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="config-section" id="s3Config" style="display: none;">
+                            <div class="config-section__header">
+                                <span class="config-section__title">
+                                    <i class="ri-cloud-line"></i> S3 存储配置
+                                </span>
+                            </div>
+                            <div class="config-section__body">
+                                <div class="config-form">
+                                    <div class="form-row">
+                                        <div class="form-label">
+                                            Endpoint
+                                            <div class="form-label__hint">S3 服务端点地址</div>
+                                        </div>
+                                        <input type="text" class="form-input" id="s3Endpoint" placeholder="https://s3.amazonaws.com">
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-label">
+                                            Bucket 名称
+                                            <div class="form-label__hint">存储桶名称</div>
+                                        </div>
+                                        <input type="text" class="form-input" id="s3Bucket" placeholder="my-bucket">
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-label">
+                                            Access Key
+                                            <div class="form-label__hint">访问密钥</div>
+                                        </div>
+                                        <input type="text" class="form-input" id="s3AccessKey" placeholder="AKIAIOSFODNN7EXAMPLE">
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-label">
+                                            Secret Key
+                                            <div class="form-label__hint">密钥</div>
+                                        </div>
+                                        <input type="password" class="form-input" id="s3SecretKey" placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY">
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-label">
+                                            Region
+                                            <div class="form-label__hint">区域</div>
+                                        </div>
+                                        <select class="form-select" id="s3Region">
+                                            <option value="us-east-1">US East (N. Virginia)</option>
+                                            <option value="us-west-2">US West (Oregon)</option>
+                                            <option value="eu-west-1">EU (Ireland)</option>
+                                            <option value="ap-northeast-1">Asia Pacific (Tokyo)</option>
+                                            <option value="ap-southeast-1">Asia Pacific (Singapore)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-quota" style="display: none;">
+                        <div class="config-section">
+                            <div class="config-section__header">
+                                <span class="config-section__title">
+                                    <i class="ri-database-2-line"></i> 存储配额
+                                </span>
+                            </div>
+                            <div class="config-section__body">
+                                <div class="quota-config">
+                                    <div>
+                                        <div class="form-label" style="margin-bottom: 8px;">
+                                            总配额
+                                            <div class="form-label__hint">存储空间上限</div>
+                                        </div>
+                                        <div class="quota-input-group">
+                                            <input type="number" class="form-input" id="totalQuota" value="100">
+                                            <select class="form-select" id="totalQuotaUnit">
+                                                <option value="GB">GB</option>
+                                                <option value="TB">TB</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="form-label" style="margin-bottom: 8px;">
+                                            单文件大小限制
+                                            <div class="form-label__hint">单个文件最大大小</div>
+                                        </div>
+                                        <div class="quota-input-group">
+                                            <input type="number" class="form-input" id="maxFileSize" value="100">
+                                            <select class="form-select" id="maxFileSizeUnit">
+                                                <option value="MB">MB</option>
+                                                <option value="GB">GB</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="form-label" style="margin-bottom: 8px;">
+                                            文件数量限制
+                                            <div class="form-label__hint">最大文件数量</div>
+                                        </div>
+                                        <input type="number" class="form-input" id="maxFileCount" value="100000">
+                                    </div>
+                                    <div>
+                                        <div class="form-label" style="margin-bottom: 8px;">
+                                            目录深度限制
+                                            <div class="form-label__hint">最大目录层级</div>
+                                        </div>
+                                        <input type="number" class="form-input" id="maxDepth" value="10">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="config-section">
+                            <div class="config-section__header">
+                                <span class="config-section__title">
+                                    <i class="ri-user-settings-line"></i> 用户配额
+                                </span>
+                                <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="showAddUserQuotaModal()">
+                                    <i class="ri-add-line"></i> 添加
+                                </button>
+                            </div>
+                            <div class="config-section__body">
+                                <div class="policy-list" id="userQuotaList">
+                                    <div class="policy-item">
+                                        <div class="policy-item__info">
+                                            <div class="policy-item__icon"><i class="ri-user-line"></i></div>
+                                            <div>
+                                                <div class="policy-item__name">默认用户配额</div>
+                                                <div class="policy-item__desc">1 GB / 用户</div>
+                                            </div>
+                                        </div>
+                                        <div class="policy-item__actions">
+                                            <button class="btn-icon" onclick="editUserQuota('default')"><i class="ri-edit-line"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-cache" style="display: none;">
+                        <div class="config-section">
+                            <div class="config-section__header">
+                                <span class="config-section__title">
+                                    <i class="ri-speed-line"></i> 缓存配置
+                                </span>
+                            </div>
+                            <div class="config-section__body">
+                                <div class="config-form">
+                                    <div class="form-row">
+                                        <div class="form-label">
+                                            启用缓存
+                                            <div class="form-label__hint">开启文件元数据缓存</div>
+                                        </div>
+                                        <div class="form-switch">
+                                            <div class="switch active" id="cacheEnabled" onclick="toggleSwitch(this)"></div>
+                                            <span class="switch-label">已启用</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-label">
+                                            缓存大小
+                                            <div class="form-label__hint">元数据缓存最大条目数</div>
+                                        </div>
+                                        <input type="number" class="form-input" id="cacheSize" value="10000" style="width: 200px;">
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-label">
+                                            缓存过期时间
+                                            <div class="form-label__hint">缓存自动过期时间（秒）</div>
+                                        </div>
+                                        <input type="number" class="form-input" id="cacheTTL" value="3600" style="width: 200px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="config-section">
+                            <div class="config-section__header">
+                                <span class="config-section__title">
+                                    <i class="ri-timer-line"></i> 缓存策略
+                                </span>
+                            </div>
+                            <div class="config-section__body">
+                                <div class="cache-config">
+                                    <div class="cache-item">
+                                        <div class="cache-item__header">
+                                            <span class="cache-item__name">LRU 淘汰比例</span>
+                                            <span class="cache-item__value" id="lruValue">20%</span>
+                                        </div>
+                                        <input type="range" class="cache-item__slider" id="lruSlider" min="10" max="50" value="20" oninput="updateSliderValue('lru')">
+                                    </div>
+                                    <div class="cache-item">
+                                        <div class="cache-item__header">
+                                            <span class="cache-item__name">预读大小</span>
+                                            <span class="cache-item__value" id="readAheadValue">64 KB</span>
+                                        </div>
+                                        <input type="range" class="cache-item__slider" id="readAheadSlider" min="16" max="256" value="64" oninput="updateSliderValue('readAhead')">
+                                    </div>
+                                    <div class="cache-item">
+                                        <div class="cache-item__header">
+                                            <span class="cache-item__name">写入缓冲</span>
+                                            <span class="cache-item__value" id="writeBufferValue">128 KB</span>
+                                        </div>
+                                        <input type="range" class="cache-item__slider" id="writeBufferSlider" min="32" max="512" value="128" oninput="updateSliderValue('writeBuffer')">
+                                    </div>
+                                    <div class="cache-item">
+                                        <div class="cache-item__header">
+                                            <span class="cache-item__name">刷新间隔</span>
+                                            <span class="cache-item__value" id="flushIntervalValue">5 秒</span>
+                                        </div>
+                                        <input type="range" class="cache-item__slider" id="flushIntervalSlider" min="1" max="30" value="5" oninput="updateSliderValue('flushInterval')">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-policy" style="display: none;">
+                        <div class="config-section">
+                            <div class="config-section__header">
+                                <span class="config-section__title">
+                                    <i class="ri-shield-check-line"></i> 存储策略
+                                </span>
+                                <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="showAddPolicyModal()">
+                                    <i class="ri-add-line"></i> 添加策略
+                                </button>
+                            </div>
+                            <div class="config-section__body">
+                                <div class="policy-list" id="policyList">
+                                    <div class="policy-item">
+                                        <div class="policy-item__info">
+                                            <div class="policy-item__icon"><i class="ri-file-shield-2-line"></i></div>
+                                            <div>
+                                                <div class="policy-item__name">默认存储策略</div>
+                                                <div class="policy-item__desc">适用于所有文件的默认策略</div>
+                                            </div>
+                                        </div>
+                                        <div class="policy-item__actions">
+                                            <button class="btn-icon" onclick="editPolicy('default')"><i class="ri-edit-line"></i></button>
+                                        </div>
+                                    </div>
+                                    <div class="policy-item">
+                                        <div class="policy-item__info">
+                                            <div class="policy-item__icon"><i class="ri-image-line"></i></div>
+                                            <div>
+                                                <div class="policy-item__name">图片存储策略</div>
+                                                <div class="policy-item__desc">针对图片文件优化存储</div>
+                                            </div>
+                                        </div>
+                                        <div class="policy-item__actions">
+                                            <button class="btn-icon" onclick="editPolicy('image')"><i class="ri-edit-line"></i></button>
+                                            <button class="btn-icon danger" onclick="deletePolicy('image')"><i class="ri-delete-bin-line"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="config-section">
+                            <div class="config-section__header">
+                                <span class="config-section__title">
+                                    <i class="ri-delete-bin-line"></i> 清理策略
+                                </span>
+                            </div>
+                            <div class="config-section__body">
+                                <div class="config-form">
+                                    <div class="form-row">
+                                        <div class="form-label">
+                                            自动清理
+                                            <div class="form-label__hint">自动清理过期文件</div>
+                                        </div>
+                                        <div class="form-switch">
+                                            <div class="switch" id="autoClean" onclick="toggleSwitch(this)"></div>
+                                            <span class="switch-label">已禁用</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-label">
+                                            文件保留时间
+                                            <div class="form-label__hint">文件自动清理前的保留天数</div>
+                                        </div>
+                                        <input type="number" class="form-input" id="retentionDays" value="30" style="width: 200px;">
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-label">
+                                            清理时间
+                                            <div class="form-label__hint">每天执行清理的时间</div>
+                                        </div>
+                                        <input type="time" class="form-input" id="cleanTime" value="02:00" style="width: 200px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="policyModal">
+        <div class="modal__content">
+            <div class="modal__header">
+                <span class="modal__title">添加存储策略</span>
+                <button class="modal__close" onclick="hidePolicyModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal__body">
+                <div class="config-form">
+                    <div>
+                        <div class="form-label" style="margin-bottom: 8px;">策略名称</div>
+                        <input type="text" class="form-input" id="policyName" placeholder="输入策略名称">
+                    </div>
+                    <div>
+                        <div class="form-label" style="margin-bottom: 8px;">文件类型</div>
+                        <input type="text" class="form-input" id="policyFileTypes" placeholder="例如: jpg,png,gif">
+                    </div>
+                    <div>
+                        <div class="form-label" style="margin-bottom: 8px;">存储路径模板</div>
+                        <input type="text" class="form-input" id="policyPath" placeholder="例如: /images/{year}/{month}">
+                    </div>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="hidePolicyModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="addPolicy()">添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var currentStorageType = 'local';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConfig();
+        });
+        
+        function switchTab(tabName) {
+            var tabs = document.querySelectorAll('.config-tab');
+            tabs.forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.getElementById('tab-basic').style.display = tabName === 'basic' ? 'block' : 'none';
+            document.getElementById('tab-quota').style.display = tabName === 'quota' ? 'block' : 'none';
+            document.getElementById('tab-cache').style.display = tabName === 'cache' ? 'block' : 'none';
+            document.getElementById('tab-policy').style.display = tabName === 'policy' ? 'block' : 'none';
+        }
+        
+        function selectStorageType(type, element) {
+            var cards = document.querySelectorAll('.storage-type-card');
+            cards.forEach(function(card) {
+                card.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            
+            currentStorageType = type;
+            
+            document.getElementById('localConfig').style.display = type === 'local' ? 'block' : 'none';
+            document.getElementById('s3Config').style.display = type === 's3' || type === 'oss' ? 'block' : 'none';
+        }
+        
+        function toggleSwitch(element) {
+            element.classList.toggle('active');
+            var label = element.nextElementSibling;
+            if (element.classList.contains('active')) {
+                label.textContent = '已启用';
+            } else {
+                label.textContent = '已禁用';
+            }
+        }
+        
+        function updateSliderValue(type) {
+            var slider = document.getElementById(type + 'Slider');
+            var value = document.getElementById(type + 'Value');
+            
+            switch (type) {
+                case 'lru':
+                    value.textContent = slider.value + '%';
+                    break;
+                case 'readAhead':
+                    value.textContent = slider.value + ' KB';
+                    break;
+                case 'writeBuffer':
+                    value.textContent = slider.value + ' KB';
+                    break;
+                case 'flushInterval':
+                    value.textContent = slider.value + ' 秒';
+                    break;
+            }
+        }
+        
+        async function loadConfig() {
+            try {
+                var response = await fetch('/api/storage/config');
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    applyConfig(rs.data);
+                }
+            } catch (error) {
+                console.error('Load config failed:', error);
+            }
+        }
+        
+        function applyConfig(config) {
+            if (config.storageType) {
+                currentStorageType = config.storageType;
+                var cards = document.querySelectorAll('.storage-type-card');
+                cards.forEach(function(card) {
+                    card.classList.remove('selected');
+                });
+                if (config.storageType === 'local') {
+                    cards[0].classList.add('selected');
+                } else if (config.storageType === 's3') {
+                    cards[1].classList.add('selected');
+                } else if (config.storageType === 'oss') {
+                    cards[2].classList.add('selected');
+                }
+            }
+            
+            if (config.storagePath) document.getElementById('storagePath').value = config.storagePath;
+            if (config.tempPath) document.getElementById('tempPath').value = config.tempPath;
+            if (config.totalQuota) document.getElementById('totalQuota').value = config.totalQuota;
+            if (config.maxFileSize) document.getElementById('maxFileSize').value = config.maxFileSize;
+            if (config.cacheSize) document.getElementById('cacheSize').value = config.cacheSize;
+            if (config.cacheTTL) document.getElementById('cacheTTL').value = config.cacheTTL;
+        }
+        
+        async function saveConfig() {
+            var config = {
+                storageType: currentStorageType,
+                storagePath: document.getElementById('storagePath').value,
+                tempPath: document.getElementById('tempPath').value,
+                dirPermission: document.getElementById('dirPermission').value,
+                totalQuota: parseInt(document.getElementById('totalQuota').value),
+                totalQuotaUnit: document.getElementById('totalQuotaUnit').value,
+                maxFileSize: parseInt(document.getElementById('maxFileSize').value),
+                maxFileSizeUnit: document.getElementById('maxFileSizeUnit').value,
+                maxFileCount: parseInt(document.getElementById('maxFileCount').value),
+                maxDepth: parseInt(document.getElementById('maxDepth').value),
+                cacheEnabled: document.getElementById('cacheEnabled').classList.contains('active'),
+                cacheSize: parseInt(document.getElementById('cacheSize').value),
+                cacheTTL: parseInt(document.getElementById('cacheTTL').value),
+                lruRatio: parseInt(document.getElementById('lruSlider').value),
+                readAhead: parseInt(document.getElementById('readAheadSlider').value),
+                writeBuffer: parseInt(document.getElementById('writeBufferSlider').value),
+                flushInterval: parseInt(document.getElementById('flushIntervalSlider').value),
+                autoClean: document.getElementById('autoClean').classList.contains('active'),
+                retentionDays: parseInt(document.getElementById('retentionDays').value),
+                cleanTime: document.getElementById('cleanTime').value
+            };
+            
+            if (currentStorageType === 's3' || currentStorageType === 'oss') {
+                config.s3Endpoint = document.getElementById('s3Endpoint').value;
+                config.s3Bucket = document.getElementById('s3Bucket').value;
+                config.s3AccessKey = document.getElementById('s3AccessKey').value;
+                config.s3SecretKey = document.getElementById('s3SecretKey').value;
+                config.s3Region = document.getElementById('s3Region').value;
+            }
+            
+            try {
+                var response = await fetch('/api/storage/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                var rs = await response.json();
+                if (rs.success) {
+                    showToast('配置已保存');
+                } else {
+                    showToast('保存失败: ' + (rs.error || '未知错误'));
+                }
+            } catch (error) {
+                console.error('Save config failed:', error);
+                showToast('保存失败');
+            }
+        }
+        
+        function resetConfig() {
+            if (confirm('确定要重置配置吗？')) {
+                loadConfig();
+                showToast('配置已重置');
+            }
+        }
+        
+        function showAddPolicyModal() {
+            document.getElementById('policyModal').classList.add('show');
+        }
+        
+        function hidePolicyModal() {
+            document.getElementById('policyModal').classList.remove('show');
+        }
+        
+        function addPolicy() {
+            var name = document.getElementById('policyName').value;
+            var fileTypes = document.getElementById('policyFileTypes').value;
+            var path = document.getElementById('policyPath').value;
+            
+            if (!name) {
+                alert('请输入策略名称');
+                return;
+            }
+            
+            var html = '<div class="policy-item">';
+            html += '  <div class="policy-item__info">';
+            html += '    <div class="policy-item__icon"><i class="ri-file-shield-2-line"></i></div>';
+            html += '    <div>';
+            html += '      <div class="policy-item__name">' + name + '</div>';
+            html += '      <div class="policy-item__desc">文件类型: ' + fileTypes + '</div>';
+            html += '    </div>';
+            html += '  </div>';
+            html += '  <div class="policy-item__actions">';
+            html += '    <button class="btn-icon"><i class="ri-edit-line"></i></button>';
+            html += '    <button class="btn-icon danger"><i class="ri-delete-bin-line"></i></button>';
+            html += '  </div>';
+            html += '</div>';
+            
+            document.getElementById('policyList').insertAdjacentHTML('beforeend', html);
+            hidePolicyModal();
+            showToast('策略已添加');
+        }
+        
+        function showAddUserQuotaModal() {
+            alert('添加用户配额功能开发中');
+        }
+        
+        function editPolicy(id) {
+            alert('编辑策略: ' + id);
+        }
+        
+        function deletePolicy(id) {
+            if (confirm('确定要删除此策略吗？')) {
+                showToast('策略已删除');
+            }
+        }
+        
+        function editUserQuota(id) {
+            alert('编辑用户配额: ' + id);
+        }
+        
+        function showToast(message) {
+            var toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仪表盘 - Nexus Console</title>
+    
+    <!-- 图标字体 -->
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    
+    <!-- Nexus UI Framework -->
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <!-- 侧边栏 -->
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <!-- 主内容区 -->
+        <main class="nx-page__content">
+            <!-- 顶部导航 -->
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">仪表盘</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <span class="nx-badge nx-badge--primary">v2.0.0</span>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- 页面内容 -->
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <!-- 统计卡片 -->
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-heart-pulse-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">系统状态</div>
+                                <div class="nx-stat-card__value" id="system-status">正常</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-wifi-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">网络连接</div>
+                                <div class="nx-stat-card__value" id="network-count">12</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-cpu-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">CPU 使用率</div>
+                                <div class="nx-stat-card__value" id="cpu-usage">25%</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--info">
+                                <i class="ri-database-2-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">内存使用率</div>
+                                <div class="nx-stat-card__value" id="memory-usage">45%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 系统概览 -->
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">系统概览</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid-cols-3">
+                                <div class="nx-flex nx-items-center nx-gap-3 nx-p-3" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                    <i class="ri-checkbox-circle-line nx-text-success"></i>
+                                    <span>Nexus 核心状态</span>
+                                    <span class="nx-badge nx-badge--success nx-ml-auto">活跃</span>
+                                </div>
+                                <div class="nx-flex nx-items-center nx-gap-3 nx-p-3" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                    <i class="ri-checkbox-circle-line nx-text-success"></i>
+                                    <span>Nexus 路由状态</span>
+                                    <span class="nx-badge nx-badge--success nx-ml-auto">活跃</span>
+                                </div>
+                                <div class="nx-flex nx-items-center nx-gap-3 nx-p-3" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                    <i class="ri-checkbox-circle-line nx-text-success"></i>
+                                    <span>Nexus 终端状态</span>
+                                    <span class="nx-badge nx-badge--success nx-ml-auto">活跃</span>
+                                </div>
+                                <div class="nx-flex nx-items-center nx-gap-3 nx-p-3" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                    <i class="ri-code-line"></i>
+                                    <span>SDK 版本</span>
+                                    <span class="nx-badge nx-badge--primary nx-ml-auto">v2.0.0</span>
+                                </div>
+                                <div class="nx-flex nx-items-center nx-gap-3 nx-p-3" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                    <i class="ri-git-branch-line"></i>
+                                    <span>服务端口</span>
+                                    <span class="nx-badge nx-badge--secondary nx-ml-auto">8080</span>
+                                </div>
+                                <div class="nx-flex nx-items-center nx-gap-3 nx-p-3" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                    <i class="ri-time-line"></i>
+                                    <span>运行时间</span>
+                                    <span class="nx-badge nx-badge--secondary nx-ml-auto">24 小时</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 更多统计 -->
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-2xl nx-font-bold nx-text-primary" id="disk-usage">32%</div>
+                                <div class="nx-text-secondary nx-text-sm">磁盘使用率</div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-2xl nx-font-bold nx-text-warning" id="system-load">0.8</div>
+                                <div class="nx-text-secondary nx-text-sm">系统负载</div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-2xl nx-font-bold nx-text-success" id="request-rate">1000/秒</div>
+                                <div class="nx-text-secondary nx-text-sm">请求处理速率</div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-2xl nx-font-bold nx-text-info" id="response-time">120ms</div>
+                                <div class="nx-text-secondary nx-text-sm">平均响应时间</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 网络拓扑 -->
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">网络拓扑</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div id="network-topology" style="min-height: 200px;">
+                                <!-- 动态生成网络拓扑图 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('Dashboard 页面初始化完成');
+        };
+    </script>
+</body>
+</html>

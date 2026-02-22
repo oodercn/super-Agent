@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 8082
   servlet:
     context-path: /skillcenter
 
@@ -12,6 +12,11 @@ spring:
       write-dates-as-timestamps: false
     deserialization:
       fail-on-unknown-properties: false
+  mvc:
+    static-path-pattern: /**
+  web:
+    resources:
+      static-locations: classpath:/static/
 
 # 管理端点配置
 management:
@@ -40,3 +45,27 @@ skillcenter:
   execution-timeout: 30000
   # 最大技能并发数
   max-concurrent-executions: 100
+  # SDK配置
+  sdk:
+    mode: sdk
+    enable-logging: true
+
+# 技能发现配置
+skill:
+  discovery:
+    # GitHub发现配置
+    github:
+      enabled: true
+      api-url: https://api.github.com
+      token: ${GITHUB_TOKEN:}
+      default-owner: ${GITHUB_OWNER:}
+      skills-path: skills
+    # Gitee发现配置
+    gitee:
+      enabled: true
+      api-url: https://gitee.com/api/v5
+      token: ${GITEE_TOKEN:}
+      default-owner: ${GITEE_OWNER:}
+      skills-path: skills
+    # 缓存TTL（毫秒）
+    cache-ttl: 3600000

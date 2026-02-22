@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P 审批 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">P2P 审批</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="loadApprovals()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-time-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">待审批</div>
+                                <div class="nx-stat-card__value" id="pendingCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">已批准</div>
+                                <div class="nx-stat-card__value" id="approvedCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--danger">
+                                <i class="ri-close-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">已拒绝</div>
+                                <div class="nx-stat-card__value" id="rejectedCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-git-branch-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">活动连接</div>
+                                <div class="nx-stat-card__value" id="activeCount">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">审批列表</h3>
+                            <div class="nx-flex nx-gap-2">
+                                <select class="nx-select" id="statusFilter">
+                                    <option value="">全部状态</option>
+                                    <option value="PENDING">待审批</option>
+                                    <option value="APPROVED">已批准</option>
+                                    <option value="REJECTED">已拒绝</option>
+                                    <option value="EXPIRED">已过期</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>审批ID</th>
+                                            <th>申请者</th>
+                                            <th>目标</th>
+                                            <th>类型</th>
+                                            <th>原因</th>
+                                            <th>状态</th>
+                                            <th>有效期</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="approvalTableBody">
+                                        <tr><td colspan="8" class="nx-text-center">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="nx-modal" id="approveModal">
+        <div class="nx-modal__backdrop" onclick="closeModal()"></div>
+        <div class="nx-modal__content">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">审批 P2P 申请</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <input type="hidden" id="approvalId">
+                <div class="nx-mb-4">
+                    <label class="nx-label">审批备注</label>
+                    <textarea class="nx-textarea" id="approvalNote" rows="3" placeholder="请输入审批备注..."></textarea>
+                </div>
+                <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                    <div>
+                        <label class="nx-label">最大连接次数</label>
+                        <input type="number" class="nx-input" id="maxConnections" value="10">
+                    </div>
+                    <div>
+                        <label class="nx-label">有效期(小时)</label>
+                        <input type="number" class="nx-input" id="validHours" value="24">
+                    </div>
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal()">取消</button>
+                <button class="nx-btn nx-btn--danger" onclick="rejectApproval()">拒绝</button>
+                <button class="nx-btn nx-btn--primary" onclick="approveApproval()">批准</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let allApprovals = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadApprovals();
+        });
+
+        async function loadApprovals() {
+            try {
+                const response = await fetch('/api/enexus/p2p/approval/list', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                const rs = await response.json();
+                allApprovals = rs.data?.list || [];
+                renderTable(allApprovals);
+                updateStats();
+            } catch (error) {
+                document.getElementById('approvalTableBody').innerHTML = 
+                    '<tr><td colspan="8" class="nx-text-center nx-text-danger">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        function updateStats() {
+            let pending = 0, approved = 0, rejected = 0;
+            allApprovals.forEach(a => {
+                if (a.status === 'PENDING') pending++;
+                else if (a.status === 'APPROVED') approved++;
+                else if (a.status === 'REJECTED') rejected++;
+            });
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('approvedCount').textContent = approved;
+            document.getElementById('rejectedCount').textContent = rejected;
+            document.getElementById('activeCount').textContent = '-';
+        }
+
+        function renderTable(approvals) {
+            if (!approvals || approvals.length === 0) {
+                document.getElementById('approvalTableBody').innerHTML = 
+                    '<tr><td colspan="8" class="nx-text-center">暂无数据</td></tr>';
+                return;
+            }
+
+            let html = '';
+            approvals.forEach(item => {
+                const statusBadge = getStatusBadge(item.status);
+                const validUntil = formatTime(item.validUntil);
+                
+                html += '<tr>';
+                html += '  <td>' + (item.approvalId || '-') + '</td>';
+                html += '  <td>' + (item.requesterId || '-') + '</td>';
+                html += '  <td>' + (item.targetId || '-') + '</td>';
+                html += '  <td>' + (item.p2pType || '-') + '</td>';
+                html += '  <td>' + (item.reason || '-') + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--' + statusBadge + '">' + (item.status || '-') + '</span></td>';
+                html += '  <td>' + validUntil + '</td>';
+                html += '  <td>';
+                if (item.status === 'PENDING') {
+                    html += '    <button class="nx-btn nx-btn--sm nx-btn--primary" onclick="openApproveModal(\'' + item.approvalId + '\')">审批</button>';
+                } else if (item.status === 'APPROVED') {
+                    html += '    <button class="nx-btn nx-btn--sm nx-btn--danger" onclick="revokeApproval(\'' + item.approvalId + '\')">撤销</button>';
+                }
+                html += '  </td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('approvalTableBody').innerHTML = html;
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'PENDING': 'warning',
+                'APPROVED': 'success',
+                'REJECTED': 'danger',
+                'EXPIRED': 'secondary',
+                'REVOKED': 'danger'
+            };
+            return map[status] || 'secondary';
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function openApproveModal(approvalId) {
+            document.getElementById('approvalId').value = approvalId;
+            document.getElementById('approvalNote').value = '';
+            document.getElementById('maxConnections').value = 10;
+            document.getElementById('validHours').value = 24;
+            document.getElementById('approveModal').classList.add('nx-modal--open');
+        }
+
+        function closeModal() {
+            document.getElementById('approveModal').classList.remove('nx-modal--open');
+        }
+
+        async function approveApproval() {
+            const approvalId = document.getElementById('approvalId').value;
+            const note = document.getElementById('approvalNote').value;
+            const maxConnections = document.getElementById('maxConnections').value;
+            const validHours = document.getElementById('validHours').value;
+            
+            try {
+                const response = await fetch('/api/enexus/p2p/approval/approve', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        approvalId: approvalId,
+                        approvalNote: note,
+                        maxConnections: parseInt(maxConnections),
+                        validHours: parseInt(validHours)
+                    })
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    closeModal();
+                    loadApprovals();
+                }
+            } catch (error) {
+                alert('审批失败: ' + error.message);
+            }
+        }
+
+        async function rejectApproval() {
+            const approvalId = document.getElementById('approvalId').value;
+            const note = document.getElementById('approvalNote').value;
+            
+            if (!note) {
+                alert('请填写拒绝原因');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/enexus/p2p/approval/reject', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        approvalId: approvalId,
+                        approvalNote: note
+                    })
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    closeModal();
+                    loadApprovals();
+                }
+            } catch (error) {
+                alert('操作失败: ' + error.message);
+            }
+        }
+
+        async function revokeApproval(approvalId) {
+            if (!confirm('确定要撤销此 P2P 授权吗？')) return;
+            
+            try {
+                const response = await fetch('/api/enexus/p2p/approval/revoke', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({approvalId: approvalId})
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    loadApprovals();
+                }
+            } catch (error) {
+                alert('撤销失败: ' + error.message);
+            }
+        }
+
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            const status = this.value;
+            let filtered = allApprovals;
+            if (status) {
+                filtered = allApprovals.filter(a => a.status === status);
+            }
+            renderTable(filtered);
+        });
+    </script>
+</body>
+</html>

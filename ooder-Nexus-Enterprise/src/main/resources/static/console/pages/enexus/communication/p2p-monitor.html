@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P监控 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">P2P监控</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="loadConnections()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-link"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">活动连接</div>
+                                <div class="nx-stat-card__value" id="activeCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-git-branch-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">P2P对数</div>
+                                <div class="nx-stat-card__value" id="pairCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--info">
+                                <i class="ri-arrow-up-down-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">总流量</div>
+                                <div class="nx-stat-card__value" id="totalTraffic">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-error-warning-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">异常连接</div>
+                                <div class="nx-stat-card__value" id="errorCount">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">实时流量</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div id="trafficChart" style="height: 200px; display: flex; align-items: center; justify-content: center; color: var(--ns-secondary);">
+                                <i class="ri-line-chart-line" style="font-size: 48px; margin-right: 16px;"></i>
+                                <span>流量图表区域 (需要图表库支持)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">P2P连接列表</h3>
+                            <div class="nx-flex nx-gap-2">
+                                <input type="text" class="nx-input" id="searchInput" placeholder="搜索连接..." style="width: 200px;">
+                                <select class="nx-select" id="statusFilter">
+                                    <option value="">全部状态</option>
+                                    <option value="ACTIVE">活动</option>
+                                    <option value="IDLE">空闲</option>
+                                    <option value="ERROR">异常</option>
+                                    <option value="CLOSED">已关闭</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>连接ID</th>
+                                            <th>节点A</th>
+                                            <th>节点B</th>
+                                            <th>类型</th>
+                                            <th>状态</th>
+                                            <th>延迟(ms)</th>
+                                            <th>流量</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="connectionTableBody">
+                                        <tr><td colspan="8" class="nx-text-center">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="nx-modal" id="detailModal">
+        <div class="nx-modal__backdrop" onclick="closeModal()"></div>
+        <div class="nx-modal__content nx-modal__content--lg">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">连接详情</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body" id="modalBody">
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let allConnections = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConnections();
+        });
+
+        async function loadConnections() {
+            try {
+                const response = await fetch('/api/enexus/p2p/monitor/list', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                const rs = await response.json();
+                allConnections = rs.data?.list || [];
+                renderTable(allConnections);
+                updateStats();
+            } catch (error) {
+                document.getElementById('connectionTableBody').innerHTML = 
+                    '<tr><td colspan="8" class="nx-text-center nx-text-danger">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        function updateStats() {
+            let active = 0, pairs = 0, errors = 0, totalBytes = 0;
+            const seenPairs = new Set();
+            
+            allConnections.forEach(c => {
+                if (c.status === 'ACTIVE') active++;
+                else if (c.status === 'ERROR') errors++;
+                
+                const pairKey = [c.nodeA, c.nodeB].sort().join('-');
+                if (!seenPairs.has(pairKey)) {
+                    seenPairs.add(pairKey);
+                    pairs++;
+                }
+                
+                totalBytes += (c.bytesSent || 0) + (c.bytesReceived || 0);
+            });
+            
+            document.getElementById('activeCount').textContent = active;
+            document.getElementById('pairCount').textContent = pairs;
+            document.getElementById('errorCount').textContent = errors;
+            document.getElementById('totalTraffic').textContent = formatBytes(totalBytes);
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function renderTable(connections) {
+            if (!connections || connections.length === 0) {
+                document.getElementById('connectionTableBody').innerHTML = 
+                    '<tr><td colspan="8" class="nx-text-center">暂无数据</td></tr>';
+                return;
+            }
+
+            let html = '';
+            connections.forEach(conn => {
+                const statusBadge = getStatusBadge(conn.status);
+                const traffic = formatBytes((conn.bytesSent || 0) + (conn.bytesReceived || 0));
+                
+                html += '<tr>';
+                html += '  <td>' + (conn.connectionId || '-') + '</td>';
+                html += '  <td>' + (conn.nodeA || '-') + '</td>';
+                html += '  <td>' + (conn.nodeB || '-') + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--info">' + (conn.connectionType || '-') + '</span></td>';
+                html += '  <td><span class="nx-badge nx-badge--' + statusBadge + '">' + (conn.status || '-') + '</span></td>';
+                html += '  <td>' + (conn.latency || '-') + '</td>';
+                html += '  <td>' + traffic + '</td>';
+                html += '  <td>';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="viewConnection(\'' + conn.connectionId + '\')">详情</button> ';
+                if (conn.status === 'ACTIVE' || conn.status === 'ERROR') {
+                    html += '    <button class="nx-btn nx-btn--sm nx-btn--danger" onclick="closeConnection(\'' + conn.connectionId + '\')">关闭</button>';
+                }
+                html += '  </td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('connectionTableBody').innerHTML = html;
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'ACTIVE': 'success',
+                'IDLE': 'secondary',
+                'ERROR': 'danger',
+                'CLOSED': 'secondary'
+            };
+            return map[status] || 'secondary';
+        }
+
+        async function viewConnection(connectionId) {
+            try {
+                const response = await fetch('/api/enexus/p2p/monitor/get', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({connectionId: connectionId})
+                });
+                const rs = await response.json();
+                const conn = rs.data;
+                
+                let html = '';
+                html += '<div class="nx-grid nx-grid-cols-2 nx-gap-4">';
+                html += '  <div><strong>连接ID:</strong> ' + (conn.connectionId || '-') + '</div>';
+                html += '  <div><strong>类型:</strong> <span class="nx-badge nx-badge--info">' + (conn.connectionType || '-') + '</span></div>';
+                html += '  <div><strong>节点A:</strong> ' + (conn.nodeA || '-') + '</div>';
+                html += '  <div><strong>节点B:</strong> ' + (conn.nodeB || '-') + '</div>';
+                html += '  <div><strong>状态:</strong> <span class="nx-badge nx-badge--' + getStatusBadge(conn.status) + '">' + (conn.status || '-') + '</span></div>';
+                html += '  <div><strong>延迟:</strong> ' + (conn.latency || '-') + ' ms</div>';
+                html += '  <div><strong>发送字节:</strong> ' + formatBytes(conn.bytesSent || 0) + '</div>';
+                html += '  <div><strong>接收字节:</strong> ' + formatBytes(conn.bytesReceived || 0) + '</div>';
+                html += '  <div><strong>建立时间:</strong> ' + formatTime(conn.establishedAt) + '</div>';
+                html += '  <div><strong>最后活动:</strong> ' + formatTime(conn.lastActivity) + '</div>';
+                html += '</div>';
+                
+                if (conn.approvalInfo) {
+                    html += '<div class="nx-mt-4"><strong>审批信息:</strong></div>';
+                    html += '<div class="nx-ml-4">';
+                    html += '<div>审批ID: ' + (conn.approvalInfo.approvalId || '-') + '</div>';
+                    html += '<div>审批人: ' + (conn.approvalInfo.approvedBy || '-') + '</div>';
+                    html += '<div>有效期至: ' + formatTime(conn.approvalInfo.validUntil) + '</div>';
+                    html += '</div>';
+                }
+                
+                document.getElementById('modalBody').innerHTML = html;
+                document.getElementById('detailModal').classList.add('nx-modal--open');
+            } catch (error) {
+                alert('获取详情失败: ' + error.message);
+            }
+        }
+
+        async function closeConnection(connectionId) {
+            if (!confirm('确定要关闭此连接吗？')) return;
+            
+            try {
+                const response = await fetch('/api/enexus/p2p/monitor/close', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({connectionId: connectionId})
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    loadConnections();
+                }
+            } catch (error) {
+                alert('关闭失败: ' + error.message);
+            }
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('nx-modal--open');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterConnections();
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            filterConnections();
+        });
+
+        function filterConnections() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            
+            let filtered = allConnections;
+            
+            if (search) {
+                filtered = filtered.filter(c => 
+                    (c.connectionId && c.connectionId.toLowerCase().includes(search)) ||
+                    (c.nodeA && c.nodeA.toLowerCase().includes(search)) ||
+                    (c.nodeB && c.nodeB.toLowerCase().includes(search))
+                );
+            }
+            
+            if (status) {
+                filtered = filtered.filter(c => c.status === status);
+            }
+            
+            renderTable(filtered);
+        }
+    </script>
+</body>
+</html>

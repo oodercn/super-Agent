@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的能力 - Nexus</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .capability-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--ns-border);
+            padding-bottom: 12px;
+        }
+        .capability-tab {
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--ns-secondary);
+            background: transparent;
+            border: none;
+            transition: all 0.2s;
+        }
+        .capability-tab:hover {
+            background: var(--ns-bg-hover);
+        }
+        .capability-tab.active {
+            background: var(--nx-primary);
+            color: white;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .channel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+        
+        .channel-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .channel-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .channel-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .channel-icon.wechat { background: rgba(7, 193, 96, 0.1); color: #07c160; }
+        .channel-icon.alipay { background: rgba(0, 166, 226, 0.1); color: #00a6e2; }
+        .channel-icon.weibo { background: rgba(230, 22, 45, 0.1); color: #e6162d; }
+        .channel-icon.xiaohongshu { background: rgba(254, 44, 85, 0.1); color: #fe2c55; }
+        .channel-icon.douyin { background: rgba(0, 0, 0, 0.1); color: #000; }
+        .channel-icon.weixinmp { background: rgba(7, 193, 96, 0.1); color: #07c160; }
+        
+        .channel-info {
+            flex: 1;
+        }
+        .channel-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        .channel-type {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .channel-status {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-active { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .status-inactive { background: rgba(148, 163, 184, 0.1); color: var(--ns-secondary); }
+        .status-pending { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        
+        .channel-body {
+            padding: 16px;
+        }
+        .config-field {
+            margin-bottom: 12px;
+        }
+        .config-field:last-child {
+            margin-bottom: 0;
+        }
+        .field-label {
+            font-size: 12px;
+            color: var(--ns-secondary);
+            margin-bottom: 4px;
+        }
+        .field-value {
+            font-size: 14px;
+            color: var(--ns-dark);
+            font-family: monospace;
+            background: var(--ns-input-bg);
+            padding: 6px 10px;
+            border-radius: 4px;
+        }
+        .field-value.masked {
+            color: var(--ns-secondary);
+        }
+        
+        .channel-actions {
+            padding: 12px 16px;
+            border-top: 1px solid var(--ns-border);
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--nx-primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        .btn-secondary {
+            background: var(--ns-card-bg);
+            color: var(--ns-dark);
+            border: 1px solid var(--ns-border);
+        }
+        .btn-secondary:hover {
+            background: var(--ns-bg-hover);
+        }
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+        .btn-success {
+            background: var(--ns-success);
+            color: white;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: var(--ns-card-bg);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--ns-secondary);
+            cursor: pointer;
+        }
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ns-dark);
+            margin-bottom: 6px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 6px;
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        
+        .publish-history {
+            margin-top: 24px;
+        }
+        .history-table {
+            width: 100%;
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .history-table th,
+        .history-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        .history-table th {
+            background: var(--ns-bg-hover);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--ns-secondary);
+        }
+        .history-table td {
+            font-size: 14px;
+            color: var(--ns-dark);
+        }
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .platform-badges {
+            display: flex;
+            gap: 4px;
+        }
+        .platform-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .badge-success { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .badge-pending { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        .badge-failed { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">我的能力</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="capability-tabs">
+                        <button class="capability-tab active" onclick="switchTab('payment')">支付能力</button>
+                        <button class="capability-tab" onclick="switchTab('media')">自媒体发文</button>
+                    </div>
+                    
+                    <div id="paymentTab" class="tab-content">
+                        <div class="section-header">
+                            <span class="section-title">支付渠道配置</span>
+                            <button class="btn btn-primary" onclick="showPaymentModal()">
+                                <i class="ri-add-line"></i> 添加渠道
+                            </button>
+                        </div>
+                        <div class="channel-grid" id="paymentList"></div>
+                        
+                        <div class="publish-history">
+                            <div class="section-header">
+                                <span class="section-title">支付记录</span>
+                            </div>
+                            <table class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>订单号</th>
+                                        <th>渠道</th>
+                                        <th>金额</th>
+                                        <th>状态</th>
+                                        <th>时间</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="paymentHistory"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div id="mediaTab" class="tab-content" style="display: none;">
+                        <div class="section-header">
+                            <span class="section-title">媒体平台配置</span>
+                            <button class="btn btn-primary" onclick="showMediaModal()">
+                                <i class="ri-add-line"></i> 添加平台
+                            </button>
+                        </div>
+                        <div class="channel-grid" id="mediaList"></div>
+                        
+                        <div class="publish-history">
+                            <div class="section-header">
+                                <span class="section-title">发文记录</span>
+                            </div>
+                            <table class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>标题</th>
+                                        <th>发布平台</th>
+                                        <th>状态</th>
+                                        <th>发布时间</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="publishHistory"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>配置支付渠道</h3>
+                <button class="modal-close" onclick="hidePaymentModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">支付渠道</label>
+                    <select class="form-control" id="paymentChannel">
+                        <option value="wechat">微信支付</option>
+                        <option value="alipay">支付宝</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">商户ID (MchId)</label>
+                    <input type="text" class="form-control" id="mchId" placeholder="输入商户ID">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">应用ID (AppId)</label>
+                    <input type="text" class="form-control" id="appId" placeholder="输入应用ID">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">API密钥</label>
+                    <input type="password" class="form-control" id="apiKey" placeholder="输入API密钥">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">回调地址</label>
+                    <input type="text" class="form-control" id="notifyUrl" placeholder="https://your-domain.com/callback">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hidePaymentModal()">取消</button>
+                <button class="btn btn-primary" onclick="savePaymentChannel()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="mediaModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>配置媒体平台</h3>
+                <button class="modal-close" onclick="hideMediaModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">平台类型</label>
+                    <select class="form-control" id="mediaPlatform">
+                        <option value="wechat_mp">微信公众号</option>
+                        <option value="weibo">微博</option>
+                        <option value="xiaohongshu">小红书</option>
+                        <option value="douyin">抖音</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">账号名称</label>
+                    <input type="text" class="form-control" id="accountName" placeholder="输入账号名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">AppKey</label>
+                    <input type="text" class="form-control" id="appKey" placeholder="输入AppKey">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">AppSecret</label>
+                    <input type="password" class="form-control" id="appSecret" placeholder="输入AppSecret">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideMediaModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveMediaPlatform()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var currentTab = 'payment';
+        
+        window.onPageInit = function() {
+            loadPaymentChannels();
+            loadPaymentHistory();
+            loadMediaPlatforms();
+            loadPublishHistory();
+        };
+        
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.capability-tab').forEach(function(t) {
+                t.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.getElementById('paymentTab').style.display = tab === 'payment' ? 'block' : 'none';
+            document.getElementById('mediaTab').style.display = tab === 'media' ? 'block' : 'none';
+        }
+        
+        function loadPaymentChannels() {
+            fetch('/api/personal/payment/channels')
+                .then(function(res) { return res.json(); })
+                .then(function(rs) {
+                    if (rs.requestStatus === 200) {
+                        renderPaymentChannels(rs.data || []);
+                    }
+                });
+        }
+        
+        function loadPaymentHistory() {
+            fetch('/api/personal/payment/records')
+                .then(function(res) { return res.json(); })
+                .then(function(rs) {
+                    if (rs.requestStatus === 200) {
+                        renderPaymentHistory(rs.data || []);
+                    }
+                });
+        }
+        
+        function loadMediaPlatforms() {
+            fetch('/api/personal/media/platforms')
+                .then(function(res) { return res.json(); })
+                .then(function(rs) {
+                    if (rs.requestStatus === 200) {
+                        renderMediaPlatforms(rs.data || []);
+                    }
+                });
+        }
+        
+        function loadPublishHistory() {
+            fetch('/api/personal/media/tasks')
+                .then(function(res) { return res.json(); })
+                .then(function(rs) {
+                    if (rs.requestStatus === 200) {
+                        renderPublishHistory(rs.data || []);
+                    }
+                });
+        }
+        
+        function renderPaymentChannels(channels) {
+            var container = document.getElementById('paymentList');
+            if (!channels || channels.length === 0) {
+                container.innerHTML = '<div style="color: var(--ns-secondary); padding: 20px; grid-column: 1/-1;">暂无支付渠道配置</div>';
+                return;
+            }
+            
+            var html = '';
+            channels.forEach(function(c) {
+                var iconClass = c.channelCode === 'wechat' ? 'wechat' : 'alipay';
+                var statusClass = c.active ? 'status-active' : 'status-inactive';
+                var statusText = c.active ? '已启用' : '已禁用';
+                
+                html += '<div class="channel-card">' +
+                    '<div class="channel-header">' +
+                    '<div class="channel-icon ' + iconClass + '"><i class="ri-' + (c.channelCode === 'wechat' ? 'wechat' : 'alipay') + '-line"></i></div>' +
+                    '<div class="channel-info">' +
+                    '<div class="channel-name">' + c.name + '</div>' +
+                    '<div class="channel-type">' + c.channelCode.toUpperCase() + '</div>' +
+                    '</div>' +
+                    '<span class="channel-status ' + statusClass + '">' + statusText + '</span>' +
+                    '</div>' +
+                    '<div class="channel-body">' +
+                    '<div class="config-field">' +
+                    '<div class="field-label">商户ID</div>' +
+                    '<div class="field-value">' + (c.mchId || '-') + '</div>' +
+                    '</div>' +
+                    '<div class="config-field">' +
+                    '<div class="field-label">应用ID</div>' +
+                    '<div class="field-value">' + (c.appId || '-') + '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="channel-actions">' +
+                    '<button class="btn btn-sm btn-secondary" onclick="editPaymentChannel(\'' + c.id + '\')"><i class="ri-edit-line"></i> 编辑</button>' +
+                    '<button class="btn btn-sm btn-secondary" onclick="togglePaymentChannel(\'' + c.id + '\', ' + !c.active + ')">' +
+                    (c.active ? '<i class="ri-pause-line"></i> 禁用' : '<i class="ri-play-line"></i> 启用') + '</button>' +
+                    '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function renderPaymentHistory(records) {
+            var tbody = document.getElementById('paymentHistory');
+            if (!records || records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--ns-secondary);">暂无支付记录</td></tr>';
+                return;
+            }
+            
+            var html = '';
+            records.forEach(function(r) {
+                var statusClass = r.status === 'SUCCESS' ? 'badge-success' : (r.status === 'PENDING' ? 'badge-pending' : 'badge-failed');
+                var statusText = r.status === 'SUCCESS' ? '成功' : (r.status === 'PENDING' ? '处理中' : '失败');
+                
+                html += '<tr>' +
+                    '<td style="font-family: monospace;">' + r.orderId + '</td>' +
+                    '<td>' + r.channel + '</td>' +
+                    '<td>¥' + (r.amount / 100).toFixed(2) + '</td>' +
+                    '<td><span class="platform-badge ' + statusClass + '">' + statusText + '</span></td>' +
+                    '<td>' + formatTime(r.createTime) + '</td>' +
+                    '</tr>';
+            });
+            tbody.innerHTML = html;
+        }
+        
+        function renderMediaPlatforms(platforms) {
+            var container = document.getElementById('mediaList');
+            if (!platforms || platforms.length === 0) {
+                container.innerHTML = '<div style="color: var(--ns-secondary); padding: 20px; grid-column: 1/-1;">暂无媒体平台配置</div>';
+                return;
+            }
+            
+            var html = '';
+            platforms.forEach(function(p) {
+                var iconClass = getPlatformIconClass(p.platformCode);
+                var statusClass = p.connected ? 'status-active' : 'status-pending';
+                var statusText = p.connected ? '已连接' : '待配置';
+                
+                html += '<div class="channel-card">' +
+                    '<div class="channel-header">' +
+                    '<div class="channel-icon ' + iconClass + '"><i class="ri-' + getPlatformIcon(p.platformCode) + '-line"></i></div>' +
+                    '<div class="channel-info">' +
+                    '<div class="channel-name">' + p.name + '</div>' +
+                    '<div class="channel-type">' + getPlatformName(p.platformCode) + '</div>' +
+                    '</div>' +
+                    '<span class="channel-status ' + statusClass + '">' + statusText + '</span>' +
+                    '</div>' +
+                    '<div class="channel-body">' +
+                    '<div class="config-field">' +
+                    '<div class="field-label">账号名称</div>' +
+                    '<div class="field-value">' + (p.accountName || '-') + '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="channel-actions">' +
+                    '<button class="btn btn-sm btn-secondary" onclick="editMediaPlatform(\'' + p.id + '\')"><i class="ri-edit-line"></i> 编辑</button>' +
+                    '<button class="btn btn-sm btn-secondary" onclick="testMediaConnection(\'' + p.id + '\')"><i class="ri-link"></i> 测试连接</button>' +
+                    '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function renderPublishHistory(tasks) {
+            var tbody = document.getElementById('publishHistory');
+            if (!tasks || tasks.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--ns-secondary);">暂无论文记录</td></tr>';
+                return;
+            }
+            
+            var html = '';
+            tasks.forEach(function(t) {
+                var platformBadges = '';
+                if (t.platforms) {
+                    t.platforms.forEach(function(p) {
+                        var statusClass = p.status === 'SUCCESS' ? 'badge-success' : (p.status === 'PENDING' ? 'badge-pending' : 'badge-failed');
+                        platformBadges += '<span class="platform-badge ' + statusClass + '">' + p.platform + '</span> ';
+                    });
+                }
+                
+                html += '<tr>' +
+                    '<td>' + t.title + '</td>' +
+                    '<td><div class="platform-badges">' + platformBadges + '</div></td>' +
+                    '<td>' + (t.status === 'COMPLETED' ? '已完成' : (t.status === 'PUBLISHING' ? '发布中' : '待发布')) + '</td>' +
+                    '<td>' + formatTime(t.createTime) + '</td>' +
+                    '</tr>';
+            });
+            tbody.innerHTML = html;
+        }
+        
+        function getPlatformIconClass(code) {
+            var classes = {
+                'wechat_mp': 'weixinmp',
+                'weibo': 'weibo',
+                'xiaohongshu': 'xiaohongshu',
+                'douyin': 'douyin'
+            };
+            return classes[code] || 'weixinmp';
+        }
+        
+        function getPlatformIcon(code) {
+            var icons = {
+                'wechat_mp': 'wechat',
+                'weibo': 'weibo',
+                'xiaohongshu': 'xiaohongshu',
+                'douyin': 'tiktok'
+            };
+            return icons[code] || 'wechat';
+        }
+        
+        function getPlatformName(code) {
+            var names = {
+                'wechat_mp': '微信公众号',
+                'weibo': '微博',
+                'xiaohongshu': '小红书',
+                'douyin': '抖音'
+            };
+            return names[code] || code;
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            var date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+        
+        function showPaymentModal() {
+            document.getElementById('paymentModal').classList.add('show');
+        }
+        
+        function hidePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('show');
+        }
+        
+        function showMediaModal() {
+            document.getElementById('mediaModal').classList.add('show');
+        }
+        
+        function hideMediaModal() {
+            document.getElementById('mediaModal').classList.remove('show');
+        }
+        
+        function savePaymentChannel() {
+            var data = {
+                channelCode: document.getElementById('paymentChannel').value,
+                mchId: document.getElementById('mchId').value,
+                appId: document.getElementById('appId').value,
+                apiKey: document.getElementById('apiKey').value,
+                notifyUrl: document.getElementById('notifyUrl').value
+            };
+            
+            fetch('/api/personal/payment/channels', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    hidePaymentModal();
+                    loadPaymentChannels();
+                } else {
+                    alert('保存失败: ' + (rs.message || '未知错误'));
+                }
+            });
+        }
+        
+        function saveMediaPlatform() {
+            var data = {
+                platformCode: document.getElementById('mediaPlatform').value,
+                accountName: document.getElementById('accountName').value,
+                appKey: document.getElementById('appKey').value,
+                appSecret: document.getElementById('appSecret').value
+            };
+            
+            fetch('/api/personal/media/platforms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    hideMediaModal();
+                    loadMediaPlatforms();
+                } else {
+                    alert('保存失败: ' + (rs.message || '未知错误'));
+                }
+            });
+        }
+        
+        function editPaymentChannel(id) {
+            alert('编辑支付渠道: ' + id);
+        }
+        
+        function togglePaymentChannel(id, enable) {
+            fetch('/api/personal/payment/channels/' + id + '/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ active: enable })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    loadPaymentChannels();
+                }
+            });
+        }
+        
+        function editMediaPlatform(id) {
+            alert('编辑媒体平台: ' + id);
+        }
+        
+        function testMediaConnection(id) {
+            fetch('/api/personal/media/platforms/' + id + '/test', { method: 'POST' })
+                .then(function(res) { return res.json(); })
+                .then(function(rs) {
+                    if (rs.requestStatus === 200 && rs.data && rs.data.success) {
+                        alert('连接成功');
+                    } else {
+                        alert('连接失败: ' + (rs.message || '未知错误'));
+                    }
+                });
+        }
+    </script>
+</body>
+</html>

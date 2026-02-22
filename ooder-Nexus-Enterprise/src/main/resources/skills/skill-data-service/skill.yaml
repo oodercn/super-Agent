@@ -1,0 +1,118 @@
+apiVersion: ooder.io/v1
+kind: Skill
+metadata:
+  skillId: "skill-data-service"
+  skillName: "数据中心"
+  skillType: "SYSTEM_SERVICE"
+  version: "1.0.0"
+  description: "提供VFS存储、数据同步、索引管理功能"
+  author: "ooder Team"
+  createdAt: "2026-02-18T00:00:00Z"
+  scene: "SYS"
+
+spec:
+  capabilities:
+    - capabilityId: "cap-vfs-storage"
+      capabilityName: "VFS存储"
+      description: "文件上传、下载、管理"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-upload-file"
+          operationName: "上传文件"
+          description: "上传文件到VFS"
+          inputSchema:
+            type: "object"
+            properties:
+              file:
+                type: "string"
+                format: "binary"
+              path:
+                type: "string"
+              metadata:
+                type: "object"
+          outputSchema:
+            type: "object"
+            properties:
+              fileId:
+                type: "string"
+              hash:
+                type: "string"
+        
+        - operationId: "op-download-file"
+          operationName: "下载文件"
+          description: "从VFS下载文件"
+        
+        - operationId: "op-delete-file"
+          operationName: "删除文件"
+          description: "删除VFS文件"
+        
+        - operationId: "op-list-files"
+          operationName: "列出文件"
+          description: "列出目录文件"
+    
+    - capabilityId: "cap-data-sync"
+      capabilityName: "数据同步"
+      description: "同步任务、状态管理"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-sync-data"
+          operationName: "同步数据"
+          description: "创建同步任务"
+        
+        - operationId: "op-get-sync-status"
+          operationName: "获取同步状态"
+          description: "获取同步任务状态"
+    
+    - capabilityId: "cap-index-mgmt"
+      capabilityName: "索引管理"
+      description: "索引创建、搜索"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-create-index"
+          operationName: "创建索引"
+          description: "创建数据索引"
+        
+        - operationId: "op-search-index"
+          operationName: "搜索索引"
+          description: "搜索索引数据"
+
+  config:
+    port: 8084
+    host: "0.0.0.0"
+    endpoints:
+      - path: "/api/vfs/store/createFileObject"
+        description: "创建文件对象"
+      - path: "/api/vfs/store/downLoadByHash"
+        description: "下载文件"
+      - path: "/api/vfs/store/GetFileObjectByID"
+        description: "获取文件信息"
+      - path: "/api/data/sync"
+        description: "数据同步接口"
+    
+    dependencies:
+      - skillId: "skill-jds-server"
+        required: true
+        description: "服务注册发现"
+    
+    storage:
+      path: "/data/vfs"
+      maxSize: "100Gi"
+      maxFileSize: 104857600
+    
+    sync:
+      enabled: true
+      interval: 60000
+
+  healthCheck:
+    enabled: true
+    interval: 30000
+    timeout: 5000
+    endpoint: "/api/vfs/health"
+
+  resources:
+    cpu:
+      request: "500m"
+      limit: "2000m"
+    memory:
+      request: "1Gi"
+      limit: "4Gi"

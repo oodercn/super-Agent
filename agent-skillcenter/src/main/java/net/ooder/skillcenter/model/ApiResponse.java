@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 public class ApiResponse<T> {
     
     private int code; // 状态码
+    private String status; // 状态
     private String message; // 消息
     private T data; // 数据
     private String timestamp; // 时间戳
@@ -19,6 +20,7 @@ public class ApiResponse<T> {
     // 构造方法
     public ApiResponse(int code, String message, T data, boolean success, String requestId) {
         this.code = code;
+        this.status = success ? "success" : "error";
         this.message = message;
         this.data = data;
         this.success = success;
@@ -33,6 +35,14 @@ public class ApiResponse<T> {
 
     public void setCode(int code) {
         this.code = code;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public String getMessage() {
@@ -93,7 +103,7 @@ public class ApiResponse<T> {
      * @return 成功响应对象
      */
     public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>(CODE_SUCCESS, "操作成功", data, true, generateRequestId());
+        return new ApiResponse<>(CODE_SUCCESS, "success", data, true, generateRequestId());
     }
 
     /**

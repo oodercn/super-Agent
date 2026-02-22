@@ -3,439 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>技能分享 - SkillCenter</title>
-    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
-    <link href="../../assets/css/remixicon/remixicon.css" rel="stylesheet">
-    <script src="/skillcenter/console/js/menu.js"></script>
+    <title>技能共享 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
 </head>
 <body>
-    <div class="container">
-        <aside class="sidebar" id="sidebar">
-            <!-- 菜单将通过menu.js动态加载 -->
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
         </aside>
-        <main class="main-content">
-            <header class="header">
-                <h1>技能分享</h1>
-                <div class="user-info">
-                    <span class="user-name">用户</span>
-                    <i class="ri-user-line"></i>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能共享</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
                 </div>
             </header>
-            <div class="sharing-content">
-                <div class="sharing-actions">
-                    <button class="btn btn-primary" id="share-skill-btn">
-                        <i class="ri-share-line"></i> 分享技能
-                    </button>
-                    <div class="sharing-search">
-                        <input type="text" class="form-control" placeholder="搜索技能..." id="sharing-search-input">
-                        <button class="btn btn-secondary btn-search">
-                            <i class="ri-search-line"></i>
-                        </button>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-tabs nx-mb-6">
+                        <button class="nx-tabs__tab nx-tabs__tab--active">我分享的</button>
+                        <button class="nx-tabs__tab">收到的分享</button>
                     </div>
-                </div>
-                <div class="sharing-tabs">
-                    <button class="tab-btn active" data-tab="share">分享技能</button>
-                    <button class="tab-btn" data-tab="shared">已分享技能</button>
-                    <button class="tab-btn" data-tab="received">收到的技能</button>
-                </div>
-                <div class="tab-content" id="share-tab">
-                    <div class="share-skill-form">
-                        <div class="form-group">
-                            <label for="share-skill-select">选择技能</label>
-                            <select id="share-skill-select" class="form-control" required>
-                                <option value="">请选择技能</option>
-                                <option value="text-to-uppercase">文本转大写</option>
-                                <option value="json-formatter">JSON格式化</option>
-                                <option value="code-generator">代码生成</option>
-                            </select>
+                    
+                    <div class="nx-grid nx-grid-cols-3 nx-gap-6">
+                        <div class="nx-card">
+                            <div class="nx-card__body">
+                                <div class="nx-flex nx-items-center nx-gap-3 nx-mb-3">
+                                    <i class="ri-cloud-sun-line nx-text-2xl nx-text-primary"></i>
+                                    <div>
+                                        <h4 class="nx-font-semibold">天气查询</h4>
+                                        <span class="nx-badge nx-badge--primary">已分享</span>
+                                    </div>
+                                </div>
+                                <p class="nx-text-secondary nx-text-sm nx-mb-4">分享给: 开发组</p>
+                                <div class="nx-flex nx-gap-2">
+                                    <button class="nx-btn nx-btn--secondary nx-btn--sm">管理</button>
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm">取消分享</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="share-group-select">选择群组</label>
-                            <select id="share-group-select" class="form-control" required>
-                                <option value="">请选择群组</option>
-                                <option value="dev-team">开发团队</option>
-                                <option value="marketing-team">市场团队</option>
-                                <option value="hr-team">人力资源团队</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="share-message">分享消息</label>
-                            <textarea id="share-message" class="form-control" rows="3" placeholder="添加分享消息..."></textarea>
-                        </div>
-                        <button class="btn btn-primary" id="submit-share-btn">
-                            <i class="ri-share-forward-line"></i> 分享
-                        </button>
-                    </div>
-                </div>
-                <div class="tab-content" id="shared-tab" style="display: none;">
-                    <div class="shared-skills" id="shared-skills">
-                        <!-- 已分享技能将通过JavaScript动态加载 -->
-                    </div>
-                </div>
-                <div class="tab-content" id="received-tab" style="display: none;">
-                    <div class="received-skills" id="received-skills">
-                        <!-- 收到的技能将通过JavaScript动态加载 -->
                     </div>
                 </div>
             </div>
         </main>
     </div>
-    <!-- 分享技能模态框 -->
-    <div class="modal" id="share-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>分享技能</h2>
-                <button class="close-btn" id="close-share-modal">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p id="share-message-content"></p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-primary" id="close-share-btn">关闭</button>
-            </div>
-        </div>
-    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
     <script>
-        // 初始化菜单
-        initMenu('my-sharing');
-        
-        // API基础URL
-        const API_BASE_URL = '/skillcenter/api';
-        
-        // 渲染已分享技能
-        function renderSharedSkills() {
-            const sharedSkillsContainer = document.getElementById('shared-skills');
-            sharedSkillsContainer.innerHTML = '<div class="loading">加载中...</div>';
-            
-            // 调用API获取已分享技能
-            fetch(`${API_BASE_URL}/share/shared`)
-                .then(response => response.json())
-                .then(data => {
-                    sharedSkillsContainer.innerHTML = '';
-                    
-                    if (data.success && data.data) {
-                        const sharedSkills = data.data;
-                        if (sharedSkills.length > 0) {
-                            sharedSkills.forEach(skill => {
-                                const skillCard = document.createElement('div');
-                                skillCard.className = 'skill-sharing-card';
-                                skillCard.innerHTML = `
-                                    <div class="skill-sharing-card-header">
-                                        <h4>技能分享</h4>
-                                        <span class="sharing-status">已分享</span>
-                                    </div>
-                                    <div class="skill-sharing-card-body">
-                                        <div class="sharing-info">
-                                            <span class="sharing-group">分享到: 群组 ${skill.groupId}</span>
-                                            <span class="sharing-time">分享时间: ${skill.sharedAt ? new Date(skill.sharedAt).toLocaleString() : new Date().toLocaleString()}</span>
-                                        </div>
-                                        <div class="sharing-message">
-                                            <strong>分享消息:</strong>
-                                            <p>${skill.message || '分享了一个技能'}</p>
-                                        </div>
-                                    </div>
-                                    <div class="skill-sharing-card-footer">
-                                        <button class="btn-sm btn-danger unshare-btn" data-id="${skill.id}">
-                                            <i class="ri-close-circle-line"></i> 取消分享
-                                        </button>
-                                    </div>
-                                `;
-                                sharedSkillsContainer.appendChild(skillCard);
-                            });
-                        } else {
-                            sharedSkillsContainer.innerHTML = '<div class="empty-state"><i class="ri-share-line"></i><p>暂无已分享技能</p></div>';
-                        }
-                    } else {
-                        sharedSkillsContainer.innerHTML = '<div class="error">获取已分享技能失败</div>';
-                    }
-                    
-                    // 绑定取消分享按钮事件
-                    document.querySelectorAll('.unshare-btn').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const shareId = this.getAttribute('data-id');
-                            unshareSkill(shareId);
-                        });
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching shared skills:', error);
-                    sharedSkillsContainer.innerHTML = '<div class="error">获取已分享技能失败</div>';
-                });
-        }
-        
-        // 渲染收到的技能
-        function renderReceivedSkills() {
-            const receivedSkillsContainer = document.getElementById('received-skills');
-            receivedSkillsContainer.innerHTML = '<div class="loading">加载中...</div>';
-            
-            // 调用API获取收到的技能
-            fetch(`${API_BASE_URL}/share/received`)
-                .then(response => response.json())
-                .then(data => {
-                    receivedSkillsContainer.innerHTML = '';
-                    
-                    if (data.success && data.data) {
-                        const receivedSkills = data.data;
-                        if (receivedSkills.length > 0) {
-                            receivedSkills.forEach(skill => {
-                                const skillCard = document.createElement('div');
-                                skillCard.className = 'skill-sharing-card';
-                                skillCard.innerHTML = `
-                                    <div class="skill-sharing-card-header">
-                                        <h4>${skill.skillName}</h4>
-                                        <span class="sharing-status">已收到</span>
-                                    </div>
-                                    <div class="skill-sharing-card-body">
-                                        <div class="sharing-info">
-                                            <span class="sharing-sharer">分享人: ${skill.sharerName}</span>
-                                            <span class="sharing-group">来自群组: ${skill.groupName}</span>
-                                            <span class="sharing-time">收到时间: ${skill.receivedAt ? new Date(skill.receivedAt).toLocaleString() : new Date().toLocaleString()}</span>
-                                        </div>
-                                        <div class="sharing-message">
-                                            <strong>分享消息:</strong>
-                                            <p>${skill.message || ''}</p>
-                                        </div>
-                                    </div>
-                                    <div class="skill-sharing-card-footer">
-                                        <button class="btn-sm btn-primary add-skill-btn" data-id="${skill.id}">
-                                            <i class="ri-add-circle-line"></i> 添加到我的技能
-                                        </button>
-                                    </div>
-                                `;
-                                receivedSkillsContainer.appendChild(skillCard);
-                            });
-                        } else {
-                            receivedSkillsContainer.innerHTML = '<div class="empty-state"><i class="ri-inbox-line"></i><p>暂无收到的技能</p></div>';
-                        }
-                    } else {
-                        receivedSkillsContainer.innerHTML = '<div class="error">获取收到的技能失败</div>';
-                    }
-                    
-                    // 绑定添加技能按钮事件
-                    document.querySelectorAll('.add-skill-btn').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const receiveId = this.getAttribute('data-id');
-                            addReceivedSkill(receiveId);
-                        });
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching received skills:', error);
-                    receivedSkillsContainer.innerHTML = '<div class="error">获取收到的技能失败</div>';
-                });
-        }
-        
-        // 取消分享
-        function unshareSkill(shareId) {
-            if (confirm('确定要取消分享这个技能吗？')) {
-                // 调用API取消分享
-                fetch(`${API_BASE_URL}/share/${shareId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        renderSharedSkills();
-                        alert('技能分享已取消！');
-                    } else {
-                        alert('取消分享失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error unsharing skill:', error);
-                    alert('取消分享失败');
-                });
-            }
-        }
-        
-        // 添加收到的技能
-        function addReceivedSkill(receiveId) {
-            alert('技能已添加到我的技能！');
-            // 这里可以添加实际的添加逻辑
-        }
-        
-        // 分享技能
-        function shareSkill() {
-            const skillSelect = document.getElementById('share-skill-select');
-            const groupSelect = document.getElementById('share-group-select');
-            const shareMessage = document.getElementById('share-message').value;
-            
-            if (!skillSelect.value || !groupSelect.value) {
-                alert('请选择技能和群组');
-                return;
-            }
-            
-            const skillId = skillSelect.value;
-            const groupId = groupSelect.value;
-            const skillName = skillSelect.options[skillSelect.selectedIndex].text;
-            const groupName = groupSelect.options[groupSelect.selectedIndex].text;
-            
-            const requestData = {
-                skillId: skillId,
-                groupId: groupId,
-                message: shareMessage
-            };
-            
-            // 显示加载状态
-            const submitBtn = document.getElementById('submit-share-btn');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="ri-loader-2-line"></i> 分享中...';
-            submitBtn.disabled = true;
-            
-            // 调用API分享技能
-            fetch(`${API_BASE_URL}/share`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                // 恢复按钮状态
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-                
-                if (data.success) {
-                    // 显示分享成功消息
-                    document.getElementById('share-message-content').textContent = `技能 ${skillName} 已成功分享到 ${groupName} 群组！`;
-                    document.getElementById('share-modal').style.display = 'block';
-                } else {
-                    alert('分享失败');
-                }
-            })
-            .catch(error => {
-                console.error('Error sharing skill:', error);
-                // 恢复按钮状态
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-                alert('分享失败');
-            });
-        }
-        
-        // 加载技能列表到下拉框
-        function loadSkills() {
-            const skillSelect = document.getElementById('share-skill-select');
-            skillSelect.innerHTML = '<option value="">请选择技能</option>';
-            
-            // 调用API获取技能列表
-            fetch(`${API_BASE_URL}/skills`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const skills = data.data.items || [];
-                        skills.forEach(skill => {
-                            const option = document.createElement('option');
-                            option.value = skill.id;
-                            option.textContent = skill.name;
-                            skillSelect.appendChild(option);
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading skills:', error);
-                });
-        }
-        
-        // 加载群组列表到下拉框
-        function loadGroups() {
-            const groupSelect = document.getElementById('share-group-select');
-            groupSelect.innerHTML = '<option value="">请选择群组</option>';
-            
-            // 调用API获取群组列表
-            fetch(`${API_BASE_URL}/admin/groups`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const groups = data.data;
-                        groups.forEach(group => {
-                            const option = document.createElement('option');
-                            option.value = group.id;
-                            option.textContent = group.name;
-                            groupSelect.appendChild(option);
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading groups:', error);
-                });
-        }
-        
-        // 事件监听
-        document.addEventListener('DOMContentLoaded', function() {
-            // 加载技能和群组列表
-            loadSkills();
-            loadGroups();
-            
-            // 标签切换
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    // 移除所有标签的active类
-                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                    // 添加当前标签的active类
-                    this.classList.add('active');
-                    // 隐藏所有内容
-                    document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
-                    // 显示当前标签的内容
-                    const tabId = this.getAttribute('data-tab');
-                    document.getElementById(`${tabId}-tab`).style.display = 'block';
-                    
-                    // 如果切换到已分享标签，重新渲染已分享技能
-                    if (tabId === 'shared') {
-                        renderSharedSkills();
-                    } else if (tabId === 'received') {
-                        renderReceivedSkills();
-                    }
-                });
-            });
-            
-            // 分享技能按钮
-            document.getElementById('submit-share-btn').addEventListener('click', shareSkill);
-            
-            // 关闭分享模态框
-            document.getElementById('close-share-modal').addEventListener('click', function() {
-                document.getElementById('share-modal').style.display = 'none';
-            });
-            
-            document.getElementById('close-share-btn').addEventListener('click', function() {
-                document.getElementById('share-modal').style.display = 'none';
-            });
-            
-            // 搜索技能
-            document.getElementById('sharing-search-input').addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                const activeTab = document.querySelector('.tab-btn.active').getAttribute('data-tab');
-                
-                if (activeTab === 'shared') {
-                    const skillCards = document.querySelectorAll('#shared-skills .skill-sharing-card');
-                    skillCards.forEach(card => {
-                        const skillName = card.querySelector('h4').textContent.toLowerCase();
-                        const groupName = card.querySelector('.sharing-group').textContent.toLowerCase();
-                        if (skillName.includes(searchTerm) || groupName.includes(searchTerm)) {
-                            card.style.display = 'block';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-                } else if (activeTab === 'received') {
-                    const skillCards = document.querySelectorAll('#received-skills .skill-sharing-card');
-                    skillCards.forEach(card => {
-                        const skillName = card.querySelector('h4').textContent.toLowerCase();
-                        const sharerName = card.querySelector('.sharing-sharer').textContent.toLowerCase();
-                        if (skillName.includes(searchTerm) || sharerName.includes(searchTerm)) {
-                            card.style.display = 'block';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-                }
-            });
-        });
+        window.onPageInit = function() {
+            console.log('技能共享页面初始化完成');
+        };
     </script>
 </body>
 </html>

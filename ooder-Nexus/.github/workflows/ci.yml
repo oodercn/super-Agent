@@ -1,0 +1,160 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # 代码质量检查
+  code-quality:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Check code formatting
+        run: |
+          echo "Checking code formatting..."
+          # 可以集成 checkstyle 或 spotless
+
+      - name: Run Maven compile
+        run: mvn compile -s settings.xml --batch-mode
+
+  # 单元测试
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: code-quality
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run tests
+        run: mvn test -s settings.xml --batch-mode
+
+      - name: Generate test report
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Maven Tests
+          path: target/surefire-reports/*.xml
+          reporter: java-junit
+
+  # 构建
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn clean package -DskipTests -s settings.xml --batch-mode
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ooder-nexus-jar
+          path: target/*.jar
+          retention-days: 7
+
+  # 发布到GitHub Releases（仅标签触发）
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ooder-nexus-jar
+          path: target/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: target/*.jar
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref, '-preview') || contains(github.ref, '-alpha') || contains(github.ref, '-beta') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # 构建Windows安装包（仅标签触发）
+  build-windows:
+    name: Build Windows Package
+    runs-on: windows-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ooder-nexus-jar
+          path: target/
+
+      - name: Copy JAR to release directory
+        run: |
+          Copy-Item -Path target\*.jar -Destination release\windows\ooder-nexus.jar -Force
+
+      - name: Create Windows package
+        run: |
+          cd release\windows
+          Compress-Archive -Path ooder-nexus.jar,start.bat,README-Preview.txt -DestinationPath ooder-nexus-windows.zip -Force
+
+      - name: Upload Windows package
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-package
+          path: release/windows/ooder-nexus-windows.zip
+
+  # 通知（可选）
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: [release, build-windows]
+    if: always()
+    steps:
+      - name: Notify success
+        if: needs.release.result == 'success' && needs.build-windows.result == 'success'
+        run: |
+          echo "✅ Release created successfully!"
+          echo "Tag: ${{ github.ref_name }}"
+
+      - name: Notify failure
+        if: needs.release.result == 'failure' || needs.build-windows.result == 'failure'
+        run: |
+          echo "❌ Release failed!"
+          exit 1

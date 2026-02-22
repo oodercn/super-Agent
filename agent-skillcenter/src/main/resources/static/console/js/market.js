@@ -1,0 +1,302 @@
+// 初始化页面
+function init() {
+    loadMarketSkills();
+}
+
+// 市场管理相关函数
+
+// 加载市场技能列表
+async function loadMarketSkills() {
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/market/skills`);
+        if (!response.ok) {
+            throw new Error('加载市场技能列表失败');
+        }
+        const skills = await response.json();
+        renderMarketSkills(skills, 'search-results');
+    } catch (error) {
+        console.error('加载市场技能列表错误:', error);
+        alert('加载市场技能列表失败: ' + error.message);
+    }
+}
+
+// 渲染市场技能列表
+function renderMarketSkills(skills, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+        console.warn('容器元素不存在:', containerId);
+        return;
+    }
+    container.innerHTML = '';
+    
+    // 检查skills是否为数组
+    if (!Array.isArray(skills)) {
+        console.warn('技能数据不是数组:', skills);
+        container.innerHTML = '<p>暂无技能数据</p>';
+        return;
+    }
+    
+    skills.forEach(skill => {
+        const card = document.createElement('div');
+        card.className = 'stat-card';
+        card.innerHTML = `
+            <div class="stat-icon">
+                <i class="ri-star-line"></i>
+            </div>
+            <div class="stat-info">
+                <h3>${skill.name}</h3>
+                <div class="stat-value">${skill.rating || 0}</div>
+                <div class="skill-category">${skill.category || '未分类'}</div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary" style="margin-right: 8px;" onclick="downloadSkill('${skill.skillId}')">下载</button>
+                    <button class="btn btn-secondary" onclick="showSkillDetail('${skill.skillId}')">详情</button>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// 搜索技能
+async function searchSkills() {
+    const keyword = document.getElementById('search-keyword').value;
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/market/skills/search?keyword=${encodeURIComponent(keyword)}`);
+        if (!response.ok) {
+            throw new Error('搜索技能失败');
+        }
+        const skills = await response.json();
+        renderMarketSkills(skills, 'search-results');
+    } catch (error) {
+        console.error('搜索技能错误:', error);
+        alert('搜索技能失败: ' + error.message);
+    }
+}
+
+// 重置搜索
+function resetSearch() {
+    document.getElementById('search-keyword').value = '';
+    document.getElementById('search-results').innerHTML = '';
+}
+
+// 下载技能
+async function downloadSkill(skillId) {
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/market/skills/${skillId}/download`);
+        if (!response.ok) {
+            throw new Error('下载技能失败');
+        }
+        const data = await response.blob();
+        const url = window.URL.createObjectURL(data);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${skillId}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        alert('技能下载成功!');
+    } catch (error) {
+        console.error('下载技能错误:', error);
+        alert('下载技能失败: ' + error.message);
+    }
+}
+
+// 显示技能详情
+async function showSkillDetail(skillId) {
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/market/skills/${skillId}`);
+        if (!response.ok) {
+            throw new Error('获取技能详情失败');
+        }
+        const skill = await response.json();
+        
+        // 获取技能评价
+        const reviewsResponse = await fetch(`${utils.API_BASE_URL}/market/skills/${skillId}/reviews`);
+        const reviews = await reviewsResponse.json();
+        
+        let reviewsHtml = '评价:';
+        if (Array.isArray(reviews) && reviews.length > 0) {
+            reviews.forEach(review => {
+                reviewsHtml += `\n- ${review.userId} (${review.rating}分): ${review.comment}`;
+            });
+        } else {
+            reviewsHtml += '\n- 暂无评价';
+        }
+        
+        alert(`技能详情:\nID: ${skill.skillId}\n名称: ${skill.name}\n分类: ${skill.category || '未分类'}\n评分: ${skill.rating || 0}\n描述: ${skill.description || '无描述'}\n\n${reviewsHtml}`);
+    } catch (error) {
+        console.error('获取技能详情错误:', error);
+        alert('获取技能详情失败: ' + error.message);
+    }
+}
+
+// 标签页切换函数
+function switchTab(tabId) {
+    // 隐藏所有标签页内容
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.style.display = 'none';
+    });
+    
+    // 显示选中的标签页内容
+    document.getElementById(`${tabId}-tab`).style.display = 'block';
+    
+    // 根据标签页ID加载相应的数据
+    if (tabId === 'market-popular') {
+        loadPopularSkills();
+    } else if (tabId === 'market-latest') {
+        loadLatestSkills();
+    } else if (tabId === 'market-download') {
+        loadDownloadSkills();
+    } else if (tabId === 'market-rate') {
+        loadRateSkills();
+    }
+}
+
+// 加载热门技能
+async function loadPopularSkills() {
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/market/skills/popular?limit=10`);
+        if (!response.ok) {
+            throw new Error('获取热门技能失败');
+        }
+        const skills = await response.json();
+        renderMarketSkills(skills, 'popular-skills');
+    } catch (error) {
+        console.error('获取热门技能错误:', error);
+        alert('获取热门技能失败: ' + error.message);
+    }
+}
+
+// 加载最新技能
+async function loadLatestSkills() {
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/market/skills/latest?limit=10`);
+        if (!response.ok) {
+            throw new Error('获取最新技能失败');
+        }
+        const skills = await response.json();
+        renderMarketSkills(skills, 'latest-skills');
+    } catch (error) {
+        console.error('获取最新技能错误:', error);
+        alert('获取最新技能失败: ' + error.message);
+    }
+}
+
+// 加载可下载技能
+async function loadDownloadSkills() {
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/market/skills`);
+        if (!response.ok) {
+            throw new Error('获取可下载技能失败');
+        }
+        const skills = await response.json();
+        renderMarketSkills(skills, 'download-skills');
+    } catch (error) {
+        console.error('获取可下载技能错误:', error);
+        alert('获取可下载技能失败: ' + error.message);
+    }
+}
+
+// 加载可评分技能
+async function loadRateSkills() {
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/market/skills`);
+        if (!response.ok) {
+            throw new Error('获取可评分技能失败');
+        }
+        const skills = await response.json();
+        const rateContainer = document.getElementById('rate-skills');
+        if (!rateContainer) {
+            console.warn('评分容器元素不存在');
+            return;
+        }
+        rateContainer.innerHTML = '';
+        
+        // 检查skills是否为数组
+        if (!Array.isArray(skills)) {
+            console.warn('技能数据不是数组:', skills);
+            rateContainer.innerHTML = '<p>暂无技能数据</p>';
+            return;
+        }
+        
+        skills.forEach(skill => {
+            const card = document.createElement('div');
+            card.className = 'stat-card';
+            card.innerHTML = `
+                <div class="stat-icon">
+                    <i class="ri-star-line"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>${skill.name}</h3>
+                    <div class="stat-value">${skill.rating || 0}</div>
+                    <div class="skill-category">${skill.category || '未分类'}</div>
+                    <div style="margin-top: 8px;">
+                        <select id="rating-${skill.skillId}" class="form-control" style="width: 100px; margin-right: 8px;">
+                            <option value="1">1星</option>
+                            <option value="2">2星</option>
+                            <option value="3">3星</option>
+                            <option value="4">4星</option>
+                            <option value="5">5星</option>
+                        </select>
+                        <input type="text" id="comment-${skill.skillId}" class="form-control" placeholder="评价内容" style="margin-bottom: 8px;">
+                        <button class="btn btn-primary" onclick="rateSkill('${skill.skillId}')">提交评分</button>
+                    </div>
+                </div>
+            `;
+            rateContainer.appendChild(card);
+        });
+    } catch (error) {
+        console.error('获取可评分技能错误:', error);
+        alert('获取可评分技能失败: ' + error.message);
+    }
+}
+
+// 提交评分
+async function rateSkill(skillId) {
+    const rating = document.getElementById(`rating-${skillId}`).value;
+    const comment = document.getElementById(`comment-${skillId}`).value;
+    const userId = 'current-user'; // 这里应该从用户会话中获取
+    
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/market/skills/${skillId}/rate?rating=${rating}&comment=${encodeURIComponent(comment)}&userId=${userId}`, {
+            method: 'POST'
+        });
+        if (!response.ok) {
+            throw new Error('提交评分失败');
+        }
+        const result = await response.json();
+        if (result) {
+            alert('评分提交成功');
+        } else {
+            alert('评分提交失败');
+        }
+    } catch (error) {
+        console.error('提交评分错误:', error);
+        alert('提交评分失败: ' + error.message);
+    }
+}
+
+// 显示API导入技能详情
+function showApiImportDetail(apiType) {
+    if (apiType === 'weather') {
+        alert('天气API导入详情:\n版本: 1.0.0\n分类: 天气 | 信息查询\n描述: 基于第三方API的天气查询技能，可以获取全球城市的实时天气信息。\n支持的API提供商: OpenWeatherMap, WeatherAPI.com, AccuWeather\n功能: 实时天气查询、城市天气、温度单位切换\n使用方法: 配置API密钥后，通过"天气北京"等命令查询天气');
+    } else if (apiType === 'stock') {
+        alert('股票API导入详情:\n版本: 1.0.0\n分类: 金融 | 信息查询\n描述: 基于第三方API的股票查询技能，可以获取全球股票的实时价格和历史数据。\n支持的API提供商: Alpha Vantage, Finnhub, Polygon.io\n功能: 实时股票价格、历史数据、K线图\n使用方法: 配置API密钥后，通过"股票 AAPL"等命令查询股票价格');
+    }
+}
+
+// 显示企业级接口详情
+function showEnterpriseApiDetail(apiType) {
+    if (apiType === 'dingtalk') {
+        alert('钉钉开放平台详情:\n版本: v1.0\n分类: 企业 | 组织机构\n描述: 钉钉开放平台提供的企业级接口，包括组织机构管理、消息通知、审批等功能。\nAPI地址: api.dingtalk.com\n认证方式: AppKey + AppSecret\n通讯协议: HTTPS\n主要功能:\n1. 组织机构管理: 部门、用户、角色管理\n2. 消息通知: 工作通知、群消息\n3. 审批: 审批流程管理\n4. 考勤: 考勤数据管理\n5. 签到: 签到数据管理\n接入流程:\n1. 注册钉钉开发者账号\n2. 创建企业内部应用\n3. 获取AppKey和AppSecret\n4. 配置接口权限\n5. 开发接口调用代码');
+    } else if (apiType === 'yonyou') {
+        alert('用友开放平台详情:\n版本: v1.0\n分类: 企业 | ERP集成\n描述: 用友开放平台提供的企业级接口，包括财务、供应链、人力资源等ERP系统集成功能。\nAPI地址: 用友云平台\n认证方式: OAuth 2.0\n通讯协议: HTTPS\n主要功能:\n1. 财务: 凭证、发票、报表\n2. 供应链: 采购、销售、库存\n3. 人力资源: 薪资、考勤\n4. 生产制造: 生产订单、工艺路线\n5. 客户关系: 客户、商机、合同\n接入流程:\n1. 注册用友开发者账号\n2. 创建应用并获取应用密钥\n3. 配置API权限\n4. 开发接口调用代码\n5. 部署和测试');
+    }
+}
+
+// 页面加载完成后初始化
+window.onload = function() {
+    initMenu('market');
+    init();
+};

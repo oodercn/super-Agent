@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>命令执行监控 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .stat-card__icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .stat-card__icon.pending { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .stat-card__icon.running { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .stat-card__icon.success { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .stat-card__icon.failed { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        
+        .stat-card__info { flex: 1; }
+        
+        .stat-card__value {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .stat-card__label {
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        
+        .monitor-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+        }
+        
+        .cmd-list-panel {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .filter-bar {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-select {
+            padding: 8px 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 6px;
+            color: var(--ns-dark);
+            font-size: 13px;
+        }
+        
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        
+        .filter-input {
+            padding: 8px 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 6px;
+            color: var(--ns-dark);
+            font-size: 13px;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .cmd-table-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .cmd-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .cmd-table th,
+        .cmd-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .cmd-table th {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--ns-secondary);
+            text-transform: uppercase;
+            background: var(--ns-input-bg);
+            position: sticky;
+            top: 0;
+        }
+        
+        .cmd-table td {
+            font-size: 13px;
+            color: var(--ns-dark);
+        }
+        
+        .cmd-table tr {
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .cmd-table tr:hover td {
+            background: var(--ns-bg-hover);
+        }
+        
+        .cmd-table tr.selected td {
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .cmd-id {
+            font-family: monospace;
+            color: var(--nx-primary);
+        }
+        
+        .protocol-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .protocol-badge.mcp { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .protocol-badge.route { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .protocol-badge.end { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .protocol-badge.iot { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .status-badge.pending { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .status-badge.running { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .status-badge.success { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .status-badge.failed { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        .status-badge.cancelled { background: rgba(148, 163, 184, 0.2); color: var(--ns-secondary); }
+        
+        .status-badge .spinner {
+            width: 12px;
+            height: 12px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .detail-panel {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .detail-empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--ns-secondary);
+        }
+        
+        .detail-empty__icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .detail-content {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .detail-content.active {
+            display: flex;
+        }
+        
+        .detail-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .detail-header__id {
+            font-family: monospace;
+            font-size: 14px;
+            color: var(--nx-primary);
+            margin-bottom: 8px;
+        }
+        
+        .detail-header__meta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .meta-item {
+            font-size: 12px;
+        }
+        
+        .meta-item__label {
+            color: var(--ns-secondary);
+        }
+        
+        .meta-item__value {
+            color: var(--ns-dark);
+            font-weight: 500;
+        }
+        
+        .detail-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .detail-section {
+            margin-bottom: 20px;
+        }
+        
+        .detail-section__title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ns-secondary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        
+        .detail-section__content {
+            background: var(--ns-input-bg);
+            border-radius: 8px;
+            padding: 12px;
+        }
+        
+        .payload-viewer {
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--ns-dark);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 24px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--ns-border);
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-bottom: 16px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--nx-primary);
+            border: 2px solid var(--ns-card-bg);
+        }
+        
+        .timeline-item.success::before { background: var(--ns-success); }
+        .timeline-item.failed::before { background: var(--ns-danger); }
+        .timeline-item.running::before { background: var(--nx-primary); }
+        
+        .timeline-item__time {
+            font-size: 11px;
+            color: var(--ns-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .timeline-item__text {
+            font-size: 13px;
+            color: var(--ns-dark);
+        }
+        
+        .detail-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--ns-border);
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: var(--nx-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: var(--ns-card-bg);
+            color: var(--ns-dark);
+            border: 1px solid var(--ns-border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--ns-bg-hover);
+            border-color: var(--nx-primary);
+        }
+        
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--ns-danger);
+        }
+        
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: var(--ns-input-bg);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .progress-bar__fill {
+            height: 100%;
+            background: var(--nx-primary);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        
+        .realtime-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--ns-success);
+        }
+        
+        .realtime-indicator__dot {
+            width: 8px;
+            height: 8px;
+            background: var(--ns-success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold"><i class="ri-pulse-line"></i> 命令执行监控</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <div class="realtime-indicator">
+                        <span class="realtime-indicator__dot"></span>
+                        实时监控中
+                    </div>
+                    <button class="btn btn-secondary" onclick="exportReport()">
+                        <i class="ri-download-line"></i> 导出报告
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-card__icon pending"><i class="ri-time-line"></i></div>
+                            <div class="stat-card__info">
+                                <div class="stat-card__value" id="pendingCount">12</div>
+                                <div class="stat-card__label">待执行</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon running"><i class="ri-loader-4-line"></i></div>
+                            <div class="stat-card__info">
+                                <div class="stat-card__value" id="runningCount">5</div>
+                                <div class="stat-card__label">执行中</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon success"><i class="ri-checkbox-circle-line"></i></div>
+                            <div class="stat-card__info">
+                                <div class="stat-card__value" id="successCount">156</div>
+                                <div class="stat-card__label">已完成</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon failed"><i class="ri-close-circle-line"></i></div>
+                            <div class="stat-card__info">
+                                <div class="stat-card__value" id="failedCount">3</div>
+                                <div class="stat-card__label">失败</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="monitor-container">
+                        <div class="cmd-list-panel">
+                            <div class="panel-header">
+                                <span class="panel-title">命令列表</span>
+                                <button class="btn btn-secondary btn-sm" onclick="loadCommands()">
+                                    <i class="ri-refresh-line"></i> 刷新
+                                </button>
+                            </div>
+                            <div class="filter-bar">
+                                <select class="filter-select" id="filterProtocol" onchange="filterCommands()">
+                                    <option value="">全部协议</option>
+                                    <option value="MCP">MCP</option>
+                                    <option value="ROUTE">ROUTE</option>
+                                    <option value="END">END</option>
+                                    <option value="IOT">IOT</option>
+                                </select>
+                                <select class="filter-select" id="filterStatus" onchange="filterCommands()">
+                                    <option value="">全部状态</option>
+                                    <option value="pending">待执行</option>
+                                    <option value="running">执行中</option>
+                                    <option value="success">已完成</option>
+                                    <option value="failed">失败</option>
+                                    <option value="cancelled">已取消</option>
+                                </select>
+                                <select class="filter-select" id="filterDirection" onchange="filterCommands()">
+                                    <option value="">全部方向</option>
+                                    <option value="NORTH">北向</option>
+                                    <option value="SOUTH">南向</option>
+                                </select>
+                                <input type="text" class="filter-input" id="filterKeyword" placeholder="搜索命令ID、目标..." oninput="filterCommands()">
+                            </div>
+                            <div class="cmd-table-container">
+                                <table class="cmd-table">
+                                    <thead>
+                                        <tr>
+                                            <th>命令ID</th>
+                                            <th>协议</th>
+                                            <th>类型</th>
+                                            <th>目标</th>
+                                            <th>状态</th>
+                                            <th>耗时</th>
+                                            <th>时间</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cmdTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-panel">
+                            <div class="detail-empty" id="detailEmpty">
+                                <div class="detail-empty__icon"><i class="ri-cursor-line"></i></div>
+                                <div>选择一个命令查看详情</div>
+                            </div>
+                            
+                            <div class="detail-content" id="detailContent">
+                                <div class="detail-header">
+                                    <div class="detail-header__id" id="detailCmdId">CMD-20260220001</div>
+                                    <div class="detail-header__meta">
+                                        <div class="meta-item">
+                                            <span class="meta-item__label">协议: </span>
+                                            <span class="meta-item__value" id="detailProtocol">MCP</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <span class="meta-item__label">类型: </span>
+                                            <span class="meta-item__value" id="detailType">INVOKE</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <span class="meta-item__label">方向: </span>
+                                            <span class="meta-item__value" id="detailDirection">NORTH</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <span class="meta-item__label">优先级: </span>
+                                            <span class="meta-item__value" id="detailPriority">高</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="detail-body">
+                                    <div class="detail-section">
+                                        <div class="detail-section__title">源 / 目标</div>
+                                        <div class="detail-section__content">
+                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                <div>
+                                                    <div style="font-size: 11px; color: var(--ns-secondary);">源节点</div>
+                                                    <div id="detailSource">nexus-local</div>
+                                                </div>
+                                                <i class="ri-arrow-right-line" style="color: var(--ns-secondary);"></i>
+                                                <div>
+                                                    <div style="font-size: 11px; color: var(--ns-secondary);">目标节点</div>
+                                                    <div id="detailTarget">agent-001</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="detail-section">
+                                        <div class="detail-section__title">命令载荷</div>
+                                        <div class="detail-section__content">
+                                            <pre class="payload-viewer" id="detailPayload">{
+  "action": "invoke",
+  "method": "process",
+  "params": {
+    "input": "data"
+  }
+}</pre>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="detail-section">
+                                        <div class="detail-section__title">执行日志</div>
+                                        <div class="detail-section__content">
+                                            <div class="timeline" id="detailTimeline">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="detail-section" id="detailResultSection" style="display: none;">
+                                        <div class="detail-section__title">执行结果</div>
+                                        <div class="detail-section__content">
+                                            <pre class="payload-viewer" id="detailResult"></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="detail-footer" id="detailFooter">
+                                    <button class="btn btn-danger btn-sm" id="btnCancel" onclick="cancelCommand()">
+                                        <i class="ri-stop-circle-line"></i> 取消命令
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" id="btnRetry" onclick="retryCommand()">
+                                        <i class="ri-refresh-line"></i> 重试
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let commands = [];
+        let selectedCmdId = null;
+        
+        window.onPageInit = function() {
+            loadCommands();
+            setInterval(loadCommands, 5000);
+        };
+        
+        async function loadCommands() {
+            try {
+                const response = await fetch('/api/cmd/list');
+                const result = await response.json();
+                
+                if (result.success) {
+                    commands = result.data;
+                    renderCommands();
+                    updateStats();
+                }
+            } catch (error) {
+                loadMockCommands();
+            }
+        }
+        
+        function loadMockCommands() {
+            commands = [
+                { id: 'CMD-20260220001', protocol: 'MCP', type: 'INVOKE', direction: 'NORTH', source: 'nexus-local', target: 'agent-001', status: 'success', duration: 120, time: '10:30:01', priority: 8 },
+                { id: 'CMD-20260220002', protocol: 'ROUTE', type: 'CONNECT', direction: 'NORTH', source: 'nexus-local', target: 'node-002', status: 'running', duration: 5000, time: '10:29:55', priority: 6 },
+                { id: 'CMD-20260220003', protocol: 'END', type: 'EXECUTE', direction: 'NORTH', source: 'nexus-local', target: 'device-003', status: 'failed', duration: 0, time: '10:28:30', priority: 7, error: '连接超时' },
+                { id: 'CMD-20260220004', protocol: 'IOT', type: 'CONTROL', direction: 'SOUTH', source: 'nexus-local', target: 'sensor-001', status: 'pending', duration: 0, time: '10:27:00', priority: 5 },
+                { id: 'CMD-20260220005', protocol: 'MCP', type: 'REGISTER', direction: 'NORTH', source: 'agent-002', target: 'nexus-local', status: 'success', duration: 85, time: '10:25:30', priority: 9 },
+                { id: 'CMD-20260220006', protocol: 'END', type: 'EXECUTE', direction: 'NORTH', source: 'nexus-local', target: 'device-001', status: 'success', duration: 230, time: '10:20:15', priority: 6 },
+                { id: 'CMD-20260220007', protocol: 'ROUTE', type: 'DISCOVER', direction: 'NORTH', source: 'nexus-local', target: 'network', status: 'success', duration: 1500, time: '10:15:00', priority: 4 },
+                { id: 'CMD-20260220008', protocol: 'IOT', type: 'CONFIG', direction: 'SOUTH', source: 'nexus-local', target: 'device-005', status: 'cancelled', duration: 0, time: '10:10:00', priority: 3 }
+            ];
+            renderCommands();
+            updateStats();
+        }
+        
+        function updateStats() {
+            const stats = {
+                pending: commands.filter(c => c.status === 'pending').length,
+                running: commands.filter(c => c.status === 'running').length,
+                success: commands.filter(c => c.status === 'success').length,
+                failed: commands.filter(c => c.status === 'failed').length
+            };
+            
+            document.getElementById('pendingCount').textContent = stats.pending;
+            document.getElementById('runningCount').textContent = stats.running;
+            document.getElementById('successCount').textContent = stats.success;
+            document.getElementById('failedCount').textContent = stats.failed;
+        }
+        
+        function renderCommands() {
+            const tbody = document.getElementById('cmdTableBody');
+            const filtered = filterCommandsData();
+            
+            tbody.innerHTML = filtered.map(cmd => {
+                const statusIcon = cmd.status === 'running' ? '<span class="spinner"></span>' : '';
+                const statusText = getStatusText(cmd.status);
+                const duration = cmd.status === 'running' ? formatRunningDuration(cmd.duration) : formatDuration(cmd.duration);
+                
+                return `
+                    <tr onclick="selectCommand('${cmd.id}')" class="${selectedCmdId === cmd.id ? 'selected' : ''}">
+                        <td><span class="cmd-id">${cmd.id}</span></td>
+                        <td><span class="protocol-badge ${cmd.protocol.toLowerCase()}">${cmd.protocol}</span></td>
+                        <td>${cmd.type}</td>
+                        <td>${cmd.target}</td>
+                        <td><span class="status-badge ${cmd.status}">${statusIcon}${statusText}</span></td>
+                        <td>${duration}</td>
+                        <td>${cmd.time}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function filterCommandsData() {
+            const protocol = document.getElementById('filterProtocol').value;
+            const status = document.getElementById('filterStatus').value;
+            const direction = document.getElementById('filterDirection').value;
+            const keyword = document.getElementById('filterKeyword').value.toLowerCase();
+            
+            return commands.filter(cmd => {
+                if (protocol && cmd.protocol !== protocol) return false;
+                if (status && cmd.status !== status) return false;
+                if (direction && cmd.direction !== direction) return false;
+                if (keyword && !cmd.id.toLowerCase().includes(keyword) && !cmd.target.toLowerCase().includes(keyword)) return false;
+                return true;
+            });
+        }
+        
+        function filterCommands() {
+            renderCommands();
+        }
+        
+        function selectCommand(cmdId) {
+            selectedCmdId = cmdId;
+            renderCommands();
+            
+            const cmd = commands.find(c => c.id === cmdId);
+            if (!cmd) return;
+            
+            document.getElementById('detailEmpty').style.display = 'none';
+            document.getElementById('detailContent').classList.add('active');
+            
+            document.getElementById('detailCmdId').textContent = cmd.id;
+            document.getElementById('detailProtocol').textContent = cmd.protocol;
+            document.getElementById('detailType').textContent = cmd.type;
+            document.getElementById('detailDirection').textContent = cmd.direction === 'NORTH' ? '北向' : '南向';
+            document.getElementById('detailPriority').textContent = getPriorityText(cmd.priority);
+            document.getElementById('detailSource').textContent = cmd.source;
+            document.getElementById('detailTarget').textContent = cmd.target;
+            
+            document.getElementById('detailPayload').textContent = JSON.stringify({
+                action: cmd.type.toLowerCase(),
+                params: { input: 'sample data' }
+            }, null, 2);
+            
+            renderTimeline(cmd);
+            
+            const btnCancel = document.getElementById('btnCancel');
+            const btnRetry = document.getElementById('btnRetry');
+            
+            btnCancel.style.display = cmd.status === 'running' || cmd.status === 'pending' ? 'inline-flex' : 'none';
+            btnRetry.style.display = cmd.status === 'failed' ? 'inline-flex' : 'none';
+        }
+        
+        function renderTimeline(cmd) {
+            const timeline = document.getElementById('detailTimeline');
+            const logs = generateMockLogs(cmd);
+            
+            timeline.innerHTML = logs.map(log => `
+                <div class="timeline-item ${log.status}">
+                    <div class="timeline-item__time">${log.time}</div>
+                    <div class="timeline-item__text">${log.message}</div>
+                </div>
+            `).join('');
+        }
+        
+        function generateMockLogs(cmd) {
+            const logs = [
+                { time: cmd.time, message: '命令已创建', status: 'success' }
+            ];
+            
+            if (cmd.status !== 'pending') {
+                logs.push({ time: addSeconds(cmd.time, 1), message: '命令已发送到目标节点', status: 'success' });
+            }
+            
+            if (cmd.status === 'running') {
+                logs.push({ time: addSeconds(cmd.time, 2), message: '目标节点已接收，正在执行...', status: 'running' });
+            }
+            
+            if (cmd.status === 'success') {
+                logs.push({ time: addSeconds(cmd.time, 2), message: '目标节点已接收', status: 'success' });
+                logs.push({ time: addSeconds(cmd.time, cmd.duration / 1000), message: '执行完成', status: 'success' });
+            }
+            
+            if (cmd.status === 'failed') {
+                logs.push({ time: addSeconds(cmd.time, 2), message: '执行失败: ' + (cmd.error || '未知错误'), status: 'failed' });
+            }
+            
+            if (cmd.status === 'cancelled') {
+                logs.push({ time: addSeconds(cmd.time, 1), message: '命令已取消', status: 'failed' });
+            }
+            
+            return logs;
+        }
+        
+        function addSeconds(time, seconds) {
+            const parts = time.split(':');
+            let total = parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]) + seconds;
+            const h = Math.floor(total / 3600) % 24;
+            const m = Math.floor((total % 3600) / 60);
+            const s = total % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+        
+        function getStatusText(status) {
+            const map = {
+                'pending': '待执行',
+                'running': '执行中',
+                'success': '已完成',
+                'failed': '失败',
+                'cancelled': '已取消'
+            };
+            return map[status] || status;
+        }
+        
+        function getPriorityText(priority) {
+            if (priority >= 8) return '高';
+            if (priority >= 5) return '中';
+            return '低';
+        }
+        
+        function formatDuration(ms) {
+            if (!ms) return '-';
+            if (ms < 1000) return ms + 'ms';
+            return (ms / 1000).toFixed(1) + 's';
+        }
+        
+        function formatRunningDuration(ms) {
+            if (ms < 1000) return ms + 'ms';
+            return (ms / 1000).toFixed(0) + 's (运行中)';
+        }
+        
+        async function cancelCommand() {
+            if (!selectedCmdId) return;
+            if (!confirm('确定要取消此命令吗？')) return;
+            
+            try {
+                const response = await fetch(`/api/cmd/${selectedCmdId}/cancel`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('命令已取消');
+                    loadCommands();
+                } else {
+                    alert('取消失败: ' + (result.error || '未知错误'));
+                }
+            } catch (error) {
+                alert('取消失败: ' + error.message);
+            }
+        }
+        
+        async function retryCommand() {
+            if (!selectedCmdId) return;
+            
+            try {
+                const response = await fetch(`/api/cmd/${selectedCmdId}/retry`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('命令已重新发送');
+                    loadCommands();
+                } else {
+                    alert('重试失败: ' + (result.error || '未知错误'));
+                }
+            } catch (error) {
+                alert('重试失败: ' + error.message);
+            }
+        }
+        
+        function exportReport() {
+            const report = {
+                timestamp: new Date().toISOString(),
+                stats: {
+                    pending: document.getElementById('pendingCount').textContent,
+                    running: document.getElementById('runningCount').textContent,
+                    success: document.getElementById('successCount').textContent,
+                    failed: document.getElementById('failedCount').textContent
+                },
+                commands: commands
+            };
+            
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cmd-report-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

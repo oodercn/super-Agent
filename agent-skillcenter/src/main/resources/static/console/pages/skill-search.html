@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能搜索 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能搜索</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__body">
+                            <div class="nx-flex nx-gap-4">
+                                <div class="nx-flex-1">
+                                    <div class="nx-input-group">
+                                        <i class="ri-search-line"></i>
+                                        <input type="text" class="nx-input" id="search-keyword" placeholder="搜索技能名称、描述、标签...">
+                                    </div>
+                                </div>
+                                <select class="nx-select" id="search-category" style="width: 150px;">
+                                    <option value="">全部分类</option>
+                                    <option value="weather">天气</option>
+                                    <option value="finance">金融</option>
+                                    <option value="productivity">效率工具</option>
+                                    <option value="entertainment">娱乐</option>
+                                </select>
+                                <button class="nx-btn nx-btn--primary" onclick="searchSkills()">
+                                    <i class="ri-search-line"></i> 搜索
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-flex nx-gap-4">
+                        <div style="width: 200px;">
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h3 class="nx-card__title">筛选条件</h3>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div class="nx-form-group">
+                                        <label class="nx-label">能力类型</label>
+                                        <div class="nx-checkbox-group">
+                                            <label class="nx-checkbox"><input type="checkbox" value="api"> API调用</label>
+                                            <label class="nx-checkbox"><input type="checkbox" value="data"> 数据处理</label>
+                                            <label class="nx-checkbox"><input type="checkbox" value="automation"> 自动化</label>
+                                        </div>
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-label">状态</label>
+                                        <select class="nx-select nx-select--sm" id="filter-status">
+                                            <option value="">全部</option>
+                                            <option value="approved">已认证</option>
+                                            <option value="pending">待审核</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-flex-1">
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h3 class="nx-card__title">搜索结果</h3>
+                                    <span class="nx-text-secondary" id="result-count">共 0 条结果</span>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div id="search-results">
+                                        <div class="nx-text-center nx-text-secondary nx-p-8">请输入关键词搜索</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('Skill Search 页面初始化完成');
+        };
+        
+        async function searchSkills() {
+            const keyword = document.getElementById('search-keyword').value;
+            const category = document.getElementById('search-category').value;
+            
+            if (!keyword && !category) {
+                ApiClient.showError('请输入搜索关键词或选择分类');
+                return;
+            }
+            
+            try {
+                ApiClient.showLoading('搜索中...');
+                const result = await ApiClient.post('/api/skills/discovery/search', {
+                    keyword: keyword,
+                    category: category,
+                    pageNum: 1,
+                    pageSize: 20
+                });
+                ApiClient.hideLoading();
+                
+                if (result && result.data) {
+                    renderResults(result.data.list || []);
+                }
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('搜索失败: ' + error.message);
+            }
+        }
+        
+        function renderResults(skills) {
+            const container = document.getElementById('search-results');
+            document.getElementById('result-count').textContent = `共 ${skills.length} 条结果`;
+            
+            if (!skills || skills.length === 0) {
+                container.innerHTML = '<div class="nx-text-center nx-text-secondary nx-p-8">未找到匹配的技能</div>';
+                return;
+            }
+            
+            container.innerHTML = skills.map(s => `
+                <div class="nx-flex nx-items-center nx-gap-4 nx-p-4 nx-mb-3" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                    <div class="nx-flex-1">
+                        <div class="nx-font-semibold">${s.name || s.id}</div>
+                        <div class="nx-text-secondary nx-text-sm">${s.description || '暂无描述'}</div>
+                    </div>
+                    <div>
+                        <span class="nx-badge nx-badge--secondary">${s.category || '未分类'}</span>
+                    </div>
+                    <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="installSkill('${s.id}')">
+                        <i class="ri-download-line"></i> 安装
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        async function installSkill(skillId) {
+            if (!confirm('确定要安装此技能吗？')) return;
+            try {
+                ApiClient.showLoading('安装中...');
+                await ApiClient.post('/api/install/start', { skillId });
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('安装成功');
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('安装失败: ' + error.message);
+            }
+        }
+        
+        document.getElementById('search-keyword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchSkills();
+        });
+    </script>
+</body>
+</html>

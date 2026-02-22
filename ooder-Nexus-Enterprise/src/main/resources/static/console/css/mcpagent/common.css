@@ -1,0 +1,697 @@
+/**
+ * Nexus公共样式
+ * 提供Nexus相关页面的通用样式
+ * 注意：所有CSS变量继承自theme.css，不要在这里重新定义:root变量
+ */
+
+/* ========== 页面布局 ========== */
+.nexus-page {
+    min-height: 100vh;
+    background-color: var(--nexus-background);
+    color: var(--nexus-dark);
+    transition: all 0.3s ease;
+}
+
+.nexus-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--nexus-background);
+    transition: all 0.3s ease;
+}
+
+.nexus-sidebar {
+    width: 260px;
+    background-color: var(--nexus-sidebar-bg);
+    border-right: 1px solid var(--nexus-border);
+    padding: 24px;
+    box-shadow: var(--nexus-shadow);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.nexus-sidebar h2 {
+    flex-shrink: 0;
+    margin-bottom: 24px;
+}
+
+.nexus-sidebar .nav-menu {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-right: -8px;
+    padding-right: 8px;
+}
+
+/* 自定义滚动条样式 - 暗色主题 */
+.nexus-sidebar .nav-menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.nexus-sidebar .nav-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.nexus-sidebar .nav-menu::-webkit-scrollbar-thumb {
+    background: var(--nexus-border);
+    border-radius: 2px;
+}
+
+.nexus-sidebar .nav-menu::-webkit-scrollbar-thumb:hover {
+    background: var(--nexus-secondary);
+}
+
+/* Firefox 滚动条样式 */
+.nexus-sidebar .nav-menu {
+    scrollbar-width: thin;
+    scrollbar-color: var(--nexus-border) transparent;
+}
+
+.nexus-main-content {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+    background-color: var(--nexus-background);
+    transition: all 0.3s ease;
+}
+
+/* ========== 页面头部 ========== */
+.nexus-header {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--nexus-border);
+}
+
+.nexus-header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--nexus-dark);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nexus-header .subtitle {
+    color: var(--nexus-secondary);
+    font-size: 14px;
+}
+
+.nexus-header .badge {
+    background-color: var(--nexus-primary);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-right: 16px;
+}
+
+/* ========== 状态概览 ========== */
+.nexus-status-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.nexus-status-card {
+    background-color: var(--nexus-card-bg);
+    padding: 20px;
+    border-radius: var(--nexus-radius);
+    border: 1px solid var(--nexus-border);
+    box-shadow: var(--nexus-shadow);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s ease;
+}
+
+.nexus-status-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+}
+
+.nexus-status-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: rgba(59, 130, 246, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--nexus-primary);
+}
+
+.nexus-status-info h3 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--nexus-secondary);
+    margin-bottom: 4px;
+}
+
+.nexus-status-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--nexus-dark);
+}
+
+/* ========== 操作区域 ========== */
+.nexus-operation-section {
+    margin-bottom: 32px;
+}
+
+.nexus-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--nexus-border);
+}
+
+.nexus-section-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--nexus-dark);
+    margin: 0;
+}
+
+.nexus-operation-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.nexus-operation-card {
+    background-color: var(--nexus-card-bg);
+    padding: 20px;
+    border-radius: var(--nexus-radius);
+    border: 1px solid var(--nexus-border);
+    box-shadow: var(--nexus-shadow);
+}
+
+/* ========== 统计网格 ========== */
+.nexus-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.nexus-stats-card {
+    background-color: var(--nexus-card-bg);
+    padding: 20px;
+    border-radius: var(--nexus-radius);
+    border: 1px solid var(--nexus-border);
+    box-shadow: var(--nexus-shadow);
+    transition: all 0.3s ease;
+}
+
+.nexus-stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+}
+
+.nexus-stats-card h4 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--nexus-secondary);
+    margin-bottom: 16px;
+}
+
+.nexus-stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--nexus-border);
+}
+
+.nexus-stat-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.nexus-stat-label {
+    font-size: 13px;
+    color: var(--nexus-secondary);
+}
+
+.nexus-stat-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--nexus-dark);
+}
+
+/* ========== 数据表格 ========== */
+.nexus-card {
+    background-color: var(--nexus-card-bg);
+    border-radius: var(--nexus-radius);
+    border: 1px solid var(--nexus-border);
+    box-shadow: var(--nexus-shadow);
+    margin-bottom: 32px;
+    overflow: hidden;
+}
+
+.nexus-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.nexus-data-table th {
+    background-color: var(--nexus-light);
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--nexus-dark);
+    border-bottom: 2px solid var(--nexus-border);
+}
+
+.nexus-data-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--nexus-border);
+    color: var(--nexus-secondary);
+}
+
+.nexus-data-table tr:hover {
+    background-color: var(--nexus-light);
+}
+
+/* ========== 表单样式 ========== */
+.nexus-form-group {
+    margin-bottom: 16px;
+}
+
+.nexus-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--nexus-secondary);
+}
+
+.nexus-form-group input,
+.nexus-form-group select,
+.nexus-form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--nexus-border);
+    border-radius: var(--nexus-radius);
+    background-color: var(--nexus-input-bg);
+    color: var(--nexus-dark);
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.nexus-form-group input:focus,
+.nexus-form-group select:focus,
+.nexus-form-group textarea:focus {
+    outline: none;
+    border-color: var(--nexus-primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.nexus-form-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    padding: 24px;
+}
+
+@media (max-width: 768px) {
+    .nexus-form-container {
+        grid-template-columns: 1fr;
+        padding: 16px;
+        gap: 16px;
+    }
+}
+
+/* ========== 按钮样式 ========== */
+.nexus-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--nexus-radius);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.nexus-btn-primary {
+    background-color: var(--nexus-primary);
+    color: white;
+}
+
+.nexus-btn-primary:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+}
+
+.nexus-btn-secondary {
+    background-color: transparent;
+    color: var(--nexus-secondary);
+    border: 1px solid var(--nexus-border);
+}
+
+.nexus-btn-secondary:hover {
+    background-color: var(--nexus-light);
+    color: var(--nexus-dark);
+}
+
+.nexus-btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.nexus-btn-danger {
+    background-color: var(--nexus-danger);
+    color: white;
+}
+
+.nexus-btn-danger:hover {
+    background-color: #dc2626;
+    transform: translateY(-1px);
+}
+
+/* ========== 状态标签 ========== */
+.nexus-status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.nexus-status-active {
+    background-color: rgba(34, 197, 94, 0.2);
+    color: var(--nexus-success);
+}
+
+.nexus-status-inactive {
+    background-color: rgba(148, 163, 184, 0.2);
+    color: var(--nexus-secondary);
+}
+
+.nexus-status-warning {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: var(--nexus-warning);
+}
+
+.nexus-status-error {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: var(--nexus-danger);
+}
+
+/* ========== 日志样式 ========== */
+.nexus-log-item {
+    background-color: var(--nexus-light);
+    padding: 16px;
+    border-radius: var(--nexus-radius);
+    border: 1px solid var(--nexus-border);
+    margin-bottom: 8px;
+}
+
+.nexus-log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.nexus-log-timestamp {
+    font-size: 12px;
+    color: var(--nexus-secondary);
+}
+
+.nexus-log-level {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 8px;
+}
+
+.nexus-log-level.error {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: var(--nexus-danger);
+}
+
+.nexus-log-level.warning {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: var(--nexus-warning);
+}
+
+.nexus-log-level.info {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: var(--nexus-primary);
+}
+
+.nexus-log-level.debug {
+    background-color: rgba(148, 163, 184, 0.2);
+    color: var(--nexus-secondary);
+}
+
+.nexus-log-message {
+    font-size: 14px;
+    color: var(--nexus-dark);
+    margin-bottom: 8px;
+}
+
+.nexus-log-details {
+    font-size: 12px;
+    color: var(--nexus-secondary);
+}
+
+/* ========== 加载状态 ========== */
+.nexus-loading-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    color: var(--nexus-secondary);
+}
+
+.nexus-loading-indicator::after {
+    content: '';
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--nexus-border);
+    border-top: 2px solid var(--nexus-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 12px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ========== 空状态 ========== */
+.nexus-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background-color: var(--nexus-light);
+    border-radius: var(--nexus-radius);
+    border: 1px solid var(--nexus-border);
+    margin: 40px 0;
+}
+
+.nexus-empty-icon {
+    font-size: 48px;
+    color: var(--nexus-secondary);
+    margin-bottom: 16px;
+}
+
+.nexus-empty-text {
+    font-size: 16px;
+    color: var(--nexus-secondary);
+    margin-bottom: 24px;
+}
+
+/* ========== 响应式设计 ========== */
+@media (max-width: 768px) {
+    .nexus-container {
+        flex-direction: column;
+    }
+    
+    .nexus-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--nexus-border);
+        padding: 16px;
+    }
+    
+    .nexus-main-content {
+        padding: 16px;
+    }
+    
+    .nexus-status-overview,
+    .nexus-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .nexus-header h1 {
+        font-size: 24px;
+    }
+    
+    .nexus-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .nexus-operation-buttons {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+/* ========== 动画效果 ========== */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+}
+
+/* ========== 菜单样式 ========== */
+.nav-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-menu li {
+    margin-bottom: 4px;
+}
+
+.nav-menu a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: var(--nexus-secondary);
+    text-decoration: none;
+    border-radius: var(--nexus-radius);
+    transition: all 0.2s ease;
+}
+
+.nav-menu a:hover {
+    background-color: var(--nexus-light);
+    color: var(--nexus-dark);
+}
+
+.nav-menu a.active {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: var(--nexus-primary);
+    font-weight: 500;
+}
+
+.nav-menu .toggle-icon {
+    margin-left: auto;
+    transition: transform 0.2s ease;
+}
+
+.nav-menu .toggle-icon.collapsed {
+    transform: rotate(-90deg);
+}
+
+.nav-menu .submenu {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0 28px;
+    display: none;
+}
+
+.nav-menu .submenu li {
+    margin-bottom: 2px;
+}
+
+.nav-menu .submenu a {
+    font-size: 13px;
+    padding: 10px 16px;
+}
+
+.menu-divider {
+    height: 1px;
+    background-color: var(--nexus-border);
+    margin: 12px 0;
+}
+
+/* ========== 工具类 ========== */
+.nexus-text-center {
+    text-align: center;
+}
+
+.nexus-text-right {
+    text-align: right;
+}
+
+.nexus-mt-16 {
+    margin-top: 16px;
+}
+
+.nexus-mb-16 {
+    margin-bottom: 16px;
+}
+
+.nexus-mt-32 {
+    margin-top: 32px;
+}
+
+.nexus-mb-32 {
+    margin-bottom: 32px;
+}
+
+.nexus-p-16 {
+    padding: 16px;
+}
+
+.nexus-p-24 {
+    padding: 24px;
+}
+
+.nexus-border {
+    border: 1px solid var(--nexus-border);
+}
+
+.nexus-border-radius {
+    border-radius: var(--nexus-radius);
+}
+
+.nexus-shadow {
+    box-shadow: var(--nexus-shadow);
+}
+
+.nexus-bg-card {
+    background-color: var(--nexus-card-bg);
+}
+
+.nexus-bg-light {
+    background-color: var(--nexus-light);
+}

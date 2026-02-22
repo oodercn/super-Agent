@@ -1,0 +1,123 @@
+apiVersion: skill.ooder.net/v1
+kind: Skill
+
+metadata:
+  id: skill-org-dingding
+  name: DingTalk Organization Service
+  version: 0.7.0
+  description: Provides organization data integration with DingTalk
+  author: ooder Team
+  license: Apache-2.0
+  homepage: https://gitee.com/ooderCN/skill-org-dingding
+  keywords:
+    - dingtalk
+    - dingding
+    - organization
+    - enterprise
+
+spec:
+  type: enterprise-skill
+  
+  runtime:
+    language: java
+    javaVersion: "8"
+    framework: spring-boot
+    mainClass: net.ooder.skill.org.dingding.DingdingSkillApplication
+    jvmOpts: "-Xms256m -Xmx512m"
+  
+  capabilities:
+    - id: org-data-read
+      name: Organization Data Read
+      description: Read organization structure and member data from DingTalk
+      category: data-access
+    - id: user-auth
+      name: User Authentication
+      description: Authenticate users via DingTalk OAuth
+      category: authentication
+    - id: send-message
+      name: Send Message
+      description: Send messages to DingTalk users or groups
+      category: communication
+  
+  scenes:
+    - name: auth
+      description: Authentication scene with organization data support
+      capabilities:
+        - org-data-read
+        - user-auth
+      roles:
+        - roleId: org-provider
+          name: Organization Provider
+          required: true
+          capabilities: [org-data-read, user-auth]
+      communicationProtocol: http
+      securityPolicy: api-key
+      allowParallel: true
+    - name: messaging
+      description: Unified messaging scene
+      capabilities:
+        - send-message
+      roles:
+        - roleId: msg-provider
+          name: Message Provider
+          required: true
+          capabilities: [send-message]
+      communicationProtocol: http
+      securityPolicy: api-key
+      allowParallel: false
+  
+  config:
+    required:
+      - name: DINGDING_APP_KEY
+        type: string
+        description: DingTalk application key
+        secret: false
+      - name: DINGDING_APP_SECRET
+        type: string
+        description: DingTalk application secret
+        secret: true
+    optional:
+      - name: DINGDING_API_BASE_URL
+        type: string
+        default: https://oapi.dingtalk.com
+        description: DingTalk API base URL
+      - name: DINGDING_AGENT_ID
+        type: string
+        description: Agent ID for message sending
+      - name: DINGDING_BOT_NAME
+        type: string
+        default: ooder Bot
+        description: Bot display name
+  
+  endpoints:
+    - path: /api/org/tree
+      method: GET
+      description: Get organization tree
+      capability: org-data-read
+      authentication: true
+    - path: /api/auth/verify
+      method: POST
+      description: Verify user authentication
+      capability: user-auth
+      authentication: false
+    - path: /api/message/send
+      method: POST
+      description: Send message
+      capability: send-message
+      authentication: true
+  
+  resources:
+    cpu: "500m"
+    memory: "512Mi"
+    storage: "1Gi"
+  
+  deployment:
+    modes:
+      - remote-hosted
+      - local-deployed
+    singleton: true
+    requiresAuth: true
+    healthCheck:
+      path: /actuator/health
+      interval: 30
+      timeout: 10

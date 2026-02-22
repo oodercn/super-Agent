@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>接收分享 - Nexus</title>
+
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .received-files-container {
+            padding: 0;
+        }
+        .search-filter {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .search-filter .form-input {
+            flex: 1;
+            max-width: 400px;
+            padding: 10px 12px;
+            border: 1px solid var(--ns-border);
+            border-radius: 6px;
+            background: var(--ns-input-bg);
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        .search-filter .form-select {
+            padding: 10px 12px;
+            border: 1px solid var(--ns-border);
+            border-radius: 6px;
+            background: var(--ns-input-bg);
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        .files-list {
+            min-height: 400px;
+        }
+        .loading-state, .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            color: var(--ns-secondary);
+        }
+        .loading-state i, .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .file-card {
+            background-color: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+        .file-card:hover {
+            border-color: var(--nx-primary);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+        }
+        .file-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .file-icon {
+            font-size: 32px;
+            color: var(--nx-primary);
+        }
+        .file-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .file-status.status-pending {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: var(--ns-warning);
+        }
+        .file-status.status-received {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: var(--ns-success);
+        }
+        .file-status.status-expired, .file-status.status-rejected {
+            background-color: rgba(148, 163, 184, 0.2);
+            color: var(--ns-secondary);
+        }
+        .file-info {
+            margin-bottom: 16px;
+        }
+        .file-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .file-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 13px;
+            color: var(--ns-secondary);
+            margin-bottom: 8px;
+        }
+        .file-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .file-size {
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        .file-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .file-actions .nx-btn {
+            flex: 1;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            z-index: 10000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+        .notification.show {
+            transform: translateX(0);
+        }
+        .notification.success {
+            background-color: rgba(34, 197, 94, 0.9);
+            color: white;
+        }
+        .notification.error {
+            background-color: rgba(239, 68, 68, 0.9);
+            color: white;
+        }
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .content-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--ns-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .content-actions {
+            display: flex;
+            gap: 12px;
+        }
+        @media (max-width: 768px) {
+            .search-filter {
+                flex-direction: column;
+            }
+            .search-filter .form-input {
+                max-width: none;
+            }
+            .files-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">接收分享</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="content-header">
+                        <h1><i class="ri-download-line"></i> 接收分享</h1>
+                        <div class="content-actions">
+                            <button id="refresh-btn" class="nx-btn nx-btn--secondary" onclick="loadReceivedFiles()">
+                                <i class="ri-refresh-line"></i> 刷新
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="received-files-container">
+                        <div class="search-filter">
+                            <input type="text" id="search-input" class="form-input" placeholder="搜索文件名或发送者">
+                            <select id="status-filter" class="form-select">
+                                <option value="all">全部状态</option>
+                                <option value="pending">待接收</option>
+                                <option value="received">已接收</option>
+                                <option value="expired">已过期</option>
+                            </select>
+                        </div>
+
+                        <div class="files-list" id="files-list">
+                            <div class="loading-state">
+                                <i class="ri-loader-4-line ri-spin"></i>
+                                <p>加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/received-files.js"></script>
+</body>
+</html>

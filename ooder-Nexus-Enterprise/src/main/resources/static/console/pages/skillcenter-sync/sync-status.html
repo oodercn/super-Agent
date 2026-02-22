@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>同步状态 - Nexus</title>
+
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .content-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        .content-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .sync-summary {
+            display: flex;
+            gap: 24px;
+            padding: 20px;
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .summary-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .summary-label {
+            color: var(--ns-secondary);
+            font-size: 14px;
+        }
+        .summary-value {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--ns-dark);
+        }
+        .summary-value.success { color: var(--ns-success); }
+        .summary-value.error { color: var(--ns-danger); }
+        .summary-value.pending { color: var(--ns-warning); }
+        .summary-value.in-progress { color: var(--nx-primary); }
+        .sync-task-item {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .task-name {
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        .task-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .task-status.pending { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .task-status.in-progress { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .task-status.completed { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .task-status.failed { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        .task-status.cancelled { background: rgba(148, 163, 184, 0.2); color: var(--ns-secondary); }
+        .task-error {
+            background: rgba(239, 68, 68, 0.1);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: var(--ns-danger);
+            margin-bottom: 12px;
+        }
+        .task-time {
+            font-size: 13px;
+            color: var(--ns-secondary);
+            display: flex;
+            gap: 16px;
+        }
+        .loading, .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--ns-secondary);
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 10000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+        .notification.show { transform: translateX(0); }
+        .notification.success { background: rgba(34, 197, 94, 0.9); color: white; }
+        .notification.error { background: rgba(239, 68, 68, 0.9); color: white; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">同步状态</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="content-header">
+                        <h1>同步状态</h1>
+                        <div class="content-actions">
+                            <button class="nx-btn nx-btn--secondary" onclick="refreshSyncStatus()">
+                                <i class="ri-refresh-line"></i> 刷新
+                            </button>
+                            <button class="nx-btn nx-btn--secondary" onclick="cancelAllSync()">
+                                <i class="ri-close-line"></i> 取消全部
+                            </button>
+                        </div>
+                    </div>
+                    <div class="sync-status-list" id="sync-status-list">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/common/api-client.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/skillcenter-sync-api.js"></script>
+    <script src="/console/js/pages/sync-status.js"></script>
+</body>
+</html>

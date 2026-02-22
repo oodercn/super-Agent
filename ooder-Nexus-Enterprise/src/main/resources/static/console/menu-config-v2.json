@@ -1,0 +1,644 @@
+{
+  "version": "2.0",
+  "sdkVersion": "0.7.1",
+  "description": "基于 SDK 0.7.1 模块重新设计的导航菜单",
+  "menu": [
+    {
+      "id": "dashboard",
+      "name": "控制台",
+      "icon": "ri-dashboard-line",
+      "level": 1,
+      "url": "pages/dashboard.html",
+      "priority": "high",
+      "status": "implemented",
+      "roles": ["personal", "home", "enterprise"],
+      "sdkModule": null
+    },
+    {
+      "id": "llm-services",
+      "name": "AI 服务",
+      "icon": "ri-robot-line",
+      "level": 1,
+      "priority": "high",
+      "status": "implemented",
+      "roles": ["personal", "home", "enterprise"],
+      "sdkModule": "LlmService",
+      "children": [
+        {
+          "id": "llm-chat",
+          "name": "智能对话",
+          "icon": "ri-chat-3-line",
+          "level": 2,
+          "url": "pages/llm/llm-chat.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["流式输出", "多模型支持", "Function Calling"]
+        },
+        {
+          "id": "llm-embed",
+          "name": "向量嵌入",
+          "icon": "ri-database-2-line",
+          "level": 2,
+          "url": "pages/llm/llm-embed.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["文本Embedding", "批量处理"]
+        },
+        {
+          "id": "llm-functions",
+          "name": "Function Calling",
+          "icon": "ri-flashlight-line",
+          "level": 2,
+          "url": "pages/llm/llm-functions.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["函数定义", "参数Schema", "执行结果"]
+        },
+        {
+          "id": "llm-models",
+          "name": "模型管理",
+          "icon": "ri-cpu-line",
+          "level": 2,
+          "url": "pages/llm-integration/skill-management.html",
+          "priority": "medium",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["模型切换", "Token统计", "健康检查"]
+        },
+        {
+          "id": "llm-debug",
+          "name": "调试工具",
+          "icon": "ri-bug-line",
+          "level": 2,
+          "url": "pages/llm-integration/skill-debug.html",
+          "priority": "medium",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"]
+        }
+      ]
+    },
+    {
+      "id": "skill-center",
+      "name": "技能中心",
+      "icon": "ri-apps-line",
+      "level": 1,
+      "priority": "high",
+      "status": "implemented",
+      "roles": ["personal", "home", "enterprise"],
+      "sdkModule": "SkillPackageManager",
+      "children": [
+        {
+          "id": "skill-market",
+          "name": "技能市场",
+          "icon": "ri-store-2-line",
+          "level": 2,
+          "url": "pages/llm-integration/skill-market.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["技能发现", "能力搜索", "场景筛选"]
+        },
+        {
+          "id": "installed-skills",
+          "name": "已安装技能",
+          "icon": "ri-install-line",
+          "level": 2,
+          "url": "pages/skillcenter/installed-skills.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["安装进度", "依赖管理", "生命周期控制", "状态可视化"]
+        },
+        {
+          "id": "skill-lifecycle",
+          "name": "生命周期管理",
+          "icon": "ri-refresh-line",
+          "level": 2,
+          "url": "pages/skillcenter/personal/my-skill.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["启动/停止/暂停", "状态监控", "回滚"]
+        },
+        {
+          "id": "collaborative-scenes",
+          "name": "协作场景",
+          "icon": "ri-team-line",
+          "level": 2,
+          "url": "pages/skillcenter/my-groups.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["场景管理", "多Agent协作", "场景密钥"]
+        },
+        {
+          "id": "skill-sync",
+          "name": "技能同步",
+          "icon": "ri-cloud-line",
+          "level": 2,
+          "priority": "medium",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "children": [
+            {
+              "id": "skill-import",
+              "name": "导入技能",
+              "icon": "ri-upload-line",
+              "level": 3,
+              "url": "pages/skillcenter-sync/skill-upload.html",
+              "priority": "high",
+              "status": "implemented"
+            },
+            {
+              "id": "skill-export",
+              "name": "导出技能",
+              "icon": "ri-download-line",
+              "level": 3,
+              "url": "pages/skillcenter-sync/skill-download.html",
+              "priority": "high",
+              "status": "implemented"
+            },
+            {
+              "id": "skill-categories",
+              "name": "技能分类",
+              "icon": "ri-folder-line",
+              "level": 3,
+              "url": "pages/skillcenter-sync/skill-categories.html",
+              "priority": "medium",
+              "status": "implemented"
+            }
+          ]
+        },
+        {
+          "id": "remote-install",
+          "name": "远程安装",
+          "icon": "ri-cloud-line",
+          "level": 2,
+          "url": "pages/skillcenter/remote-install.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["GitHub安装", "Gitee安装", "URL下载"]
+        }
+      ]
+    },
+    {
+      "id": "network-services",
+      "name": "网络服务",
+      "icon": "ri-network-line",
+      "level": 1,
+      "priority": "high",
+      "status": "implemented",
+      "roles": ["personal", "home", "enterprise"],
+      "sdkModule": "NetworkService",
+      "children": [
+        {
+          "id": "network-overview",
+          "name": "网络概览",
+          "icon": "ri-dashboard-line",
+          "level": 2,
+          "url": "pages/network/network-overview.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["链路统计", "质量监控", "网络拓扑"]
+        },
+        {
+          "id": "link-management",
+          "name": "链路管理",
+          "icon": "ri-links-line",
+          "level": 2,
+          "url": "pages/nexus/link-management.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["链路创建/删除", "质量监控", "最优路径"]
+        },
+        {
+          "id": "network-topology",
+          "name": "网络拓扑",
+          "icon": "ri-global-line",
+          "level": 2,
+          "url": "pages/nexus/network-topology.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["可视化拓扑", "路径分析"]
+        },
+        {
+          "id": "network-quality",
+          "name": "质量监控",
+          "icon": "ri-bar-chart-line",
+          "level": 2,
+          "url": "pages/network/traffic-monitor.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["延迟监控", "丢包率", "带宽统计"]
+        },
+        {
+          "id": "lan-management",
+          "name": "局域网管理",
+          "icon": "ri-wifi-line",
+          "level": 2,
+          "priority": "medium",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "children": [
+            {
+              "id": "lan-dashboard",
+              "name": "局域网仪表盘",
+              "icon": "ri-dashboard-3-line",
+              "level": 3,
+              "url": "pages/lan/lan-dashboard.html",
+              "priority": "high",
+              "status": "implemented"
+            },
+            {
+              "id": "lan-devices",
+              "name": "设备管理",
+              "icon": "ri-device-line",
+              "level": 3,
+              "url": "pages/lan/network-devices.html",
+              "priority": "high",
+              "status": "implemented"
+            },
+            {
+              "id": "lan-ip-management",
+              "name": "IP管理",
+              "icon": "ri-computer-line",
+              "level": 3,
+              "url": "pages/lan/ip-management.html",
+              "priority": "high",
+              "status": "implemented"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "security-center",
+      "name": "安全中心",
+      "icon": "ri-shield-check-line",
+      "level": 1,
+      "priority": "high",
+      "status": "implemented",
+      "roles": ["personal", "home", "enterprise"],
+      "sdkModule": "SecurityService",
+      "children": [
+        {
+          "id": "security-overview",
+          "name": "安全概览",
+          "icon": "ri-shield-line",
+          "level": 2,
+          "url": "pages/home/security-status.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["健康状态", "密钥管理", "Token状态"]
+        },
+        {
+          "id": "key-management",
+          "name": "密钥管理",
+          "icon": "ri-key-line",
+          "level": 2,
+          "url": "pages/nexus/security-management.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["密钥对生成", "加密/解密", "数字签名"]
+        },
+        {
+          "id": "token-management",
+          "name": "Token管理",
+          "icon": "ri-ticket-line",
+          "level": 2,
+          "url": "pages/nexus/config-management.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["Token生成", "Token验证", "Token撤销"]
+        },
+        {
+          "id": "scene-security",
+          "name": "场景安全",
+          "icon": "ri-lock-line",
+          "level": 2,
+          "url": "pages/nexus/scenario-management.html",
+          "priority": "medium",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["场景组密钥", "端到端加密", "密钥轮换"]
+        }
+      ]
+    },
+    {
+      "id": "storage-services",
+      "name": "存储服务",
+      "icon": "ri-database-2-line",
+      "level": 1,
+      "priority": "high",
+      "status": "implemented",
+      "roles": ["personal", "home", "enterprise"],
+      "sdkModule": "StorageService",
+      "children": [
+        {
+          "id": "storage-overview",
+          "name": "存储概览",
+          "icon": "ri-folder-line",
+          "level": 2,
+          "url": "pages/storage/storage-management.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["类型安全存储", "批量操作", "缓存支持"]
+        },
+        {
+          "id": "shared-files",
+          "name": "文件共享",
+          "icon": "ri-share-line",
+          "level": 2,
+          "url": "pages/storage/shared-files.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"]
+        },
+        {
+          "id": "received-files",
+          "name": "接收文件",
+          "icon": "ri-download-line",
+          "level": 2,
+          "url": "pages/storage/received-files.html",
+          "priority": "medium",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"]
+        }
+      ]
+    },
+    {
+      "id": "task-scheduler",
+      "name": "任务调度",
+      "icon": "ri-time-line",
+      "level": 1,
+      "priority": "medium",
+      "status": "implemented",
+      "roles": ["personal", "home", "enterprise"],
+      "sdkModule": "TaskScheduler",
+      "children": [
+        {
+          "id": "task-overview",
+          "name": "任务概览",
+          "icon": "ri-list-check",
+          "level": 2,
+          "url": "pages/task/data-extract-tasks.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["延迟任务", "周期任务", "Cron表达式"]
+        },
+        {
+          "id": "task-history",
+          "name": "执行历史",
+          "icon": "ri-history-line",
+          "level": 2,
+          "url": "pages/task/list-data-extract-tasks.html",
+          "priority": "medium",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "features": ["任务恢复", "持久化"]
+        }
+      ]
+    },
+    {
+      "id": "user-center",
+      "name": "用户中心",
+      "icon": "ri-user-line",
+      "level": 1,
+      "priority": "high",
+      "status": "implemented",
+      "roles": ["personal"],
+      "children": [
+        {
+          "id": "personal-dashboard",
+          "name": "个人概览",
+          "icon": "ri-dashboard-3-line",
+          "level": 2,
+          "url": "pages/personal/dashboard.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal"]
+        },
+        {
+          "id": "my-execution",
+          "name": "执行历史",
+          "icon": "ri-history-line",
+          "level": 2,
+          "url": "pages/skillcenter/personal/my-execution.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal"]
+        },
+        {
+          "id": "my-sharing",
+          "name": "我的分享",
+          "icon": "ri-share-line",
+          "level": 2,
+          "url": "pages/skillcenter/my-sharing.html",
+          "priority": "medium",
+          "status": "implemented",
+          "roles": ["personal"]
+        }
+      ]
+    },
+    {
+      "id": "system-admin",
+      "name": "系统管理",
+      "icon": "ri-admin-line",
+      "level": 1,
+      "priority": "high",
+      "status": "implemented",
+      "roles": ["admin"],
+      "children": [
+        {
+          "id": "admin-dashboard",
+          "name": "管理概览",
+          "icon": "ri-dashboard-line",
+          "level": 2,
+          "url": "pages/skillcenter/admin/dashboard.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["admin"]
+        },
+        {
+          "id": "admin-skill-management",
+          "name": "技能管理",
+          "icon": "ri-apps-line",
+          "level": 2,
+          "url": "pages/skillcenter/admin/skill-management.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["admin"]
+        },
+        {
+          "id": "admin-market-management",
+          "name": "市场管理",
+          "icon": "ri-store-2-line",
+          "level": 2,
+          "url": "pages/skillcenter/admin/market-management.html",
+          "priority": "medium",
+          "status": "implemented",
+          "roles": ["admin"]
+        },
+        {
+          "id": "admin-skill-authentication",
+          "name": "技能认证",
+          "icon": "ri-shield-check-line",
+          "level": 2,
+          "url": "pages/skillcenter/admin/skill-authentication.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["admin"]
+        },
+        {
+          "id": "admin-group-management",
+          "name": "群组管理",
+          "icon": "ri-group-line",
+          "level": 2,
+          "url": "pages/skillcenter/admin/group-management.html",
+          "priority": "medium",
+          "status": "implemented",
+          "roles": ["admin"]
+        },
+        {
+          "id": "admin-system-status",
+          "name": "系统状态",
+          "icon": "ri-bar-chart-line",
+          "level": 2,
+          "url": "pages/nexus/system-status.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["admin"]
+        },
+        {
+          "id": "admin-log-management",
+          "name": "日志管理",
+          "icon": "ri-file-text-line",
+          "level": 2,
+          "url": "pages/nexus/log-management.html",
+          "priority": "medium",
+          "status": "implemented",
+          "roles": ["admin"]
+        }
+      ]
+    },
+    {
+      "id": "ops-tools",
+      "name": "运维工具",
+      "icon": "ri-tools-line",
+      "level": 1,
+      "priority": "medium",
+      "status": "implemented",
+      "roles": ["personal", "home", "enterprise"],
+      "children": [
+        {
+          "id": "health-check",
+          "name": "健康检查",
+          "icon": "ri-heart-pulse-line",
+          "level": 2,
+          "url": "pages/monitoring/health-check.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"]
+        },
+        {
+          "id": "app-config",
+          "name": "应用配置",
+          "icon": "ri-settings-4-line",
+          "level": 2,
+          "url": "pages/config/app-config.html",
+          "priority": "high",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"]
+        },
+        {
+          "id": "openwrt-tools",
+          "name": "OpenWrt工具",
+          "icon": "ri-router-line",
+          "level": 2,
+          "priority": "medium",
+          "status": "implemented",
+          "roles": ["personal", "home", "enterprise"],
+          "children": [
+            {
+              "id": "openwrt-dashboard",
+              "name": "路由仪表盘",
+              "icon": "ri-dashboard-line",
+              "level": 3,
+              "url": "pages/openwrt/router-dashboard.html",
+              "priority": "high",
+              "status": "implemented"
+            },
+            {
+              "id": "openwrt-network",
+              "name": "网络设置",
+              "icon": "ri-wifi-line",
+              "level": 3,
+              "url": "pages/openwrt/network-management.html",
+              "priority": "high",
+              "status": "implemented"
+            },
+            {
+              "id": "openwrt-command",
+              "name": "命令执行",
+              "icon": "ri-terminal-line",
+              "level": 3,
+              "url": "pages/openwrt/command.html",
+              "priority": "medium",
+              "status": "implemented"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "sdkModules": {
+    "LlmService": {
+      "name": "LLM服务",
+      "description": "大语言模型服务，支持流式输出、多模型、Function Calling",
+      "endpoints": ["/api/llm/*"]
+    },
+    "SkillPackageManager": {
+      "name": "技能包管理",
+      "description": "技能发现、安装、卸载、更新",
+      "endpoints": ["/api/skillcenter/*"]
+    },
+    "NetworkService": {
+      "name": "网络服务",
+      "description": "链路管理、质量监控、最优路径计算",
+      "endpoints": ["/api/network/*"]
+    },
+    "SecurityService": {
+      "name": "安全服务",
+      "description": "密钥管理、加密解密、Token管理、场景组安全",
+      "endpoints": ["/api/security/*"]
+    },
+    "StorageService": {
+      "name": "存储服务",
+      "description": "类型安全存储、批量操作、缓存支持",
+      "endpoints": ["/api/storage/*"]
+    },
+    "TaskScheduler": {
+      "name": "任务调度",
+      "description": "延迟任务、周期任务、Cron表达式、持久化",
+      "endpoints": ["/api/task/*"]
+    },
+    "EventBus": {
+      "name": "事件总线",
+      "description": "发布订阅模式、模块解耦",
+      "endpoints": []
+    }
+  }
+}

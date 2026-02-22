@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配置文件 - OpenWrt - Nexus</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/common/api-client.js"></script>
+    <style>
+        .config-editor {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 4px;
+            min-height: 400px;
+            resize: vertical;
+            border: none;
+            width: 100%;
+        }
+        .config-file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .config-file-item {
+            padding: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+        }
+        .config-file-item:hover {
+            background: var(--ns-bg-hover);
+        }
+        .config-file-item.active {
+            background: var(--nx-primary);
+            color: white;
+            border-color: var(--nx-primary);
+        }
+        .config-file-item i {
+            font-size: 18px;
+        }
+        .config-grid {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">配置文件</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="saveConfigFile()">
+                        <i class="ri-save-line"></i> 保存配置
+                    </button>
+                </div>
+            </header>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="config-grid">
+                        <!-- 配置文件列表 -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title"><i class="ri-folder-line"></i> 配置文件</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="config-file-list" id="configFileList">
+                                    <div class="config-file-item active" data-file="network" onclick="loadConfigFile('network')">
+                                        <i class="ri-network-line"></i>
+                                        <span>network</span>
+                                    </div>
+                                    <div class="config-file-item" data-file="dhcp" onclick="loadConfigFile('dhcp')">
+                                        <i class="ri-server-line"></i>
+                                        <span>dhcp</span>
+                                    </div>
+                                    <div class="config-file-item" data-file="firewall" onclick="loadConfigFile('firewall')">
+                                        <i class="ri-shield-line"></i>
+                                        <span>firewall</span>
+                                    </div>
+                                    <div class="config-file-item" data-file="wireless" onclick="loadConfigFile('wireless')">
+                                        <i class="ri-wifi-line"></i>
+                                        <span>wireless</span>
+                                    </div>
+                                    <div class="config-file-item" data-file="system" onclick="loadConfigFile('system')">
+                                        <i class="ri-settings-line"></i>
+                                        <span>system</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 配置编辑器 -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title"><i class="ri-edit-line"></i> 编辑配置</h2>
+                                <span id="currentFileName" class="badge badge-primary">network</span>
+                            </div>
+                            <div class="card-body">
+                                <textarea id="configEditor" class="config-editor" placeholder="选择配置文件进行编辑..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+</body>
+</html>

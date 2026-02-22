@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据同步 - Nexus</title>
+
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .content-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--ns-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .content-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--nx-primary);
+            margin-bottom: 8px;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: var(--ns-secondary);
+        }
+        .tabs {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .tab-header {
+            display: flex;
+            border-bottom: 1px solid var(--ns-border);
+            background: var(--ns-bg-hover);
+        }
+        .tab-item {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--ns-dark);
+        }
+        .tab-item:hover { background: var(--ns-bg-hover); }
+        .tab-item.active { border-bottom-color: var(--nx-primary); color: var(--nx-primary); }
+        .tab-content { display: none; padding: 20px; }
+        .tab-content.active { display: block; }
+        .search-filter {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .form-input, .form-select {
+            padding: 10px 12px;
+            border: 1px solid var(--ns-border);
+            border-radius: 6px;
+            background: var(--ns-input-bg);
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        .search-filter .form-input { flex: 1; min-width: 200px; }
+        .table-container {
+            overflow-x: auto;
+            background: var(--ns-card-bg);
+            border-radius: 8px;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .data-table th {
+            background: var(--ns-bg-hover);
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--ns-dark);
+            border-bottom: 2px solid var(--ns-border);
+        }
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--ns-border);
+            color: var(--ns-dark);
+        }
+        .data-table tr:hover { background-color: var(--ns-bg-hover); }
+        .status-indicator {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .status-running { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .status-completed { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .status-failed { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        .status-cancelled { background: rgba(148, 163, 184, 0.2); color: var(--ns-secondary); }
+        .progress-bar {
+            position: relative;
+            height: 20px;
+            background: var(--ns-bg-hover);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--nx-primary);
+            transition: width 0.3s;
+        }
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            color: var(--ns-dark);
+        }
+        .skill-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+        .skill-card {
+            background: var(--ns-bg-hover);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: all 0.3s;
+        }
+        .skill-card:hover { border-color: var(--nx-primary); }
+        .skill-card.selected { border-color: var(--nx-primary); background: rgba(59, 130, 246, 0.1); }
+        .skill-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--nx-primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+        .skill-info { flex: 1; }
+        .skill-info h4 { margin: 0 0 4px 0; font-size: 16px; color: var(--ns-dark); }
+        .skill-info p { margin: 0 0 8px 0; font-size: 13px; color: var(--ns-secondary); }
+        .skill-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; background: var(--ns-bg-hover); color: var(--ns-secondary); }
+        .badge-success { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .skill-actions { display: flex; flex-direction: column; gap: 8px; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        .modal-header h3 { margin: 0; color: var(--ns-dark); }
+        .modal-body { padding: 20px; }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 20px;
+            border-top: 1px solid var(--ns-border);
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--ns-dark); }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">数据同步</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="content-header">
+                        <h1><i class="ri-sync-line"></i> 数据同步</h1>
+                        <div class="content-actions">
+                            <button class="nx-btn nx-btn--primary" onclick="showSyncModal()">
+                                <i class="ri-add-line"></i> 新建同步
+                            </button>
+                            <button class="nx-btn nx-btn--secondary" onclick="refreshData()">
+                                <i class="ri-refresh-line"></i> 刷新
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid" id="stats-container">
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-total">-</div>
+                            <div class="stat-label">总任务</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-completed">-</div>
+                            <div class="stat-label">已完成</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-running">-</div>
+                            <div class="stat-label">进行中</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-skills">-</div>
+                            <div class="stat-label">已同步技能</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-rate">-</div>
+                            <div class="stat-label">成功率</div>
+                        </div>
+                    </div>
+
+                    <div class="tabs">
+                        <div class="tab-header">
+                            <div class="tab-item active" data-tab="tasks" onclick="switchTab('tasks')">
+                                <i class="ri-task-line"></i> 同步任务
+                            </div>
+                            <div class="tab-item" data-tab="skills" onclick="switchTab('skills')">
+                                <i class="ri-apps-line"></i> 技能管理
+                            </div>
+                            <div class="tab-item" data-tab="history" onclick="switchTab('history')">
+                                <i class="ri-history-line"></i> 同步历史
+                            </div>
+                        </div>
+
+                        <div class="tab-content active" id="tab-tasks">
+                            <div class="search-filter">
+                                <select id="status-filter" class="form-select" onchange="filterTasks()">
+                                    <option value="all">全部状态</option>
+                                    <option value="pending">待执行</option>
+                                    <option value="running">进行中</option>
+                                    <option value="completed">已完成</option>
+                                    <option value="failed">失败</option>
+                                </select>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>任务名称</th>
+                                            <th>类型</th>
+                                            <th>状态</th>
+                                            <th>进度</th>
+                                            <th>创建时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="task-table-body">
+                                        <tr><td colspan="6" style="text-align: center; padding: 40px;">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="tab-content" id="tab-skills">
+                            <div class="search-filter">
+                                <input type="text" id="skill-search" class="form-input" placeholder="搜索技能" onkeyup="filterSkills()">
+                                <button class="nx-btn nx-btn--primary" onclick="batchSync()">
+                                    <i class="ri-sync-line"></i> 批量同步
+                                </button>
+                            </div>
+                            <div class="skill-grid" id="skill-grid"></div>
+                        </div>
+
+                        <div class="tab-content" id="tab-history">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>技能名称</th>
+                                            <th>同步方向</th>
+                                            <th>同步时间</th>
+                                            <th>状态</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="history-table-body">
+                                        <tr><td colspan="4" style="text-align: center; padding: 40px;">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="sync-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="sync-modal-title">新建同步任务</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-task-id">
+                <div class="form-group">
+                    <label>任务名称</label>
+                    <input type="text" id="sync-name" class="form-input" placeholder="输入任务名称">
+                </div>
+                <div class="form-group">
+                    <label>同步类型</label>
+                    <select id="sync-type" class="form-select">
+                        <option value="upload">上传到云端</option>
+                        <option value="download">下载到本地</option>
+                        <option value="bidirectional">双向同步</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>源位置</label>
+                    <input type="text" id="sync-source" class="form-input" value="本地" readonly>
+                </div>
+                <div class="form-group">
+                    <label>目标位置</label>
+                    <input type="text" id="sync-target" class="form-input" value="云端" readonly>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createSync()">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/sync-dashboard.js"></script>
+</body>
+</html>

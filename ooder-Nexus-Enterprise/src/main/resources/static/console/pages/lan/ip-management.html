@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP管理 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">IP管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-3 nx-mb-6">
+                        <div class="nx-card">
+                            <div class="nx-card__body">
+                                <h3 class="nx-text-secondary nx-text-sm nx-mb-2">IP 分配状态</h3>
+                                <div class="nx-flex nx-gap-4">
+                                    <div>
+                                        <p class="nx-text-secondary nx-text-sm nx-mb-1">已分配 IP</p>
+                                        <p class="nx-text-2xl nx-font-bold">12</p>
+                                    </div>
+                                    <div>
+                                        <p class="nx-text-secondary nx-text-sm nx-mb-1">可用 IP</p>
+                                        <p class="nx-text-2xl nx-font-bold nx-text-success">88</p>
+                                    </div>
+                                    <div>
+                                        <p class="nx-text-secondary nx-text-sm nx-mb-1">分配率</p>
+                                        <p class="nx-text-2xl nx-font-bold nx-text-warning">12%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body">
+                                <h3 class="nx-text-secondary nx-text-sm nx-mb-2">IP 范围</h3>
+                                <div class="nx-flex nx-flex-col nx-gap-2">
+                                    <div class="nx-flex nx-justify-between">
+                                        <span class="nx-text-secondary nx-text-sm">起始 IP</span>
+                                        <span class="nx-font-medium">192.168.1.100</span>
+                                    </div>
+                                    <div class="nx-flex nx-justify-between">
+                                        <span class="nx-text-secondary nx-text-sm">结束 IP</span>
+                                        <span class="nx-font-medium">192.168.1.200</span>
+                                    </div>
+                                    <div class="nx-flex nx-justify-between">
+                                        <span class="nx-text-secondary nx-text-sm">子网掩码</span>
+                                        <span class="nx-font-medium">255.255.255.0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">静态 IP 分配</h3>
+                            <button class="nx-btn nx-btn--primary" onclick="showAddStaticIPForm()">
+                                <i class="ri-plus-line"></i> 添加静态 IP
+                            </button>
+                        </div>
+                        <div class="nx-card__body">
+                            <table class="nx-table">
+                                <thead>
+                                    <tr>
+                                        <th>设备名称</th>
+                                        <th>MAC 地址</th>
+                                        <th>静态 IP</th>
+                                        <th>状态</th>
+                                        <th>分配时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>主路由器</td>
+                                        <td>00:11:22:33:44:55</td>
+                                        <td>192.168.1.1</td>
+                                        <td><span class="nx-text-success">活跃</span></td>
+                                        <td>2023-12-01 10:00:00</td>
+                                        <td>
+                                            <button class="nx-btn nx-btn--sm nx-btn--secondary">编辑</button>
+                                            <button class="nx-btn nx-btn--sm nx-btn--danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>智能家居中心</td>
+                                        <td>AA:BB:CC:DD:EE:FF</td>
+                                        <td>192.168.1.10</td>
+                                        <td><span class="nx-text-success">活跃</span></td>
+                                        <td>2023-12-01 10:05:00</td>
+                                        <td>
+                                            <button class="nx-btn nx-btn--sm nx-btn--secondary">编辑</button>
+                                            <button class="nx-btn nx-btn--sm nx-btn--danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>网络存储</td>
+                                        <td>11:22:33:44:55:66</td>
+                                        <td>192.168.1.20</td>
+                                        <td><span class="nx-text-success">活跃</span></td>
+                                        <td>2023-12-01 10:10:00</td>
+                                        <td>
+                                            <button class="nx-btn nx-btn--sm nx-btn--secondary">编辑</button>
+                                            <button class="nx-btn nx-btn--sm nx-btn--danger">删除</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">DHCP 租约</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <table class="nx-table">
+                                <thead>
+                                    <tr>
+                                        <th>设备名称</th>
+                                        <th>MAC 地址</th>
+                                        <th>IP 地址</th>
+                                        <th>租约开始</th>
+                                        <th>租约结束</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>笔记本电脑</td>
+                                        <td>AA:BB:CC:DD:EE:01</td>
+                                        <td>192.168.1.101</td>
+                                        <td>2023-12-01 11:00:00</td>
+                                        <td>2023-12-02 11:00:00</td>
+                                        <td><span class="nx-text-success">活跃</span></td>
+                                        <td>
+                                            <button class="nx-btn nx-btn--sm nx-btn--secondary">设为静态</button>
+                                            <button class="nx-btn nx-btn--sm nx-btn--danger">释放</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>智能手机</td>
+                                        <td>AA:BB:CC:DD:EE:02</td>
+                                        <td>192.168.1.102</td>
+                                        <td>2023-12-01 11:30:00</td>
+                                        <td>2023-12-02 11:30:00</td>
+                                        <td><span class="nx-text-success">活跃</span></td>
+                                        <td>
+                                            <button class="nx-btn nx-btn--sm nx-btn--secondary">设为静态</button>
+                                            <button class="nx-btn nx-btn--sm nx-btn--danger">释放</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">IP 地址范围设置</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-4 nx-mb-4">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">起始 IP 地址</label>
+                                    <input type="text" class="nx-input" value="192.168.1.100">
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">结束 IP 地址</label>
+                                    <input type="text" class="nx-input" value="192.168.1.200">
+                                </div>
+                            </div>
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-4 nx-mb-4">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">子网掩码</label>
+                                    <input type="text" class="nx-input" value="255.255.255.0">
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">DHCP 租约时间</label>
+                                    <select class="nx-input">
+                                        <option value="1h">1小时</option>
+                                        <option value="6h">6小时</option>
+                                        <option value="12h">12小时</option>
+                                        <option value="24h" selected>24小时</option>
+                                        <option value="7d">7天</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="nx-flex nx-gap-3">
+                                <button class="nx-btn nx-btn--secondary" onclick="resetIpRangeSettings()">重置</button>
+                                <button class="nx-btn nx-btn--primary" onclick="saveIpRangeSettings()">保存设置</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/ip-management.js"></script>
+</body>
+</html>

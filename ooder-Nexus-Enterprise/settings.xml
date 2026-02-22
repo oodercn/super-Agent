@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+          http://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+    <!-- 本地仓库 -->
+    <localRepository>D:/maven/.m2/repository</localRepository>
+
+    <!-- 交互模式 -->
+    <interactiveMode>true</interactiveMode>
+
+    <!-- 是否启用插件更新检查 -->
+    <usePluginRegistry>false</usePluginRegistry>
+
+    <!-- 是否离线模式 -->
+    <offline>false</offline>
+
+    <!-- Maven镜像配置 - 国内加速 -->
+    <mirrors>
+        <!-- 阿里云公共仓库 (主力镜像) -->
+        <mirror>
+            <id>aliyunmaven</id>
+            <mirrorOf>*</mirrorOf>
+            <name>阿里云公共仓库</name>
+            <url>https://maven.aliyun.com/repository/public</url>
+        </mirror>
+
+        <!-- 阿里云Spring仓库 -->
+        <mirror>
+            <id>aliyun-spring</id>
+            <mirrorOf>central,spring-releases</mirrorOf>
+            <name>阿里云Spring仓库</name>
+            <url>https://maven.aliyun.com/repository/spring</url>
+        </mirror>
+
+        <!-- 华为云Maven镜像 -->
+        <mirror>
+            <id>huaweicloud</id>
+            <mirrorOf>*</mirrorOf>
+            <name>华为云Maven镜像</name>
+            <url>https://repo.huaweicloud.com/repository/maven-public/</url>
+        </mirror>
+
+        <!-- 腾讯云Maven镜像 -->
+        <mirror>
+            <id>tencentmaven</id>
+            <mirrorOf>*</mirrorOf>
+            <name>腾讯云Maven镜像</name>
+            <url>https://mirrors.cloud.tencent.com/repository/maven/</url>
+        </mirror>
+
+        <!-- Maven官方仓库 (备用) -->
+        <mirror>
+            <id>central-maven-org</id>
+            <mirrorOf>central</mirrorOf>
+            <name>Maven Central</name>
+            <url>https://repo1.maven.org/maven2</url>
+        </mirror>
+    </mirrors>
+
+    <!-- 代理配置 (如果需要) -->
+    <proxies>
+        <!-- 如果公司需要代理上网，取消注释以下配置 -->
+        <!--
+        <proxy>
+            <id>my-proxy</id>
+            <active>true</active>
+            <protocol>http</protocol>
+            <host>proxy.example.com</host>
+            <port>8080</port>
+            <username>proxyuser</username>
+            <password>proxypass</password>
+            <nonProxyHosts>localhost|127.0.0.1|*.example.com</nonProxyHosts>
+        </proxy>
+        -->
+    </proxies>
+
+    <!-- 服务器配置 (如私有仓库认证) -->
+    <servers>
+        <!--
+        <server>
+            <id>my-repo</id>
+            <username>repo-user</username>
+            <password>repo-pass</password>
+        </server>
+        -->
+    </servers>
+
+    <!-- 活跃Profiles -->
+    <activeProfiles>
+        <activeProfile>jdk-1.8</activeProfile>
+    </activeProfiles>
+
+    <!-- Profiles配置 -->
+    <profiles>
+        <!-- JDK 1.8配置 -->
+        <profile>
+            <id>jdk-1.8</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <jdk>1.8</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.source>1.8</maven.compiler.source>
+                <maven.compiler.target>1.8</maven.compiler.target>
+                <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
+            </properties>
+        </profile>
+
+        <!-- 国内加速配置 -->
+        <profile>
+            <id>china-accelerate</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <!-- 使用阿里云仓库 -->
+                <maven.repository.url>https://maven.aliyun.com/repository/public</maven.repository.url>
+            </properties>
+        </profile>
+    </profiles>
+</settings>

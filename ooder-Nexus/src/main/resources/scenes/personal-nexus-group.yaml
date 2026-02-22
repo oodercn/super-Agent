@@ -1,0 +1,60 @@
+apiVersion: scene.ooder.net/v1
+kind: SceneGroupDefinition
+
+metadata:
+  sceneGroupId: personal-nexus
+  name: Personal Nexus
+  description: |
+    个人版Nexus默认场景组配置。
+    包含VFS和认证等基础场景，适合个人用户。
+  version: "1.0.0"
+  author: Ooder Team
+  createdAt: "2026-02-18T00:00:00Z"
+
+spec:
+  type: personal
+  
+  scenes:
+    - sceneId: vfs
+      roleId: PRIMARY
+      required: true
+      autoStart: true
+      priority: 1
+      description: 虚拟文件系统，必选基础场景
+      
+    - sceneId: auth
+      roleId: PRIMARY
+      required: true
+      autoStart: true
+      priority: 2
+      description: 认证授权，必选安全场景
+      
+    - sceneId: a2ui
+      roleId: PRIMARY
+      required: false
+      autoStart: false
+      priority: 3
+      description: UI生成，可选开发场景
+
+  communicationProtocol: http
+  securityPolicy: jwt
+  allowParallel: true
+  
+  config:
+    maxMembers: 1
+    sessionTimeout: 3600
+    enableAuditLog: false
+    enableMetrics: false
+    
+  dependencies:
+    - sceneId: auth
+      dependsOn:
+        - vfs
+    - sceneId: a2ui
+      dependsOn:
+        - vfs
+
+  deployment:
+    strategy: simple
+    healthCheckInterval: 60
+    gracefulShutdownTimeout: 10

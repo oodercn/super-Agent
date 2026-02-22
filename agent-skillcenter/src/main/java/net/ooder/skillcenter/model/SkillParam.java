@@ -1,12 +1,17 @@
 package net.ooder.skillcenter.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * 技能参数描述，定义技能所需的参数信息
  */
 public class SkillParam {
     private String name;
     private String description;
+
+    @JsonIgnore
     private Class<?> type;
+
     private boolean required;
     private Object defaultValue;
 
@@ -54,12 +59,21 @@ public class SkillParam {
         this.description = description;
     }
 
+    @JsonIgnore
     public Class<?> getType() {
         return type;
     }
 
     public void setType(Class<?> type) {
         this.type = type;
+    }
+
+    /**
+     * 获取类型名称（用于JSON序列化）
+     * @return 类型名称
+     */
+    public String getTypeName() {
+        return type != null ? type.getSimpleName() : null;
     }
 
     public boolean isRequired() {

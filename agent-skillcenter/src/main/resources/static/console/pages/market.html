@@ -3,419 +3,495 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>市场管理 - SkillCenter 控制台</title>
-    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
-    <link href="/skillcenter/console/assets/css/remixicon/remixicon.css" rel="stylesheet">
-    <script src="/skillcenter/console/js/menu.js"></script>
+    <title>技能市场 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .skill-card {
+            transition: all 0.3s ease;
+        }
+        .skill-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        .rating-star {
+            color: var(--nx-warning);
+        }
+        .category-tag {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .category-tag:hover {
+            opacity: 0.8;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <!-- 侧边导航栏 -->
-        <aside class="sidebar" id="sidebar">
-            <!-- 菜单将通过menu.js动态加载 -->
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
         </aside>
         
-        <!-- 主内容区 -->
-        <main class="main-content">
-            <div class="header">
-                <h1><i class="ri-briefcase-line"></i> 市场管理</h1>
-                <div class="user-info">
-                    <span class="user-name">管理员</span>
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能市场</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__body">
+                            <div class="nx-flex nx-items-center nx-gap-3">
+                                <input type="text" id="search-keyword" placeholder="搜索技能名称、描述..." class="nx-input" style="flex: 1;" onkeypress="if(event.key==='Enter')searchSkills()">
+                                <select id="category-filter" class="nx-select" style="width: 150px;">
+                                    <option value="">全部分类</option>
+                                    <option value="信息查询">信息查询</option>
+                                    <option value="金融">金融</option>
+                                    <option value="工具">工具</option>
+                                    <option value="娱乐">娱乐</option>
+                                    <option value="文档">文档</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                                <button class="nx-btn nx-btn--primary" onclick="searchSkills()">
+                                    <i class="ri-search-line"></i> 搜索
+                                </button>
+                                <button class="nx-btn nx-btn--ghost" onclick="resetSearch()">重置</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-tabs nx-mb-6">
+                        <button class="nx-tabs__tab nx-tabs__tab--active" data-tab="all" onclick="switchTab('all')">全部技能</button>
+                        <button class="nx-tabs__tab" data-tab="popular" onclick="switchTab('popular')">热门技能</button>
+                        <button class="nx-tabs__tab" data-tab="latest" onclick="switchTab('latest')">最新技能</button>
+                    </div>
+                    
+                    <div id="skills-container">
+                        <div class="nx-grid nx-grid-cols-3 nx-gap-6" id="skills-grid">
+                            <tr><td colspan="3" style="text-align: center; padding: 40px;">加载中...</td></tr>
+                        </div>
+                    </div>
+                    
+                    <div id="pagination" class="nx-flex nx-justify-center nx-gap-2 nx-mt-6">
+                    </div>
                 </div>
             </div>
-            
-            <!-- 标签页导航 -->
-            <div class="section" style="padding-bottom: 0;">
-                <div style="display: flex; border-bottom: 1px solid var(--ooder-border); margin-bottom: 0;">
-                    <button class="btn btn-secondary" style="border-radius: var(--ooder-radius) var(--ooder-radius) 0 0; border-bottom: none; margin-right: 0;" onclick="switchTab('market-search')">技能搜索</button>
-                    <button class="btn btn-secondary" style="border-radius: 0; border-bottom: none; margin-right: 0;" onclick="switchTab('market-download')">技能下载</button>
-                    <button class="btn btn-secondary" style="border-radius: 0; border-bottom: none; margin-right: 0;" onclick="switchTab('market-rate')">技能评分</button>
-                    <button class="btn btn-secondary" style="border-radius: 0; border-bottom: none; margin-right: 0;" onclick="switchTab('market-popular')">热门技能</button>
-                    <button class="btn btn-secondary" style="border-radius: 0; border-bottom: none; margin-right: 0;" onclick="switchTab('market-latest')">最新技能</button>
-                    <button class="btn btn-secondary" style="border-radius: 0; border-bottom: none; margin-right: 0;" onclick="switchTab('market-api-import')">API导入</button>
-                    <button class="btn btn-secondary" style="border-radius: 0 var(--ooder-radius) 0 0; border-bottom: none; margin-right: 0;" onclick="switchTab('market-enterprise-apis')">企业级接口</button>
-                </div>
+        </main>
+    </div>
+    
+    <div id="detailModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 700px;">
+            <div class="modal-header">
+                <h3 id="detailTitle">技能详情</h3>
+                <button class="modal-close" onclick="closeDetailModal()">&times;</button>
             </div>
-            
-            <!-- 标签页内容 -->
-            <div class="section">
-                <!-- 技能搜索标签页 -->
-                <div id="market-search-tab" class="tab-content">
-                    <div style="margin-bottom: 16px;">
-                        <input type="text" id="search-keyword" placeholder="搜索技能..." style="padding: 10px; border: 1px solid var(--ooder-border); border-radius: var(--ooder-radius); background-color: #1a1a1a; color: var(--ooder-dark); margin-right: 12px;">
-                        <button class="btn btn-primary" onclick="searchSkills()">搜索</button>
-                        <button class="btn btn-secondary" onclick="resetSearch()">重置</button>
-                    </div>
-                    <div class="dashboard" id="search-results">
-                        <!-- 搜索结果将在这里显示 -->
-                    </div>
-                </div>
-                
-                <!-- 技能下载标签页 -->
-                <div id="market-download-tab" class="tab-content hidden">
-                    <div class="dashboard" id="download-skills">
-                        <!-- 可下载技能将在这里显示 -->
-                    </div>
-                </div>
-                
-                <!-- 技能评分标签页 -->
-                <div id="market-rate-tab" class="tab-content hidden">
-                    <div class="dashboard" id="rate-skills">
-                        <!-- 可评分技能将在这里显示 -->
-                    </div>
-                </div>
-                
-                <!-- 热门技能标签页 -->
-                <div id="market-popular-tab" class="tab-content hidden">
-                    <div class="dashboard" id="popular-skills">
-                        <!-- 热门技能将在这里显示 -->
-                    </div>
-                </div>
-                
-                <!-- 最新技能标签页 -->
-                <div id="market-latest-tab" class="tab-content hidden">
-                    <div class="dashboard" id="latest-skills">
-                        <!-- 最新技能将在这里显示 -->
-                    </div>
-                </div>
-                
-                <!-- API导入标签页 -->
-                <div id="market-api-import-tab" class="tab-content hidden">
-                    <div class="dashboard">
-                        <div class="card">
-                            <h3><i class="ri-cloud-sun-line"></i> 天气API导入</h3>
-                            <div class="value">1.0.0</div>
-                            <div class="label">天气 | 信息查询</div>
-                            <p>基于第三方API的天气查询技能，可以获取全球城市的实时天气信息。</p>
-                            <button class="btn btn-primary" style="margin-top: 16px; margin-right: 8px;" onclick="window.location.href='weather-api-skill.html'">配置导入</button>
-                            <button class="btn btn-secondary" style="margin-top: 16px;" onclick="showApiImportDetail('weather')">详情</button>
-                        </div>
-                        <div class="card">
-                            <h3><i class="ri-line-chart-line"></i> 股票API导入</h3>
-                            <div class="value">1.0.0</div>
-                            <div class="label">金融 | 信息查询</div>
-                            <p>基于第三方API的股票查询技能，可以获取全球股票的实时价格和历史数据。</p>
-                            <button class="btn btn-primary" style="margin-top: 16px; margin-right: 8px;" onclick="window.location.href='stock-api-skill.html'">配置导入</button>
-                            <button class="btn btn-secondary" style="margin-top: 16px;" onclick="showApiImportDetail('stock')">详情</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 企业级接口标签页 -->
-                <div id="market-enterprise-apis-tab" class="tab-content hidden">
-                    <div class="dashboard">
-                        <div class="card">
-                            <h3><i class="ri-building-line"></i> 钉钉开放平台</h3>
-                            <div class="value">v1.0</div>
-                            <div class="label">企业 | 组织机构</div>
-                            <p>钉钉开放平台提供的企业级接口，包括组织机构管理、消息通知、审批等功能。</p>
-                            <div class="label" style="margin-top: 8px;">API地址: api.dingtalk.com</div>
-                            <div class="label">认证方式: AppKey + AppSecret</div>
-                            <div class="label">通讯协议: HTTPS</div>
-                            <button class="btn btn-primary" style="margin-top: 16px; margin-right: 8px;" onclick="showEnterpriseApiDetail('dingtalk')">查看详情</button>
-                            <button class="btn btn-secondary" style="margin-top: 16px;" onclick="window.open('https://open.dingtalk.com/document/development/api-overview', '_blank')">官方文档</button>
-                        </div>
-                        <div class="card">
-                            <h3><i class="ri-money-dollar-circle-line"></i> 用友开放平台</h3>
-                            <div class="value">v1.0</div>
-                            <div class="label">企业 | ERP集成</div>
-                            <p>用友开放平台提供的企业级接口，包括财务、供应链、人力资源等ERP系统集成功能。</p>
-                            <div class="label" style="margin-top: 8px;">API地址: 用友云平台</div>
-                            <div class="label">认证方式: OAuth 2.0</div>
-                            <div class="label">通讯协议: HTTPS</div>
-                            <button class="btn btn-primary" style="margin-top: 16px; margin-right: 8px;" onclick="showEnterpriseApiDetail('yonyou')">查看详情</button>
-                            <button class="btn btn-secondary" style="margin-top: 16px;" onclick="window.open('https://www.ding.cn/technology/40192.html', '_blank')">官方文档</button>
-                        </div>
-                    </div>
-                </div>
+            <div class="modal-body" id="detailContent">
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeDetailModal()">关闭</button>
+                <button class="nx-btn nx-btn--primary" id="downloadBtn" onclick="downloadCurrentSkill()">
+                    <i class="ri-download-line"></i> 下载安装
+                </button>
             </div>
         </div>
     </div>
     
+    <div id="ratingModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 400px;">
+            <div class="modal-header">
+                <h3>评价技能</h3>
+                <button class="modal-close" onclick="closeRatingModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="ratingSkillId">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">评分</label>
+                    <div id="star-rating" class="nx-flex nx-gap-1">
+                        <i class="ri-star-line nx-text-2xl" data-rating="1" style="cursor: pointer;"></i>
+                        <i class="ri-star-line nx-text-2xl" data-rating="2" style="cursor: pointer;"></i>
+                        <i class="ri-star-line nx-text-2xl" data-rating="3" style="cursor: pointer;"></i>
+                        <i class="ri-star-line nx-text-2xl" data-rating="4" style="cursor: pointer;"></i>
+                        <i class="ri-star-line nx-text-2xl" data-rating="5" style="cursor: pointer;"></i>
+                    </div>
+                </div>
+                <div class="nx-form-group">
+                    <label class="nx-label">评价内容</label>
+                    <textarea id="ratingComment" class="nx-textarea" rows="3" placeholder="请输入您的评价"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeRatingModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="submitRating()">提交评价</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/utils.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
     <script>
-        // API基础URL
-        const API_BASE_URL = '/skillcenter/api';
+        var currentTab = 'all';
+        var currentPage = 1;
+        var pageSize = 9;
+        var currentSkillId = null;
+        var selectedRating = 0;
+        var skillsData = [];
         
-        // 初始化页面
-        function init() {
-            loadMarketSkills();
-        }
-        
-        // 市场管理相关函数
-        
-        // 加载市场技能列表
-        async function loadMarketSkills() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/market/skills`);
-                if (!response.ok) {
-                    throw new Error('加载市场技能列表失败');
-                }
-                const skills = await response.json();
-                renderMarketSkills(skills, 'search-results');
-            } catch (error) {
-                console.error('加载市场技能列表错误:', error);
-                alert('加载市场技能列表失败: ' + error.message);
+        window.onPageInit = function() {
+            console.log('[Market] 页面初始化');
+            if (typeof initMenu === 'function') {
+                initMenu('skill-market');
             }
-        }
+            loadSkills();
+            initStarRating();
+        };
         
-        // 渲染市场技能列表
-        function renderMarketSkills(skills, containerId) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
+        window.switchTab = function(tab) {
+            currentTab = tab;
+            currentPage = 1;
             
-            skills.forEach(skill => {
-                const card = document.createElement('div');
-                card.className = 'stat-card';
-                card.innerHTML = `
-                    <div class="stat-icon">
-                        <i class="ri-star-line"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>${skill.name}</h3>
-                        <div class="stat-value">${skill.rating || 0}</div>
-                        <div class="skill-category">${skill.category || '未分类'}</div>
-                        <div style="margin-top: 10px;">
-                            <button class="btn btn-primary" style="margin-right: 8px;" onclick="downloadSkill('${skill.skillId}')">下载</button>
-                            <button class="btn btn-secondary" onclick="showSkillDetail('${skill.skillId}')">详情</button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
+            document.querySelectorAll('.nx-tabs__tab').forEach(t => t.classList.remove('nx-tabs__tab--active'));
+            document.querySelector('[data-tab="' + tab + '"]').classList.add('nx-tabs__tab--active');
+            
+            loadSkills();
+        };
         
-        // 搜索技能
-        async function searchSkills() {
+        async function loadSkills() {
+            const grid = document.getElementById('skills-grid');
+            grid.innerHTML = '<div style="text-align: center; padding: 40px; grid-column: 1/-1;">加载中...</div>';
+            
             const keyword = document.getElementById('search-keyword').value;
+            const category = document.getElementById('category-filter').value;
+            
             try {
-                const response = await fetch(`${API_BASE_URL}/market/skills/search?keyword=${encodeURIComponent(keyword)}`);
-                if (!response.ok) {
-                    throw new Error('搜索技能失败');
-                }
-                const skills = await response.json();
-                renderMarketSkills(skills, 'search-results');
-            } catch (error) {
-                console.error('搜索技能错误:', error);
-                alert('搜索技能失败: ' + error.message);
-            }
-        }
-        
-        // 重置搜索
-        function resetSearch() {
-            document.getElementById('search-keyword').value = '';
-            document.getElementById('search-results').innerHTML = '';
-        }
-        
-        // 下载技能
-        async function downloadSkill(skillId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/market/skills/${skillId}/download`);
-                if (!response.ok) {
-                    throw new Error('下载技能失败');
-                }
-                const data = await response.blob();
-                const url = window.URL.createObjectURL(data);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${skillId}.zip`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                alert('技能下载成功!');
-            } catch (error) {
-                console.error('下载技能错误:', error);
-                alert('下载技能失败: ' + error.message);
-            }
-        }
-        
-        // 显示技能详情
-        async function showSkillDetail(skillId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/market/skills/${skillId}`);
-                if (!response.ok) {
-                    throw new Error('获取技能详情失败');
-                }
-                const skill = await response.json();
+                let result;
                 
-                // 获取技能评价
-                const reviewsResponse = await fetch(`${API_BASE_URL}/market/skills/${skillId}/reviews`);
-                const reviews = await reviewsResponse.json();
-                
-                let reviewsHtml = '评价:';
-                if (reviews.length > 0) {
-                    reviews.forEach(review => {
-                        reviewsHtml += `\n- ${review.userId} (${review.rating}分): ${review.comment}`;
+                if (currentTab === 'popular') {
+                    result = await utils.api.post('/market/skills/popular', {
+                        pageNum: currentPage,
+                        pageSize: pageSize
+                    });
+                } else if (currentTab === 'latest') {
+                    result = await utils.api.post('/market/skills/latest', {
+                        pageNum: currentPage,
+                        pageSize: pageSize
                     });
                 } else {
-                    reviewsHtml += '\n- 暂无评价';
+                    result = await utils.api.post('/market/skills', {
+                        pageNum: currentPage,
+                        pageSize: pageSize,
+                        keyword: keyword,
+                        category: category
+                    });
                 }
                 
-                alert(`技能详情:\nID: ${skill.skillId}\n名称: ${skill.name}\n分类: ${skill.category || '未分类'}\n评分: ${skill.rating || 0}\n描述: ${skill.description || '无描述'}\n\n${reviewsHtml}`);
+                if (result.code === 200 && result.data) {
+                    skillsData = result.data.content || result.data.items || result.data || [];
+                    
+                    if (skillsData.length === 0) {
+                        grid.innerHTML = '<div style="text-align: center; padding: 40px; grid-column: 1/-1; color: var(--nx-text-secondary);">暂无技能数据</div>';
+                        return;
+                    }
+                    
+                    renderSkills();
+                    renderPagination(result.data.total || skillsData.length);
+                } else {
+                    grid.innerHTML = '<div style="text-align: center; padding: 40px; grid-column: 1/-1; color: var(--nx-danger);">加载失败</div>';
+                }
             } catch (error) {
-                console.error('获取技能详情错误:', error);
-                alert('获取技能详情失败: ' + error.message);
+                console.error('[Market] 加载技能错误:', error);
+                grid.innerHTML = '<div style="text-align: center; padding: 40px; grid-column: 1/-1; color: var(--nx-danger);">加载失败</div>';
             }
         }
         
-        // 标签页切换函数
-        function switchTab(tabId) {
-            // 隐藏所有标签页内容
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.style.display = 'none';
-            });
+        function renderSkills() {
+            const grid = document.getElementById('skills-grid');
             
-            // 显示选中的标签页内容
-            document.getElementById(`${tabId}-tab`).style.display = 'block';
-            
-            // 根据标签页ID加载相应的数据
-            if (tabId === 'market-popular') {
-                loadPopularSkills();
-            } else if (tabId === 'market-latest') {
-                loadLatestSkills();
-            } else if (tabId === 'market-download') {
-                loadDownloadSkills();
-            } else if (tabId === 'market-rate') {
-                loadRateSkills();
-            }
-        }
-        
-        // 加载热门技能
-        async function loadPopularSkills() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/market/skills/popular?limit=10`);
-                if (!response.ok) {
-                    throw new Error('获取热门技能失败');
-                }
-                const skills = await response.json();
-                renderMarketSkills(skills, 'popular-skills');
-            } catch (error) {
-                console.error('获取热门技能错误:', error);
-                alert('获取热门技能失败: ' + error.message);
-            }
-        }
-        
-        // 加载最新技能
-        async function loadLatestSkills() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/market/skills/latest?limit=10`);
-                if (!response.ok) {
-                    throw new Error('获取最新技能失败');
-                }
-                const skills = await response.json();
-                renderMarketSkills(skills, 'latest-skills');
-            } catch (error) {
-                console.error('获取最新技能错误:', error);
-                alert('获取最新技能失败: ' + error.message);
-            }
-        }
-        
-        // 加载可下载技能
-        async function loadDownloadSkills() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/market/skills`);
-                if (!response.ok) {
-                    throw new Error('获取可下载技能失败');
-                }
-                const skills = await response.json();
-                renderMarketSkills(skills, 'download-skills');
-            } catch (error) {
-                console.error('获取可下载技能错误:', error);
-                alert('获取可下载技能失败: ' + error.message);
-            }
-        }
-        
-        // 加载可评分技能
-        async function loadRateSkills() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/market/skills`);
-                if (!response.ok) {
-                    throw new Error('获取可评分技能失败');
-                }
-                const skills = await response.json();
-                const rateContainer = document.getElementById('rate-skills');
-                rateContainer.innerHTML = '';
-                
-                skills.forEach(skill => {
-                    const card = document.createElement('div');
-                    card.className = 'stat-card';
-                    card.innerHTML = `
-                        <div class="stat-icon">
-                            <i class="ri-star-line"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3>${skill.name}</h3>
-                            <div class="stat-value">${skill.rating || 0}</div>
-                            <div class="skill-category">${skill.category || '未分类'}</div>
-                            <div style="margin-top: 8px;">
-                                <select id="rating-${skill.skillId}" class="form-control" style="width: 100px; margin-right: 8px;">
-                                    <option value="1">1星</option>
-                                    <option value="2">2星</option>
-                                    <option value="3">3星</option>
-                                    <option value="4">4星</option>
-                                    <option value="5">5星</option>
-                                </select>
-                                <input type="text" id="comment-${skill.skillId}" class="form-control" placeholder="评价内容" style="margin-bottom: 8px;">
-                                <button class="btn btn-primary" onclick="rateSkill('${skill.skillId}')">提交评分</button>
+            grid.innerHTML = skillsData.map(skill => `
+                <div class="nx-card skill-card">
+                    <div class="nx-card__body">
+                        <div class="nx-flex nx-items-center nx-gap-3 nx-mb-3">
+                            <i class="${getSkillIcon(skill.category)} nx-text-2xl nx-text-primary"></i>
+                            <div>
+                                <h4 class="nx-font-semibold">${skill.name || skill.skillId}</h4>
+                                <span class="nx-badge nx-badge--primary">${skill.version || 'v1.0.0'}</span>
                             </div>
                         </div>
-                    `;
-                    rateContainer.appendChild(card);
-                });
-            } catch (error) {
-                console.error('获取可评分技能错误:', error);
-                alert('获取可评分技能失败: ' + error.message);
-            }
+                        <p class="nx-text-secondary nx-text-sm nx-mb-4" style="min-height: 40px;">${skill.description || '暂无描述'}</p>
+                        <div class="nx-flex nx-items-center nx-gap-2 nx-mb-4">
+                            <span class="nx-badge nx-badge--secondary category-tag" onclick="filterByCategory('${skill.category}')">${skill.category || '未分类'}</span>
+                        </div>
+                        <div class="nx-flex nx-items-center nx-gap-2">
+                            <span class="rating-star"><i class="ri-star-fill"></i> ${skill.rating || '4.5'}</span>
+                            <span class="nx-text-secondary nx-text-sm">(${skill.ratingCount || 0} 评价)</span>
+                            <span class="nx-text-secondary nx-text-sm nx-ml-auto"><i class="ri-download-line"></i> ${skill.downloads || 0}</span>
+                        </div>
+                    </div>
+                    <div class="nx-card__footer">
+                        <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="downloadSkill('${skill.id || skill.skillId}')">
+                            <i class="ri-download-line"></i> 下载
+                        </button>
+                        <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="showDetail('${skill.id || skill.skillId}')">详情</button>
+                    </div>
+                </div>
+            `).join('');
         }
         
-        // 提交评分
-        async function rateSkill(skillId) {
-            const rating = document.getElementById(`rating-${skillId}`).value;
-            const comment = document.getElementById(`comment-${skillId}`).value;
-            const userId = 'current-user'; // 这里应该从用户会话中获取
+        function renderPagination(total) {
+            const totalPages = Math.ceil(total / pageSize);
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            if (currentPage > 1) {
+                html += '<button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="goToPage(' + (currentPage - 1) + ')"><i class="ri-arrow-left-line"></i></button>';
+            }
+            
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === currentPage) {
+                    html += '<button class="nx-btn nx-btn--primary nx-btn--sm">' + i + '</button>';
+                } else if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+                    html += '<button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="goToPage(' + i + ')">' + i + '</button>';
+                } else if (Math.abs(i - currentPage) === 3) {
+                    html += '<span>...</span>';
+                }
+            }
+            
+            if (currentPage < totalPages) {
+                html += '<button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="goToPage(' + (currentPage + 1) + ')"><i class="ri-arrow-right-line"></i></button>';
+            }
+            
+            pagination.innerHTML = html;
+        }
+        
+        window.goToPage = function(page) {
+            currentPage = page;
+            loadSkills();
+        };
+        
+        window.searchSkills = function() {
+            currentPage = 1;
+            currentTab = 'all';
+            document.querySelectorAll('.nx-tabs__tab').forEach(t => t.classList.remove('nx-tabs__tab--active'));
+            document.querySelector('[data-tab="all"]').classList.add('nx-tabs__tab--active');
+            loadSkills();
+        };
+        
+        window.resetSearch = function() {
+            document.getElementById('search-keyword').value = '';
+            document.getElementById('category-filter').value = '';
+            currentPage = 1;
+            loadSkills();
+        };
+        
+        window.filterByCategory = function(category) {
+            document.getElementById('category-filter').value = category;
+            searchSkills();
+        };
+        
+        window.downloadSkill = async function(skillId) {
+            try {
+                const result = await utils.api.post('/market/skills/download', { skillId: skillId });
+                
+                if (result.code === 200) {
+                    utils.msg.success('技能下载成功，正在安装...');
+                    
+                    const installResult = await utils.api.post('/api/skills/discovery/download', { skillId: skillId });
+                    
+                    if (installResult.code === 200) {
+                        utils.msg.success('技能安装成功');
+                    }
+                } else {
+                    utils.msg.error('下载失败: ' + (result.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('[Market] 下载错误:', error);
+                utils.msg.error('下载失败');
+            }
+        };
+        
+        window.showDetail = async function(skillId) {
+            currentSkillId = skillId;
             
             try {
-                const response = await fetch(`${API_BASE_URL}/market/skills/${skillId}/rate?rating=${rating}&comment=${encodeURIComponent(comment)}&userId=${userId}`, {
-                    method: 'POST'
-                });
-                if (!response.ok) {
-                    throw new Error('提交评分失败');
-                }
-                const result = await response.json();
-                if (result) {
-                    alert('评分提交成功');
+                const result = await utils.api.post('/market/skills/' + skillId);
+                
+                if (result.code === 200 && result.data) {
+                    const skill = result.data;
+                    
+                    document.getElementById('detailTitle').textContent = skill.name || skill.skillId;
+                    document.getElementById('detailContent').innerHTML = `
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-4 nx-mb-4">
+                            <div class="nx-form-group">
+                                <label class="nx-label">技能ID</label>
+                                <p>${skill.id || skill.skillId}</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">版本</label>
+                                <p>${skill.version || '-'}</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">分类</label>
+                                <p>${skill.category || '-'}</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">评分</label>
+                                <p><span class="rating-star"><i class="ri-star-fill"></i></span> ${skill.rating || '-'} (${skill.ratingCount || 0} 评价)</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">下载量</label>
+                                <p>${skill.downloads || 0}</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">作者</label>
+                                <p>${skill.author || '-'}</p>
+                            </div>
+                        </div>
+                        <div class="nx-form-group nx-mb-4">
+                            <label class="nx-label">描述</label>
+                            <p>${skill.description || '-'}</p>
+                        </div>
+                        ${skill.changelog ? `
+                        <div class="nx-form-group nx-mb-4">
+                            <label class="nx-label">更新日志</label>
+                            <div class="result-box">${skill.changelog}</div>
+                        </div>
+                        ` : ''}
+                        <div class="nx-form-group">
+                            <button class="nx-btn nx-btn--secondary" onclick="openRatingModal('${skillId}')">
+                                <i class="ri-star-line"></i> 评价此技能
+                            </button>
+                        </div>
+                    `;
+                    
+                    document.getElementById('detailModal').style.display = 'block';
                 } else {
-                    alert('评分提交失败');
+                    utils.msg.error('获取详情失败');
                 }
             } catch (error) {
-                console.error('提交评分错误:', error);
-                alert('提交评分失败: ' + error.message);
+                console.error('[Market] 获取详情错误:', error);
+                utils.msg.error('获取详情失败');
             }
-        }
-        
-        // 显示API导入技能详情
-        function showApiImportDetail(apiType) {
-            if (apiType === 'weather') {
-                alert('天气API导入详情:\n版本: 1.0.0\n分类: 天气 | 信息查询\n描述: 基于第三方API的天气查询技能，可以获取全球城市的实时天气信息。\n支持的API提供商: OpenWeatherMap, WeatherAPI.com, AccuWeather\n功能: 实时天气查询、城市天气、温度单位切换\n使用方法: 配置API密钥后，通过"天气北京"等命令查询天气');
-            } else if (apiType === 'stock') {
-                alert('股票API导入详情:\n版本: 1.0.0\n分类: 金融 | 信息查询\n描述: 基于第三方API的股票查询技能，可以获取全球股票的实时价格和历史数据。\n支持的API提供商: Alpha Vantage, Finnhub, Polygon.io\n功能: 实时股票价格、历史数据、K线图\n使用方法: 配置API密钥后，通过"股票 AAPL"等命令查询股票价格');
-            }
-        }
-        
-        // 显示企业级接口详情
-        function showEnterpriseApiDetail(apiType) {
-            if (apiType === 'dingtalk') {
-                alert('钉钉开放平台详情:\n版本: v1.0\n分类: 企业 | 组织机构\n描述: 钉钉开放平台提供的企业级接口，包括组织机构管理、消息通知、审批等功能。\nAPI地址: api.dingtalk.com\n认证方式: AppKey + AppSecret\n通讯协议: HTTPS\n主要功能:\n1. 组织机构管理: 部门、用户、角色管理\n2. 消息通知: 工作通知、群消息\n3. 审批: 审批流程管理\n4. 考勤: 考勤数据管理\n5. 签到: 签到数据管理\n接入流程:\n1. 注册钉钉开发者账号\n2. 创建企业内部应用\n3. 获取AppKey和AppSecret\n4. 配置接口权限\n5. 开发接口调用代码');
-            } else if (apiType === 'yonyou') {
-                alert('用友开放平台详情:\n版本: v1.0\n分类: 企业 | ERP集成\n描述: 用友开放平台提供的企业级接口，包括财务、供应链、人力资源等ERP系统集成功能。\nAPI地址: 用友云平台\n认证方式: OAuth 2.0\n通讯协议: HTTPS\n主要功能:\n1. 财务: 凭证、发票、报表\n2. 供应链: 采购、销售、库存\n3. 人力资源: 员工、薪资、考勤\n4. 生产制造: 生产订单、工艺路线\n5. 客户关系: 客户、商机、合同\n接入流程:\n1. 注册用友开发者账号\n2. 创建应用并获取应用密钥\n3. 配置API权限\n4. 开发接口调用代码\n5. 部署和测试');
-            }
-        }
-        
-        // 页面加载完成后初始化
-        window.onload = function() {
-            initMenu('market');
-            init();
         };
+        
+        window.closeDetailModal = function() {
+            document.getElementById('detailModal').style.display = 'none';
+            currentSkillId = null;
+        };
+        
+        window.downloadCurrentSkill = function() {
+            if (currentSkillId) {
+                downloadSkill(currentSkillId);
+                closeDetailModal();
+            }
+        };
+        
+        window.openRatingModal = function(skillId) {
+            document.getElementById('ratingSkillId').value = skillId;
+            document.getElementById('ratingComment').value = '';
+            selectedRating = 0;
+            updateStarDisplay();
+            document.getElementById('ratingModal').style.display = 'block';
+        };
+        
+        window.closeRatingModal = function() {
+            document.getElementById('ratingModal').style.display = 'none';
+        };
+        
+        function initStarRating() {
+            const stars = document.querySelectorAll('#star-rating i');
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    selectedRating = parseInt(this.dataset.rating);
+                    updateStarDisplay();
+                });
+                star.addEventListener('mouseenter', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    highlightStars(rating);
+                });
+                star.addEventListener('mouseleave', function() {
+                    updateStarDisplay();
+                });
+            });
+        }
+        
+        function highlightStars(rating) {
+            const stars = document.querySelectorAll('#star-rating i');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.className = 'ri-star-fill nx-text-2xl rating-star';
+                } else {
+                    star.className = 'ri-star-line nx-text-2xl';
+                }
+            });
+        }
+        
+        function updateStarDisplay() {
+            highlightStars(selectedRating);
+        }
+        
+        window.submitRating = async function() {
+            const skillId = document.getElementById('ratingSkillId').value;
+            const comment = document.getElementById('ratingComment').value;
+            
+            if (selectedRating === 0) {
+                utils.msg.error('请选择评分');
+                return;
+            }
+            
+            try {
+                const result = await utils.api.post('/market/skills/rate', {
+                    skillId: skillId,
+                    rating: selectedRating,
+                    comment: comment
+                });
+                
+                if (result.code === 200) {
+                    utils.msg.success('评价成功');
+                    closeRatingModal();
+                } else {
+                    utils.msg.error('评价失败');
+                }
+            } catch (error) {
+                utils.msg.error('评价失败');
+            }
+        };
+        
+        function getSkillIcon(category) {
+            const icons = {
+                '信息查询': 'ri-search-line',
+                '金融': 'ri-line-chart-line',
+                '工具': 'ri-tools-line',
+                '娱乐': 'ri-gamepad-line',
+                '文档': 'ri-file-text-line',
+                '天气': 'ri-cloud-sun-line',
+                '其他': 'ri-apps-line'
+            };
+            return icons[category] || 'ri-apps-line';
+        }
     </script>
 </body>
 </html>

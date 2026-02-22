@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动纠正 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">自动纠正</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="runAutoCorrection()">
+                        <i class="ri-magic-line"></i> 执行自动纠正
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="loadData()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-refresh-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">今日纠正</div>
+                                <div class="nx-stat-card__value" id="totalCorrections">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">成功</div>
+                                <div class="nx-stat-card__value" id="successCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--danger">
+                                <i class="ri-close-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">失败</div>
+                                <div class="nx-stat-card__value" id="failedCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--info">
+                                <i class="ri-percent-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">成功率</div>
+                                <div class="nx-stat-card__value" id="successRate">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">纠正历史</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>纠正ID</th>
+                                            <th>异常ID</th>
+                                            <th>类型</th>
+                                            <th>描述</th>
+                                            <th>状态</th>
+                                            <th>执行时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="correctionTableBody">
+                                        <tr>
+                                            <td colspan="7" class="nx-text-center">加载中...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/anomaly-api.js"></script>
+    <script>
+        let correctionHistory = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+        });
+
+        async function loadData() {
+            try {
+                const rs = await AnomalyAPI.list({ status: 'RESOLVED' });
+                correctionHistory = [];
+                
+                const anomalies = rs.data || [];
+                for (const anomaly of anomalies) {
+                    const history = await AnomalyAPI.history(anomaly.anomalyId);
+                    if (history.data && history.data.length > 0) {
+                        correctionHistory = correctionHistory.concat(history.data.map(h => ({
+                            ...h,
+                            anomaly: anomaly
+                        })));
+                    }
+                }
+                
+                renderTable(correctionHistory);
+                updateStats();
+            } catch (error) {
+                document.getElementById('correctionTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="nx-text-center nx-text-danger">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        function renderTable(corrections) {
+            if (!corrections || corrections.length === 0) {
+                document.getElementById('correctionTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="nx-text-center">暂无纠正记录</td></tr>';
+                return;
+            }
+
+            let html = '';
+            corrections.forEach((correction, index) => {
+                const time = AnomalyAPI.formatTime(correction.executionTime);
+                const statusBadge = correction.success ? 'success' : 'danger';
+                const statusText = correction.success ? '成功' : '失败';
+                
+                html += '<tr>';
+                html += '  <td>' + (index + 1) + '</td>';
+                html += '  <td>' + (correction.anomalyId || '-') + '</td>';
+                html += '  <td>' + (correction.correctionType || '自动纠正') + '</td>';
+                html += '  <td>' + (correction.description || '-') + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--' + statusBadge + '">' + statusText + '</span></td>';
+                html += '  <td>' + time + '</td>';
+                html += '  <td>';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="viewDetail(\'' + correction.anomalyId + '\')">详情</button>';
+                html += '  </td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('correctionTableBody').innerHTML = html;
+        }
+
+        function updateStats() {
+            const total = correctionHistory.length;
+            const success = correctionHistory.filter(c => c.success).length;
+            const failed = total - success;
+            const rate = total > 0 ? Math.round((success / total) * 100) : 0;
+            
+            document.getElementById('totalCorrections').textContent = total;
+            document.getElementById('successCount').textContent = success;
+            document.getElementById('failedCount').textContent = failed;
+            document.getElementById('successRate').textContent = rate + '%';
+        }
+
+        async function runAutoCorrection() {
+            try {
+                const rs = await AnomalyAPI.list({ status: 'ACTIVE' });
+                const activeAnomalies = rs.data || [];
+                
+                if (activeAnomalies.length === 0) {
+                    alert('没有需要纠正的异常');
+                    return;
+                }
+                
+                let successCount = 0;
+                for (const anomaly of activeAnomalies) {
+                    try {
+                        const result = await AnomalyAPI.autoCorrect(anomaly.anomalyId);
+                        if (result.data && result.data.success) {
+                            successCount++;
+                        }
+                    } catch (e) {
+                        console.error('Auto correct failed for', anomaly.anomalyId, e);
+                    }
+                }
+                
+                alert('自动纠正完成: 成功 ' + successCount + '/' + activeAnomalies.length);
+                loadData();
+            } catch (error) {
+                alert('执行自动纠正失败: ' + error.message);
+            }
+        }
+
+        function viewDetail(anomalyId) {
+            window.location.href = '/console/pages/anomaly/manual-intervention.html?id=' + anomalyId;
+        }
+    </script>
+</body>
+</html>

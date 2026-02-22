@@ -1,0 +1,84 @@
+server:
+  port: 8082
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: ooder-mcp-agent
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+  datasource:
+    url: jdbc:h2:file:./data/nexus;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+ooder:
+  agent:
+    id: "mcp-agent-001"
+    name: "Independent MCP Agent"
+    type: "mcp"
+    description: "Independent MCP Agent built with Ooder SDK"
+  udp:
+    port: 9876
+    host: 0.0.0.0
+    timeout: 30000
+    retry: 3
+  heartbeat:
+    interval: 30000
+    timeout: 60000
+  skill:
+    base-package: "net.ooder.nexus.skill"
+  org:
+    provider: local
+    cache:
+      enabled: true
+      ttl: 3600
+    sync:
+      enabled: true
+      cron: "0 0 2 * * ?"
+
+mock:
+  enabled: false
+
+mcpagent:
+  service:
+    type: "REAL"
+    switch:
+      enabled: true
+      require-auth: false
+
+mqtt:
+  enabled: false
+  port: 1883
+  host: 0.0.0.0
+  websocket:
+    enabled: true
+    port: 8083
+  allow:
+    anonymous: false
+  max:
+    connections: 10000
+  persistence:
+    enabled: true
+    path: ./data/mqtt

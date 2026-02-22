@@ -1,9 +1,15 @@
+/*
+ * Copyright (c) 2024 Ooder Team
+ *
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
 package net.ooder.skillcenter.model;
 
 import java.util.Map;
 
 /**
- * 技能接口，定义技能的基本行为
+ * Skill Interface - Defines basic skill behavior
  */
 public interface Skill {
     /**

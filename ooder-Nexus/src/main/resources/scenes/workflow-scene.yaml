@@ -1,0 +1,182 @@
+apiVersion: scene.ooder.net/v1
+kind: SceneDefinition
+
+metadata:
+  sceneId: workflow
+  name: Workflow Management
+  description: |
+    工作流管理场景，提供流程定义、流程执行和任务调度能力。
+    支持可视化流程设计、条件分支、并行执行和人工审批。
+  version: "1.0.0"
+  author: Ooder Team
+  createdAt: "2026-02-18T00:00:00Z"
+
+spec:
+  type: primary
+  scenePrefix: wf
+  
+  required: false
+  category: business
+  
+  capabilities:
+    - capId: wf-define
+      name: Define Workflow
+      description: 定义工作流
+      parameters:
+        - name: definitionId
+          type: string
+          required: true
+          description: 流程定义ID
+        - name: name
+          type: string
+          required: true
+          description: 流程名称
+        - name: description
+          type: string
+          required: false
+          description: 流程描述
+        - name: nodes
+          type: list
+          required: true
+          description: 节点列表
+        - name: edges
+          type: list
+          required: true
+          description: 边列表
+      returnType: object
+      async: false
+      
+    - capId: wf-start
+      name: Start Workflow
+      description: 启动工作流
+      parameters:
+        - name: definitionId
+          type: string
+          required: true
+          description: 流程定义ID
+        - name: variables
+          type: object
+          required: false
+          description: 流程变量
+      returnType: string
+      async: true
+      
+    - capId: wf-execute
+      name: Execute Node
+      description: 执行节点
+      parameters:
+        - name: instanceId
+          type: string
+          required: true
+          description: 流程实例ID
+        - name: nodeId
+          type: string
+          required: true
+          description: 节点ID
+        - name: input
+          type: object
+          required: false
+          description: 输入参数
+      returnType: object
+      async: true
+      
+    - capId: wf-query
+      name: Query Workflow
+      description: 查询工作流状态
+      parameters:
+        - name: instanceId
+          type: string
+          required: true
+          description: 流程实例ID
+      returnType: object
+      async: false
+      
+    - capId: wf-cancel
+      name: Cancel Workflow
+      description: 取消工作流
+      parameters:
+        - name: instanceId
+          type: string
+          required: true
+          description: 流程实例ID
+        - name: reason
+          type: string
+          required: false
+          description: 取消原因
+      returnType: boolean
+      async: false
+      
+    - capId: wf-task-complete
+      name: Complete Task
+      description: 完成任务
+      parameters:
+        - name: taskId
+          type: string
+          required: true
+          description: 任务ID
+        - name: result
+          type: object
+          required: false
+          description: 任务结果
+      returnType: boolean
+      async: false
+      
+    - capId: wf-task-claim
+      name: Claim Task
+      description: 认领任务
+      parameters:
+        - name: taskId
+          type: string
+          required: true
+          description: 任务ID
+        - name: userId
+          type: string
+          required: true
+          description: 用户ID
+      returnType: boolean
+      async: false
+
+  config:
+    executor:
+      threadPoolSize: 10
+      maxConcurrentInstances: 100
+      defaultTimeout: 3600000
+    persistence:
+      enabled: true
+      historyRetentionDays: 90
+    scheduler:
+      enabled: true
+      threadPoolSize: 5
+    notification:
+      onWorkflowStart: true
+      onWorkflowComplete: true
+      onTaskAssigned: true
+      onTaskComplete: true
+
+  collaborativeScenes:
+    - auth
+    - vfs
+    - msg
+
+  skills:
+    - skillId: skill-workflow
+      required: true
+      capabilities:
+        - wf-define
+        - wf-start
+        - wf-execute
+        - wf-query
+        - wf-cancel
+        - wf-task-complete
+        - wf-task-claim
+
+  deployment:
+    singleton: false
+    autoStart: true
+    healthCheck:
+      path: /api/health
+      interval: 30
+      timeout: 10
+    resources:
+      cpu: "500m"
+      memory: "512Mi"

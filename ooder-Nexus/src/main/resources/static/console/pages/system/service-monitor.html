@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务监控 - Nexus</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .stat-value.success { color: var(--ns-success); }
+        .stat-value.warning { color: var(--ns-warning); }
+        .stat-value.danger { color: #ef4444; }
+        .stat-value.info { color: var(--nx-primary); }
+        .stat-label {
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .service-table {
+            width: 100%;
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .service-table th,
+        .service-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        .service-table th {
+            background: var(--ns-bg-hover);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--ns-secondary);
+            text-transform: uppercase;
+        }
+        .service-table td {
+            font-size: 14px;
+            color: var(--ns-dark);
+        }
+        .service-table tr:last-child td {
+            border-bottom: none;
+        }
+        .service-table tr:hover td {
+            background: var(--ns-bg-hover);
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-running { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .status-stopped { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .status-warning { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        .status-connected { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .status-disconnected { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .status-pending { background: rgba(148, 163, 184, 0.1); color: var(--ns-secondary); }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        
+        .service-type {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .type-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .type-icon.core { background: rgba(59, 130, 246, 0.1); color: var(--nx-primary); }
+        .type-icon.engine { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+        .type-icon.messaging { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .type-icon.org { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        .type-icon.database { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
+        
+        .btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+        .btn-secondary {
+            background: var(--ns-card-bg);
+            color: var(--ns-dark);
+            border: 1px solid var(--ns-border);
+        }
+        .btn-secondary:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .skill-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+        .skill-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .skill-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .skill-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--nx-primary);
+        }
+        .skill-info {
+            flex: 1;
+        }
+        .skill-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        .skill-type {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        .skill-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--ns-secondary);
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--ns-border);
+        }
+        
+        .refresh-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .uptime {
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">服务监控</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="btn btn-secondary refresh-btn" onclick="refreshAll()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="stats-grid" id="statsGrid">
+                        <div class="stat-card">
+                            <div class="stat-value info" id="statTotal">0</div>
+                            <div class="stat-label">总服务数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value success" id="statRunning">0</div>
+                            <div class="stat-label">运行中</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value danger" id="statStopped">0</div>
+                            <div class="stat-label">已停止</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value warning" id="statWarning">0</div>
+                            <div class="stat-label">警告</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-header">
+                        <span class="section-title">核心服务</span>
+                    </div>
+                    <table class="service-table">
+                        <thead>
+                            <tr>
+                                <th>服务名称</th>
+                                <th>端口</th>
+                                <th>状态</th>
+                                <th>响应时间</th>
+                                <th>运行时长</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="serviceList"></tbody>
+                    </table>
+                    
+                    <div class="section-header" style="margin-top: 32px;">
+                        <span class="section-title">Skill 服务状态</span>
+                    </div>
+                    <div class="stats-grid" id="skillStatsGrid" style="margin-bottom: 16px;">
+                        <div class="stat-card">
+                            <div class="stat-value success" id="skillConnected">0</div>
+                            <div class="stat-label">已连接</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value danger" id="skillDisconnected">0</div>
+                            <div class="stat-label">已断开</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value info" id="skillPending">0</div>
+                            <div class="stat-label">待配置</div>
+                        </div>
+                    </div>
+                    <div class="skill-grid" id="skillList"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            loadServicesOverview();
+            loadSkillServices();
+        };
+        
+        function loadServicesOverview() {
+            fetch('/api/system/services/overview')
+                .then(function(res) { return res.json(); })
+                .then(function(rs) {
+                    if (rs.requestStatus === 200) {
+                        var data = rs.data || {};
+                        document.getElementById('statTotal').textContent = data.total || 0;
+                        document.getElementById('statRunning').textContent = data.running || 0;
+                        document.getElementById('statStopped').textContent = data.stopped || 0;
+                        document.getElementById('statWarning').textContent = data.warning || 0;
+                        renderServiceList(data.services || []);
+                    }
+                });
+        }
+        
+        function loadSkillServices() {
+            fetch('/api/system/services/skills')
+                .then(function(res) { return res.json(); })
+                .then(function(rs) {
+                    if (rs.requestStatus === 200) {
+                        var data = rs.data || {};
+                        document.getElementById('skillConnected').textContent = data.connected || 0;
+                        document.getElementById('skillDisconnected').textContent = data.disconnected || 0;
+                        document.getElementById('skillPending').textContent = data.notConfigured || 0;
+                        renderSkillList(data.skills || []);
+                    }
+                });
+        }
+        
+        function renderServiceList(services) {
+            var tbody = document.getElementById('serviceList');
+            if (!services || services.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--ns-secondary);">暂无服务</td></tr>';
+                return;
+            }
+            
+            var html = '';
+            services.forEach(function(s) {
+                var statusClass = getStatusClass(s.status);
+                var statusText = getStatusText(s.status);
+                var typeIconClass = getTypeIconClass(s.type);
+                var uptime = formatUptime(s.uptime || 0);
+                
+                html += '<tr>' +
+                    '<td>' +
+                    '<div class="service-type">' +
+                    '<div class="type-icon ' + typeIconClass + '"><i class="ri-server-line"></i></div>' +
+                    '<div>' +
+                    '<div style="font-weight: 500;">' + s.name + '</div>' +
+                    '<div style="font-size: 12px; color: var(--ns-secondary);">' + s.serviceId + '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '</td>' +
+                    '<td>' + (s.port || '-') + '</td>' +
+                    '<td><span class="status-badge ' + statusClass + '"><span class="status-dot"></span>' + statusText + '</span></td>' +
+                    '<td>' + (s.responseTime ? s.responseTime + ' ms' : '-') + '</td>' +
+                    '<td class="uptime">' + uptime + '</td>' +
+                    '<td>' +
+                    '<button class="btn btn-sm btn-secondary" onclick="checkService(\'' + s.serviceId + '\')"><i class="ri-refresh-line"></i></button> ' +
+                    '<button class="btn btn-sm btn-secondary" onclick="showHistory(\'' + s.serviceId + '\')"><i class="ri-line-chart-line"></i></button>' +
+                    '</td>' +
+                    '</tr>';
+            });
+            tbody.innerHTML = html;
+        }
+        
+        function renderSkillList(skills) {
+            var container = document.getElementById('skillList');
+            if (!skills || skills.length === 0) {
+                container.innerHTML = '<div style="color: var(--ns-secondary); padding: 20px; grid-column: 1/-1;">暂无Skill服务</div>';
+                return;
+            }
+            
+            var html = '';
+            skills.forEach(function(s) {
+                var statusClass = getSkillStatusClass(s.status);
+                var statusText = getSkillStatusText(s.status);
+                var iconClass = s.type === 'database' ? 'database' : 'org';
+                
+                html += '<div class="skill-card">' +
+                    '<div class="skill-header">' +
+                    '<div class="skill-icon"><i class="ri-' + (s.type === 'database' ? 'database-2' : 'building') + '-line"></i></div>' +
+                    '<div class="skill-info">' +
+                    '<div class="skill-name">' + s.name + '</div>' +
+                    '<div class="skill-type">' + s.skillId + '</div>' +
+                    '</div>' +
+                    '<span class="status-badge ' + statusClass + '"><span class="status-dot"></span>' + statusText + '</span>' +
+                    '</div>' +
+                    '<div class="skill-meta">' +
+                    '<span><i class="ri-link"></i> ' + (s.endpoint || '-') + '</span>' +
+                    '<span><i class="ri-timer-line"></i> ' + (s.responseTime ? s.responseTime + ' ms' : '-') + '</span>' +
+                    '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function getStatusClass(status) {
+            var classes = {
+                'RUNNING': 'status-running',
+                'STOPPED': 'status-stopped',
+                'WARNING': 'status-warning'
+            };
+            return classes[status] || 'status-stopped';
+        }
+        
+        function getStatusText(status) {
+            var texts = {
+                'RUNNING': '运行中',
+                'STOPPED': '已停止',
+                'WARNING': '警告'
+            };
+            return texts[status] || status;
+        }
+        
+        function getSkillStatusClass(status) {
+            var classes = {
+                'CONNECTED': 'status-connected',
+                'DISCONNECTED': 'status-disconnected',
+                'CONNECTION_FAILED': 'status-disconnected',
+                'PENDING_CONFIG': 'status-pending',
+                'NOT_CONFIGURED': 'status-pending'
+            };
+            return classes[status] || 'status-pending';
+        }
+        
+        function getSkillStatusText(status) {
+            var texts = {
+                'CONNECTED': '已连接',
+                'DISCONNECTED': '已断开',
+                'CONNECTION_FAILED': '连接失败',
+                'PENDING_CONFIG': '待配置',
+                'NOT_CONFIGURED': '未配置'
+            };
+            return texts[status] || status;
+        }
+        
+        function getTypeIconClass(type) {
+            var classes = {
+                'core': 'core',
+                'engine': 'engine',
+                'messaging': 'messaging'
+            };
+            return classes[type] || 'core';
+        }
+        
+        function formatUptime(ms) {
+            if (!ms || ms <= 0) return '-';
+            var seconds = Math.floor(ms / 1000);
+            var minutes = Math.floor(seconds / 60);
+            var hours = Math.floor(minutes / 60);
+            var days = Math.floor(hours / 24);
+            
+            if (days > 0) {
+                return days + 'd ' + (hours % 24) + 'h';
+            } else if (hours > 0) {
+                return hours + 'h ' + (minutes % 60) + 'm';
+            } else if (minutes > 0) {
+                return minutes + 'm';
+            } else {
+                return seconds + 's';
+            }
+        }
+        
+        function checkService(serviceId) {
+            fetch('/api/system/services/' + serviceId + '/check', { method: 'POST' })
+                .then(function(res) { return res.json(); })
+                .then(function(rs) {
+                    if (rs.requestStatus === 200) {
+                        loadServicesOverview();
+                    }
+                });
+        }
+        
+        function showHistory(serviceId) {
+            alert('查看服务历史: ' + serviceId);
+        }
+        
+        function refreshAll() {
+            loadServicesOverview();
+            loadSkillServices();
+        }
+    </script>
+</body>
+</html>

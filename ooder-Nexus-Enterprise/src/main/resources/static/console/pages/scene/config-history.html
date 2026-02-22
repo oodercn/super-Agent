@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配置历史 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .history-header {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-header__info h2 {
+            margin: 0 0 4px 0;
+            color: var(--ns-dark);
+        }
+        
+        .history-header__meta {
+            font-size: 14px;
+            color: var(--ns-secondary);
+        }
+        
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .history-item {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .history-item.current {
+            border-color: var(--nx-primary);
+        }
+        
+        .history-item__header {
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .history-item__header:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .history-item__main {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .history-item__version {
+            width: 80px;
+            text-align: center;
+            padding: 8px;
+            background: var(--ns-input-bg);
+            border-radius: 6px;
+        }
+        
+        .history-item__version-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .history-item__version-label {
+            font-size: 11px;
+            color: var(--ns-secondary);
+        }
+        
+        .history-item__info {
+            flex: 1;
+        }
+        
+        .history-item__title {
+            font-weight: 500;
+            color: var(--ns-dark);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .history-item__desc {
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        
+        .history-item__meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        
+        .history-item__actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .history-item__body {
+            padding: 16px;
+            border-top: 1px solid var(--ns-border);
+            display: none;
+            background: var(--ns-input-bg);
+        }
+        
+        .history-item__body.expanded {
+            display: block;
+        }
+        
+        .diff-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .diff-panel {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .diff-panel__header {
+            padding: 8px 12px;
+            background: var(--ns-bg-hover);
+            font-weight: 500;
+            font-size: 13px;
+            color: var(--ns-dark);
+        }
+        
+        .diff-panel__content {
+            padding: 12px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            color: var(--ns-dark);
+        }
+        
+        .change-summary {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 16px;
+        }
+        
+        .change-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .change-stat__value {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .change-stat__value.added {
+            color: var(--ns-success);
+        }
+        
+        .change-stat__value.removed {
+            color: var(--ns-danger);
+        }
+        
+        .change-stat__value.modified {
+            color: var(--ns-warning);
+        }
+        
+        .change-stat__label {
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        
+        .changes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .change-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: var(--ns-card-bg);
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .change-item__type {
+            width: 60px;
+            text-align: center;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .change-item__type.added {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--ns-success);
+        }
+        
+        .change-item__type.removed {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--ns-danger);
+        }
+        
+        .change-item__type.modified {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--ns-warning);
+        }
+        
+        .change-item__path {
+            flex: 1;
+            color: var(--ns-dark);
+            font-family: monospace;
+        }
+        
+        .rollback-confirm {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .rollback-confirm.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .rollback-confirm__content {
+            background: var(--ns-card-bg);
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .rollback-confirm__title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ns-dark);
+            margin-bottom: 12px;
+        }
+        
+        .rollback-confirm__message {
+            color: var(--ns-secondary);
+            margin-bottom: 20px;
+        }
+        
+        .rollback-confirm__actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">配置历史</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="goBack()">
+                        <i class="ri-arrow-left-line"></i> 返回
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="history-header">
+                        <div class="history-header__info">
+                            <h2 id="sceneName">-</h2>
+                            <div class="history-header__meta">
+                                场景ID: <span id="sceneId">-</span> | 
+                                当前版本: <span id="currentVersion">-</span> | 
+                                历史记录: <span id="historyCount">-</span>
+                            </div>
+                        </div>
+                        <div class="nx-flex nx-gap-2">
+                            <select class="nx-select" id="limitFilter">
+                                <option value="10">最近10条</option>
+                                <option value="20">最近20条</option>
+                                <option value="50">最近50条</option>
+                                <option value="100">最近100条</option>
+                            </select>
+                            <button class="nx-btn nx-btn--secondary" onclick="loadHistory()">
+                                <i class="ri-refresh-line"></i> 刷新
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="history-list" id="historyList">
+                        <div class="nx-text-center" style="padding: 40px; color: var(--ns-secondary);">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="rollback-confirm" id="rollbackConfirm">
+        <div class="rollback-confirm__content">
+            <div class="rollback-confirm__title">确认回滚</div>
+            <div class="rollback-confirm__message">
+                确定要回滚到版本 <strong id="rollbackVersion"></strong> 吗？<br>
+                当前配置将被替换为该历史版本。
+            </div>
+            <div class="rollback-confirm__actions">
+                <button class="nx-btn nx-btn--secondary" onclick="hideRollbackConfirm()">取消</button>
+                <button class="nx-btn nx-btn--danger" onclick="confirmRollback()">确认回滚</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var sceneId = null;
+        var historyData = [];
+        var currentVersion = 0;
+        var selectedVersion = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var params = new URLSearchParams(window.location.search);
+            sceneId = params.get('sceneId');
+            
+            if (!sceneId) {
+                alert('缺少场景ID参数');
+                return;
+            }
+            
+            loadHistory();
+        });
+
+        document.getElementById('limitFilter').addEventListener('change', function() {
+            loadHistory();
+        });
+
+        async function loadHistory() {
+            try {
+                var limit = document.getElementById('limitFilter').value;
+                var response = await fetch('/api/enexus/scene/config/history', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({sceneId: sceneId, limit: parseInt(limit)})
+                });
+                var rs = await response.json();
+                historyData = rs.data || [];
+                
+                if (historyData.length > 0) {
+                    currentVersion = historyData[0].version;
+                    document.getElementById('currentVersion').textContent = 'v' + currentVersion;
+                }
+                
+                document.getElementById('historyCount').textContent = historyData.length;
+                
+                loadSceneInfo();
+                renderHistory();
+            } catch (error) {
+                document.getElementById('historyList').innerHTML = 
+                    '<div class="nx-text-center nx-text-danger" style="padding: 40px;">加载失败: ' + error.message + '</div>';
+            }
+        }
+
+        async function loadSceneInfo() {
+            try {
+                var response = await fetch('/api/enexus/scene/get', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({sceneId: sceneId})
+                });
+                var rs = await response.json();
+                if (rs.data) {
+                    document.getElementById('sceneName').textContent = rs.data.sceneName || '-';
+                    document.getElementById('sceneId').textContent = rs.data.sceneId || '-';
+                }
+            } catch (error) {
+                console.error('Load scene info failed:', error);
+            }
+        }
+
+        function renderHistory() {
+            if (historyData.length === 0) {
+                document.getElementById('historyList').innerHTML = 
+                    '<div class="nx-text-center" style="padding: 40px; color: var(--ns-secondary);">暂无历史记录</div>';
+                return;
+            }
+            
+            var html = '';
+            historyData.forEach(function(item, index) {
+                var isCurrent = item.version === currentVersion;
+                var changes = item.changes || {};
+                
+                html += '<div class="history-item' + (isCurrent ? ' current' : '') + '">';
+                html += '  <div class="history-item__header" onclick="toggleHistory(this)">';
+                html += '    <div class="history-item__main">';
+                html += '      <div class="history-item__version">';
+                html += '        <div class="history-item__version-value">v' + item.version + '</div>';
+                html += '        <div class="history-item__version-label">' + (isCurrent ? '当前' : '历史') + '</div>';
+                html += '      </div>';
+                html += '      <div class="history-item__info">';
+                html += '        <div class="history-item__title">';
+                html += '          ' + (item.changeSummary || '配置更新');
+                if (isCurrent) {
+                    html += '          <span class="nx-badge nx-badge--primary">当前版本</span>';
+                }
+                html += '        </div>';
+                html += '        <div class="history-item__desc">' + (item.description || '-') + '</div>';
+                html += '      </div>';
+                html += '    </div>';
+                html += '    <div class="history-item__meta">';
+                html += '      <span><i class="ri-user-line"></i> ' + (item.operator || '-') + '</span>';
+                html += '      <span><i class="ri-time-line"></i> ' + formatTime(item.createdAt) + '</span>';
+                html += '      <i class="ri-arrow-down-s-line"></i>';
+                html += '    </div>';
+                html += '  </div>';
+                html += '  <div class="history-item__body">';
+                
+                html += '    <div class="change-summary">';
+                html += '      <div class="change-stat">';
+                html += '        <div class="change-stat__value added">+' + (changes.added || 0) + '</div>';
+                html += '        <div class="change-stat__label">新增</div>';
+                html += '      </div>';
+                html += '      <div class="change-stat">';
+                html += '        <div class="change-stat__value removed">-' + (changes.removed || 0) + '</div>';
+                html += '        <div class="change-stat__label">删除</div>';
+                html += '      </div>';
+                html += '      <div class="change-stat">';
+                html += '        <div class="change-stat__value modified">~' + (changes.modified || 0) + '</div>';
+                html += '        <div class="change-stat__label">修改</div>';
+                html += '      </div>';
+                html += '    </div>';
+                
+                if (item.changeDetails && item.changeDetails.length > 0) {
+                    html += '    <div class="changes-list">';
+                    item.changeDetails.forEach(function(change) {
+                        var typeClass = change.type ? change.type.toLowerCase() : 'modified';
+                        html += '      <div class="change-item">';
+                        html += '        <span class="change-item__type ' + typeClass + '">' + (change.type || 'MODIFIED') + '</span>';
+                        html += '        <span class="change-item__path">' + (change.path || '-') + '</span>';
+                        html += '      </div>';
+                    });
+                    html += '    </div>';
+                }
+                
+                if (!isCurrent) {
+                    html += '    <div style="margin-top: 16px; display: flex; gap: 8px;">';
+                    html += '      <button class="nx-btn nx-btn--secondary" onclick="viewVersion(' + item.version + ')">';
+                    html += '        <i class="ri-eye-line"></i> 查看详情';
+                    html += '      </button>';
+                    html += '      <button class="nx-btn nx-btn--warning" onclick="showRollbackConfirm(' + item.version + ')">';
+                    html += '        <i class="ri-arrow-go-back-line"></i> 回滚到此版本';
+                    html += '      </button>';
+                    html += '    </div>';
+                }
+                
+                html += '  </div>';
+                html += '</div>';
+            });
+            
+            document.getElementById('historyList').innerHTML = html;
+        }
+
+        function toggleHistory(header) {
+            var body = header.nextElementSibling;
+            body.classList.toggle('expanded');
+        }
+
+        function viewVersion(version) {
+            window.location.href = '/console/pages/scene/config-editor.html?sceneId=' + sceneId + '&version=' + version;
+        }
+
+        function showRollbackConfirm(version) {
+            selectedVersion = version;
+            document.getElementById('rollbackVersion').textContent = 'v' + version;
+            document.getElementById('rollbackConfirm').classList.add('show');
+        }
+
+        function hideRollbackConfirm() {
+            document.getElementById('rollbackConfirm').classList.remove('show');
+            selectedVersion = null;
+        }
+
+        async function confirmRollback() {
+            if (!selectedVersion) return;
+            
+            hideRollbackConfirm();
+            
+            try {
+                var response = await fetch('/api/enexus/scene/config/rollback', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        sceneId: sceneId,
+                        targetVersion: selectedVersion
+                    })
+                });
+                var rs = await response.json();
+                if (rs.data) {
+                    alert('回滚成功');
+                    loadHistory();
+                } else {
+                    alert('回滚失败: ' + (rs.message || '未知错误'));
+                }
+            } catch (error) {
+                alert('回滚失败: ' + error.message);
+            }
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            var date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function goBack() {
+            window.location.href = '/console/pages/scene/list.html';
+        }
+    </script>
+</body>
+</html>

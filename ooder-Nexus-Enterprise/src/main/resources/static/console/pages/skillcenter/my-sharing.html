@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能分享 - Nexus SkillCenter</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <style>
+        .sharing-container {
+            padding: 24px;
+        }
+
+        .sharing-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .sharing-tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--ns-border);
+            margin-bottom: 24px;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: var(--ns-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--ns-dark);
+        }
+
+        .tab-btn.active {
+            color: var(--nx-primary);
+            border-bottom-color: var(--nx-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .share-form {
+            max-width: 600px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--ns-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            background: var(--ns-input-bg);
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .skill-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .skill-item {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .skill-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--nx-primary), var(--ns-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .skill-info {
+            flex: 1;
+        }
+
+        .skill-name {
+            font-weight: 600;
+            color: var(--ns-dark);
+            margin-bottom: 4px;
+        }
+
+        .skill-meta {
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+
+        .skill-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--ns-secondary);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            width: 90%;
+            max-width: 500px;
+            padding: 24px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--ns-secondary);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: var(--ns-radius);
+            color: white;
+            font-weight: 500;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification-success {
+            background: var(--ns-success);
+        }
+
+        .notification-error {
+            background: var(--ns-danger);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能分享</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="sharing-container">
+                        <div class="sharing-tabs">
+                            <button class="tab-btn active" data-tab="share" onclick="switchTab('share')">
+                                <i class="ri-share-forward-line"></i> 分享技能
+                            </button>
+                            <button class="tab-btn" data-tab="shared" onclick="switchTab('shared')">
+                                <i class="ri-upload-cloud-line"></i> 已分享
+                            </button>
+                            <button class="tab-btn" data-tab="received" onclick="switchTab('received')">
+                                <i class="ri-download-cloud-line"></i> 收到的技能
+                            </button>
+                        </div>
+
+                        <!-- 分享技能 -->
+                        <div class="tab-content active" id="share-tab">
+                            <div class="share-form">
+                                <div class="form-group">
+                                    <label class="form-label">选择技能</label>
+                                    <select id="share-skill-select" class="form-control">
+                                        <option value="">请选择要分享的技能</option>
+                                        <option value="openwrt-network-control">OpenWrt网络控制</option>
+                                        <option value="parental-control">家长上网控制</option>
+                                        <option value="smart-bandwidth">智能带宽管理</option>
+                                        <option value="network-security">网络安全防护</option>
+                                        <option value="ad-blocker">智能广告拦截</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">选择群组</label>
+                                    <select id="share-group-select" class="form-control">
+                                        <option value="">请选择群组</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">分享消息</label>
+                                    <textarea id="share-message" class="form-control" placeholder="添加分享消息（可选）..."></textarea>
+                                </div>
+                                <button class="btn btn-primary" onclick="submitShare()">
+                                    <i class="ri-share-forward-line"></i> 分享技能
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 已分享技能 -->
+                        <div class="tab-content" id="shared-tab">
+                            <div class="skill-list" id="shared-skills-list">
+                                <div class="empty-state">
+                                    <i class="ri-upload-cloud-line"></i>
+                                    <h3>暂无已分享的技能</h3>
+                                    <p>您分享的技能将显示在这里</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 收到的技能 -->
+                        <div class="tab-content" id="received-tab">
+                            <div class="skill-list" id="received-skills-list">
+                                <div class="empty-state">
+                                    <i class="ri-download-cloud-line"></i>
+                                    <h3>暂无收到的技能</h3>
+                                    <p>群组成员分享的技能将显示在这里</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/pages/skillcenter-my-sharing.js"></script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>版本管理 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">版本管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">技能版本</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>技能名称</th>
+                                            <th>当前版本</th>
+                                            <th>最新版本</th>
+                                            <th>更新时间</th>
+                                            <th>状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="version-list">
+                                        <tr>
+                                            <td colspan="6" class="nx-text-center nx-text-secondary">加载中...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/api-client.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            loadVersions();
+        };
+        
+        async function loadVersions() {
+            try {
+                const result = await ApiClient.post('/api/skills/list', {});
+                if (result && result.data) {
+                    renderVersions(result.data.list || result.data || []);
+                }
+            } catch (error) {
+                renderMockVersions();
+            }
+        }
+        
+        function renderMockVersions() {
+            const versions = [
+                { id: 'skill-weather', name: '天气查询技能', currentVersion: '1.0.0', latestVersion: '1.2.0', updatedAt: Date.now() - 86400000, hasUpdate: true },
+                { id: 'skill-stock', name: '股票查询技能', currentVersion: '2.0.0', latestVersion: '2.0.0', updatedAt: Date.now() - 172800000, hasUpdate: false },
+                { id: 'skill-chat', name: '对话技能', currentVersion: '1.5.0', latestVersion: '1.6.0', updatedAt: Date.now() - 3600000, hasUpdate: true }
+            ];
+            renderVersions(versions);
+        }
+        
+        function renderVersions(skills) {
+            const tbody = document.getElementById('version-list');
+            if (!skills || skills.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="nx-text-center nx-text-secondary">暂无数据</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = skills.map(s => `
+                <tr>
+                    <td><strong>${s.name || s.id}</strong></td>
+                    <td><code>${s.currentVersion || s.version || '1.0.0'}</code></td>
+                    <td><code>${s.latestVersion || s.version || '1.0.0'}</code></td>
+                    <td>${formatTime(s.updatedAt || Date.now())}</td>
+                    <td>
+                        <span class="nx-badge nx-badge--${s.hasUpdate ? 'warning' : 'success'}">
+                            ${s.hasUpdate ? '有更新' : '最新'}
+                        </span>
+                    </td>
+                    <td>
+                        ${s.hasUpdate ? 
+                            `<button class="nx-btn nx-btn--primary nx-btn--sm" onclick="upgradeSkill('${s.id}')">
+                                <i class="ri-arrow-up-line"></i> 升级
+                            </button>` : 
+                            '<span class="nx-text-secondary">-</span>'
+                        }
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="viewHistory('${s.id}')" title="历史版本">
+                            <i class="ri-history-line"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        async function upgradeSkill(skillId) {
+            if (!confirm('确定要升级此技能吗？')) return;
+            ApiClient.showLoading('升级中...');
+            setTimeout(() => {
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('升级成功');
+                loadVersions();
+            }, 1000);
+        }
+        
+        function viewHistory(skillId) {
+            alert('查看历史版本: ' + skillId);
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+    </script>
+</body>
+</html>

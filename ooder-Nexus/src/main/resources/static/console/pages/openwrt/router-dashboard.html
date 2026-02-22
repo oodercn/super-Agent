@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenWrt 路由器管理 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">OpenWrt 路由器管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="refreshData()">
+                        <i class="ri-refresh-line"></i> 刷新数据
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">路由器连接状态</h3>
+                            <span id="connectionStatus" class="nx-text-danger">未连接</span>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid-cols-4 nx-gap-4 nx-mb-4" id="routerInfo">
+                                <div>
+                                    <p class="nx-text-secondary nx-text-sm nx-mb-1">设备地址</p>
+                                    <p class="nx-text-xl nx-font-bold" id="routerHost">-</p>
+                                </div>
+                                <div>
+                                    <p class="nx-text-secondary nx-text-sm nx-mb-1">固件版本</p>
+                                    <p class="nx-text-xl nx-font-bold" id="firmwareVersion">-</p>
+                                </div>
+                                <div>
+                                    <p class="nx-text-secondary nx-text-sm nx-mb-1">运行时间</p>
+                                    <p class="nx-text-xl nx-font-bold" id="uptime">-</p>
+                                </div>
+                                <div>
+                                    <p class="nx-text-secondary nx-text-sm nx-mb-1">设备型号</p>
+                                    <p class="nx-text-xl nx-font-bold" id="deviceModel">-</p>
+                                </div>
+                            </div>
+                            <div class="nx-flex nx-gap-3">
+                                <button class="nx-btn nx-btn--primary" onclick="showConnectModal()">
+                                    <i class="ri-link"></i> 连接路由器
+                                </button>
+                                <button class="nx-btn nx-btn--danger" onclick="disconnectRouter()" id="disconnectBtn" style="display: none;">
+                                    <i class="ri-link-unlink"></i> 断开连接
+                                </button>
+                                <button class="nx-btn nx-btn--secondary" onclick="rebootRouter()" id="rebootBtn" style="display: none;">
+                                    <i class="ri-restart-line"></i> 重启路由器
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="nx-text-lg nx-font-semibold nx-mb-4">快捷操作</h3>
+                    <div class="nx-grid nx-grid-cols-3 nx-gap-4">
+                        <div class="nx-card" onclick="navigateTo('network-settings')" style="cursor: pointer;">
+                            <div class="nx-card__body nx-text-center">
+                                <i class="ri-wifi-line" style="font-size: 32px; color: var(--nx-primary);"></i>
+                                <h4 class="nx-mt-3">网络设置</h4>
+                                <p class="nx-text-secondary nx-text-sm">配置网络参数</p>
+                            </div>
+                        </div>
+                        <div class="nx-card" onclick="navigateTo('ip-management')" style="cursor: pointer;">
+                            <div class="nx-card__body nx-text-center">
+                                <i class="ri-global-line" style="font-size: 32px; color: var(--nx-success);"></i>
+                                <h4 class="nx-mt-3">IP 管理</h4>
+                                <p class="nx-text-secondary nx-text-sm">管理 IP 地址</p>
+                            </div>
+                        </div>
+                        <div class="nx-card" onclick="navigateTo('blacklist')" style="cursor: pointer;">
+                            <div class="nx-card__body nx-text-center">
+                                <i class="ri-shield-cross-line" style="font-size: 32px; color: var(--nx-warning);"></i>
+                                <h4 class="nx-mt-3">黑名单</h4>
+                                <p class="nx-text-secondary nx-text-sm">管理访问控制</p>
+                            </div>
+                        </div>
+                        <div class="nx-card" onclick="navigateTo('config-files')" style="cursor: pointer;">
+                            <div class="nx-card__body nx-text-center">
+                                <i class="ri-file-settings-line" style="font-size: 32px; color: var(--nx-info);"></i>
+                                <h4 class="nx-mt-3">配置文件</h4>
+                                <p class="nx-text-secondary nx-text-sm">编辑配置文件</p>
+                            </div>
+                        </div>
+                        <div class="nx-card" onclick="navigateTo('system-status')" style="cursor: pointer;">
+                            <div class="nx-card__body nx-text-center">
+                                <i class="ri-dashboard-line" style="font-size: 32px; color: var(--nx-danger);"></i>
+                                <h4 class="nx-mt-3">系统状态</h4>
+                                <p class="nx-text-secondary nx-text-sm">查看系统信息</p>
+                            </div>
+                        </div>
+                        <div class="nx-card" onclick="navigateTo('command')" style="cursor: pointer;">
+                            <div class="nx-card__body nx-text-center">
+                                <i class="ri-terminal-line" style="font-size: 32px; color: var(--nx-primary);"></i>
+                                <h4 class="nx-mt-3">命令执行</h4>
+                                <p class="nx-text-secondary nx-text-sm">执行系统命令</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="connectModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div class="nx-card" style="width: 400px; max-width: 90%;">
+            <div class="nx-card__header">
+                <h3 class="nx-card__title">连接 OpenWrt 路由器</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="hideConnectModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-card__body">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-form-label">路由器地址</label>
+                    <input type="text" class="nx-input" id="hostInput" value="192.168.1.1">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-form-label">用户名</label>
+                    <input type="text" class="nx-input" id="usernameInput" value="root">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-form-label">密码</label>
+                    <input type="password" class="nx-input" id="passwordInput">
+                </div>
+            </div>
+            <div class="nx-card__footer nx-flex nx-gap-3 nx-justify-end">
+                <button class="nx-btn nx-btn--secondary" onclick="hideConnectModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="connectRouter()">连接</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/openwrt-router-dashboard.js"></script>
+</body>
+</html>

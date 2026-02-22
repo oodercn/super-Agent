@@ -3,218 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SkillCenter Console - 技能中心管理控制台">
+    <meta name="theme-color" content="#000000">
     <title>SkillCenter Console - Ooder</title>
-    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
-    <!-- 本地版本的RemixIcon -->
-    <link href="/skillcenter/console/assets/css/remixicon/remixicon.css" rel="stylesheet">
-    <script src="/skillcenter/console/js/menu.js"></script>
-
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="css/nexus.css">
+    <link rel="stylesheet" href="css/index.css">
+    <script src="js/theme-manager.js?v=2"></script>
+    <script src="js/index.js?v=2"></script>
 </head>
 <body>
     <div class="container">
-        <!-- 侧边导航栏 -->
-        <div class="sidebar" id="sidebar">
-            <h2 style="display: flex; align-items: center; gap: 12px;"><i class="ri-bolt-line"></i> SkillCenter</h2>
-            <ul class="nav-menu" id="nav-menu"></ul>
-        </div>
-        
-        <!-- 主内容区 -->
         <div class="main-content">
-            <div class="header">
-                <h1><span>⚡</span> SkillCenter 控制台</h1>
-                <div class="subtitle">
-                    <span class="badge" style="background-color: var(--ooder-primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-right: 16px;">v0.6.5</span>
-                    <span>Ooder Rad Style</span> | 
-                    <span id="timestamp"></span>
+            <div class="welcome-section">
+                <div class="welcome-header">
+                    <h1><i class="ri-bolt-line"></i> SkillCenter 控制台</h1>
+                    <button class="theme-toggle-btn btn btn-secondary">
+                        <i class="ri-sun-line"></i> 浅色模式
+                    </button>
                 </div>
-            </div>
-            
-            <!-- 仪表盘页面 -->
-            <div id="page-dashboard" class="page">
-                <!-- 系统概览 -->
-                <div class="dashboard">
-                    <div class="card">
-                        <h3>系统状态</h3>
-                        <div class="value" id="system-status">运行中</div>
-                        <div class="label">SkillCenter 状态</div>
+                <p>请选择您要使用的功能模块</p>
+                
+                <div class="page-type-selection">
+                    <div class="page-type-card" onclick="selectPageType('dashboard')">
+                        <div class="icon"><i class="ri-dashboard-line"></i></div>
+                        <h3>仪表盘</h3>
+                        <p>查看系统概览、统计数据和最近活动</p>
+                        <button class="btn btn-primary">进入仪表盘</button>
                     </div>
-                    <div class="card">
-                        <h3>技能数量</h3>
-                        <div class="value" id="skill-count">24</div>
-                        <div class="label">已注册技能数</div>
+                    
+                    <div class="page-type-card" onclick="selectPageType('personal')">
+                        <div class="icon"><i class="ri-user-line"></i></div>
+                        <h3>个人中心</h3>
+                        <p>管理个人技能、执行历史和群组设置</p>
+                        <button class="btn btn-primary">进入个人中心</button>
                     </div>
-                    <div class="card">
-                        <h3>执行成功率</h3>
-                        <div class="value" id="execution-success-rate">97.5%</div>
-                        <div class="label">技能执行成功率</div>
+                    
+                    <div class="page-type-card" onclick="selectPageType('market')">
+                        <div class="icon"><i class="ri-store-2-line"></i></div>
+                        <h3>技能市场</h3>
+                        <p>浏览、搜索和安装各类技能组件</p>
+                        <button class="btn btn-primary">进入技能市场</button>
                     </div>
-                    <div class="card">
-                        <h3>市场活跃度</h3>
-                        <div class="value" id="market-activity">85</div>
-                        <div class="label">最近7天活跃度</div>
-                    </div>
-                    <div class="card">
-                        <h3>CPU 使用率</h3>
-                        <div class="value" id="cpu-usage">23%</div>
-                        <div class="label">当前使用率</div>
-                    </div>
-                    <div class="card">
-                        <h3>内存使用率</h3>
-                        <div class="value" id="memory-usage">45%</div>
-                        <div class="label">当前使用率</div>
+                    
+                    <div class="page-type-card" onclick="selectPageType('admin')">
+                        <div class="icon"><i class="ri-admin-line"></i></div>
+                        <h3>管理中心</h3>
+                        <p>系统管理、技能认证和用户群组管理</p>
+                        <button class="btn btn-primary">进入管理中心</button>
                     </div>
                 </div>
                 
-                <!-- 技能执行监控 -->
-                <div class="section">
-                    <h2>技能执行监控</h2>
-                    <div class="status-grid">
-                        <div class="status-item ok">
-                            <div class="key">今日执行次数</div>
-                            <div class="value">128</div>
-                        </div>
-                        <div class="status-item ok">
-                            <div class="key">成功次数</div>
-                            <div class="value">125</div>
-                        </div>
-                        <div class="status-item warning">
-                            <div class="key">失败次数</div>
-                            <div class="value">3</div>
-                        </div>
-                        <div class="status-item ok">
-                            <div class="key">平均执行时间</div>
-                            <div class="value">2.3s</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 市场活跃度 -->
-                <div class="section">
-                    <h2>市场活跃度</h2>
-                    <div class="status-grid">
-                        <div class="status-item ok">
-                            <div class="key">发布技能数</div>
-                            <div class="value">8</div>
-                        </div>
-                        <div class="status-item ok">
-                            <div class="key">下载技能数</div>
-                            <div class="value">42</div>
-                        </div>
-                        <div class="status-item ok">
-                            <div class="key">技能评分</div>
-                            <div class="value">4.8/5.0</div>
-                        </div>
-                        <div class="status-item ok">
-                            <div class="key">活跃用户数</div>
-                            <div class="value">15</div>
-                        </div>
-                    </div>
+                <div style="margin-top: 64px;">
+                    <h3>最近访问</h3>
+                    <div id="recent-access" style="margin-top: 16px;"></div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <script>
-        // API基础URL
-        const API_BASE_URL = '/skillcenter/api';
-        
-        // 更新时间戳
-        function updateTimestamp() {
-            const now = new Date();
-            const timestamp = document.getElementById('timestamp');
-            if (timestamp) {
-                timestamp.textContent = now.toLocaleString('zh-CN');
-            }
-        }
-        
-        // 加载仪表盘数据
-        async function loadDashboardData() {
-            try {
-                // 获取系统概览统计数据
-                const statsResponse = await fetch(`${API_BASE_URL}/dashboard/stats`);
-                if (statsResponse.ok) {
-                    const statsData = await statsResponse.json();
-                    if (statsData.data) {
-                        const skillCount = document.getElementById('skill-count');
-                        if (skillCount) skillCount.textContent = statsData.data.totalSkills || 0;
-                    }
-                }
-                
-                // 获取技能执行统计数据
-                const executionStatsResponse = await fetch(`${API_BASE_URL}/dashboard/execution-stats`);
-                if (executionStatsResponse.ok) {
-                    const executionStatsData = await executionStatsResponse.json();
-                    if (executionStatsData.data) {
-                        const executionSuccessRate = document.getElementById('execution-success-rate');
-                        if (executionSuccessRate) executionSuccessRate.textContent = `${executionStatsData.data.successRate || 0}%`;
-                    }
-                }
-                
-                // 获取市场活跃度统计数据
-                const marketStatsResponse = await fetch(`${API_BASE_URL}/dashboard/market-stats`);
-                if (marketStatsResponse.ok) {
-                    const marketStatsData = await marketStatsResponse.json();
-                    if (marketStatsData.data) {
-                        // 计算市场活跃度得分（基于下载量和评论数）
-                        const downloads = marketStatsData.data.totalDownloads || 0;
-                        const reviews = marketStatsData.data.totalReviews || 0;
-                        const activityScore = Math.min(100, Math.floor((downloads + reviews) / 40));
-                        
-                        const marketActivity = document.getElementById('market-activity');
-                        if (marketActivity) marketActivity.textContent = activityScore;
-                    }
-                }
-                
-                // 获取系统资源使用统计数据
-                const systemStatsResponse = await fetch(`${API_BASE_URL}/dashboard/system-stats`);
-                if (systemStatsResponse.ok) {
-                    const systemStatsData = await systemStatsResponse.json();
-                    if (systemStatsData.data) {
-                        const cpuUsage = document.getElementById('cpu-usage');
-                        if (cpuUsage) cpuUsage.textContent = `${systemStatsData.data.cpuUsage || 0}%`;
-                        
-                        const memoryUsage = document.getElementById('memory-usage');
-                        if (memoryUsage) memoryUsage.textContent = `${systemStatsData.data.memoryUsage || 0}%`;
-                    }
-                }
-                
-                // 系统状态默认为运行中
-                const systemStatus = document.getElementById('system-status');
-                if (systemStatus) systemStatus.textContent = '运行中';
-                
-            } catch (error) {
-                console.error('加载仪表盘数据错误:', error);
-                // 加载失败时显示默认值
-                const systemStatus = document.getElementById('system-status');
-                if (systemStatus) systemStatus.textContent = '运行中';
-                
-                const skillCount = document.getElementById('skill-count');
-                if (skillCount) skillCount.textContent = '0';
-                
-                const executionSuccessRate = document.getElementById('execution-success-rate');
-                if (executionSuccessRate) executionSuccessRate.textContent = '0%';
-                
-                const marketActivity = document.getElementById('market-activity');
-                if (marketActivity) marketActivity.textContent = '0';
-                
-                const cpuUsage = document.getElementById('cpu-usage');
-                if (cpuUsage) cpuUsage.textContent = '0%';
-                
-                const memoryUsage = document.getElementById('memory-usage');
-                if (memoryUsage) memoryUsage.textContent = '0%';
-            }
-        }
-        
-        // 初始化页面
-        function init() {
-            updateTimestamp();
-            loadDashboardData();
-            setInterval(updateTimestamp, 60000); // 每分钟更新时间戳
-            setInterval(loadDashboardData, 300000); // 每5分钟更新仪表盘数据
-        }
-        
-        // 页面加载完成后初始化
-        window.onload = init;
-    </script>
 </body>
 </html>

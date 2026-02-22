@@ -1,0 +1,275 @@
+apiVersion: ooder.io/v1
+kind: Scene
+metadata:
+  sceneId: "SYS"
+  sceneName: "系统服务场景"
+  sceneType: "SYSTEM"
+  description: "ENexus 北向服务集群管理场景，所有服务节点作为特殊Skills运行于此场景"
+  version: "1.0.0"
+  createdAt: "2026-02-18T00:00:00Z"
+  owner: "SYSTEM"
+
+spec:
+  capabilities:
+    - capabilityId: "cap-service-discovery"
+      capabilityName: "服务发现"
+      description: "服务注册、发现、健康检查"
+      provider: "skill-jds-server"
+      required: true
+      operations:
+        - operationId: "op-register-service"
+          operationName: "注册服务"
+        - operationId: "op-discover-service"
+          operationName: "发现服务"
+        - operationId: "op-health-check"
+          operationName: "健康检查"
+    
+    - capabilityId: "cap-config-center"
+      capabilityName: "配置中心"
+      description: "配置管理、热更新、推送"
+      provider: "skill-jds-server"
+      required: true
+      operations:
+        - operationId: "op-get-config"
+          operationName: "获取配置"
+        - operationId: "op-push-config"
+          operationName: "推送配置"
+    
+    - capabilityId: "cap-security-auth"
+      capabilityName: "安全认证"
+      description: "用户认证、权限验证、Token管理"
+      provider: "skill-auth-service"
+      required: true
+      operations:
+        - operationId: "op-authenticate"
+          operationName: "用户认证"
+        - operationId: "op-verify-token"
+          operationName: "验证Token"
+        - operationId: "op-generate-token"
+          operationName: "生成Token"
+    
+    - capabilityId: "cap-agent-register"
+      capabilityName: "Agent注册"
+      description: "MCP Agent注册、心跳、子网管理"
+      provider: "skill-agent-service"
+      required: true
+      operations:
+        - operationId: "op-register-agent"
+          operationName: "注册Agent"
+        - operationId: "op-heartbeat"
+          operationName: "心跳上报"
+        - operationId: "op-report-subnet"
+          operationName: "子网上报"
+    
+    - capabilityId: "cap-command-dispatch"
+      capabilityName: "命令下发"
+      description: "命令下发、任务调度、执行追踪"
+      provider: "skill-cmd-service"
+      required: true
+      operations:
+        - operationId: "op-send-command"
+          operationName: "发送命令"
+        - operationId: "op-broadcast-command"
+          operationName: "广播命令"
+        - operationId: "op-get-status"
+          operationName: "获取状态"
+    
+    - capabilityId: "cap-vfs-storage"
+      capabilityName: "VFS存储"
+      description: "文件存储、数据同步、索引管理"
+      provider: "skill-data-service"
+      required: true
+      operations:
+        - operationId: "op-upload-file"
+          operationName: "上传文件"
+        - operationId: "op-download-file"
+          operationName: "下载文件"
+        - operationId: "op-sync-data"
+          operationName: "同步数据"
+    
+    - capabilityId: "cap-org-mgmt"
+      capabilityName: "组织管理"
+      description: "组织架构、人员管理、角色权限"
+      provider: "skill-res-service"
+      required: true
+      operations:
+        - operationId: "op-get-org"
+          operationName: "获取组织"
+        - operationId: "op-get-persons"
+          operationName: "获取人员"
+        - operationId: "op-manage-role"
+          operationName: "管理角色"
+    
+    - capabilityId: "cap-msg-push"
+      capabilityName: "消息推送"
+      description: "消息推送、P2P通信、Topic订阅"
+      provider: "skill-msg-service"
+      required: true
+      operations:
+        - operationId: "op-push-message"
+          operationName: "推送消息"
+        - operationId: "op-send-p2p"
+          operationName: "P2P发送"
+        - operationId: "op-subscribe-topic"
+          operationName: "订阅Topic"
+
+  policies:
+    joinPolicy:
+      type: "SYSTEM_ONLY"
+      description: "仅系统服务可加入"
+      allowedTypes:
+        - "SYSTEM_SERVICE"
+      requireApproval: false
+      autoApprove: true
+    
+    communicationMode:
+      type: "INTERNAL"
+      description: "内部通信模式"
+      encryption: "TLS"
+      authentication: "TOKEN"
+      protocol: "HTTP"
+    
+    securityLevel: "HIGH"
+    
+    healthCheck:
+      enabled: true
+      interval: 30000
+      timeout: 5000
+      failureThreshold: 3
+      successThreshold: 1
+
+  members:
+    - skillId: "skill-jds-server"
+      skillName: "JDSServer 核心服务管理中心"
+      role: "PRIMARY"
+      priority: 1
+      required: true
+      description: "核心服务管理中心，负责服务注册发现、配置管理、心跳检测"
+    
+    - skillId: "skill-auth-service"
+      skillName: "域认证中心"
+      role: "PRIMARY"
+      priority: 2
+      required: true
+      description: "用户认证、域管理、密钥管理"
+      dependencies:
+        - "skill-jds-server"
+        - "skill-data-service"
+    
+    - skillId: "skill-agent-service"
+      skillName: "Agent联网服务"
+      role: "PRIMARY"
+      priority: 3
+      required: true
+      description: "Agent注册、心跳、子网管理"
+      dependencies:
+        - "skill-jds-server"
+        - "skill-auth-service"
+    
+    - skillId: "skill-cmd-service"
+      skillName: "命令服务"
+      role: "PRIMARY"
+      priority: 4
+      required: true
+      description: "命令下发、任务调度、执行追踪"
+      dependencies:
+        - "skill-jds-server"
+        - "skill-agent-service"
+        - "skill-msg-service"
+    
+    - skillId: "skill-data-service"
+      skillName: "数据中心"
+      role: "PRIMARY"
+      priority: 5
+      required: true
+      description: "VFS存储、数据同步、索引管理"
+      dependencies:
+        - "skill-jds-server"
+    
+    - skillId: "skill-res-service"
+      skillName: "资源服务"
+      role: "PRIMARY"
+      priority: 6
+      required: true
+      description: "组织管理、场景策略、资源配置"
+      dependencies:
+        - "skill-jds-server"
+        - "skill-auth-service"
+    
+    - skillId: "skill-msg-service"
+      skillName: "消息服务"
+      role: "PRIMARY"
+      priority: 7
+      required: true
+      description: "消息推送、P2P通信、Topic订阅"
+      dependencies:
+        - "skill-jds-server"
+        - "skill-auth-service"
+
+  networkConfig:
+    internalNetwork: "10.0.0.0/24"
+    serviceDiscovery:
+      type: "JDSSERVER"
+      heartbeatInterval: 30000
+    
+    externalAccess:
+      enabled: true
+      gateway: "JDSServer"
+      endpoints:
+        - path: "/api/north/mcp/*"
+          target: "skill-agent-service"
+          description: "Agent北向协议接口"
+        
+        - path: "/api/north/command/*"
+          target: "skill-cmd-service"
+          description: "命令下发接口"
+        
+        - path: "/api/auth/*"
+          target: "skill-auth-service"
+          description: "认证服务接口"
+        
+        - path: "/api/org/*"
+          target: "skill-res-service"
+          description: "组织管理接口"
+        
+        - path: "/api/vfs/*"
+          target: "skill-data-service"
+          description: "VFS存储接口"
+        
+        - path: "/api/msg/*"
+          target: "skill-msg-service"
+          description: "消息服务接口"
+        
+        - path: "/api/jds/*"
+          target: "skill-jds-server"
+          description: "服务管理接口"
+
+  keyConfig:
+    algorithm: "RSA-2048"
+    keyRotationDays: 30
+    keyStorage: "INTERNAL"
+    keyHierarchy:
+      - level: "USER"
+        description: "用户密钥"
+        rotationDays: 90
+      
+      - level: "DOMAIN"
+        description: "域密钥"
+        rotationDays: 30
+      
+      - level: "SCENE_GROUP"
+        description: "场景组密钥"
+        rotationDays: 30
+
+  auditConfig:
+    enabled: true
+    logLevel: "INFO"
+    retentionDays: 90
+    auditEvents:
+      - "SERVICE_REGISTER"
+      - "SERVICE_UNREGISTER"
+      - "CONFIG_CHANGE"
+      - "AUTH_SUCCESS"
+      - "AUTH_FAILURE"
+      - "COMMAND_SEND"
+      - "COMMAND_EXECUTE"

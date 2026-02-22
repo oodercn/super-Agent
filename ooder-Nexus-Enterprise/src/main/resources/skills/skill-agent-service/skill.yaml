@@ -1,0 +1,139 @@
+apiVersion: ooder.io/v1
+kind: Skill
+metadata:
+  skillId: "skill-agent-service"
+  skillName: "Agent联网服务"
+  skillType: "SYSTEM_SERVICE"
+  version: "1.0.0"
+  description: "提供Agent注册、心跳、子网管理、能力管理功能"
+  author: "ooder Team"
+  createdAt: "2026-02-18T00:00:00Z"
+  scene: "SYS"
+
+spec:
+  capabilities:
+    - capabilityId: "cap-agent-register"
+      capabilityName: "Agent注册"
+      description: "Agent注册、注销、信息管理"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-register-agent"
+          operationName: "注册Agent"
+          description: "注册新的MCP Agent"
+          inputSchema:
+            type: "object"
+            properties:
+              agentId:
+                type: "string"
+              userId:
+                type: "string"
+              publicKey:
+                type: "string"
+              capabilities:
+                type: "array"
+          outputSchema:
+            type: "object"
+            properties:
+              success:
+                type: "boolean"
+              mcpId:
+                type: "string"
+              certificate:
+                type: "string"
+        
+        - operationId: "op-unregister-agent"
+          operationName: "注销Agent"
+          description: "注销MCP Agent"
+        
+        - operationId: "op-get-agent-info"
+          operationName: "获取Agent信息"
+          description: "获取Agent详细信息"
+    
+    - capabilityId: "cap-heartbeat"
+      capabilityName: "心跳检测"
+      description: "心跳接收、状态更新、超时检测"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-receive-heartbeat"
+          operationName: "接收心跳"
+          description: "接收Agent心跳"
+        
+        - operationId: "op-check-health"
+          operationName: "健康检查"
+          description: "检查Agent健康状态"
+    
+    - capabilityId: "cap-subnet-mgmt"
+      capabilityName: "子网管理"
+      description: "子网上报、拓扑同步、链路管理"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-report-subnet"
+          operationName: "子网上报"
+          description: "上报子网信息"
+        
+        - operationId: "op-get-topology"
+          operationName: "获取拓扑"
+          description: "获取网络拓扑"
+        
+        - operationId: "op-manage-link"
+          operationName: "管理链路"
+          description: "管理网络链路"
+    
+    - capabilityId: "cap-capability-mgmt"
+      capabilityName: "能力管理"
+      description: "能力上报、查询、同步"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-report-capability"
+          operationName: "能力上报"
+          description: "上报Agent能力"
+        
+        - operationId: "op-query-capability"
+          operationName: "查询能力"
+          description: "查询可用能力"
+
+  config:
+    port: 8082
+    udpPort: 8087
+    host: "0.0.0.0"
+    endpoints:
+      - path: "/api/north/mcp/register"
+        description: "Agent注册接口"
+      - path: "/api/north/mcp/heartbeat"
+        description: "心跳接口"
+      - path: "/api/north/mcp/subnet/report"
+        description: "子网上报接口"
+      - path: "/api/north/mcp/capability/report"
+        description: "能力上报接口"
+    
+    dependencies:
+      - skillId: "skill-jds-server"
+        required: true
+        description: "服务注册发现"
+      - skillId: "skill-auth-service"
+        required: true
+        description: "认证服务"
+    
+    heartbeat:
+      interval: 30
+      timeout: 90
+      maxMissed: 3
+    
+    udp:
+      enabled: true
+      port: 8087
+      bufferSize: 65536
+
+  healthCheck:
+    enabled: true
+    interval: 30000
+    timeout: 5000
+    endpoint: "/api/north/mcp/health"
+
+  resources:
+    cpu:
+      request: "250m"
+      limit: "1000m"
+    memory:
+      request: "256Mi"
+      limit: "1Gi"

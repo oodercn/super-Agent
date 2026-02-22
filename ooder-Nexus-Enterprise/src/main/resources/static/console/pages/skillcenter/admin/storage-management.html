@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>存储管理 - Nexus SkillCenter</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+
+    <!-- 必须引入的脚本文件 -->
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar" id="sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">存储管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="switchTab('status')">存储状态</button>
+                        <button class="tab-btn" onclick="switchTab('backup')">存储备份</button>
+                        <button class="tab-btn" onclick="switchTab('restore')">存储恢复</button>
+                        <button class="tab-btn" onclick="switchTab('clean')">存储清理</button>
+                        <button class="tab-btn" onclick="switchTab('settings')">存储设置</button>
+                    </div>
+                    
+                    <div class="tab-content" id="status-tab">
+                        <div class="storage-status" id="storage-status">
+                            <div class="loading">加载中...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="backup-tab" style="display: none;">
+                        <div class="backup-list" id="backup-list">
+                            <div class="loading">加载中...</div>
+                        </div>
+                        <div class="backup-actions">
+                            <button class="btn btn-primary" onclick="createBackup()">
+                                <i class="ri-save-line"></i> 创建备份
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="restore-tab" style="display: none;">
+                        <div class="restore-list" id="restore-list">
+                            <div class="loading">加载中...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="clean-tab" style="display: none;">
+                        <div class="clean-options">
+                            <h3>清理选项</h3>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="clean-temp"> 清理临时文件
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="clean-cache"> 清理缓存
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="clean-logs"> 清理日志文件
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="clean-old-backups"> 清理旧备份
+                                </label>
+                            </div>
+                            <button class="btn btn-primary" onclick="performClean()">
+                                <i class="ri-delete-bin-line"></i> 执行清理
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="settings-tab" style="display: none;">
+                        <div class="storage-settings">
+                            <h3>存储设置</h3>
+                            <form id="storage-settings-form">
+                                <div class="form-group">
+                                    <label>存储路径</label>
+                                    <input type="text" id="storage-path" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>最大存储空间 (GB)</label>
+                                    <input type="number" id="max-storage" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>备份保留天数</label>
+                                    <input type="number" id="backup-retention" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>自动备份</label>
+                                    <select id="auto-backup" class="form-control">
+                                        <option value="disabled">禁用</option>
+                                        <option value="daily">每天</option>
+                                        <option value="weekly">每周</option>
+                                        <option value="monthly">每月</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="saveSettings()">
+                                    <i class="ri-save-line"></i> 保存设置
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+</body>
+</html>

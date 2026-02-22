@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>命令管理 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .cmd-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--ns-card-bg); border-radius: 8px; padding: 20px; border: 1px solid var(--ns-border); }
+        .stat-card .stat-value { font-size: 32px; font-weight: 600; }
+        .stat-card .stat-label { color: var(--ns-secondary); margin-top: 8px; }
+        .stat-card.pending .stat-value { color: var(--ns-warning); }
+        .stat-card.executing .stat-value { color: var(--nx-primary); }
+        .stat-card.success .stat-value { color: var(--ns-success); }
+        .stat-card.failed .stat-value { color: var(--ns-danger); }
+        
+        .filter-bar { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        .filter-bar select, .filter-bar input { 
+            background: var(--ns-input-bg); 
+            border: 1px solid var(--ns-border); 
+            color: var(--ns-dark);
+            padding: 8px 12px; 
+            border-radius: 6px; 
+        }
+        
+        .cmd-table { width: 100%; border-collapse: collapse; }
+        .cmd-table th, .cmd-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--ns-border); }
+        .cmd-table th { background: var(--ns-card-bg); color: var(--ns-secondary); font-weight: 500; }
+        .cmd-table tr:hover { background: var(--ns-bg-hover); }
+        
+        .protocol-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+        .protocol-mcp { background: rgba(59, 130, 246, 0.12); color: var(--nx-primary); }
+        .protocol-route { background: rgba(34, 197, 94, 0.12); color: var(--ns-success); }
+        .protocol-end { background: rgba(245, 158, 11, 0.12); color: var(--ns-warning); }
+        .protocol-iot { background: rgba(139, 92, 246, 0.12); color: var(--ns-purple); }
+        .protocol-sensor { background: rgba(236, 72, 153, 0.12); color: var(--ns-pink); }
+        
+        .direction-badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 11px; }
+        .direction-north { background: rgba(59, 130, 246, 0.12); color: var(--nx-primary); }
+        .direction-south { background: rgba(34, 197, 94, 0.12); color: var(--ns-success); }
+        
+        .cmd-status { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .status-success { background: rgba(34, 197, 94, 0.12); color: var(--ns-success); }
+        .status-pending { background: rgba(245, 158, 11, 0.12); color: var(--ns-warning); }
+        .status-executing { background: rgba(59, 130, 246, 0.12); color: var(--nx-primary); }
+        .status-failed { background: rgba(239, 68, 68, 0.12); color: var(--ns-danger); }
+        .status-cancelled { background: rgba(107, 114, 128, 0.12); color: var(--ns-secondary); }
+        
+        .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .btn-primary { background: var(--nx-primary); color: white; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-secondary { background: var(--ns-card-bg); color: var(--ns-dark); border: 1px solid var(--ns-border); }
+        .btn-secondary:hover { background: var(--ns-bg-hover); }
+        .btn-sm { padding: 4px 8px; font-size: 12px; }
+        .btn-danger { background: var(--ns-danger); color: white; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal.active { display: flex; justify-content: center; align-items: center; }
+        .modal-content { background: var(--ns-card-bg); border-radius: 12px; padding: 24px; width: 600px; max-width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h3 { margin: 0; color: var(--ns-dark); }
+        .modal-close { background: none; border: none; color: var(--ns-secondary); font-size: 24px; cursor: pointer; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--ns-secondary); }
+        .form-group input, .form-group textarea, .form-group select { 
+            width: 100%; 
+            background: var(--ns-input-bg); 
+            border: 1px solid var(--ns-border); 
+            color: var(--ns-dark);
+            padding: 10px 12px; 
+            border-radius: 6px; 
+        }
+        .form-group textarea { min-height: 100px; resize: vertical; font-family: monospace; }
+        
+        .tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 1px solid var(--ns-border); }
+        .tab { padding: 12px 24px; color: var(--ns-secondary); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .tab:hover { color: var(--ns-dark); }
+        .tab.active { color: var(--nx-primary); border-bottom-color: var(--nx-primary); }
+        
+        .protocol-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .protocol-card { background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 8px; padding: 16px; }
+        .protocol-card h4 { margin: 0 0 12px 0; color: var(--ns-dark); }
+        .protocol-card .stat { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .protocol-card .stat-label { color: var(--ns-secondary); }
+        
+        .route-topology { background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 8px; padding: 24px; min-height: 300px; }
+        .topology-node { display: inline-block; background: var(--ns-input-bg); border: 1px solid var(--ns-border); border-radius: 8px; padding: 12px 20px; margin: 8px; text-align: center; }
+        .topology-node.active { border-color: var(--nx-primary); color: var(--nx-primary); }
+        .topology-arrow { color: var(--ns-secondary); font-size: 20px; margin: 0 8px; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold"><i class="ri-terminal-box-line"></i> 命令管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="btn btn-primary" onclick="openSendModal()">
+                        <i class="ri-send-plane-line"></i> 发送命令
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="cmd-stats">
+                        <div class="stat-card pending">
+                            <div class="stat-value" id="pendingCommands">-</div>
+                            <div class="stat-label">待执行</div>
+                        </div>
+                        <div class="stat-card executing">
+                            <div class="stat-value" id="executingCommands">-</div>
+                            <div class="stat-label">执行中</div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-value" id="successCommands">-</div>
+                            <div class="stat-label">成功</div>
+                        </div>
+                        <div class="stat-card failed">
+                            <div class="stat-value" id="failedCommands">-</div>
+                            <div class="stat-label">失败</div>
+                        </div>
+                    </div>
+
+                    <div class="tabs">
+                        <div class="tab active" data-tab="commands">命令列表</div>
+                        <div class="tab" data-tab="protocols">协议处理器</div>
+                        <div class="tab" data-tab="route">命令路由</div>
+                        <div class="tab" data-tab="capabilities">命令能力</div>
+                    </div>
+
+                    <div id="commandsTab" class="tab-content">
+                        <div class="filter-bar">
+                            <select id="filterProtocol">
+                                <option value="">全部协议</option>
+                                <option value="MCP">MCP</option>
+                                <option value="ROUTE">ROUTE</option>
+                                <option value="END">END</option>
+                                <option value="IOT">IOT</option>
+                                <option value="SENSOR">SENSOR</option>
+                            </select>
+                            <select id="filterStatus">
+                                <option value="">全部状态</option>
+                                <option value="PENDING">待执行</option>
+                                <option value="EXECUTING">执行中</option>
+                                <option value="SUCCESS">成功</option>
+                                <option value="FAILED">失败</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="loadCommands()">
+                                <i class="ri-search-line"></i> 搜索
+                            </button>
+                            <button class="btn btn-secondary" onclick="resetFilters()">
+                                <i class="ri-refresh-line"></i> 重置
+                            </button>
+                        </div>
+
+                        <table class="cmd-table">
+                            <thead>
+                                <tr>
+                                    <th>命令ID</th>
+                                    <th>协议</th>
+                                    <th>方向</th>
+                                    <th>源→目标</th>
+                                    <th>状态</th>
+                                    <th>执行时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="commandsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="protocolsTab" class="tab-content" style="display: none;">
+                        <div class="protocol-grid" id="protocolGrid"></div>
+                    </div>
+
+                    <div id="routeTab" class="tab-content" style="display: none;">
+                        <div class="route-topology" id="routeTopology">
+                            <div style="text-align: center; margin-bottom: 24px;">
+                                <h3 style="color: var(--ns-dark); margin: 0 0 8px 0;">命令路由拓扑</h3>
+                                <p style="color: var(--ns-secondary); margin: 0;">北向命令流 → ProtocolHub → 南向命令流</p>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+                                <div>
+                                    <span class="topology-node">外部系统</span>
+                                    <span class="topology-arrow">→</span>
+                                    <span class="topology-node">RouteAgent</span>
+                                    <span class="topology-arrow">→</span>
+                                    <span class="topology-node active">ProtocolHub</span>
+                                </div>
+                                <div style="display: flex; gap: 16px;">
+                                    <span class="topology-node">MCP</span>
+                                    <span class="topology-node">ROUTE</span>
+                                    <span class="topology-node">END</span>
+                                    <span class="topology-node">IOT</span>
+                                    <span class="topology-node">SENSOR</span>
+                                </div>
+                                <div>
+                                    <span class="topology-node active">ProtocolHub</span>
+                                    <span class="topology-arrow">→</span>
+                                    <span class="topology-node">EndAgent</span>
+                                    <span class="topology-arrow">→</span>
+                                    <span class="topology-node">外部设备</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="capabilitiesTab" class="tab-content" style="display: none;">
+                        <table class="cmd-table">
+                            <thead>
+                                <tr>
+                                    <th>能力ID</th>
+                                    <th>能力名称</th>
+                                    <th>命令类型</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="capabilitiesTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="sendModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>发送命令</h3>
+                <button class="modal-close" onclick="closeSendModal()">&times;</button>
+            </div>
+            <form id="sendForm">
+                <div class="form-group">
+                    <label>命令方向</label>
+                    <select id="sendDirection" required>
+                        <option value="NORTH">北向 (外部系统 → ENexus)</option>
+                        <option value="SOUTH">南向 (ENexus → 外部设备)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>协议类型</label>
+                    <select id="sendProtocol" required>
+                        <option value="MCP">MCP</option>
+                        <option value="ROUTE">ROUTE</option>
+                        <option value="END">END</option>
+                        <option value="IOT">IOT</option>
+                        <option value="SENSOR">SENSOR</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>命令类型</label>
+                    <select id="sendCmdType" required>
+                        <option value="EXECUTE">EXECUTE (执行)</option>
+                        <option value="QUERY">QUERY (查询)</option>
+                        <option value="CONTROL">CONTROL (控制)</option>
+                    </select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label>源节点</label>
+                        <input type="text" id="sendSource" placeholder="源节点ID" value="nexus-local">
+                    </div>
+                    <div class="form-group">
+                        <label>目标节点</label>
+                        <input type="text" id="sendTarget" placeholder="目标节点ID" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>命令参数 (JSON)</label>
+                    <textarea id="sendPayload" placeholder='{"action": "execute", "params": {}}'>{}</textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label>优先级</label>
+                        <select id="sendPriority">
+                            <option value="LOW">低</option>
+                            <option value="NORMAL" selected>普通</option>
+                            <option value="HIGH">高</option>
+                            <option value="URGENT">紧急</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>超时时间 (秒)</label>
+                        <input type="number" id="sendTtl" value="30" min="1" max="300">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeSendModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">发送</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>命令详情</h3>
+                <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div id="detailContent"></div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let currentPage = 0;
+        const pageSize = 15;
+
+        window.onPageInit = function() {
+            loadStats();
+            loadCommands();
+            initTabs();
+        };
+
+        function initTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+                    this.classList.add('active');
+                    const tabId = this.dataset.tab;
+                    document.getElementById(tabId + 'Tab').style.display = 'block';
+                    
+                    if (tabId === 'protocols') loadProtocols();
+                    if (tabId === 'capabilities') loadCapabilities();
+                });
+            });
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/msgcmd/stats');
+                const result = await response.json();
+                if (result.success) {
+                    const stats = result.data;
+                    document.getElementById('pendingCommands').textContent = stats.pendingCommands || 0;
+                    document.getElementById('successCommands').textContent = stats.successCommands || 0;
+                    document.getElementById('failedCommands').textContent = stats.failedCommands || 0;
+                    
+                    let executing = 0;
+                    try {
+                        const cmdResponse = await fetch('/api/msgcmd/commands?status=EXECUTING&size=100');
+                        const cmdResult = await cmdResponse.json();
+                        if (cmdResult.success) {
+                            executing = cmdResult.data ? cmdResult.data.length : 0;
+                        }
+                    } catch (e) {}
+                    document.getElementById('executingCommands').textContent = executing;
+                }
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        async function loadCommands() {
+            const protocolType = document.getElementById('filterProtocol').value;
+            const status = document.getElementById('filterStatus').value;
+            
+            try {
+                const params = new URLSearchParams({ page: currentPage, size: pageSize });
+                if (protocolType) params.append('protocolType', protocolType);
+                if (status) params.append('status', status);
+                
+                const response = await fetch('/api/msgcmd/commands?' + params);
+                const result = await response.json();
+                
+                if (result.success) {
+                    renderCommands(result.data);
+                }
+            } catch (error) {
+                console.error('Failed to load commands:', error);
+            }
+        }
+
+        function renderCommands(commands) {
+            const tbody = document.getElementById('commandsTableBody');
+            tbody.innerHTML = commands.map(cmd => `
+                <tr>
+                    <td><code style="color: var(--nx-primary);">${cmd.commandId}</code></td>
+                    <td><span class="protocol-badge protocol-${cmd.protocolType.toLowerCase()}">${cmd.protocolType}</span></td>
+                    <td><span class="direction-badge direction-${cmd.direction.toLowerCase()}">${cmd.direction === 'NORTH' ? '北向' : '南向'}</span></td>
+                    <td>${cmd.sourceId || '-'} → ${cmd.targetId || '-'}</td>
+                    <td><span class="cmd-status status-${cmd.status.toLowerCase()}">${getStatusText(cmd.status)}</span></td>
+                    <td>${cmd.executionTime ? cmd.executionTime + 'ms' : '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="viewCommand('${cmd.commandId}')">详情</button>
+                        ${cmd.status === 'PENDING' ? `<button class="btn btn-sm btn-danger" onclick="cancelCommand('${cmd.commandId}')">取消</button>` : ''}
+                        ${cmd.status === 'FAILED' ? `<button class="btn btn-sm btn-primary" onclick="retryCommand('${cmd.commandId}')">重试</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadProtocols() {
+            try {
+                const response = await fetch('/api/msgcmd/protocols/handlers');
+                const result = await response.json();
+                if (result.success) {
+                    renderProtocols(result.data);
+                }
+            } catch (error) {
+                console.error('Failed to load protocols:', error);
+            }
+        }
+
+        function renderProtocols(handlers) {
+            const container = document.getElementById('protocolGrid');
+            const protocols = Object.values(handlers);
+            container.innerHTML = protocols.map(p => `
+                <div class="protocol-card">
+                    <h4><span class="protocol-badge protocol-${p.protocolType.toLowerCase()}">${p.protocolType}</span></h4>
+                    <div class="stat">
+                        <span class="stat-label">状态</span>
+                        <span style="color: var(--ns-success);">${p.status}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">处理器</span>
+                        <span>${p.protocolType}Handler</span>
+                    </div>
+                    <button class="btn btn-sm btn-secondary" style="width: 100%; margin-top: 12px;">配置</button>
+                </div>
+            `).join('');
+        }
+
+        async function loadCapabilities() {
+            try {
+                const response = await fetch('/api/msgcmd/capabilities/commands');
+                const result = await response.json();
+                if (result.success) {
+                    renderCapabilities(result.data);
+                }
+            } catch (error) {
+                console.error('Failed to load capabilities:', error);
+            }
+        }
+
+        function renderCapabilities(capabilities) {
+            const tbody = document.getElementById('capabilitiesTableBody');
+            tbody.innerHTML = capabilities.map(cap => `
+                <tr>
+                    <td>${cap.capabilityId}</td>
+                    <td>${cap.capabilityName}</td>
+                    <td>${cap.commandType}</td>
+                    <td><span class="cmd-status status-${cap.status.toLowerCase().replace('_', '-')}">${cap.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" ${cap.status === 'ENABLED' ? 'disabled' : ''}>
+                            ${cap.status === 'ENABLED' ? '已启用' : '申请'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openSendModal() {
+            document.getElementById('sendModal').classList.add('active');
+        }
+
+        function closeSendModal() {
+            document.getElementById('sendModal').classList.remove('active');
+            document.getElementById('sendForm').reset();
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        document.getElementById('sendForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            let payload = {};
+            try {
+                payload = JSON.parse(document.getElementById('sendPayload').value);
+            } catch (e) {
+                payload = {};
+            }
+            
+            const data = {
+                protocolType: document.getElementById('sendProtocol').value,
+                commandType: document.getElementById('sendCmdType').value,
+                sourceId: document.getElementById('sendSource').value,
+                targetId: document.getElementById('sendTarget').value,
+                payload: payload,
+                options: {
+                    priority: document.getElementById('sendPriority').value,
+                    ttl: parseInt(document.getElementById('sendTtl').value)
+                }
+            };
+            
+            try {
+                const response = await fetch('/api/msgcmd/commands/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    closeSendModal();
+                    loadCommands();
+                    loadStats();
+                    alert('命令发送成功: ' + result.data.status);
+                }
+            } catch (error) {
+                console.error('Failed to send command:', error);
+                alert('发送失败');
+            }
+        });
+
+        async function viewCommand(commandId) {
+            try {
+                const response = await fetch(`/api/msgcmd/commands/${commandId}`);
+                const result = await response.json();
+                if (result.success) {
+                    const cmd = result.data;
+                    document.getElementById('detailContent').innerHTML = `
+                        <div style="display: grid; gap: 12px;">
+                            <div class="form-group">
+                                <label>命令ID</label>
+                                <input type="text" value="${cmd.commandId}" readonly>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div class="form-group">
+                                    <label>协议类型</label>
+                                    <input type="text" value="${cmd.protocolType}" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>命令类型</label>
+                                    <input type="text" value="${cmd.commandType}" readonly>
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div class="form-group">
+                                    <label>源节点</label>
+                                    <input type="text" value="${cmd.sourceId || '-'}" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>目标节点</label>
+                                    <input type="text" value="${cmd.targetId || '-'}" readonly>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>状态</label>
+                                <input type="text" value="${getStatusText(cmd.status)}" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>载荷</label>
+                                <textarea readonly>${JSON.stringify(cmd.payload || {}, null, 2)}</textarea>
+                            </div>
+                            ${cmd.errorMessage ? `<div class="form-group">
+                                <label>错误信息</label>
+                                <textarea readonly style="color: var(--ns-danger);">${cmd.errorMessage}</textarea>
+                            </div>` : ''}
+                        </div>
+                    `;
+                    document.getElementById('detailModal').classList.add('active');
+                }
+            } catch (error) {
+                console.error('Failed to load command:', error);
+            }
+        }
+
+        async function cancelCommand(commandId) {
+            if (!confirm('确定要取消该命令吗？')) return;
+            try {
+                const response = await fetch(`/api/msgcmd/commands/${commandId}/cancel`, { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    loadCommands();
+                    loadStats();
+                }
+            } catch (error) {
+                console.error('Failed to cancel command:', error);
+            }
+        }
+
+        async function retryCommand(commandId) {
+            try {
+                const response = await fetch(`/api/msgcmd/commands/${commandId}/retry`, { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    loadCommands();
+                    loadStats();
+                    alert('命令已重新提交');
+                }
+            } catch (error) {
+                console.error('Failed to retry command:', error);
+            }
+        }
+
+        function resetFilters() {
+            document.getElementById('filterProtocol').value = '';
+            document.getElementById('filterStatus').value = '';
+            currentPage = 0;
+            loadCommands();
+        }
+
+        function getStatusText(status) {
+            const map = { 
+                'PENDING': '待执行', 'EXECUTING': '执行中', 'SUCCESS': '成功', 
+                'FAILED': '失败', 'CANCELLED': '已取消' 
+            };
+            return map[status] || status;
+        }
+    </script>
+</body>
+</html>

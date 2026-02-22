@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP地址管理 - Nexus</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <style>
+        .ip-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .ip-stat-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            padding: 20px;
+            text-align: center;
+        }
+        .ip-stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--nx-primary);
+        }
+        .ip-stat-label {
+            font-size: 14px;
+            color: var(--ns-secondary);
+            margin-top: 8px;
+        }
+        .ip-pool-section {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .ip-pool-section h3 {
+            margin: 0 0 20px 0;
+            color: var(--ns-dark);
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .ip-pool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 8px;
+        }
+        .ip-block {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .ip-block.available {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--ns-success);
+            border: 1px solid var(--ns-success);
+        }
+        .ip-block.used {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--ns-danger);
+            border: 1px solid var(--ns-danger);
+        }
+        .ip-block.reserved {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--ns-warning);
+            border: 1px solid var(--ns-warning);
+        }
+        .ip-block:hover {
+            transform: scale(1.1);
+        }
+        .ip-legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 16px;
+            font-size: 13px;
+        }
+        .ip-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ip-legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+        .ip-legend-dot.available { background: var(--ns-success); }
+        .ip-legend-dot.used { background: var(--ns-danger); }
+        .ip-legend-dot.reserved { background: var(--ns-warning); }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .form-group {
+            margin-bottom: 0;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            background-color: var(--ns-input-bg);
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">IP地址管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <!-- IP 统计 -->
+                    <div class="ip-stats">
+                        <div class="ip-stat-card">
+                            <div class="ip-stat-value">254</div>
+                            <div class="ip-stat-label">总 IP 数</div>
+                        </div>
+                        <div class="ip-stat-card">
+                            <div class="ip-stat-value" style="color: var(--ns-danger);">45</div>
+                            <div class="ip-stat-label">已使用</div>
+                        </div>
+                        <div class="ip-stat-card">
+                            <div class="ip-stat-value" style="color: var(--ns-success);">199</div>
+                            <div class="ip-stat-label">可用</div>
+                        </div>
+                        <div class="ip-stat-card">
+                            <div class="ip-stat-value" style="color: var(--ns-warning);">10</div>
+                            <div class="ip-stat-label">保留</div>
+                        </div>
+                    </div>
+
+                    <!-- IP 地址池可视化 -->
+                    <div class="ip-pool-section">
+                        <h3><i class="ri-grid-line"></i> IP 地址池 (192.168.1.0/24)</h3>
+                        <div class="ip-pool-grid" id="ip-pool">
+                            <!-- IP 块将通过 JavaScript 动态生成 -->
+                        </div>
+                        <div class="ip-legend">
+                            <div class="ip-legend-item">
+                                <div class="ip-legend-dot available"></div>
+                                <span>可用</span>
+                            </div>
+                            <div class="ip-legend-item">
+                                <div class="ip-legend-dot used"></div>
+                                <span>已使用</span>
+                            </div>
+                            <div class="ip-legend-item">
+                                <div class="ip-legend-dot reserved"></div>
+                                <span>保留</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 静态 IP 分配 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="ri-link"></i> 静态 IP 分配</h2>
+                            <button class="btn btn-primary" onclick="showAddStaticIP()">
+                                <i class="ri-add-line"></i> 添加
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>IP 地址</th>
+                                        <th>MAC 地址</th>
+                                        <th>设备名称</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>192.168.1.10</td>
+                                        <td>AA:BB:CC:DD:EE:01</td>
+                                        <td>NAS 服务器</td>
+                                        <td><span class="badge badge-success">在线</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-secondary">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>192.168.1.20</td>
+                                        <td>AA:BB:CC:DD:EE:02</td>
+                                        <td>打印机</td>
+                                        <td><span class="badge badge-success">在线</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-secondary">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>192.168.1.30</td>
+                                        <td>AA:BB:CC:DD:EE:03</td>
+                                        <td>监控摄像头</td>
+                                        <td><span class="badge badge-secondary">离线</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-secondary">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- DHCP 设置 -->
+                    <div class="card" style="margin-top: 24px;">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="ri-settings-3-line"></i> DHCP 设置</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">起始 IP</label>
+                                    <input type="text" class="form-input" value="192.168.1.100">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">结束 IP</label>
+                                    <input type="text" class="form-input" value="192.168.1.200">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">租约时间</label>
+                                    <input type="text" class="form-input" value="12h">
+                                </div>
+                            </div>
+                            <div class="btn-group" style="margin-top: 16px;">
+                                <button class="btn btn-secondary">重置</button>
+                                <button class="btn btn-primary">保存设置</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+</body>
+</html>

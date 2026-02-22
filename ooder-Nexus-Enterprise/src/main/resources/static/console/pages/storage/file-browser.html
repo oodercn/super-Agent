@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件浏览器 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 200px;
+            padding: 8px 12px;
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        .breadcrumb__item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--ns-secondary);
+            cursor: pointer;
+        }
+        
+        .breadcrumb__item:hover {
+            color: var(--nx-primary);
+        }
+        
+        .breadcrumb__item.active {
+            color: var(--ns-dark);
+            cursor: default;
+        }
+        
+        .breadcrumb__separator {
+            color: var(--ns-border);
+        }
+        
+        .search-box {
+            position: relative;
+            width: 250px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            color: var(--ns-dark);
+            font-size: 13px;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--ns-secondary);
+        }
+        
+        .file-list {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .file-list__header {
+            display: grid;
+            grid-template-columns: 1fr 100px 120px 150px;
+            gap: 16px;
+            padding: 12px 16px;
+            background: var(--ns-input-bg);
+            border-bottom: 1px solid var(--ns-border);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--ns-secondary);
+            text-transform: uppercase;
+        }
+        
+        .file-list__body {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .file-item {
+            display: grid;
+            grid-template-columns: 1fr 100px 120px 150px;
+            gap: 16px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--ns-border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .file-item:last-child {
+            border-bottom: none;
+        }
+        
+        .file-item:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .file-item.selected {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid var(--nx-primary);
+        }
+        
+        .file-item__name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--ns-dark);
+        }
+        
+        .file-item__icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .file-item__icon.folder {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--nx-primary);
+        }
+        
+        .file-item__icon.file {
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--ns-secondary);
+        }
+        
+        .file-item__icon.image {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+        }
+        
+        .file-item__icon.document {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--ns-success);
+        }
+        
+        .file-item__icon.code {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--ns-warning);
+        }
+        
+        .file-item__info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .file-item__filename {
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .file-item__meta {
+            font-size: 11px;
+            color: var(--ns-secondary);
+            margin-top: 2px;
+        }
+        
+        .file-item__size,
+        .file-item__type,
+        .file-item__modified {
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--ns-secondary);
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .context-menu {
+            position: fixed;
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 8px 0;
+            min-width: 180px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .context-menu__item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            color: var(--ns-dark);
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        .context-menu__item:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .context-menu__item i {
+            font-size: 16px;
+            color: var(--ns-secondary);
+        }
+        
+        .context-menu__divider {
+            height: 1px;
+            background: var(--ns-border);
+            margin: 8px 0;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal__content {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow: hidden;
+        }
+        
+        .modal__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .modal__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .modal__close {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--ns-secondary);
+            background: transparent;
+            border: none;
+        }
+        
+        .modal__close:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .modal__body {
+            padding: 20px;
+        }
+        
+        .modal__footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 20px;
+            border-top: 1px solid var(--ns-border);
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--ns-secondary);
+            margin-bottom: 6px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        
+        .upload-zone {
+            border: 2px dashed var(--ns-border);
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .upload-zone:hover {
+            border-color: var(--nx-primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+        
+        .upload-zone i {
+            font-size: 36px;
+            color: var(--ns-secondary);
+            margin-bottom: 12px;
+        }
+        
+        .upload-zone__text {
+            color: var(--ns-dark);
+            margin-bottom: 4px;
+        }
+        
+        .upload-zone__hint {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .preview-panel {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 16px;
+        }
+        
+        .preview-panel__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .preview-panel__title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .preview-content {
+            background: var(--ns-input-bg);
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 200px;
+            max-height: 300px;
+            overflow: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            color: var(--ns-dark);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">文件浏览器</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="showUploadModal()">
+                        <i class="ri-upload-line"></i> 上传
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="createFolder()">
+                        <i class="ri-folder-add-line"></i> 新建文件夹
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="loadFiles()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="toolbar">
+                        <div class="breadcrumb" id="breadcrumb">
+                            <span class="breadcrumb__item active"><i class="ri-home-4-line"></i> Root</span>
+                        </div>
+                        <div class="search-box">
+                            <i class="ri-search-line"></i>
+                            <input type="text" placeholder="搜索文件..." id="searchInput" onkeyup="handleSearch(event)">
+                        </div>
+                    </div>
+                    
+                    <div class="file-list">
+                        <div class="file-list__header">
+                            <span>名称</span>
+                            <span>大小</span>
+                            <span>类型</span>
+                            <span>修改时间</span>
+                        </div>
+                        <div class="file-list__body" id="fileListBody">
+                            <div class="empty-state">
+                                <i class="ri-folder-open-line"></i>
+                                <p>加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-panel" id="previewPanel" style="display: none;">
+                        <div class="preview-panel__header">
+                            <span class="preview-panel__title" id="previewTitle">文件预览</span>
+                            <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="closePreview()">
+                                <i class="ri-close-line"></i> 关闭
+                            </button>
+                        </div>
+                        <div class="preview-content" id="previewContent"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu__item" onclick="handleContextAction('open')">
+            <i class="ri-folder-open-line"></i> 打开
+        </div>
+        <div class="context-menu__item" onclick="handleContextAction('download')">
+            <i class="ri-download-line"></i> 下载
+        </div>
+        <div class="context-menu__divider"></div>
+        <div class="context-menu__item" onclick="handleContextAction('rename')">
+            <i class="ri-edit-line"></i> 重命名
+        </div>
+        <div class="context-menu__item" onclick="handleContextAction('copy')">
+            <i class="ri-file-copy-line"></i> 复制
+        </div>
+        <div class="context-menu__item" onclick="handleContextAction('move')">
+            <i class="ri-scissors-cut-line"></i> 移动
+        </div>
+        <div class="context-menu__divider"></div>
+        <div class="context-menu__item" onclick="handleContextAction('delete')" style="color: var(--ns-danger);">
+            <i class="ri-delete-bin-line"></i> 删除
+        </div>
+    </div>
+    
+    <div class="modal" id="uploadModal">
+        <div class="modal__content">
+            <div class="modal__header">
+                <span class="modal__title">上传文件</span>
+                <button class="modal__close" onclick="hideUploadModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal__body">
+                <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                    <i class="ri-upload-cloud-2-line"></i>
+                    <div class="upload-zone__text">点击或拖拽文件到此处上传</div>
+                    <div class="upload-zone__hint">支持所有文件类型</div>
+                </div>
+                <input type="file" id="fileInput" multiple style="display: none;" onchange="handleFileSelect(event)">
+            </div>
+            <div class="modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="hideUploadModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="uploadFiles()">上传</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="renameModal">
+        <div class="modal__content">
+            <div class="modal__header">
+                <span class="modal__title">重命名</span>
+                <button class="modal__close" onclick="hideRenameModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal__body">
+                <div class="form-group">
+                    <label>新名称</label>
+                    <input type="text" id="newNameInput" placeholder="输入新名称">
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="hideRenameModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="confirmRename()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var currentPath = '/';
+        var selectedFile = null;
+        var selectedFiles = [];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFiles();
+            setupContextMenu();
+        });
+        
+        function setupContextMenu() {
+            document.addEventListener('click', function(e) {
+                document.getElementById('contextMenu').style.display = 'none';
+            });
+            
+            document.addEventListener('contextmenu', function(e) {
+                var fileItem = e.target.closest('.file-item');
+                if (fileItem) {
+                    e.preventDefault();
+                    selectedFile = fileItem.dataset;
+                    showContextMenu(e.clientX, e.clientY);
+                }
+            });
+        }
+        
+        function showContextMenu(x, y) {
+            var menu = document.getElementById('contextMenu');
+            menu.style.display = 'block';
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+        }
+        
+        function handleContextAction(action) {
+            if (!selectedFile) return;
+            
+            switch (action) {
+                case 'open':
+                    if (selectedFile.type === 'folder') {
+                        navigateTo(selectedFile.path);
+                    } else {
+                        previewFile(selectedFile.path);
+                    }
+                    break;
+                case 'download':
+                    downloadFile(selectedFile.path);
+                    break;
+                case 'rename':
+                    showRenameModal(selectedFile.name);
+                    break;
+                case 'delete':
+                    deleteFile(selectedFile.path);
+                    break;
+                case 'copy':
+                    alert('复制功能开发中');
+                    break;
+                case 'move':
+                    alert('移动功能开发中');
+                    break;
+            }
+            
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+        
+        async function loadFiles() {
+            try {
+                var response = await fetch('/api/storage/browse?path=' + encodeURIComponent(currentPath));
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    renderFiles(rs.data);
+                    updateBreadcrumb();
+                }
+            } catch (error) {
+                console.error('Load files failed:', error);
+                renderFiles([]);
+            }
+        }
+        
+        function renderFiles(files) {
+            if (!files || files.length === 0) {
+                document.getElementById('fileListBody').innerHTML = 
+                    '<div class="empty-state"><i class="ri-folder-open-line"></i><p>文件夹为空</p></div>';
+                return;
+            }
+            
+            files.sort(function(a, b) {
+                if (a.type === 'folder' && b.type !== 'folder') return -1;
+                if (a.type !== 'folder' && b.type === 'folder') return 1;
+                return a.name.localeCompare(b.name);
+            });
+            
+            var html = '';
+            files.forEach(function(file) {
+                var iconClass = getFileIconClass(file);
+                var icon = getFileIcon(file);
+                var size = file.type === 'folder' ? '-' : formatSize(file.size);
+                var type = file.type === 'folder' ? '文件夹' : getFileType(file.name);
+                var modified = formatDate(file.modified);
+                
+                html += '<div class="file-item" data-path="' + file.path + '" data-name="' + file.name + '" data-type="' + file.type + '" ondblclick="handleDoubleClick(this.dataset)">';
+                html += '  <div class="file-item__name">';
+                html += '    <div class="file-item__icon ' + iconClass + '"><i class="' + icon + '"></i></div>';
+                html += '    <div class="file-item__info">';
+                html += '      <div class="file-item__filename">' + file.name + '</div>';
+                html += '    </div>';
+                html += '  </div>';
+                html += '  <div class="file-item__size">' + size + '</div>';
+                html += '  <div class="file-item__type">' + type + '</div>';
+                html += '  <div class="file-item__modified">' + modified + '</div>';
+                html += '</div>';
+            });
+            
+            document.getElementById('fileListBody').innerHTML = html;
+        }
+        
+        function handleDoubleClick(data) {
+            if (data.type === 'folder') {
+                navigateTo(data.path);
+            } else {
+                previewFile(data.path);
+            }
+        }
+        
+        function navigateTo(path) {
+            currentPath = path;
+            loadFiles();
+        }
+        
+        function updateBreadcrumb() {
+            var parts = currentPath.split('/').filter(function(p) { return p; });
+            var html = '<span class="breadcrumb__item' + (parts.length === 0 ? ' active' : '') + '" onclick="navigateTo(\'/\')"><i class="ri-home-4-line"></i> Root</span>';
+            
+            var path = '';
+            parts.forEach(function(part, index) {
+                path += '/' + part;
+                var currentPathCopy = path;
+                var isLast = index === parts.length - 1;
+                html += '<span class="breadcrumb__separator"><i class="ri-arrow-right-s-line"></i></span>';
+                html += '<span class="breadcrumb__item' + (isLast ? ' active' : '') + '" onclick="navigateTo(\'' + currentPathCopy + '\')">' + part + '</span>';
+            });
+            
+            document.getElementById('breadcrumb').innerHTML = html;
+        }
+        
+        function getFileIcon(file) {
+            if (file.type === 'folder') return 'ri-folder-fill';
+            
+            var ext = file.name.split('.').pop().toLowerCase();
+            var iconMap = {
+                'jpg': 'ri-image-line', 'jpeg': 'ri-image-line', 'png': 'ri-image-line', 'gif': 'ri-image-line',
+                'pdf': 'ri-file-pdf-line',
+                'doc': 'ri-file-word-line', 'docx': 'ri-file-word-line',
+                'xls': 'ri-file-excel-line', 'xlsx': 'ri-file-excel-line',
+                'ppt': 'ri-file-ppt-line', 'pptx': 'ri-file-ppt-line',
+                'zip': 'ri-file-zip-line', 'rar': 'ri-file-zip-line', '7z': 'ri-file-zip-line',
+                'mp3': 'ri-music-line', 'wav': 'ri-music-line',
+                'mp4': 'ri-video-line', 'avi': 'ri-video-line', 'mkv': 'ri-video-line',
+                'js': 'ri-code-line', 'ts': 'ri-code-line', 'java': 'ri-code-line',
+                'html': 'ri-code-line', 'css': 'ri-code-line', 'json': 'ri-code-line',
+                'txt': 'ri-file-text-line', 'md': 'ri-file-text-line', 'log': 'ri-file-text-line'
+            };
+            
+            return iconMap[ext] || 'ri-file-line';
+        }
+        
+        function getFileIconClass(file) {
+            if (file.type === 'folder') return 'folder';
+            
+            var ext = file.name.split('.').pop().toLowerCase();
+            var imageExts = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'];
+            var docExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'md'];
+            var codeExts = ['js', 'ts', 'java', 'html', 'css', 'json', 'xml', 'py'];
+            
+            if (imageExts.indexOf(ext) >= 0) return 'image';
+            if (docExts.indexOf(ext) >= 0) return 'document';
+            if (codeExts.indexOf(ext) >= 0) return 'code';
+            
+            return 'file';
+        }
+        
+        function getFileType(name) {
+            var ext = name.split('.').pop().toLowerCase();
+            var typeMap = {
+                'jpg': 'JPEG 图像', 'jpeg': 'JPEG 图像', 'png': 'PNG 图像', 'gif': 'GIF 图像',
+                'pdf': 'PDF 文档',
+                'doc': 'Word 文档', 'docx': 'Word 文档',
+                'xls': 'Excel 表格', 'xlsx': 'Excel 表格',
+                'zip': 'ZIP 压缩包', 'rar': 'RAR 压缩包',
+                'js': 'JavaScript', 'ts': 'TypeScript', 'java': 'Java',
+                'html': 'HTML', 'css': 'CSS', 'json': 'JSON'
+            };
+            
+            return typeMap[ext] || ext.toUpperCase() + ' 文件';
+        }
+        
+        function formatSize(bytes) {
+            if (!bytes) return '0 B';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+        }
+        
+        function formatDate(timestamp) {
+            if (!timestamp) return '-';
+            var date = new Date(timestamp);
+            return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        function handleSearch(event) {
+            if (event.key === 'Enter') {
+                var query = document.getElementById('searchInput').value.trim();
+                if (query) {
+                    searchFiles(query);
+                } else {
+                    loadFiles();
+                }
+            }
+        }
+        
+        async function searchFiles(query) {
+            try {
+                var response = await fetch('/api/storage/search?q=' + encodeURIComponent(query) + '&path=' + encodeURIComponent(currentPath));
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    renderFiles(rs.data);
+                }
+            } catch (error) {
+                console.error('Search failed:', error);
+            }
+        }
+        
+        function showUploadModal() {
+            document.getElementById('uploadModal').classList.add('show');
+        }
+        
+        function hideUploadModal() {
+            document.getElementById('uploadModal').classList.remove('show');
+            selectedFiles = [];
+        }
+        
+        function handleFileSelect(event) {
+            selectedFiles = Array.from(event.target.files);
+            alert('已选择 ' + selectedFiles.length + ' 个文件');
+        }
+        
+        async function uploadFiles() {
+            if (selectedFiles.length === 0) {
+                alert('请选择文件');
+                return;
+            }
+            
+            var formData = new FormData();
+            formData.append('path', currentPath);
+            selectedFiles.forEach(function(file) {
+                formData.append('files', file);
+            });
+            
+            try {
+                var response = await fetch('/api/storage/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                var rs = await response.json();
+                if (rs.success) {
+                    alert('上传成功');
+                    hideUploadModal();
+                    loadFiles();
+                } else {
+                    alert('上传失败: ' + (rs.error || '未知错误'));
+                }
+            } catch (error) {
+                console.error('Upload failed:', error);
+                alert('上传失败');
+            }
+        }
+        
+        async function createFolder() {
+            var name = prompt('请输入文件夹名称');
+            if (!name) return;
+            
+            try {
+                var response = await fetch('/api/storage/folder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        path: currentPath,
+                        name: name
+                    })
+                });
+                var rs = await response.json();
+                if (rs.success) {
+                    loadFiles();
+                } else {
+                    alert('创建失败: ' + (rs.error || '未知错误'));
+                }
+            } catch (error) {
+                console.error('Create folder failed:', error);
+            }
+        }
+        
+        function showRenameModal(currentName) {
+            document.getElementById('newNameInput').value = currentName;
+            document.getElementById('renameModal').classList.add('show');
+        }
+        
+        function hideRenameModal() {
+            document.getElementById('renameModal').classList.remove('show');
+        }
+        
+        async function confirmRename() {
+            var newName = document.getElementById('newNameInput').value.trim();
+            if (!newName || !selectedFile) return;
+            
+            try {
+                var response = await fetch('/api/storage/rename', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        oldPath: selectedFile.path,
+                        newName: newName
+                    })
+                });
+                var rs = await response.json();
+                if (rs.success) {
+                    hideRenameModal();
+                    loadFiles();
+                } else {
+                    alert('重命名失败: ' + (rs.error || '未知错误'));
+                }
+            } catch (error) {
+                console.error('Rename failed:', error);
+            }
+        }
+        
+        async function deleteFile(path) {
+            if (!confirm('确定要删除此文件吗？')) return;
+            
+            try {
+                var response = await fetch('/api/storage/file?path=' + encodeURIComponent(path), {
+                    method: 'DELETE'
+                });
+                var rs = await response.json();
+                if (rs.success) {
+                    loadFiles();
+                } else {
+                    alert('删除失败: ' + (rs.error || '未知错误'));
+                }
+            } catch (error) {
+                console.error('Delete failed:', error);
+            }
+        }
+        
+        function downloadFile(path) {
+            window.location.href = '/api/storage/download?path=' + encodeURIComponent(path);
+        }
+        
+        async function previewFile(path) {
+            try {
+                var response = await fetch('/api/storage/preview?path=' + encodeURIComponent(path));
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    document.getElementById('previewTitle').textContent = path.split('/').pop();
+                    document.getElementById('previewContent').textContent = rs.data.content || '(二进制文件，无法预览)';
+                    document.getElementById('previewPanel').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Preview failed:', error);
+            }
+        }
+        
+        function closePreview() {
+            document.getElementById('previewPanel').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

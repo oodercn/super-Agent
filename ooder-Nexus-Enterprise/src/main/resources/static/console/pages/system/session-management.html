@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会话管理 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .stat-card__icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .stat-card__icon.primary { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .stat-card__icon.success { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .stat-card__icon.warning { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .stat-card__icon.danger { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        
+        .stat-card__info h3 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .stat-card__info p {
+            margin: 4px 0 0 0;
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        
+        .panel {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+        }
+        
+        .panel__header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .panel__body {
+            padding: 16px 20px;
+        }
+        
+        .session-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .session-table th,
+        .session-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .session-table th {
+            background: var(--ns-input-bg);
+            font-weight: 500;
+            color: var(--ns-secondary);
+            font-size: 13px;
+        }
+        
+        .session-table td {
+            color: var(--ns-dark);
+        }
+        
+        .session-table tr:hover td {
+            background: var(--ns-bg-hover);
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-badge.active { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .status-badge.expired { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        
+        .action-btn {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .action-btn.danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--ns-danger);
+        }
+        
+        .action-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">会话管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="cleanupExpired()">
+                        <i class="ri-delete-bin-line"></i> 清理过期
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="loadSessions()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-card__icon primary">
+                                <i class="ri-user-line"></i>
+                            </div>
+                            <div class="stat-card__info">
+                                <h3 id="activeSessions">-</h3>
+                                <p>活跃会话</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon success">
+                                <i class="ri-login-box-line"></i>
+                            </div>
+                            <div class="stat-card__info">
+                                <h3 id="totalLogins">-</h3>
+                                <p>总登录数</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon warning">
+                                <i class="ri-logout-box-line"></i>
+                            </div>
+                            <div class="stat-card__info">
+                                <h3 id="totalLogouts">-</h3>
+                                <p>总登出数</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon danger">
+                                <i class="ri-time-line"></i>
+                            </div>
+                            <div class="stat-card__info">
+                                <h3 id="expiredSessions">-</h3>
+                                <p>过期会话</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <div class="panel__header">
+                            <span class="panel__title">会话列表</span>
+                            <input type="text" id="searchInput" placeholder="搜索用户..." 
+                                   style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--ns-border); background: var(--ns-input-bg); color: var(--ns-dark);"
+                                   oninput="filterSessions()">
+                        </div>
+                        <div class="panel__body">
+                            <table class="session-table">
+                                <thead>
+                                    <tr>
+                                        <th>会话ID</th>
+                                        <th>用户</th>
+                                        <th>系统</th>
+                                        <th>客户端IP</th>
+                                        <th>连接时间</th>
+                                        <th>持续时间</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sessionTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var allSessions = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadSessions();
+        });
+
+        async function loadStats() {
+            try {
+                var response = await fetch('/api/session/stats', { method: 'POST' });
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    document.getElementById('activeSessions').textContent = rs.data.activeSessions || 0;
+                    document.getElementById('totalLogins').textContent = rs.data.totalLogins || 0;
+                    document.getElementById('totalLogouts').textContent = rs.data.totalLogouts || 0;
+                    document.getElementById('expiredSessions').textContent = rs.data.expiredSessions || 0;
+                }
+            } catch (error) {
+                console.error('Load stats failed:', error);
+            }
+        }
+
+        async function loadSessions() {
+            try {
+                var response = await fetch('/api/session/list', { method: 'POST' });
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    allSessions = rs.data;
+                    renderSessions(allSessions);
+                }
+            } catch (error) {
+                console.error('Load sessions failed:', error);
+                loadMockSessions();
+            }
+        }
+
+        function loadMockSessions() {
+            allSessions = [
+                { sessionId: 'sess-001', account: 'admin', userId: 'u001', systemCode: 'Nexus', clientIp: '192.168.1.100', connectTime: Date.now() - 3600000, duration: 3600000, status: 'ACTIVE' },
+                { sessionId: 'sess-002', account: 'user1', userId: 'u002', systemCode: 'Nexus', clientIp: '192.168.1.101', connectTime: Date.now() - 7200000, duration: 7200000, status: 'ACTIVE' },
+                { sessionId: 'sess-003', account: 'guest', userId: 'u003', systemCode: 'Nexus', clientIp: '192.168.1.102', connectTime: Date.now() - 86400000, duration: 86400000, status: 'EXPIRED' }
+            ];
+            renderSessions(allSessions);
+        }
+
+        function renderSessions(sessions) {
+            var html = '';
+            sessions.forEach(function(session) {
+                html += '<tr>';
+                html += '  <td>' + (session.sessionId || '-').substring(0, 12) + '...</td>';
+                html += '  <td>' + (session.account || session.userId || '-') + '</td>';
+                html += '  <td>' + (session.systemCode || '-') + '</td>';
+                html += '  <td>' + (session.clientIp || '-') + '</td>';
+                html += '  <td>' + formatTime(session.connectTime) + '</td>';
+                html += '  <td>' + formatDuration(session.duration) + '</td>';
+                html += '  <td><span class="status-badge ' + (session.status || 'active').toLowerCase() + '">' + (session.status || 'ACTIVE') + '</span></td>';
+                html += '  <td><button class="action-btn danger" onclick="invalidateSession(\'' + session.sessionId + '\')">终止</button></td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('sessionTableBody').innerHTML = html || '<tr><td colspan="8" style="text-align: center; color: var(--ns-secondary);">暂无会话</td></tr>';
+        }
+
+        function filterSessions() {
+            var search = document.getElementById('searchInput').value.toLowerCase();
+            var filtered = allSessions.filter(function(s) {
+                return !search || 
+                    (s.account && s.account.toLowerCase().includes(search)) ||
+                    (s.userId && s.userId.toLowerCase().includes(search)) ||
+                    (s.clientIp && s.clientIp.toLowerCase().includes(search));
+            });
+            renderSessions(filtered);
+        }
+
+        async function invalidateSession(sessionId) {
+            if (!confirm('确定要终止此会话吗？')) return;
+            
+            try {
+                var response = await fetch('/api/session/invalidate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: sessionId })
+                });
+                var rs = await response.json();
+                if (rs.success) {
+                    loadStats();
+                    loadSessions();
+                }
+            } catch (error) {
+                console.error('Invalidate session failed:', error);
+            }
+        }
+
+        async function cleanupExpired() {
+            try {
+                var response = await fetch('/api/session/cleanup', { method: 'POST' });
+                var rs = await response.json();
+                if (rs.success) {
+                    alert('过期会话已清理');
+                    loadStats();
+                    loadSessions();
+                }
+            } catch (error) {
+                console.error('Cleanup failed:', error);
+            }
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            return new Date(timestamp).toLocaleString('zh-CN');
+        }
+
+        function formatDuration(ms) {
+            if (!ms) return '-';
+            var seconds = Math.floor(ms / 1000);
+            var hours = Math.floor(seconds / 3600);
+            var minutes = Math.floor((seconds % 3600) / 60);
+            return hours + '时' + minutes + '分';
+        }
+    </script>
+</body>
+</html>

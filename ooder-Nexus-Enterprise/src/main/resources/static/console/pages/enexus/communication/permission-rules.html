@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>权限规则 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">权限规则</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="openCreateModal()">
+                        <i class="ri-add-line"></i> 创建规则
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-shield-check-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">总规则数</div>
+                                <div class="nx-stat-card__value" id="totalCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">已启用</div>
+                                <div class="nx-stat-card__value" id="enabledCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-time-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">待生效</div>
+                                <div class="nx-stat-card__value" id="pendingCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--info">
+                                <i class="ri-filter-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">规则类型</div>
+                                <div class="nx-stat-card__value" id="typeCount">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">规则列表</h3>
+                            <div class="nx-flex nx-gap-2">
+                                <input type="text" class="nx-input" id="searchInput" placeholder="搜索规则..." style="width: 200px;">
+                                <select class="nx-select" id="typeFilter">
+                                    <option value="">全部类型</option>
+                                    <option value="ALLOW">允许</option>
+                                    <option value="DENY">拒绝</option>
+                                    <option value="CONDITIONAL">条件</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>规则ID</th>
+                                            <th>名称</th>
+                                            <th>类型</th>
+                                            <th>作用域</th>
+                                            <th>优先级</th>
+                                            <th>状态</th>
+                                            <th>创建时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ruleTableBody">
+                                        <tr><td colspan="8" class="nx-text-center">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="nx-modal" id="createModal">
+        <div class="nx-modal__backdrop" onclick="closeModal()"></div>
+        <div class="nx-modal__content">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">创建权限规则</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-mb-4">
+                    <label class="nx-label">规则名称</label>
+                    <input type="text" class="nx-input" id="ruleName" placeholder="输入规则名称">
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">规则类型</label>
+                    <select class="nx-select" id="ruleType">
+                        <option value="ALLOW">允许</option>
+                        <option value="DENY">拒绝</option>
+                        <option value="CONDITIONAL">条件</option>
+                    </select>
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">作用域</label>
+                    <select class="nx-select" id="scope">
+                        <option value="GLOBAL">全局</option>
+                        <option value="DOMAIN">域</option>
+                        <option value="SCENE">场景</option>
+                        <option value="USER">用户</option>
+                    </select>
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">目标ID (域/场景/用户ID)</label>
+                    <input type="text" class="nx-input" id="targetId" placeholder="留空表示全局">
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">优先级 (数字越小优先级越高)</label>
+                    <input type="number" class="nx-input" id="priority" value="100">
+                </div>
+                <div class="nx-mb-4">
+                    <label class="nx-label">规则条件 (JSON)</label>
+                    <textarea class="nx-textarea" id="conditions" rows="3" placeholder='{"actions": ["read", "write"]}'>{}</textarea>
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createRule()">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="nx-modal" id="detailModal">
+        <div class="nx-modal__backdrop" onclick="closeDetailModal()"></div>
+        <div class="nx-modal__content nx-modal__content--lg">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">规则详情</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeDetailModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body" id="detailBody">
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let allRules = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRules();
+        });
+
+        async function loadRules() {
+            try {
+                const response = await fetch('/api/enexus/permission/rule/list', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                const rs = await response.json();
+                allRules = rs.data?.list || [];
+                renderTable(allRules);
+                updateStats();
+            } catch (error) {
+                document.getElementById('ruleTableBody').innerHTML = 
+                    '<tr><td colspan="8" class="nx-text-center nx-text-danger">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        function updateStats() {
+            let enabled = 0, pending = 0;
+            const types = new Set();
+            
+            allRules.forEach(r => {
+                if (r.status === 'ENABLED') enabled++;
+                else if (r.status === 'PENDING') pending++;
+                if (r.ruleType) types.add(r.ruleType);
+            });
+            
+            document.getElementById('totalCount').textContent = allRules.length;
+            document.getElementById('enabledCount').textContent = enabled;
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('typeCount').textContent = types.size;
+        }
+
+        function renderTable(rules) {
+            if (!rules || rules.length === 0) {
+                document.getElementById('ruleTableBody').innerHTML = 
+                    '<tr><td colspan="8" class="nx-text-center">暂无数据</td></tr>';
+                return;
+            }
+
+            let html = '';
+            rules.forEach(rule => {
+                const statusBadge = getStatusBadge(rule.status);
+                const typeBadge = getTypeBadge(rule.ruleType);
+                const createdAt = formatTime(rule.createdAt);
+                
+                html += '<tr>';
+                html += '  <td>' + (rule.ruleId || '-') + '</td>';
+                html += '  <td>' + (rule.ruleName || '-') + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--' + typeBadge + '">' + (rule.ruleType || '-') + '</span></td>';
+                html += '  <td>' + (rule.scope || '-') + '</td>';
+                html += '  <td>' + (rule.priority || '-') + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--' + statusBadge + '">' + (rule.status || '-') + '</span></td>';
+                html += '  <td>' + createdAt + '</td>';
+                html += '  <td>';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="viewRule(\'' + rule.ruleId + '\')">详情</button> ';
+                if (rule.status === 'ENABLED') {
+                    html += '    <button class="nx-btn nx-btn--sm nx-btn--warning" onclick="toggleRule(\'' + rule.ruleId + '\')">禁用</button>';
+                } else if (rule.status === 'DISABLED') {
+                    html += '    <button class="nx-btn nx-btn--sm nx-btn--success" onclick="toggleRule(\'' + rule.ruleId + '\')">启用</button>';
+                }
+                html += '  </td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('ruleTableBody').innerHTML = html;
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'ENABLED': 'success',
+                'DISABLED': 'secondary',
+                'PENDING': 'warning'
+            };
+            return map[status] || 'secondary';
+        }
+
+        function getTypeBadge(type) {
+            const map = {
+                'ALLOW': 'success',
+                'DENY': 'danger',
+                'CONDITIONAL': 'warning'
+            };
+            return map[type] || 'info';
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function openCreateModal() {
+            document.getElementById('ruleName').value = '';
+            document.getElementById('ruleType').value = 'ALLOW';
+            document.getElementById('scope').value = 'GLOBAL';
+            document.getElementById('targetId').value = '';
+            document.getElementById('priority').value = 100;
+            document.getElementById('conditions').value = '{}';
+            document.getElementById('createModal').classList.add('nx-modal--open');
+        }
+
+        function closeModal() {
+            document.getElementById('createModal').classList.remove('nx-modal--open');
+        }
+
+        async function createRule() {
+            const ruleName = document.getElementById('ruleName').value;
+            const ruleType = document.getElementById('ruleType').value;
+            const scope = document.getElementById('scope').value;
+            const targetId = document.getElementById('targetId').value;
+            const priority = document.getElementById('priority').value;
+            const conditionsStr = document.getElementById('conditions').value;
+            
+            if (!ruleName) {
+                alert('请输入规则名称');
+                return;
+            }
+            
+            let conditions = {};
+            try {
+                conditions = JSON.parse(conditionsStr);
+            } catch (e) {
+                alert('条件JSON格式错误');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/enexus/permission/rule/create', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        ruleName: ruleName,
+                        ruleType: ruleType,
+                        scope: scope,
+                        targetId: targetId || null,
+                        priority: parseInt(priority),
+                        conditions: conditions
+                    })
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    closeModal();
+                    loadRules();
+                }
+            } catch (error) {
+                alert('创建失败: ' + error.message);
+            }
+        }
+
+        async function viewRule(ruleId) {
+            try {
+                const response = await fetch('/api/enexus/permission/rule/get', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ruleId: ruleId})
+                });
+                const rs = await response.json();
+                const rule = rs.data;
+                
+                let html = '';
+                html += '<div class="nx-grid nx-grid-cols-2 nx-gap-4">';
+                html += '  <div><strong>规则ID:</strong> ' + (rule.ruleId || '-') + '</div>';
+                html += '  <div><strong>名称:</strong> ' + (rule.ruleName || '-') + '</div>';
+                html += '  <div><strong>类型:</strong> <span class="nx-badge nx-badge--' + getTypeBadge(rule.ruleType) + '">' + (rule.ruleType || '-') + '</span></div>';
+                html += '  <div><strong>作用域:</strong> ' + (rule.scope || '-') + '</div>';
+                html += '  <div><strong>目标ID:</strong> ' + (rule.targetId || '-') + '</div>';
+                html += '  <div><strong>优先级:</strong> ' + (rule.priority || '-') + '</div>';
+                html += '  <div><strong>状态:</strong> <span class="nx-badge nx-badge--' + getStatusBadge(rule.status) + '">' + (rule.status || '-') + '</span></div>';
+                html += '  <div><strong>创建时间:</strong> ' + formatTime(rule.createdAt) + '</div>';
+                html += '</div>';
+                
+                if (rule.conditions) {
+                    html += '<div class="nx-mt-4"><strong>条件:</strong></div>';
+                    html += '<pre class="nx-code-block">' + JSON.stringify(rule.conditions, null, 2) + '</pre>';
+                }
+                
+                if (rule.description) {
+                    html += '<div class="nx-mt-4"><strong>描述:</strong></div>';
+                    html += '<div class="nx-ml-4">' + rule.description + '</div>';
+                }
+                
+                document.getElementById('detailBody').innerHTML = html;
+                document.getElementById('detailModal').classList.add('nx-modal--open');
+            } catch (error) {
+                alert('获取详情失败: ' + error.message);
+            }
+        }
+
+        async function toggleRule(ruleId) {
+            try {
+                const response = await fetch('/api/enexus/permission/rule/toggle', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ruleId: ruleId})
+                });
+                const rs = await response.json();
+                if (rs.data) {
+                    loadRules();
+                }
+            } catch (error) {
+                alert('操作失败: ' + error.message);
+            }
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('nx-modal--open');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterRules();
+        });
+
+        document.getElementById('typeFilter').addEventListener('change', function() {
+            filterRules();
+        });
+
+        function filterRules() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const type = document.getElementById('typeFilter').value;
+            
+            let filtered = allRules;
+            
+            if (search) {
+                filtered = filtered.filter(r => 
+                    (r.ruleId && r.ruleId.toLowerCase().includes(search)) ||
+                    (r.ruleName && r.ruleName.toLowerCase().includes(search)) ||
+                    (r.targetId && r.targetId.toLowerCase().includes(search))
+                );
+            }
+            
+            if (type) {
+                filtered = filtered.filter(r => r.ruleType === type);
+            }
+            
+            renderTable(filtered);
+        }
+    </script>
+</body>
+</html>

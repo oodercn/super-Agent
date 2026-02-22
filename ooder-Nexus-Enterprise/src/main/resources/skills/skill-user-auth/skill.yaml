@@ -1,0 +1,117 @@
+apiVersion: skill.ooder.net/v1
+kind: Skill
+
+metadata:
+  id: skill-user-auth
+  name: User Authentication Service
+  version: 0.7.0
+  description: Provides local user authentication and session management
+  author: ooder Team
+  license: Apache-2.0
+  homepage: https://gitee.com/ooderCN/skill-user-auth
+  keywords:
+    - authentication
+    - user
+    - session
+    - security
+
+spec:
+  type: infrastructure-skill
+  
+  runtime:
+    language: java
+    javaVersion: "8"
+    framework: spring-boot
+    mainClass: net.ooder.skill.auth.AuthSkillApplication
+    jvmOpts: "-Xms128m -Xmx256m"
+  
+  capabilities:
+    - id: user-auth
+      name: User Authentication
+      description: Authenticate users with username/password
+      category: authentication
+    - id: session-manage
+      name: Session Management
+      description: Manage user sessions
+      category: authentication
+    - id: permission-check
+      name: Permission Check
+      description: Check user permissions
+      category: authentication
+  
+  scenes:
+    - name: auth
+      description: Authentication scene
+      capabilities:
+        - user-auth
+        - session-manage
+        - permission-check
+      roles:
+        - roleId: auth-provider
+          name: Authentication Provider
+          required: true
+          capabilities: [user-auth, session-manage, permission-check]
+      communicationProtocol: http
+      securityPolicy: jwt
+      allowParallel: true
+  
+  config:
+    required:
+      - name: AUTH_SECRET_KEY
+        type: string
+        description: Secret key for JWT signing
+        secret: true
+    optional:
+      - name: AUTH_PROVIDER
+        type: string
+        default: local
+        description: Authentication provider (local, ldap, oauth)
+      - name: SESSION_TIMEOUT
+        type: number
+        default: 3600
+        description: Session timeout in seconds
+      - name: MAX_LOGIN_ATTEMPTS
+        type: number
+        default: 5
+        description: Maximum login attempts before lockout
+      - name: PASSWORD_MIN_LENGTH
+        type: number
+        default: 8
+        description: Minimum password length
+  
+  endpoints:
+    - path: /api/auth/login
+      method: POST
+      description: User login
+      capability: user-auth
+      authentication: false
+    - path: /api/auth/logout
+      method: POST
+      description: User logout
+      capability: user-auth
+      authentication: true
+    - path: /api/auth/verify
+      method: POST
+      description: Verify session token
+      capability: session-manage
+      authentication: false
+    - path: /api/auth/permissions
+      method: GET
+      description: Get user permissions
+      capability: permission-check
+      authentication: true
+  
+  resources:
+    cpu: "250m"
+    memory: "256Mi"
+    storage: "512Mi"
+  
+  deployment:
+    modes:
+      - local-deployed
+    singleton: true
+    requiresAuth: false
+    healthCheck:
+      path: /actuator/health
+      interval: 30
+      timeout: 10

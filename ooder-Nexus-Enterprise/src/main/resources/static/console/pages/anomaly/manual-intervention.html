@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手动干预 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">手动干预</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="loadAnomalies()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-3 nx-gap-6">
+                        <div class="nx-card" style="grid-column: span 2;">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">待处理异常</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container" style="max-height: 400px; overflow-y: auto;">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>异常ID</th>
+                                                <th>类型</th>
+                                                <th>严重程度</th>
+                                                <th>描述</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="anomalyTableBody">
+                                            <tr><td colspan="5" class="nx-text-center">加载中...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">异常详情</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div id="anomalyDetails">
+                                    <p class="nx-text-secondary">选择异常查看详情</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">干预措施</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">干预类型</label>
+                                    <select class="nx-input" id="actionType">
+                                        <option value="reboot">重启节点</option>
+                                        <option value="reconnect">重新连接</option>
+                                        <option value="reset">重置配置</option>
+                                        <option value="isolate">隔离节点</option>
+                                        <option value="custom">自定义操作</option>
+                                    </select>
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">操作备注</label>
+                                    <input type="text" class="nx-input" id="actionNotes" placeholder="输入操作备注...">
+                                </div>
+                            </div>
+                            <div class="nx-flex nx-gap-2 nx-mt-4">
+                                <button class="nx-btn nx-btn--primary" onclick="executeIntervention()">
+                                    <i class="ri-play-line"></i> 执行操作
+                                </button>
+                                <button class="nx-btn nx-btn--warning" onclick="escalateAnomaly()">
+                                    <i class="ri-arrow-up-line"></i> 升级
+                                </button>
+                            </div>
+                            <div class="nx-mt-4">
+                                <div id="executionResult" class="nx-alert nx-alert--info">
+                                    <i class="ri-information-line"></i> 选择异常并执行干预操作
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/anomaly-api.js"></script>
+    <script>
+        let selectedAnomalyId = null;
+        let selectedAnomaly = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const anomalyId = urlParams.get('id');
+            
+            loadAnomalies().then(() => {
+                if (anomalyId) {
+                    selectAnomaly(anomalyId);
+                }
+            });
+        });
+
+        async function loadAnomalies() {
+            try {
+                const rs = await AnomalyAPI.list({ status: 'ACTIVE' });
+                renderTable(rs.data || []);
+            } catch (error) {
+                document.getElementById('anomalyTableBody').innerHTML = 
+                    '<tr><td colspan="5" class="nx-text-center nx-text-danger">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        function renderTable(anomalies) {
+            if (!anomalies || anomalies.length === 0) {
+                document.getElementById('anomalyTableBody').innerHTML = 
+                    '<tr><td colspan="5" class="nx-text-center">暂无待处理异常</td></tr>';
+                return;
+            }
+
+            let html = '';
+            anomalies.forEach(anomaly => {
+                const severity = AnomalyAPI.formatSeverity(anomaly.severity);
+                const selectedClass = selectedAnomalyId === anomaly.anomalyId ? 'nx-table__row--selected' : '';
+                
+                html += '<tr class="' + selectedClass + '" onclick="selectAnomaly(\'' + anomaly.anomalyId + '\')">';
+                html += '  <td>' + (anomaly.anomalyId || '-') + '</td>';
+                html += '  <td>' + (anomaly.type || '-') + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--' + getSeverityBadge(anomaly.severity) + '">' + severity.text + '</span></td>';
+                html += '  <td>' + (anomaly.description || '-') + '</td>';
+                html += '  <td><button class="nx-btn nx-btn--sm nx-btn--primary" onclick="event.stopPropagation(); selectAnomaly(\'' + anomaly.anomalyId + '\')">选择</button></td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('anomalyTableBody').innerHTML = html;
+        }
+
+        function getSeverityBadge(severity) {
+            const map = { 'CRITICAL': 'danger', 'HIGH': 'warning', 'MEDIUM': 'info', 'LOW': 'secondary' };
+            return map[severity] || 'secondary';
+        }
+
+        async function selectAnomaly(anomalyId) {
+            selectedAnomalyId = anomalyId;
+            
+            try {
+                const rs = await AnomalyAPI.get(anomalyId);
+                selectedAnomaly = rs.data;
+                renderDetails(selectedAnomaly);
+                loadAnomalies();
+            } catch (error) {
+                console.error('获取详情失败:', error);
+            }
+        }
+
+        function renderDetails(anomaly) {
+            if (!anomaly) return;
+            
+            const time = AnomalyAPI.formatTime(anomaly.detectedTime);
+            let html = '';
+            html += '<div class="nx-mb-2"><strong>异常ID:</strong> ' + (anomaly.anomalyId || '-') + '</div>';
+            html += '<div class="nx-mb-2"><strong>类型:</strong> ' + (anomaly.type || '-') + '</div>';
+            html += '<div class="nx-mb-2"><strong>严重程度:</strong> ' + (anomaly.severity || '-') + '</div>';
+            html += '<div class="nx-mb-2"><strong>发生时间:</strong> ' + time + '</div>';
+            html += '<div class="nx-mb-2"><strong>影响范围:</strong> ' + (anomaly.sourceNode || '-') + '</div>';
+            html += '<div class="nx-mb-2"><strong>描述:</strong> ' + (anomaly.description || '-') + '</div>';
+            
+            document.getElementById('anomalyDetails').innerHTML = html;
+        }
+
+        async function executeIntervention() {
+            if (!selectedAnomalyId) {
+                alert('请先选择一个异常');
+                return;
+            }
+            
+            const actionType = document.getElementById('actionType').value;
+            const notes = document.getElementById('actionNotes').value;
+            
+            document.getElementById('executionResult').className = 'nx-alert nx-alert--info';
+            document.getElementById('executionResult').innerHTML = '<i class="ri-loader-4-line ri-spin"></i> 执行中...';
+            
+            try {
+                const intervention = {
+                    anomalyId: selectedAnomalyId,
+                    actionType: actionType,
+                    notes: notes
+                };
+                
+                const rs = await AnomalyAPI.intervene(intervention);
+                const correction = rs.data;
+                
+                if (correction && correction.success) {
+                    document.getElementById('executionResult').className = 'nx-alert nx-alert--success';
+                    document.getElementById('executionResult').innerHTML = '<i class="ri-check-line"></i> 操作成功: ' + (correction.description || '干预操作执行成功');
+                    loadAnomalies();
+                } else {
+                    document.getElementById('executionResult').className = 'nx-alert nx-alert--danger';
+                    document.getElementById('executionResult').innerHTML = '<i class="ri-close-line"></i> 操作失败: ' + (correction.description || '干预操作执行失败');
+                }
+            } catch (error) {
+                document.getElementById('executionResult').className = 'nx-alert nx-alert--danger';
+                document.getElementById('executionResult').innerHTML = '<i class="ri-close-line"></i> 执行错误: ' + error.message;
+            }
+        }
+
+        async function escalateAnomaly() {
+            if (!selectedAnomalyId) {
+                alert('请先选择一个异常');
+                return;
+            }
+            
+            try {
+                const rs = await AnomalyAPI.escalate(selectedAnomalyId, '需要更高级别处理');
+                if (rs.requestStatus === 200) {
+                    alert('异常已升级');
+                    loadAnomalies();
+                }
+            } catch (error) {
+                alert('升级失败: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

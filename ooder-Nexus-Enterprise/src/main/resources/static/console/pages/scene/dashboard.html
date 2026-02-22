@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景监控大屏 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .health-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--ns-card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--ns-border);
+        }
+        
+        .health-indicator__icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .health-indicator__icon.healthy {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--ns-success);
+        }
+        
+        .health-indicator__icon.warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--ns-warning);
+        }
+        
+        .health-indicator__icon.critical {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--ns-danger);
+        }
+        
+        .health-indicator__icon.unknown {
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--ns-secondary);
+        }
+        
+        .health-indicator__info h4 {
+            margin: 0 0 4px 0;
+            font-size: 14px;
+            color: var(--ns-secondary);
+        }
+        
+        .health-indicator__info .value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .metrics-panel {
+            background: var(--ns-card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--ns-border);
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .metrics-panel__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .metrics-panel__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+        }
+        
+        .metric-item {
+            text-align: center;
+            padding: 12px;
+            background: var(--ns-input-bg);
+            border-radius: 6px;
+        }
+        
+        .metric-item__value {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .metric-item__label {
+            font-size: 12px;
+            color: var(--ns-secondary);
+            margin-top: 4px;
+        }
+        
+        .capability-status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        
+        .capability-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 12px;
+        }
+        
+        .capability-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .capability-card__name {
+            font-weight: 500;
+            color: var(--ns-dark);
+        }
+        
+        .capability-card__status {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        
+        .capability-card__status.active {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--ns-success);
+        }
+        
+        .capability-card__status.inactive {
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--ns-secondary);
+        }
+        
+        .capability-card__status.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--ns-danger);
+        }
+        
+        .capability-card__metrics {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .events-panel {
+            background: var(--ns-card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--ns-border);
+        }
+        
+        .events-panel__header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .events-panel__title {
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .events-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .event-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .event-item:last-child {
+            border-bottom: none;
+        }
+        
+        .event-item__icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .event-item__icon.info {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--nx-primary);
+        }
+        
+        .event-item__icon.success {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--ns-success);
+        }
+        
+        .event-item__icon.warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--ns-warning);
+        }
+        
+        .event-item__icon.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--ns-danger);
+        }
+        
+        .event-item__content {
+            flex: 1;
+        }
+        
+        .event-item__message {
+            color: var(--ns-dark);
+            margin-bottom: 4px;
+        }
+        
+        .event-item__meta {
+            font-size: 12px;
+            color: var(--ns-secondary);
+            display: flex;
+            gap: 16px;
+        }
+        
+        .scene-header {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .scene-header__info h2 {
+            margin: 0 0 4px 0;
+            color: var(--ns-dark);
+        }
+        
+        .scene-header__meta {
+            font-size: 14px;
+            color: var(--ns-secondary);
+            display: flex;
+            gap: 24px;
+        }
+        
+        .scene-header__actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .service-status-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .service-status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--ns-input-bg);
+            border-radius: 6px;
+        }
+        
+        .service-status-item__name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--ns-dark);
+        }
+        
+        .service-status-item__status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .status-dot.healthy {
+            background: var(--ns-success);
+        }
+        
+        .status-dot.warning {
+            background: var(--ns-warning);
+        }
+        
+        .status-dot.critical {
+            background: var(--ns-danger);
+        }
+        
+        .status-dot.unknown {
+            background: var(--ns-secondary);
+        }
+        
+        .refresh-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .refresh-indicator.spinning i {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">场景监控大屏</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <div class="refresh-indicator" id="refreshIndicator">
+                        <i class="ri-refresh-line"></i>
+                        <span id="lastUpdate">-</span>
+                    </div>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="goBack()">
+                        <i class="ri-arrow-left-line"></i> 返回
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="scene-header">
+                        <div class="scene-header__info">
+                            <h2 id="sceneName">-</h2>
+                            <div class="scene-header__meta">
+                                <span><i class="ri-fingerprint-line"></i> <span id="sceneId">-</span></span>
+                                <span><i class="ri-time-line"></i> 运行时长: <span id="uptime">-</span></span>
+                                <span><i class="ri-git-branch-line"></i> 版本: <span id="version">-</span></span>
+                            </div>
+                        </div>
+                        <div class="scene-header__actions">
+                            <button class="nx-btn nx-btn--secondary" onclick="viewConfig()">
+                                <i class="ri-settings-3-line"></i> 配置
+                            </button>
+                            <button class="nx-btn nx-btn--secondary" onclick="viewFlow()">
+                                <i class="ri-flow-chart"></i> 流程
+                            </button>
+                            <button class="nx-btn nx-btn--primary" onclick="refreshAll()">
+                                <i class="ri-refresh-line"></i> 刷新
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-grid">
+                        <div class="health-indicator">
+                            <div class="health-indicator__icon healthy" id="cpuIcon">
+                                <i class="ri-cpu-line"></i>
+                            </div>
+                            <div class="health-indicator__info">
+                                <h4>CPU 使用率</h4>
+                                <div class="value" id="cpuUsage">-</div>
+                            </div>
+                        </div>
+                        <div class="health-indicator">
+                            <div class="health-indicator__icon healthy" id="memIcon">
+                                <i class="ri-database-2-line"></i>
+                            </div>
+                            <div class="health-indicator__info">
+                                <h4>内存使用</h4>
+                                <div class="value" id="memUsage">-</div>
+                            </div>
+                        </div>
+                        <div class="health-indicator">
+                            <div class="health-indicator__icon healthy" id="threadIcon">
+                                <i class="ri-git-merge-line"></i>
+                            </div>
+                            <div class="health-indicator__info">
+                                <h4>活跃线程</h4>
+                                <div class="value" id="threadCount">-</div>
+                            </div>
+                        </div>
+                        <div class="health-indicator">
+                            <div class="health-indicator__icon healthy" id="healthIcon">
+                                <i class="ri-heart-pulse-line"></i>
+                            </div>
+                            <div class="health-indicator__info">
+                                <h4>健康状态</h4>
+                                <div class="value" id="healthStatus">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metrics-panel">
+                        <div class="metrics-panel__header">
+                            <span class="metrics-panel__title">场景指标</span>
+                            <span style="font-size: 12px; color: var(--ns-secondary);">实时监控</span>
+                        </div>
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <div class="metric-item__value" id="metricRequests">-</div>
+                                <div class="metric-item__label">请求总数</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-item__value" id="metricQps">-</div>
+                                <div class="metric-item__label">QPS</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-item__value" id="metricLatency">-</div>
+                                <div class="metric-item__label">平均延迟(ms)</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-item__value" id="metricErrors">-</div>
+                                <div class="metric-item__label">错误数</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-item__value" id="metricConnections">-</div>
+                                <div class="metric-item__label">连接数</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-item__value" id="metricUptime">-</div>
+                                <div class="metric-item__label">运行时间(h)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="two-column">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">服务状态</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="service-status-list" id="serviceStatusList">
+                                    <div class="nx-text-center" style="padding: 20px; color: var(--ns-secondary);">加载中...</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">能力状态</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="capability-status-grid" id="capabilityGrid">
+                                    <div class="nx-text-center" style="padding: 20px; color: var(--ns-secondary);">加载中...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="events-panel">
+                        <div class="events-panel__header">
+                            <span class="events-panel__title">最近事件</span>
+                            <div class="nx-flex nx-gap-2">
+                                <select class="nx-select nx-select--sm" id="eventLevelFilter">
+                                    <option value="">全部级别</option>
+                                    <option value="INFO">信息</option>
+                                    <option value="WARNING">警告</option>
+                                    <option value="ERROR">错误</option>
+                                </select>
+                                <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="clearEvents()">清除</button>
+                            </div>
+                        </div>
+                        <div class="events-list" id="eventsList">
+                            <div class="nx-text-center" style="padding: 20px; color: var(--ns-secondary);">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var sceneId = null;
+        var refreshInterval = null;
+        var allEvents = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var params = new URLSearchParams(window.location.search);
+            sceneId = params.get('sceneId');
+            
+            if (!sceneId) {
+                alert('缺少场景ID参数');
+                return;
+            }
+            
+            loadAll();
+            startAutoRefresh();
+        });
+
+        function startAutoRefresh() {
+            refreshInterval = setInterval(function() {
+                refreshAll();
+            }, 30000);
+        }
+
+        function loadAll() {
+            loadSceneInfo();
+            loadStatus();
+            loadMetrics();
+            loadCapabilities();
+            loadEvents();
+        }
+
+        function refreshAll() {
+            var indicator = document.getElementById('refreshIndicator');
+            indicator.classList.add('spinning');
+            
+            loadAll();
+            
+            setTimeout(function() {
+                indicator.classList.remove('spinning');
+            }, 1000);
+        }
+
+        async function loadSceneInfo() {
+            try {
+                var response = await fetch('/api/enexus/scene/get', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({sceneId: sceneId})
+                });
+                var rs = await response.json();
+                if (rs.data) {
+                    document.getElementById('sceneName').textContent = rs.data.sceneName || '-';
+                    document.getElementById('sceneId').textContent = rs.data.sceneId || '-';
+                    document.getElementById('version').textContent = rs.data.version || '1.0.0';
+                }
+            } catch (error) {
+                console.error('Load scene info failed:', error);
+            }
+        }
+
+        async function loadStatus() {
+            try {
+                var response = await fetch('/api/enexus/runtime/status', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({sceneId: sceneId})
+                });
+                var rs = await response.json();
+                if (rs.data) {
+                    renderStatus(rs.data);
+                }
+            } catch (error) {
+                console.error('Load status failed:', error);
+            }
+        }
+
+        function renderStatus(data) {
+            var health = data.health || {};
+            
+            document.getElementById('healthStatus').textContent = health.status || 'UNKNOWN';
+            updateHealthIcon('healthIcon', health.status);
+            
+            if (data.metrics) {
+                document.getElementById('cpuUsage').textContent = (data.metrics.cpuUsage || 0) + '%';
+                document.getElementById('memUsage').textContent = formatBytes(data.metrics.memoryUsed || 0);
+                document.getElementById('threadCount').textContent = data.metrics.threadCount || 0;
+                
+                updateHealthIcon('cpuIcon', getHealthLevel(data.metrics.cpuUsage, 80, 95));
+                updateHealthIcon('memIcon', getHealthLevel(data.metrics.memoryUsagePercent || 0, 80, 95));
+                updateHealthIcon('threadIcon', 'healthy');
+            }
+            
+            if (data.uptime) {
+                document.getElementById('uptime').textContent = formatUptime(data.uptime);
+                document.getElementById('metricUptime').textContent = Math.floor(data.uptime / 3600);
+            }
+            
+            if (data.services) {
+                renderServices(data.services);
+            }
+            
+            updateLastRefresh();
+        }
+
+        function getHealthLevel(value, warnThreshold, critThreshold) {
+            if (value >= critThreshold) return 'critical';
+            if (value >= warnThreshold) return 'warning';
+            return 'healthy';
+        }
+
+        function updateHealthIcon(iconId, status) {
+            var icon = document.getElementById(iconId);
+            if (!icon) return;
+            
+            icon.classList.remove('healthy', 'warning', 'critical', 'unknown');
+            icon.classList.add(status ? status.toLowerCase() : 'unknown');
+        }
+
+        function renderServices(services) {
+            var html = '';
+            var serviceNames = {
+                'ORG': '组织服务',
+                'VFS': '虚拟文件系统',
+                'MSG': '消息服务',
+                'JDS': 'JSON数据存储'
+            };
+            
+            for (var key in services) {
+                if (services.hasOwnProperty(key)) {
+                    var service = services[key];
+                    var name = serviceNames[key] || key;
+                    var status = service.status || 'UNKNOWN';
+                    var statusClass = status === 'ACTIVE' ? 'healthy' : (status === 'WARNING' ? 'warning' : 'critical');
+                    
+                    html += '<div class="service-status-item">';
+                    html += '  <div class="service-status-item__name">';
+                    html += '    <span class="status-dot ' + statusClass + '"></span>';
+                    html += '    ' + name;
+                    html += '  </div>';
+                    html += '  <div class="service-status-item__status">';
+                    html += '    <span class="nx-badge nx-badge--' + (status === 'ACTIVE' ? 'success' : 'danger') + '">' + status + '</span>';
+                    html += '  </div>';
+                    html += '</div>';
+                }
+            }
+            
+            document.getElementById('serviceStatusList').innerHTML = html || '<div class="nx-text-center" style="padding: 20px; color: var(--ns-secondary);">暂无服务</div>';
+        }
+
+        async function loadMetrics() {
+            try {
+                var response = await fetch('/api/enexus/runtime/metrics', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({sceneId: sceneId})
+                });
+                var rs = await response.json();
+                if (rs.data) {
+                    renderMetrics(rs.data);
+                }
+            } catch (error) {
+                console.error('Load metrics failed:', error);
+            }
+        }
+
+        function renderMetrics(metrics) {
+            document.getElementById('metricRequests').textContent = formatNumber(metrics.totalRequests || 0);
+            document.getElementById('metricQps').textContent = (metrics.qps || 0).toFixed(2);
+            document.getElementById('metricLatency').textContent = (metrics.avgLatency || 0).toFixed(2);
+            document.getElementById('metricErrors').textContent = formatNumber(metrics.errorCount || 0);
+            document.getElementById('metricConnections').textContent = metrics.activeConnections || 0;
+        }
+
+        async function loadCapabilities() {
+            try {
+                var response = await fetch('/api/enexus/runtime/capabilities', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({sceneId: sceneId})
+                });
+                var rs = await response.json();
+                if (rs.data) {
+                    renderCapabilities(rs.data);
+                }
+            } catch (error) {
+                console.error('Load capabilities failed:', error);
+            }
+        }
+
+        function renderCapabilities(capabilities) {
+            var html = '';
+            
+            for (var key in capabilities) {
+                if (capabilities.hasOwnProperty(key)) {
+                    var cap = capabilities[key];
+                    var status = cap.status || 'INACTIVE';
+                    var statusClass = status === 'ACTIVE' ? 'active' : (status === 'ERROR' ? 'error' : 'inactive');
+                    
+                    html += '<div class="capability-card">';
+                    html += '  <div class="capability-card__header">';
+                    html += '    <span class="capability-card__name">' + (cap.name || key) + '</span>';
+                    html += '    <span class="capability-card__status ' + statusClass + '">' + status + '</span>';
+                    html += '  </div>';
+                    html += '  <div class="capability-card__metrics">';
+                    html += '    <span>调用: ' + formatNumber(cap.invokeCount || 0) + '</span>';
+                    html += '    <span>错误: ' + formatNumber(cap.errorCount || 0) + '</span>';
+                    html += '  </div>';
+                    html += '</div>';
+                }
+            }
+            
+            document.getElementById('capabilityGrid').innerHTML = html || '<div class="nx-text-center" style="padding: 20px; color: var(--ns-secondary);">暂无能力</div>';
+        }
+
+        async function loadEvents() {
+            try {
+                var response = await fetch('/api/enexus/runtime/events', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({sceneId: sceneId, limit: 50})
+                });
+                var rs = await response.json();
+                allEvents = rs.data || [];
+                renderEvents(allEvents);
+            } catch (error) {
+                console.error('Load events failed:', error);
+            }
+        }
+
+        function renderEvents(events) {
+            var filter = document.getElementById('eventLevelFilter').value;
+            var filtered = events;
+            
+            if (filter) {
+                filtered = events.filter(function(e) {
+                    return e.level === filter;
+                });
+            }
+            
+            if (filtered.length === 0) {
+                document.getElementById('eventsList').innerHTML = '<div class="nx-text-center" style="padding: 20px; color: var(--ns-secondary);">暂无事件</div>';
+                return;
+            }
+            
+            var html = '';
+            filtered.forEach(function(event) {
+                var iconClass = event.level ? event.level.toLowerCase() : 'info';
+                var iconMap = {
+                    'info': 'ri-information-line',
+                    'success': 'ri-checkbox-circle-line',
+                    'warning': 'ri-alert-line',
+                    'error': 'ri-error-warning-line'
+                };
+                
+                html += '<div class="event-item">';
+                html += '  <div class="event-item__icon ' + iconClass + '">';
+                html += '    <i class="' + (iconMap[iconClass] || 'ri-information-line') + '"></i>';
+                html += '  </div>';
+                html += '  <div class="event-item__content">';
+                html += '    <div class="event-item__message">' + (event.message || '-') + '</div>';
+                html += '    <div class="event-item__meta">';
+                html += '      <span>' + formatTime(event.timestamp) + '</span>';
+                html += '      <span>' + (event.source || '-') + '</span>';
+                html += '    </div>';
+                html += '  </div>';
+                html += '</div>';
+            });
+            
+            document.getElementById('eventsList').innerHTML = html;
+        }
+
+        document.getElementById('eventLevelFilter').addEventListener('change', function() {
+            renderEvents(allEvents);
+        });
+
+        function clearEvents() {
+            allEvents = [];
+            renderEvents([]);
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            var k = 1024;
+            var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            var i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function formatUptime(seconds) {
+            var hours = Math.floor(seconds / 3600);
+            var minutes = Math.floor((seconds % 3600) / 60);
+            var secs = Math.floor(seconds % 60);
+            
+            if (hours > 0) {
+                return hours + '小时 ' + minutes + '分钟';
+            } else if (minutes > 0) {
+                return minutes + '分钟 ' + secs + '秒';
+            } else {
+                return secs + '秒';
+            }
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            var date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function updateLastRefresh() {
+            var now = new Date();
+            document.getElementById('lastUpdate').textContent = '更新于 ' + now.toLocaleTimeString('zh-CN');
+        }
+
+        function viewConfig() {
+            window.location.href = '/console/pages/scene/config-editor.html?sceneId=' + sceneId;
+        }
+
+        function viewFlow() {
+            window.location.href = '/console/pages/scene/flow-tracker.html?sceneId=' + sceneId;
+        }
+
+        function goBack() {
+            window.location.href = '/console/pages/scene/list.html';
+        }
+    </script>
+</body>
+</html>

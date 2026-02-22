@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>流程追踪 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .flow-header {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .flow-header__title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .flow-header__info {
+            display: flex;
+            gap: 24px;
+            font-size: 14px;
+            color: var(--ns-secondary);
+        }
+        
+        .flow-header__info span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .flow-progress {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        .flow-progress__bar {
+            flex: 1;
+            height: 8px;
+            background: var(--ns-border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .flow-progress__fill {
+            height: 100%;
+            background: var(--nx-primary);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        
+        .flow-progress__text {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--nx-primary);
+            min-width: 50px;
+            text-align: right;
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+        }
+        
+        .panel__header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .panel__body {
+            padding: 16px 20px;
+        }
+        
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .flow-step {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .flow-step__indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 40px;
+        }
+        
+        .flow-step__icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border: 2px solid;
+        }
+        
+        .flow-step__icon.completed {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: var(--ns-success);
+            color: var(--ns-success);
+        }
+        
+        .flow-step__icon.running {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--nx-primary);
+            color: var(--nx-primary);
+            animation: pulse 1.5s infinite;
+        }
+        
+        .flow-step__icon.pending {
+            background: var(--ns-input-bg);
+            border-color: var(--ns-border);
+            color: var(--ns-secondary);
+        }
+        
+        .flow-step__icon.error {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--ns-danger);
+            color: var(--ns-danger);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .flow-step__line {
+            width: 2px;
+            flex: 1;
+            min-height: 20px;
+        }
+        
+        .flow-step__line.completed {
+            background: var(--ns-success);
+        }
+        
+        .flow-step__line.pending {
+            background: var(--ns-border);
+        }
+        
+        .flow-step__content {
+            flex: 1;
+            padding-bottom: 20px;
+        }
+        
+        .flow-step__title {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--ns-dark);
+            margin-bottom: 4px;
+        }
+        
+        .flow-step__desc {
+            font-size: 13px;
+            color: var(--ns-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .flow-step__time {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .flow-step__substeps {
+            margin-top: 12px;
+            padding-left: 16px;
+            border-left: 2px solid var(--ns-border);
+        }
+        
+        .flow-substep {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 8px 0;
+        }
+        
+        .flow-substep__icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        
+        .flow-substep__icon.completed {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--ns-success);
+        }
+        
+        .flow-substep__icon.running {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--nx-primary);
+        }
+        
+        .flow-substep__icon.pending {
+            background: var(--ns-input-bg);
+            color: var(--ns-secondary);
+        }
+        
+        .flow-substep__icon.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--ns-danger);
+        }
+        
+        .flow-substep__content {
+            flex: 1;
+        }
+        
+        .flow-substep__title {
+            font-size: 13px;
+            color: var(--ns-dark);
+        }
+        
+        .flow-substep__title.running {
+            color: var(--nx-primary);
+        }
+        
+        .log-list {
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+        }
+        
+        .log-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .log-item:last-child {
+            border-bottom: none;
+        }
+        
+        .log-item__time {
+            color: var(--ns-secondary);
+            flex-shrink: 0;
+        }
+        
+        .log-item__level {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            flex-shrink: 0;
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        .log-item__level.info {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--nx-primary);
+        }
+        
+        .log-item__level.warn {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--ns-warning);
+        }
+        
+        .log-item__level.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--ns-danger);
+        }
+        
+        .log-item__level.debug {
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--ns-secondary);
+        }
+        
+        .log-item__message {
+            color: var(--ns-dark);
+            word-break: break-all;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-badge.running {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--nx-primary);
+        }
+        
+        .status-badge.completed {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--ns-success);
+        }
+        
+        .status-badge.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--ns-danger);
+        }
+        
+        .status-badge.pending {
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--ns-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">场景启动流程追踪</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="downloadLogs()">
+                        <i class="ri-download-line"></i> 下载日志
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="refreshFlow()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="flow-header">
+                        <div class="flow-header__title">
+                            <div>
+                                <h3 style="margin: 0 0 4px 0; font-size: 18px; color: var(--ns-dark);">
+                                    场景: <span id="sceneName">dev-scene</span>
+                                </h3>
+                                <span class="status-badge running" id="sceneStatus">运行中</span>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="pauseFlow()">
+                                    <i class="ri-pause-line"></i> 暂停
+                                </button>
+                                <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="rollbackFlow()">
+                                    <i class="ri-arrow-go-back-line"></i> 回滚
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flow-header__info">
+                            <span><i class="ri-time-line"></i> 开始: <span id="startTime">-</span></span>
+                            <span><i class="ri-timer-line"></i> 预计完成: <span id="estimatedTime">-</span></span>
+                            <span><i class="ri-speed-line"></i> 耗时: <span id="elapsedTime">-</span></span>
+                        </div>
+                        <div class="flow-progress">
+                            <div class="flow-progress__bar">
+                                <div class="flow-progress__fill" id="progressBar" style="width: 0%"></div>
+                            </div>
+                            <span class="flow-progress__text" id="progressText">0%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="two-column">
+                        <div class="panel">
+                            <div class="panel__header">
+                                <span class="panel__title">启动流程</span>
+                            </div>
+                            <div class="panel__body">
+                                <div class="flow-diagram" id="flowDiagram">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="panel">
+                            <div class="panel__header">
+                                <span class="panel__title">实时日志</span>
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="clearLogs()">
+                                    清除
+                                </button>
+                            </div>
+                            <div class="panel__body">
+                                <div class="log-list" id="logList">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var flowData = {
+            sceneName: 'dev-scene',
+            status: 'running',
+            progress: 68,
+            startTime: Date.now() - 90000,
+            estimatedEndTime: Date.now() + 60000,
+            steps: [
+                {
+                    id: 1,
+                    title: '配置加载',
+                    desc: '加载场景配置文件',
+                    status: 'completed',
+                    time: '10:00:00',
+                    substeps: [
+                        { title: '加载 OrgSceneConfig', status: 'completed' },
+                        { title: '加载 VfsSceneConfig', status: 'completed' },
+                        { title: '加载 MsgSceneConfig', status: 'completed' },
+                        { title: '加载 JdsSceneConfig', status: 'completed' }
+                    ]
+                },
+                {
+                    id: 2,
+                    title: '基础服务初始化',
+                    desc: '初始化基础服务组件',
+                    status: 'completed',
+                    time: '10:00:15',
+                    substeps: [
+                        { title: '初始化 SessionManager', status: 'completed' },
+                        { title: '初始化 CacheManager', status: 'completed' },
+                        { title: '初始化 MonitorService', status: 'completed' }
+                    ]
+                },
+                {
+                    id: 3,
+                    title: '扩展服务初始化',
+                    desc: '初始化扩展服务组件',
+                    status: 'running',
+                    time: '10:01:00',
+                    substeps: [
+                        { title: '初始化 JdsScene (会话服务)', status: 'completed' },
+                        { title: '初始化 VfsScene (文件服务)', status: 'running' },
+                        { title: '初始化 MsgScene (消息服务)', status: 'pending' }
+                    ]
+                },
+                {
+                    id: 4,
+                    title: '能力注册',
+                    desc: '注册场景能力',
+                    status: 'pending',
+                    time: '-',
+                    substeps: [
+                        { title: '注册 org-query 能力', status: 'pending' },
+                        { title: '注册 vfs-store 能力', status: 'pending' },
+                        { title: '注册 msg-push 能力', status: 'pending' }
+                    ]
+                },
+                {
+                    id: 5,
+                    title: '场景就绪',
+                    desc: '场景启动完成',
+                    status: 'pending',
+                    time: '-',
+                    substeps: []
+                }
+            ]
+        };
+
+        var logs = [
+            { time: '10:01:23', level: 'INFO', message: 'VfsScene: 开始初始化' },
+            { time: '10:01:24', level: 'INFO', message: 'VfsScene: 本地缓存初始化完成' },
+            { time: '10:01:25', level: 'WARN', message: 'Capability: vfs-store 响应较慢' },
+            { time: '10:01:26', level: 'INFO', message: 'VfsScene: 能力服务注册中...' },
+            { time: '10:01:27', level: 'DEBUG', message: 'VfsScene: 等待依赖服务响应' },
+            { time: '10:01:28', level: 'INFO', message: 'VfsScene: 文件系统挂载成功' }
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderFlow();
+            renderLogs();
+            startTimer();
+        });
+
+        function renderFlow() {
+            document.getElementById('sceneName').textContent = flowData.sceneName;
+            document.getElementById('sceneStatus').textContent = getStatusText(flowData.status);
+            document.getElementById('sceneStatus').className = 'status-badge ' + flowData.status;
+            document.getElementById('progressBar').style.width = flowData.progress + '%';
+            document.getElementById('progressText').textContent = flowData.progress + '%';
+            
+            var startTime = new Date(flowData.startTime);
+            document.getElementById('startTime').textContent = startTime.toLocaleTimeString('zh-CN');
+            
+            if (flowData.estimatedEndTime) {
+                var estTime = new Date(flowData.estimatedEndTime);
+                document.getElementById('estimatedTime').textContent = estTime.toLocaleTimeString('zh-CN');
+            }
+            
+            var html = '';
+            flowData.steps.forEach(function(step, index) {
+                var isLast = index === flowData.steps.length - 1;
+                
+                html += '<div class="flow-step">';
+                html += '  <div class="flow-step__indicator">';
+                html += '    <div class="flow-step__icon ' + step.status + '">';
+                html += '      <i class="' + getStepIcon(step.status) + '"></i>';
+                html += '    </div>';
+                if (!isLast) {
+                    html += '    <div class="flow-step__line ' + (step.status === 'completed' ? 'completed' : 'pending') + '"></div>';
+                }
+                html += '  </div>';
+                html += '  <div class="flow-step__content">';
+                html += '    <div class="flow-step__title">' + step.title + '</div>';
+                html += '    <div class="flow-step__desc">' + step.desc + '</div>';
+                html += '    <div class="flow-step__time">' + step.time + '</div>';
+                
+                if (step.substeps && step.substeps.length > 0) {
+                    html += '    <div class="flow-step__substeps">';
+                    step.substeps.forEach(function(substep) {
+                        html += '      <div class="flow-substep">';
+                        html += '        <div class="flow-substep__icon ' + substep.status + '">';
+                        html += '          <i class="' + getSubstepIcon(substep.status) + '"></i>';
+                        html += '        </div>';
+                        html += '        <div class="flow-substep__content">';
+                        html += '          <div class="flow-substep__title ' + (substep.status === 'running' ? 'running' : '') + '">' + substep.title + '</div>';
+                        html += '        </div>';
+                        html += '      </div>';
+                    });
+                    html += '    </div>';
+                }
+                
+                html += '  </div>';
+                html += '</div>';
+            });
+            
+            document.getElementById('flowDiagram').innerHTML = html;
+        }
+
+        function getStepIcon(status) {
+            switch (status) {
+                case 'completed': return 'ri-check-line';
+                case 'running': return 'ri-loader-4-line';
+                case 'error': return 'ri-close-line';
+                default: return 'ri-time-line';
+            }
+        }
+
+        function getSubstepIcon(status) {
+            switch (status) {
+                case 'completed': return 'ri-check-line';
+                case 'running': return 'ri-loader-4-line';
+                case 'error': return 'ri-close-line';
+                default: return 'ri-checkbox-blank-circle-line';
+            }
+        }
+
+        function getStatusText(status) {
+            switch (status) {
+                case 'running': return '运行中';
+                case 'completed': return '已完成';
+                case 'error': return '错误';
+                case 'pending': return '等待中';
+                default: return status;
+            }
+        }
+
+        function renderLogs() {
+            var html = '';
+            logs.forEach(function(log) {
+                html += '<div class="log-item">';
+                html += '  <span class="log-item__time">' + log.time + '</span>';
+                html += '  <span class="log-item__level ' + log.level.toLowerCase() + '">' + log.level + '</span>';
+                html += '  <span class="log-item__message">' + log.message + '</span>';
+                html += '</div>';
+            });
+            
+            document.getElementById('logList').innerHTML = html || '<div style="text-align: center; color: var(--ns-secondary); padding: 20px;">暂无日志</div>';
+        }
+
+        function startTimer() {
+            setInterval(function() {
+                if (flowData.status === 'running') {
+                    var elapsed = Date.now() - flowData.startTime;
+                    document.getElementById('elapsedTime').textContent = formatDuration(elapsed);
+                }
+            }, 1000);
+        }
+
+        function formatDuration(ms) {
+            var seconds = Math.floor(ms / 1000);
+            var minutes = Math.floor(seconds / 60);
+            var secs = seconds % 60;
+            return minutes + '分' + secs + '秒';
+        }
+
+        function refreshFlow() {
+            renderFlow();
+            renderLogs();
+        }
+
+        function pauseFlow() {
+            alert('流程已暂停');
+        }
+
+        function rollbackFlow() {
+            if (confirm('确定要回滚到上一个阶段吗？')) {
+                alert('正在回滚...');
+            }
+        }
+
+        function clearLogs() {
+            logs = [];
+            renderLogs();
+        }
+
+        function downloadLogs() {
+            var content = logs.map(function(log) {
+                return log.time + ' [' + log.level + '] ' + log.message;
+            }).join('\n');
+            
+            var blob = new Blob([content], { type: 'text/plain' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'flow-logs-' + Date.now() + '.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

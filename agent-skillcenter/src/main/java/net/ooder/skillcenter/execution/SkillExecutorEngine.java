@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2024 Ooder Team
+ *
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
 package net.ooder.skillcenter.execution;
 
 import net.ooder.skillcenter.model.Skill;
@@ -10,8 +16,8 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 技能执行引擎，负责技能执行的核心逻辑
- * 管理技能执行的生命周期、异常处理、监控等
+ * Skill Execution Engine - Core logic for skill execution
+ * Manages skill execution lifecycle, exception handling, monitoring, etc.
  */
 public class SkillExecutorEngine {
     // 单例实例

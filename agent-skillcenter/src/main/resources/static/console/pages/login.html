@@ -3,285 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkillCenter - 登录</title>
+    <title>登录 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        .login-page {
             min-height: 100vh;
             display: flex;
+            align-items: center;
             justify-content: center;
-            align-items: center;
-            color: #ffffff;
+            background: linear-gradient(135deg, var(--nx-bg) 0%, var(--nx-bg-elevated) 100%);
         }
-        
-        .login-container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
+        .login-card {
+            width: 100%;
+            max-width: 400px;
             padding: 40px;
-            width: 100%;
-            max-width: 450px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
         }
-        
-        .login-container:hover {
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-        }
-        
-        .login-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
         .login-logo {
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #4facfe, #00f2fe);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .login-subtitle {
-            font-size: 16px;
-            color: #b0b0b0;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #e0e0e0;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-            color: #ffffff;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-        
-        .form-group input:focus {
-            outline: none;
-            border-color: #4facfe;
-            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.2);
-        }
-        
-        .form-group input::placeholder {
-            color: #666666;
-        }
-        
-        .form-options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-        
-        .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .remember-me input[type="checkbox"] {
-            width: auto;
-            accent-color: #4facfe;
-        }
-        
-        .forgot-password {
-            color: #4facfe;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        
-        .forgot-password:hover {
-            color: #00f2fe;
-            text-decoration: underline;
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(45deg, #4facfe, #00f2fe);
-            color: #1a1a2e;
-            margin-bottom: 15px;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
-        }
-        
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-        }
-        
-        .login-footer {
             text-align: center;
-            margin-top: 30px;
-            font-size: 14px;
-            color: #b0b0b0;
+            margin-bottom: 32px;
         }
-        
-        .login-footer a {
-            color: #4facfe;
-            text-decoration: none;
-            transition: color 0.3s ease;
+        .login-logo i {
+            font-size: 48px;
+            color: var(--nx-primary);
         }
-        
-        .login-footer a:hover {
-            color: #00f2fe;
-            text-decoration: underline;
-        }
-        
-        .error-message {
-            background: rgba(255, 87, 87, 0.1);
-            border: 1px solid rgba(255, 87, 87, 0.2);
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 20px;
-            color: #ff5757;
-            font-size: 14px;
-            display: none;
-        }
-        
-        .success-message {
-            background: rgba(76, 175, 80, 0.1);
-            border: 1px solid rgba(76, 175, 80, 0.2);
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 20px;
-            color: #4caf50;
-            font-size: 14px;
-            display: none;
-        }
-        
-        @media (max-width: 768px) {
-            .login-container {
-                padding: 30px;
-                margin: 20px;
-            }
-            
-            .login-logo {
-                font-size: 28px;
-            }
+        .login-logo h1 {
+            margin-top: 16px;
+            font-size: 24px;
+            color: var(--nx-text);
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <div class="login-logo">SkillCenter</div>
-            <div class="login-subtitle">技能管理和执行平台</div>
-        </div>
-        
-        <div class="error-message" id="error-message">
-            用户名或密码错误，请重试
-        </div>
-        
-        <div class="success-message" id="success-message">
-            登录成功，正在跳转...
-        </div>
-        
-        <form id="login-form" onsubmit="handleLogin(event)">
-            <div class="form-group">
-                <label for="username">用户名</label>
-                <input type="text" id="username" placeholder="请输入用户名" required>
+    <div class="login-page">
+        <div class="nx-card login-card">
+            <div class="login-logo">
+                <i class="ri-bolt-line"></i>
+                <h1>SkillCenter</h1>
             </div>
             
-            <div class="form-group">
-                <label for="password">密码</label>
-                <input type="password" id="password" placeholder="请输入密码" required>
-            </div>
-            
-            <div class="form-options">
-                <div class="remember-me">
-                    <input type="checkbox" id="remember-me">
-                    <label for="remember-me">记住我</label>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-form-label">用户名</label>
+                    <input type="text" id="username" class="nx-input" placeholder="请输入用户名" required>
                 </div>
-                <a href="#" class="forgot-password">忘记密码？</a>
-            </div>
+                
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-form-label">密码</label>
+                    <input type="password" id="password" class="nx-input" placeholder="请输入密码" required>
+                </div>
+                
+                <div class="nx-flex nx-items-center nx-justify-between nx-mb-6">
+                    <label class="nx-flex nx-items-center nx-gap-2">
+                        <input type="checkbox" id="remember">
+                        <span class="nx-text-sm">记住我</span>
+                    </label>
+                    <a href="#" class="nx-text-sm nx-text-primary">忘记密码？</a>
+                </div>
+                
+                <button type="submit" class="nx-btn nx-btn--primary nx-w-full">
+                    <i class="ri-login-box-line"></i> 登录
+                </button>
+            </form>
             
-            <button type="submit" class="btn btn-primary">登录</button>
-            <button type="button" class="btn btn-secondary" onclick="goToInstall()">初始化安装</button>
-        </form>
-        
-        <div class="login-footer">
-            &copy; 2026 SkillCenter. 保留所有权利。
+            <div class="nx-text-center nx-mt-6">
+                <span class="nx-text-secondary nx-text-sm">还没有账号？</span>
+                <a href="#" class="nx-text-sm nx-text-primary">立即注册</a>
+            </div>
         </div>
     </div>
     
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
     <script>
         function handleLogin(event) {
             event.preventDefault();
-            
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            // 隐藏所有消息
-            document.getElementById('error-message').style.display = 'none';
-            document.getElementById('success-message').style.display = 'none';
+            console.log('登录:', username);
             
-            // 简单的登录验证
-            if (username === 'admin' && password === 'admin123') {
-                // 显示成功消息
-                document.getElementById('success-message').style.display = 'block';
-                
-                // 模拟登录成功后跳转
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1500);
-            } else {
-                // 显示错误消息
-                document.getElementById('error-message').style.display = 'block';
-            }
+            localStorage.setItem('currentRole', 'personal');
+            localStorage.setItem('currentUser', username);
+            
+            window.location.href = '/skillcenter/console/pages/dashboard.html';
         }
-        
-        function goToInstall() {
-            window.location.href = 'install.html';
-        }
-        
-        // 检查是否需要显示安装页面
-        document.addEventListener('DOMContentLoaded', function() {
-            // 这里可以添加逻辑来检查系统是否已安装
-            // 例如检查本地存储或发送API请求
-        });
     </script>
 </body>
 </html>

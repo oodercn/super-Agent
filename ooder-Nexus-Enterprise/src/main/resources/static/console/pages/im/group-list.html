@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>群组管理 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .group-container { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+        
+        .group-list { background: var(--ns-card-bg); border-radius: 12px; border: 1px solid var(--ns-border); }
+        .list-header { padding: 16px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .list-header h3 { margin: 0; color: var(--ns-dark); }
+        
+        .search-box { display: flex; align-items: center; background: var(--ns-input-bg); border-radius: 8px; padding: 8px 12px; }
+        .search-box i { color: var(--ns-secondary); margin-right: 8px; }
+        .search-box input { background: none; border: none; color: var(--ns-dark); width: 200px; outline: none; }
+        
+        .group-items { display: flex; flex-direction: column; max-height: calc(100vh - 250px); overflow-y: auto; }
+        
+        .group-item { display: flex; align-items: center; padding: 12px 16px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid var(--ns-border); }
+        .group-item:hover { background: var(--ns-bg-hover); }
+        .group-item.active { background: rgba(59, 130, 246, 0.1); }
+        
+        .group-avatar { width: 48px; height: 48px; border-radius: 12px; background: var(--nx-primary); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; margin-right: 12px; }
+        
+        .group-info { flex: 1; }
+        .group-name { font-weight: 500; color: var(--ns-dark); margin-bottom: 4px; }
+        .group-meta { font-size: 13px; color: var(--ns-secondary); display: flex; gap: 12px; }
+        
+        .group-detail { background: var(--ns-card-bg); border-radius: 12px; border: 1px solid var(--ns-border); display: flex; flex-direction: column; }
+        .detail-header { padding: 16px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .detail-header h3 { margin: 0; color: var(--ns-dark); display: flex; align-items: center; gap: 8px; }
+        
+        .detail-content { flex: 1; padding: 16px; overflow-y: auto; }
+        
+        .member-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .member-item { display: flex; align-items: center; background: var(--ns-input-bg); border-radius: 20px; padding: 4px 12px 4px 4px; }
+        .member-avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--ns-secondary); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; margin-right: 8px; }
+        .member-name { font-size: 13px; color: var(--ns-dark); }
+        .member-role { font-size: 11px; color: var(--ns-secondary); margin-left: 4px; }
+        
+        .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: var(--nx-primary); color: white; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-secondary { background: var(--ns-card-bg); color: var(--ns-dark); border: 1px solid var(--ns-border); }
+        .btn-secondary:hover { background: var(--ns-bg-hover); }
+        .btn-sm { padding: 4px 8px; font-size: 12px; }
+        .btn-icon { padding: 8px; }
+        
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--ns-secondary); }
+        .empty-state i { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal.active { display: flex; justify-content: center; align-items: center; }
+        .modal-content { background: var(--ns-card-bg); border-radius: 12px; padding: 24px; width: 500px; max-width: 90%; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h3 { margin: 0; color: var(--ns-dark); }
+        .modal-close { background: none; border: none; color: var(--ns-secondary); font-size: 24px; cursor: pointer; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--ns-secondary); }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; background: var(--ns-input-bg); border: 1px solid var(--ns-border); color: var(--ns-dark); padding: 10px 12px; border-radius: 6px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+        .stat-item { background: var(--ns-input-bg); border-radius: 8px; padding: 12px; text-align: center; }
+        .stat-item .value { font-size: 20px; font-weight: 600; color: var(--nx-primary); }
+        .stat-item .label { font-size: 12px; color: var(--ns-secondary); margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold"><i class="ri-group-line"></i> 群组管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="btn btn-primary" onclick="openCreateModal()">
+                        <i class="ri-add-line"></i> 创建群组
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="group-container">
+                        <div class="group-list">
+                            <div class="list-header">
+                                <h3><i class="ri-group-line"></i> 我的群组</h3>
+                                <div class="search-box">
+                                    <i class="ri-search-line"></i>
+                                    <input type="text" placeholder="搜索群组..." id="searchInput" oninput="filterGroups()">
+                                </div>
+                            </div>
+                            <div class="group-items" id="groupItems">
+                            </div>
+                        </div>
+                        
+                        <div class="group-detail" id="groupDetail">
+                            <div class="empty-state">
+                                <i class="ri-group-line"></i>
+                                <p>选择一个群组查看详情</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="createModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-add-line"></i> 创建群组</h3>
+                <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>群组名称</label>
+                <input type="text" id="groupName" placeholder="输入群组名称">
+            </div>
+            <div class="form-group">
+                <label>群组类型</label>
+                <select id="groupType">
+                    <option value="work">工作群</option>
+                    <option value="project">项目群</option>
+                    <option value="department">部门群</option>
+                    <option value="social">社交群</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>群组描述</label>
+                <textarea id="groupDesc" placeholder="输入群组描述"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                <button class="btn btn-secondary" onclick="closeCreateModal()">取消</button>
+                <button class="btn btn-primary" onclick="createGroup()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="addMemberModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-user-add-line"></i> 添加成员</h3>
+                <button class="modal-close" onclick="closeAddMemberModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>用户ID</label>
+                <input type="text" id="memberUserId" placeholder="输入用户ID">
+            </div>
+            <div class="form-group">
+                <label>角色</label>
+                <select id="memberRole">
+                    <option value="member">普通成员</option>
+                    <option value="admin">管理员</option>
+                </select>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                <button class="btn btn-secondary" onclick="closeAddMemberModal()">取消</button>
+                <button class="btn btn-primary" onclick="addMember()">添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var groups = [];
+        var selectedGroup = null;
+        
+        window.onPageInit = function() {
+            loadGroups();
+        };
+        
+        function loadGroups() {
+            fetch('/api/gateway/im/group/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    groups = data.data || [];
+                    renderGroups();
+                }
+            })
+            .catch(function(err) { console.error('加载群组失败:', err); });
+        }
+        
+        function renderGroups() {
+            var container = document.getElementById('groupItems');
+            container.innerHTML = '';
+            
+            groups.forEach(function(group) {
+                var item = document.createElement('div');
+                item.className = 'group-item';
+                item.onclick = function() { selectGroup(group); };
+                
+                var avatarLetter = group.name ? group.name.charAt(0) : 'G';
+                
+                item.innerHTML = 
+                    '<div class="group-avatar">' + avatarLetter + '</div>' +
+                    '<div class="group-info">' +
+                        '<div class="group-name">' + group.name + '</div>' +
+                        '<div class="group-meta">' +
+                            '<span><i class="ri-user-line"></i> ' + (group.memberCount || 0) + ' 人</span>' +
+                            '<span><i class="ri-calendar-line"></i> ' + formatDate(group.createTime) + '</span>' +
+                        '</div>' +
+                    '</div>';
+                
+                container.appendChild(item);
+            });
+        }
+        
+        function selectGroup(group) {
+            selectedGroup = group;
+            var items = document.querySelectorAll('.group-item');
+            items.forEach(function(item) { item.classList.remove('active'); });
+            event.currentTarget.classList.add('active');
+            
+            loadGroupDetail(group.id);
+        }
+        
+        function loadGroupDetail(groupId) {
+            fetch('/api/gateway/im/group/get', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ groupId: groupId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    showGroupDetail(data.data);
+                }
+            });
+        }
+        
+        function showGroupDetail(group) {
+            var detail = document.getElementById('groupDetail');
+            var avatarLetter = group.name ? group.name.charAt(0) : 'G';
+            
+            var membersHtml = '';
+            if (group.members && group.members.length > 0) {
+                group.members.forEach(function(member) {
+                    membersHtml += 
+                        '<div class="member-item">' +
+                            '<div class="member-avatar">' + (member.userName ? member.userName.charAt(0) : '?') + '</div>' +
+                            '<span class="member-name">' + (member.userName || member.userId) + '</span>' +
+                            '<span class="member-role">' + (member.role === 'admin' ? '管理员' : '成员') + '</span>' +
+                        '</div>';
+                });
+            }
+            
+            detail.innerHTML = 
+                '<div class="detail-header">' +
+                    '<h3><div class="group-avatar" style="width:32px;height:32px;font-size:14px;">' + avatarLetter + '</div> ' + group.name + '</h3>' +
+                    '<div>' +
+                        '<button class="btn btn-secondary btn-sm" onclick="openAddMemberModal()"><i class="ri-user-add-line"></i> 添加成员</button>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="detail-content">' +
+                    '<div class="stats-grid">' +
+                        '<div class="stat-item"><div class="value">' + (group.memberCount || 0) + '</div><div class="label">成员数</div></div>' +
+                        '<div class="stat-item"><div class="value">' + (group.type || 'N/A') + '</div><div class="label">类型</div></div>' +
+                        '<div class="stat-item"><div class="value">' + (group.status || 'active') + '</div><div class="label">状态</div></div>' +
+                    '</div>' +
+                    '<h4 style="margin: 16px 0 8px; color: var(--ns-dark);"><i class="ri-user-line"></i> 成员列表</h4>' +
+                    '<div class="member-list">' + (membersHtml || '<p style="color: var(--ns-secondary);">暂无成员</p>') + '</div>' +
+                '</div>';
+        }
+        
+        function openCreateModal() { document.getElementById('createModal').classList.add('active'); }
+        function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
+        
+        function createGroup() {
+            var name = document.getElementById('groupName').value;
+            var type = document.getElementById('groupType').value;
+            var desc = document.getElementById('groupDesc').value;
+            
+            fetch('/api/gateway/im/group/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, type: type, description: desc })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    closeCreateModal();
+                    loadGroups();
+                }
+            });
+        }
+        
+        function openAddMemberModal() { document.getElementById('addMemberModal').classList.add('active'); }
+        function closeAddMemberModal() { document.getElementById('addMemberModal').classList.remove('active'); }
+        
+        function addMember() {
+            if (!selectedGroup) return;
+            
+            var userId = document.getElementById('memberUserId').value;
+            var role = document.getElementById('memberRole').value;
+            
+            fetch('/api/gateway/im/group/addMember', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ groupId: selectedGroup.id, userId: userId, role: role })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    closeAddMemberModal();
+                    loadGroupDetail(selectedGroup.id);
+                }
+            });
+        }
+        
+        function filterGroups() {
+            var keyword = document.getElementById('searchInput').value.toLowerCase();
+            var items = document.querySelectorAll('.group-item');
+            items.forEach(function(item) {
+                var name = item.querySelector('.group-name').textContent.toLowerCase();
+                item.style.display = name.indexOf(keyword) > -1 ? 'flex' : 'none';
+            });
+        }
+        
+        function formatDate(timestamp) {
+            if (!timestamp) return 'N/A';
+            var date = new Date(timestamp);
+            return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+        }
+    </script>
+</body>
+</html>

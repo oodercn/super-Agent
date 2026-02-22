@@ -3,7 +3,7 @@
  */
 
 // 导入API客户端
-import { ApiClient, apiClient, API_BASE_URL } from './api.js';
+import { ApiClient, apiClient } from './api.js';
 
 // 导入列表组件
 import { ListComponent } from './list.js';
@@ -18,7 +18,6 @@ import { initTemplateSystem, createTemplate, renderTemplate, destroyTemplate, ge
 export {
     ApiClient,
     apiClient,
-    API_BASE_URL,
     ListComponent,
     FormComponent,
     initTemplateSystem,
@@ -37,7 +36,6 @@ export {
 export default {
     ApiClient,
     apiClient,
-    API_BASE_URL,
     ListComponent,
     FormComponent,
     initTemplateSystem,

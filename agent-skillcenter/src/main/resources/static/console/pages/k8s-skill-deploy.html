@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能部署 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .skill-card {
+            background: var(--nx-bg-elevated);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .skill-card:hover {
+            border-color: var(--nx-primary-color);
+        }
+        .skill-card.selected {
+            border-color: var(--nx-primary-color);
+            background: linear-gradient(135deg, rgba(var(--nx-primary-color-rgb), 0.1) 0%, transparent 100%);
+        }
+        .skill-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: linear-gradient(135deg, var(--nx-primary-color), #8b5cf6);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能部署</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-tabs nx-mb-6">
+                        <button class="nx-tabs__tab" onclick="location.href='k8s-cluster.html'">集群概览</button>
+                        <button class="nx-tabs__tab" onclick="location.href='k8s-workloads.html'">工作负载</button>
+                        <button class="nx-tabs__tab nx-tabs__tab--active" onclick="location.href='k8s-skill-deploy.html'">技能部署</button>
+                    </div>
+                    
+                    <div class="nx-grid nx-grid-cols-2 nx-gap-6">
+                        <div>
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h3 class="nx-card__title">选择技能</h3>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div class="nx-form-group nx-mb-4">
+                                        <input type="text" class="nx-input" id="skill-search" placeholder="搜索技能..." onkeyup="filterSkills()">
+                                    </div>
+                                    <div id="skill-list" class="nx-flex nx-flex-col nx-gap-3" style="max-height: 400px; overflow-y: auto;">
+                                        <div class="nx-text-center nx-text-secondary nx-py-4">加载中...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h3 class="nx-card__title">部署配置</h3>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div id="config-panel" style="display: none;">
+                                        <div class="nx-form-group nx-mb-4">
+                                            <label class="nx-label">部署名称 <span style="color: red;">*</span></label>
+                                            <input type="text" class="nx-input" id="deploy-name" placeholder="输入部署名称">
+                                        </div>
+                                        <div class="nx-form-group nx-mb-4">
+                                            <label class="nx-label">命名空间</label>
+                                            <select class="nx-select" id="deploy-namespace">
+                                                <option value="default">default</option>
+                                            </select>
+                                        </div>
+                                        <div class="nx-grid nx-grid-cols-2 nx-gap-4 nx-mb-4">
+                                            <div class="nx-form-group">
+                                                <label class="nx-label">最小副本</label>
+                                                <input type="number" class="nx-input" id="deploy-min-replicas" value="1" min="1">
+                                            </div>
+                                            <div class="nx-form-group">
+                                                <label class="nx-label">最大副本</label>
+                                                <input type="number" class="nx-input" id="deploy-max-replicas" value="5" min="1">
+                                            </div>
+                                        </div>
+                                        <div class="nx-grid nx-grid-cols-2 nx-gap-4 nx-mb-4">
+                                            <div class="nx-form-group">
+                                                <label class="nx-label">CPU (核)</label>
+                                                <input type="number" class="nx-input" id="deploy-cpu" value="0.5" step="0.1">
+                                            </div>
+                                            <div class="nx-form-group">
+                                                <label class="nx-label">内存 (MB)</label>
+                                                <input type="number" class="nx-input" id="deploy-memory" value="256">
+                                            </div>
+                                        </div>
+                                        <div class="nx-form-group nx-mb-4">
+                                            <label class="nx-label">容器端口</label>
+                                            <input type="number" class="nx-input" id="deploy-port" value="8080">
+                                        </div>
+                                        
+                                        <div class="nx-mb-4">
+                                            <div class="nx-flex nx-items-center nx-justify-between nx-mb-2">
+                                                <span class="nx-text-sm nx-font-semibold">环境变量</span>
+                                                <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="addEnvVar()">
+                                                    <i class="ri-add-line"></i> 添加
+                                                </button>
+                                            </div>
+                                            <div id="env-vars-list"></div>
+                                        </div>
+                                        
+                                        <div class="nx-flex nx-gap-3 nx-mt-6">
+                                            <button class="nx-btn nx-btn--secondary nx-flex-1" onclick="previewYaml()">
+                                                <i class="ri-code-line"></i> 预览YAML
+                                            </button>
+                                            <button class="nx-btn nx-btn--primary nx-flex-1" onclick="deploySkill()">
+                                                <i class="ri-rocket-line"></i> 部署
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="no-skill-selected" class="nx-text-center nx-py-8">
+                                        <i class="ri-cursor-line" style="font-size: 48px; color: var(--nx-text-secondary);"></i>
+                                        <p class="nx-text-secondary nx-mt-4">请从左侧选择要部署的技能</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">已部署技能</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>技能名称</th>
+                                            <th>部署名称</th>
+                                            <th>命名空间</th>
+                                            <th>状态</th>
+                                            <th>副本</th>
+                                            <th>部署时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="deployed-list">
+                                        <tr>
+                                            <td colspan="7" class="nx-text-center nx-text-secondary">加载中...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="yaml-modal" class="nx-modal" style="display: none;">
+        <div class="nx-modal__backdrop" onclick="hideYamlModal()"></div>
+        <div class="nx-modal__content" style="max-width: 700px;">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">YAML预览</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="hideYamlModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <pre id="yaml-content" style="background: var(--nx-bg-secondary); padding: 16px; border-radius: 8px; font-size: 12px; overflow: auto; max-height: 400px;"></pre>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('K8S Skill Deploy 页面初始化完成');
+            loadSkills();
+            loadNamespaces();
+            loadDeployedSkills();
+        };
+        
+        let allSkills = [];
+        let selectedSkill = null;
+        let envVarCount = 0;
+        
+        async function loadSkills() {
+            try {
+                const result = await ApiClient.post('/api/skill/list', {});
+                const container = document.getElementById('skill-list');
+                
+                if (result && result.data) {
+                    allSkills = result.data;
+                    renderSkills(allSkills);
+                }
+            } catch (error) {
+                console.error('加载技能列表失败:', error);
+                document.getElementById('skill-list').innerHTML = 
+                    '<div class="nx-text-center nx-text-error">加载失败</div>';
+            }
+        }
+        
+        function renderSkills(skills) {
+            const container = document.getElementById('skill-list');
+            
+            if (skills.length === 0) {
+                container.innerHTML = '<div class="nx-text-center nx-text-secondary">暂无技能</div>';
+                return;
+            }
+            
+            container.innerHTML = skills.map(skill => `
+                <div class="skill-card ${selectedSkill && selectedSkill.id === skill.id ? 'selected' : ''}" 
+                     onclick="selectSkill('${skill.id}')">
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <div class="skill-icon">
+                            <i class="ri-robot-line"></i>
+                        </div>
+                        <div class="nx-flex-1">
+                            <div class="nx-font-semibold">${skill.name}</div>
+                            <div class="nx-text-secondary nx-text-sm">${skill.description || '无描述'}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function filterSkills() {
+            const search = document.getElementById('skill-search').value.toLowerCase();
+            const filtered = allSkills.filter(s => 
+                s.name.toLowerCase().includes(search) || 
+                (s.description && s.description.toLowerCase().includes(search))
+            );
+            renderSkills(filtered);
+        }
+        
+        function selectSkill(skillId) {
+            selectedSkill = allSkills.find(s => s.id === skillId);
+            
+            document.querySelectorAll('.skill-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            document.getElementById('no-skill-selected').style.display = 'none';
+            document.getElementById('config-panel').style.display = 'block';
+            
+            document.getElementById('deploy-name').value = selectedSkill.name.toLowerCase().replace(/\s+/g, '-');
+        }
+        
+        async function loadNamespaces() {
+            try {
+                const result = await ApiClient.post('/api/k8s/clusters/namespaces', { cluster: 'default' });
+                if (result && result.data) {
+                    document.getElementById('deploy-namespace').innerHTML = 
+                        result.data.map(ns => `<option value="${ns}">${ns}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('加载命名空间失败:', error);
+            }
+        }
+        
+        async function loadDeployedSkills() {
+            try {
+                const result = await ApiClient.post('/api/k8s/deployments/list', { namespace: 'all' });
+                const container = document.getElementById('deployed-list');
+                
+                if (result && result.data && result.data.length > 0) {
+                    const skillDeployments = result.data.filter(d => 
+                        d.image && d.image.includes('ooder/skill')
+                    );
+                    
+                    if (skillDeployments.length === 0) {
+                        container.innerHTML = '<tr><td colspan="7" class="nx-text-center nx-text-secondary">暂无已部署技能</td></tr>';
+                        return;
+                    }
+                    
+                    container.innerHTML = skillDeployments.map(d => `
+                        <tr>
+                            <td>${d.name}</td>
+                            <td>${d.name}</td>
+                            <td><span class="nx-badge nx-badge--secondary">${d.namespace}</span></td>
+                            <td>
+                                <span class="nx-badge nx-badge--${getStatusBadge(d.status)}">${getStatusText(d.status)}</span>
+                            </td>
+                            <td>${d.readyReplicas}/${d.replicas}</td>
+                            <td>${formatTime(d.createdAt)}</td>
+                            <td>
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="viewDeployment('${d.namespace}', '${d.name}')" title="查看">
+                                    <i class="ri-eye-line"></i>
+                                </button>
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm nx-text-error" onclick="deleteDeployment('${d.namespace}', '${d.name}')" title="删除">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<tr><td colspan="7" class="nx-text-center nx-text-secondary">暂无已部署技能</td></tr>';
+                }
+            } catch (error) {
+                console.error('加载已部署技能失败:', error);
+            }
+        }
+        
+        function addEnvVar() {
+            const container = document.getElementById('env-vars-list');
+            const div = document.createElement('div');
+            div.className = 'nx-flex nx-gap-2 nx-mb-2';
+            div.innerHTML = `
+                <input type="text" class="nx-input nx-flex-1" placeholder="KEY" id="env-key-${envVarCount}">
+                <input type="text" class="nx-input nx-flex-1" placeholder="VALUE" id="env-value-${envVarCount}">
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="this.parentElement.remove()">
+                    <i class="ri-delete-bin-line"></i>
+                </button>
+            `;
+            container.appendChild(div);
+            envVarCount++;
+        }
+        
+        function getEnvVars() {
+            const envVars = [];
+            const container = document.getElementById('env-vars-list');
+            const rows = container.querySelectorAll('.nx-flex');
+            rows.forEach((row, index) => {
+                const key = document.getElementById(`env-key-${index}`);
+                const value = document.getElementById(`env-value-${index}`);
+                if (key && value && key.value && value.value) {
+                    envVars.push(`${key.value}=${value.value}`);
+                }
+            });
+            return envVars;
+        }
+        
+        function previewYaml() {
+            const name = document.getElementById('deploy-name').value;
+            const namespace = document.getElementById('deploy-namespace').value;
+            const image = selectedSkill ? `ooder/skill-${selectedSkill.name.toLowerCase()}:latest` : 'nginx:latest';
+            const replicas = parseInt(document.getElementById('deploy-min-replicas').value) || 1;
+            const cpu = document.getElementById('deploy-cpu').value;
+            const memory = document.getElementById('deploy-memory').value;
+            const port = document.getElementById('deploy-port').value;
+            
+            const yaml = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${name}
+  namespace: ${namespace}
+  labels:
+    app: ${name}
+    managed-by: skillcenter
+spec:
+  replicas: ${replicas}
+  selector:
+    matchLabels:
+      app: ${name}
+  template:
+    metadata:
+      labels:
+        app: ${name}
+    spec:
+      containers:
+      - name: ${name}
+        image: ${image}
+        ports:
+        - containerPort: ${port}
+        resources:
+          limits:
+            cpu: "${cpu}"
+            memory: "${memory}Mi"
+          requests:
+            cpu: "${cpu}"
+            memory: "${memory}Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${name}
+  namespace: ${namespace}
+spec:
+  selector:
+    app: ${name}
+  ports:
+  - port: 80
+    targetPort: ${port}
+  type: ClusterIP`;
+            
+            document.getElementById('yaml-content').textContent = yaml;
+            document.getElementById('yaml-modal').style.display = 'flex';
+        }
+        
+        function hideYamlModal() {
+            document.getElementById('yaml-modal').style.display = 'none';
+        }
+        
+        async function deploySkill() {
+            if (!selectedSkill) {
+                ApiClient.showError('请先选择技能');
+                return;
+            }
+            
+            const name = document.getElementById('deploy-name').value;
+            if (!name) {
+                ApiClient.showError('请输入部署名称');
+                return;
+            }
+            
+            const namespace = document.getElementById('deploy-namespace').value;
+            const image = `ooder/skill-${selectedSkill.name.toLowerCase()}:latest`;
+            const replicas = parseInt(document.getElementById('deploy-min-replicas').value) || 1;
+            const cpu = parseFloat(document.getElementById('deploy-cpu').value) || 0.5;
+            const memory = parseInt(document.getElementById('deploy-memory').value) * 1024 * 1024 || 256 * 1024 * 1024;
+            const port = parseInt(document.getElementById('deploy-port').value) || 8080;
+            
+            try {
+                ApiClient.showLoading('部署中...');
+                
+                await ApiClient.post('/api/k8s/deployments/create', {
+                    cluster: 'default',
+                    namespace: namespace,
+                    name: name,
+                    image: image,
+                    replicas: replicas,
+                    cpuLimit: cpu,
+                    memoryLimit: memory,
+                    containerPort: port,
+                    envVars: getEnvVars()
+                });
+                
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('部署成功');
+                loadDeployedSkills();
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('部署失败: ' + error.message);
+            }
+        }
+        
+        async function deleteDeployment(namespace, name) {
+            if (!confirm('确定要删除 ' + name + ' 吗？')) return;
+            
+            try {
+                await ApiClient.post('/api/k8s/deployments/delete', {
+                    cluster: 'default',
+                    namespace: namespace,
+                    name: name
+                });
+                
+                ApiClient.showSuccess('删除成功');
+                loadDeployedSkills();
+            } catch (error) {
+                ApiClient.showError('删除失败: ' + error.message);
+            }
+        }
+        
+        function viewDeployment(namespace, name) {
+            window.location.href = `k8s-workloads.html?namespace=${namespace}&name=${name}`;
+        }
+        
+        function getStatusBadge(status) {
+            if (status === 'running') return 'success';
+            if (status === 'updating') return 'warning';
+            return 'secondary';
+        }
+        
+        function getStatusText(status) {
+            const map = { 'running': '运行中', 'updating': '更新中', 'stopped': '已停止' };
+            return map[status] || status;
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            return new Date(timestamp).toLocaleString();
+        }
+    </script>
+</body>
+</html>

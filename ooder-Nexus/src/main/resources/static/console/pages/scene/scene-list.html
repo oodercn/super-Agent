@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景管理 - Nexus</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .scene-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .stat-icon.primary { background: rgba(59, 130, 246, 0.1); color: var(--nx-primary); }
+        .stat-icon.success { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .stat-icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        .stat-icon.info { background: rgba(148, 163, 184, 0.1); color: var(--ns-secondary); }
+        .stat-info h3 { font-size: 12px; color: var(--ns-secondary); margin-bottom: 4px; }
+        .stat-value { font-size: 22px; font-weight: 600; color: var(--ns-dark); }
+        
+        .scene-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+        .scene-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .scene-card:hover {
+            border-color: var(--nx-primary);
+            transform: translateY(-2px);
+        }
+        .scene-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .scene-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .scene-icon.infrastructure { background: rgba(59, 130, 246, 0.1); color: var(--nx-primary); }
+        .scene-icon.security { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .scene-icon.communication { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .scene-icon.business { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        .scene-icon.development { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+        .scene-icon.identity { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
+        .scene-title { font-size: 16px; font-weight: 600; color: var(--ns-dark); margin-bottom: 4px; }
+        .scene-id { font-size: 12px; color: var(--ns-secondary); font-family: monospace; }
+        .scene-desc { font-size: 13px; color: var(--ns-secondary); line-height: 1.5; margin-bottom: 12px; }
+        .scene-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        .scene-meta span { display: flex; align-items: center; gap: 4px; }
+        .scene-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .badge-required { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .badge-optional { background: rgba(148, 163, 184, 0.1); color: var(--ns-secondary); }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--ns-card-bg); border-radius: 8px; width: 100%; max-width: 800px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 16px; font-weight: 600; color: var(--ns-dark); }
+        .modal-close { background: none; border: none; font-size: 20px; color: var(--ns-secondary); cursor: pointer; }
+        .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+        
+        .capability-list { display: flex; flex-direction: column; gap: 12px; }
+        .capability-item { background: var(--ns-bg-hover); border-radius: 8px; padding: 16px; }
+        .capability-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .capability-name { font-size: 14px; font-weight: 500; color: var(--ns-dark); }
+        .capability-id { font-size: 12px; color: var(--ns-secondary); font-family: monospace; }
+        .capability-desc { font-size: 13px; color: var(--ns-secondary); margin-bottom: 12px; }
+        .capability-params { background: var(--ns-input-bg); border-radius: 6px; padding: 12px; }
+        .param-row { display: flex; gap: 12px; font-size: 12px; padding: 4px 0; }
+        .param-name { color: var(--nx-primary); font-family: monospace; min-width: 100px; }
+        .param-type { color: var(--ns-success); }
+        .param-required { color: #ef4444; }
+        .param-optional { color: var(--ns-secondary); }
+        
+        .dependency-graph { background: var(--ns-bg-hover); border-radius: 8px; padding: 20px; margin-top: 16px; }
+        .dep-node { display: inline-flex; align-items: center; gap: 8px; background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 6px; padding: 8px 12px; margin: 4px; }
+        .dep-arrow { color: var(--ns-secondary); font-size: 18px; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">场景管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="scene-stats" id="sceneStats">
+                        <div class="stat-card">
+                            <div class="stat-icon primary"><i class="ri-apps-line"></i></div>
+                            <div class="stat-info"><h3>总场景</h3><div class="stat-value" id="stat-total">0</div></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon success"><i class="ri-check-line"></i></div>
+                            <div class="stat-info"><h3>必需场景</h3><div class="stat-value" id="stat-required">0</div></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon warning"><i class="ri-flashlight-line"></i></div>
+                            <div class="stat-info"><h3>能力总数</h3><div class="stat-value" id="stat-capabilities">0</div></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon info"><i class="ri-group-line"></i></div>
+                            <div class="stat-info"><h3>场景组</h3><div class="stat-value" id="stat-groups">0</div></div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-flex nx-items-center nx-gap-3 nx-mb-4">
+                        <button class="nx-btn filter-btn active" onclick="filterScenes('all')">全部</button>
+                        <button class="nx-btn filter-btn" onclick="filterScenes('required')">必需</button>
+                        <button class="nx-btn filter-btn" onclick="filterScenes('optional')">可选</button>
+                        <div style="flex: 1"></div>
+                        <input type="text" class="form-control" placeholder="搜索场景..." id="searchInput" style="width: 200px;">
+                    </div>
+                    
+                    <div class="scene-grid" id="sceneList"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">场景详情</h3>
+                <button class="modal-close" onclick="hideDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var scenes = [];
+        var currentFilter = 'all';
+        
+        window.onPageInit = function() {
+            loadScenes();
+            loadStats();
+            document.getElementById('searchInput').addEventListener('input', searchScenes);
+        };
+        
+        function loadScenes() {
+            fetch('/api/scene/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    scenes = rs.data || [];
+                    renderScenes(scenes);
+                }
+            });
+        }
+        
+        function loadStats() {
+            fetch('/api/scene/index', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    var spec = rs.data.spec || {};
+                    var sceneList = spec.scenes || [];
+                    var groups = spec.sceneGroups || [];
+                    
+                    var required = sceneList.filter(function(s) { return s.required; }).length;
+                    var caps = 0;
+                    sceneList.forEach(function(s) {
+                        if (s.capabilities) caps += s.capabilities.length;
+                    });
+                    
+                    document.getElementById('stat-total').textContent = sceneList.length;
+                    document.getElementById('stat-required').textContent = required;
+                    document.getElementById('stat-capabilities').textContent = caps;
+                    document.getElementById('stat-groups').textContent = groups.length;
+                }
+            });
+        }
+        
+        function renderScenes(data) {
+            var container = document.getElementById('sceneList');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--ns-secondary); padding: 40px;">暂无场景</div>';
+                return;
+            }
+            
+            var html = '';
+            data.forEach(function(s) {
+                var iconClass = getCategoryIconClass(s.category);
+                var badgeClass = s.required ? 'badge-required' : 'badge-optional';
+                var badgeText = s.required ? '必需' : '可选';
+                var caps = s.capabilities ? s.capabilities.length : 0;
+                
+                html += '<div class="scene-card" onclick="showSceneDetail(\'' + s.sceneId + '\')">' +
+                    '<div class="scene-header">' +
+                    '<div class="scene-icon ' + iconClass + '"><i class="' + getCategoryIcon(s.category) + '"></i></div>' +
+                    '<div style="flex: 1">' +
+                    '<div class="scene-title">' + s.name + '</div>' +
+                    '<div class="scene-id">' + s.sceneId + '</div>' +
+                    '</div>' +
+                    '<span class="scene-badge ' + badgeClass + '">' + badgeText + '</span>' +
+                    '</div>' +
+                    '<div class="scene-desc">' + (s.description || '').split('\n')[0] + '</div>' +
+                    '<div class="scene-meta">' +
+                    '<span><i class="ri-flashlight-line"></i> ' + caps + ' 能力</span>' +
+                    '<span><i class="ri-folder-line"></i> ' + s.category + '</span>' +
+                    '<span><i class="ri-code-line"></i> v' + s.version + '</span>' +
+                    '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function filterScenes(type) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-btn').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            var filtered = scenes;
+            if (type === 'required') {
+                filtered = scenes.filter(function(s) { return s.required; });
+            } else if (type === 'optional') {
+                filtered = scenes.filter(function(s) { return !s.required; });
+            }
+            renderScenes(filtered);
+        }
+        
+        function searchScenes() {
+            var keyword = document.getElementById('searchInput').value.toLowerCase();
+            var filtered = scenes.filter(function(s) {
+                return s.sceneId.toLowerCase().indexOf(keyword) >= 0 ||
+                       s.name.toLowerCase().indexOf(keyword) >= 0 ||
+                       (s.description && s.description.toLowerCase().indexOf(keyword) >= 0);
+            });
+            if (currentFilter !== 'all') {
+                var isRequired = currentFilter === 'required';
+                filtered = filtered.filter(function(s) { return s.required === isRequired; });
+            }
+            renderScenes(filtered);
+        }
+        
+        function showSceneDetail(sceneId) {
+            var scene = scenes.find(function(s) { return s.sceneId === sceneId; });
+            if (!scene) return;
+            
+            document.getElementById('modalTitle').textContent = scene.name;
+            
+            var html = '<div style="margin-bottom: 16px">' +
+                '<p style="color: var(--ns-secondary); line-height: 1.6">' + (scene.description || '') + '</p>' +
+                '</div>';
+            
+            if (scene.capabilities && scene.capabilities.length > 0) {
+                html += '<h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--ns-dark)">能力列表 (' + scene.capabilities.length + ')</h4>';
+                html += '<div class="capability-list">';
+                
+                scene.capabilities.forEach(function(cap) {
+                    html += '<div class="capability-item">' +
+                        '<div class="capability-header">' +
+                        '<span class="capability-name">' + cap.name + '</span>' +
+                        '<span class="capability-id">' + cap.capId + '</span>' +
+                        '</div>' +
+                        '<div class="capability-desc">' + (cap.description || '') + '</div>';
+                    
+                    if (cap.parameters && cap.parameters.length > 0) {
+                        html += '<div class="capability-params">';
+                        cap.parameters.forEach(function(p) {
+                            var reqClass = p.required ? 'param-required' : 'param-optional';
+                            var reqText = p.required ? '必需' : '可选';
+                            var defaultVal = p.default ? ' = ' + p.default : '';
+                            html += '<div class="param-row">' +
+                                '<span class="param-name">' + p.name + '</span>' +
+                                '<span class="param-type">' + p.type + '</span>' +
+                                '<span class="' + reqClass + '">[' + reqText + ']</span>' +
+                                '<span style="color: var(--ns-secondary)">' + (p.description || '') + defaultVal + '</span>' +
+                                '</div>';
+                        });
+                        html += '</div>';
+                    }
+                    
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+            
+            document.getElementById('modalBody').innerHTML = html;
+            document.getElementById('detailModal').classList.add('show');
+        }
+        
+        function hideDetailModal() {
+            document.getElementById('detailModal').classList.remove('show');
+        }
+        
+        function getCategoryIconClass(category) {
+            var classes = {
+                'infrastructure': 'infrastructure',
+                'security': 'security',
+                'communication': 'communication',
+                'business': 'business',
+                'development': 'development',
+                'identity': 'identity',
+                'authentication': 'security',
+                'messaging': 'communication',
+                'storage': 'infrastructure'
+            };
+            return classes[category] || 'infrastructure';
+        }
+        
+        function getCategoryIcon(category) {
+            var icons = {
+                'infrastructure': 'ri-database-2-line',
+                'security': 'ri-shield-line',
+                'communication': 'ri-message-3-line',
+                'business': 'ri-flow-chart',
+                'development': 'ri-code-line',
+                'identity': 'ri-user-settings-line',
+                'authentication': 'ri-lock-line',
+                'messaging': 'ri-send-plane-line',
+                'storage': 'ri-folder-line'
+            };
+            return icons[category] || 'ri-apps-line';
+        }
+    </script>
+</body>
+</html>

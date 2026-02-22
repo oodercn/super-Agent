@@ -1,9 +1,17 @@
+/*
+ * Copyright (c) 2024 Ooder Team
+ *
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
 package net.ooder.skillcenter.p2p;
 
 import net.ooder.skillcenter.distribution.SkillDistributionManager;
 import net.ooder.skillcenter.model.SkillContext;
 import net.ooder.skillcenter.model.SkillException;
 import net.ooder.skillcenter.model.SkillResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -11,9 +19,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * P2P技能执行器，用于在P2P网络中执行技能
+ * P2P Skill Executor - Used to execute skills in P2P network
  */
 public class P2PSkillExecutor {
+    private static final Logger logger = LoggerFactory.getLogger(P2PSkillExecutor.class);
+
     // 单例实例
     private static P2PSkillExecutor instance;
     
@@ -115,7 +125,7 @@ public class P2PSkillExecutor {
      */
     private SkillResult invokeRemoteSkill(Node node, String skillId, SkillContext context) throws SkillException {
         // 模拟远程技能调用
-        System.out.println("Invoking skill " + skillId + " on node " + node.getName() + " (" + node.getIp() + ":" + node.getPort() + ")");
+        logger.info("Invoking skill {} on node {} ({}:{})", skillId, node.getName(), node.getIp(), node.getPort());
         
         // 实际项目中，这里应该实现与远程节点的通信，调用其技能
         // 例如：使用REST API、gRPC或其他通信协议
@@ -126,12 +136,13 @@ public class P2PSkillExecutor {
         SkillResult result;
         if (cachedSkill != null) {
             // 使用缓存的技能执行
-            System.out.println("Using cached skill for execution");
+            logger.debug("Using cached skill for execution");
             result = cachedSkill.execute(context);
         } else {
             // 模拟技能执行结果
             result = new SkillResult();
             result.setMessage("Skill executed successfully on remote node: " + node.getName());
+            result.setStatus("SUCCESS");
             result.addData("skillId", skillId);
             result.addData("targetNode", node.getName());
             result.addData("targetNodeIp", node.getIp());

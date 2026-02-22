@@ -1,0 +1,82 @@
+apiVersion: scene.ooder.net/v1
+kind: SceneGroupDefinition
+
+metadata:
+  sceneGroupId: enterprise-nexus
+  name: Enterprise Nexus Platform
+  description: |
+    企业级Nexus平台默认场景组配置。
+    包含VFS、认证、消息、工作流、UI生成等核心场景。
+  version: "1.0.0"
+  author: Ooder Team
+  createdAt: "2026-02-18T00:00:00Z"
+
+spec:
+  type: enterprise
+  
+  scenes:
+    - sceneId: vfs
+      roleId: PRIMARY
+      required: true
+      autoStart: true
+      priority: 1
+      description: 虚拟文件系统，必选基础场景
+      
+    - sceneId: auth
+      roleId: PRIMARY
+      required: true
+      autoStart: true
+      priority: 2
+      description: 认证授权，必选安全场景
+      
+    - sceneId: msg
+      roleId: PRIMARY
+      required: false
+      autoStart: true
+      priority: 3
+      description: 消息服务，可选通信场景
+      
+    - sceneId: workflow
+      roleId: PRIMARY
+      required: false
+      autoStart: false
+      priority: 4
+      description: 工作流管理，可选业务场景
+      
+    - sceneId: a2ui
+      roleId: PRIMARY
+      required: false
+      autoStart: false
+      priority: 5
+      description: UI生成，可选开发场景
+
+  communicationProtocol: http
+  securityPolicy: jwt
+  allowParallel: true
+  
+  config:
+    maxMembers: 1000
+    sessionTimeout: 7200
+    enableAuditLog: true
+    enableMetrics: true
+    
+  dependencies:
+    - sceneId: auth
+      dependsOn:
+        - vfs
+    - sceneId: msg
+      dependsOn:
+        - auth
+    - sceneId: workflow
+      dependsOn:
+        - auth
+        - vfs
+        - msg
+    - sceneId: a2ui
+      dependsOn:
+        - vfs
+
+  deployment:
+    strategy: rolling
+    healthCheckInterval: 30
+    gracefulShutdownTimeout: 30

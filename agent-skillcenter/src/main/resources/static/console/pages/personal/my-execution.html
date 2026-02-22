@@ -3,352 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>执行管理 - SkillCenter</title>
-    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
-    <link href="../../assets/css/remixicon/remixicon.css" rel="stylesheet">
-    <script src="/skillcenter/console/js/menu.js"></script>
+    <title>我的执行历史 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
 </head>
 <body>
-    <div class="container">
-        <aside class="sidebar" id="sidebar">
-            <!-- 菜单将通过menu.js动态加载 -->
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
         </aside>
-        <main class="main-content">
-            <header class="header">
-                <h1>执行管理</h1>
-                <div class="user-info">
-                    <span class="user-name">用户</span>
-                    <i class="ri-user-line"></i>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">我的执行历史</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
                 </div>
             </header>
-            <div class="execution-content">
-                <div class="execution-actions">
-                    <button class="btn-primary" id="execute-skill-btn">
-                        <i class="ri-play-line"></i> 执行技能
-                    </button>
-                    <div class="execution-search">
-                        <input type="text" placeholder="搜索执行历史..." id="execution-search-input">
-                        <button class="btn-search">
-                            <i class="ri-search-line"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="execution-tabs">
-                    <button class="tab-btn active" data-tab="execute">执行技能</button>
-                    <button class="tab-btn" data-tab="history">执行历史</button>
-                    <button class="tab-btn" data-tab="result">执行结果</button>
-                </div>
-                <div class="tab-content" id="execute-tab">
-                    <div class="execute-skill-form">
-                        <div class="form-group">
-                            <label for="skill-select">选择技能</label>
-                            <select id="skill-select" required>
-                                <option value="">请选择技能</option>
-                                <option value="text-to-uppercase">文本转大写</option>
-                                <option value="json-formatter">JSON格式化</option>
-                                <option value="code-generator">代码生成</option>
-                            </select>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">执行记录</h3>
                         </div>
-                        <div class="form-group">
-                            <label for="skill-params">技能参数</label>
-                            <textarea id="skill-params" rows="4" placeholder='{"param1": "value1", "param2": "value2"}'></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>执行方式</label>
-                            <div class="execution-mode">
-                                <label class="radio-label">
-                                    <input type="radio" name="execution-mode" value="sync" checked>
-                                    <span>同步执行</span>
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="execution-mode" value="async">
-                                    <span>异步执行</span>
-                                </label>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>执行ID</th>
+                                            <th>技能名称</th>
+                                            <th>执行时间</th>
+                                            <th>状态</th>
+                                            <th>耗时</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>exec-001</td>
+                                            <td>天气查询</td>
+                                            <td>2024-01-15 10:30:00</td>
+                                            <td><span class="nx-badge nx-badge--success">成功</span></td>
+                                            <td>1.2s</td>
+                                            <td><button class="nx-btn nx-btn--ghost nx-btn--sm">详情</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                        </div>
-                        <button class="btn-primary" id="submit-execute-btn">
-                            <i class="ri-play-circle-line"></i> 执行
-                        </button>
-                    </div>
-                </div>
-                <div class="tab-content" id="history-tab" style="display: none;">
-                    <div class="execution-history" id="execution-history">
-                        <!-- 执行历史将通过JavaScript动态加载 -->
-                    </div>
-                </div>
-                <div class="tab-content" id="result-tab" style="display: none;">
-                    <div class="execution-result" id="execution-result">
-                        <div class="result-empty">
-                            <i class="ri-file-text-line"></i>
-                            <p>暂无执行结果</p>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
-    <!-- 执行结果模态框 -->
-    <div class="modal" id="result-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>执行结果</h2>
-                <button class="close-btn" id="close-result-modal">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="result-info">
-                    <div class="result-item">
-                        <span class="result-label">技能名称:</span>
-                        <span class="result-value" id="result-skill-name"></span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">执行状态:</span>
-                        <span class="result-value" id="result-status"></span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">执行时间:</span>
-                        <span class="result-value" id="result-time"></span>
-                    </div>
-                    <div class="result-item">
-                        <span class="result-label">执行结果:</span>
-                        <pre class="result-output" id="result-output"></pre>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-primary" id="close-result-btn">关闭</button>
-            </div>
-        </div>
-    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
     <script>
-        // 初始化菜单
-        initMenu('my-execution');
-        
-        // API基础URL
-        const API_BASE_URL = '/skillcenter/api';
-        
-        // 渲染执行历史
-        function renderExecutionHistory() {
-            const historyContainer = document.getElementById('execution-history');
-            historyContainer.innerHTML = '<div class="loading">加载中...</div>';
-            
-            // 调用API获取执行历史
-            fetch(`${API_BASE_URL}/execution/history`)
-                .then(response => response.json())
-                .then(data => {
-                    historyContainer.innerHTML = '';
-                    
-                    if (data && Object.keys(data).length > 0) {
-                        Object.entries(data).forEach(([executionId, result]) => {
-                            const historyItem = document.createElement('div');
-                            historyItem.className = 'execution-history-item';
-                            historyItem.innerHTML = `
-                                <div class="history-item-header">
-                                    <h4>技能执行</h4>
-                                    <span class="execution-status ${result.status}">${result.status === 'SUCCESS' ? '成功' : '失败'}</span>
-                                </div>
-                                <div class="history-item-body">
-                                    <div class="history-item-meta">
-                                        <span class="execution-id">执行ID: ${executionId}</span>
-                                        <span class="execution-time">执行时间: ${new Date().toLocaleString()}</span>
-                                        <span class="execution-duration">耗时: 0.5s</span>
-                                    </div>
-                                </div>
-                                <div class="history-item-footer">
-                                    <button class="btn-sm btn-primary view-result-btn" data-id="${executionId}">
-                                        <i class="ri-file-text-line"></i> 查看结果
-                                    </button>
-                                </div>
-                            `;
-                            historyContainer.appendChild(historyItem);
-                        });
-                    } else {
-                        historyContainer.innerHTML = '<div class="empty-state"><i class="ri-history-line"></i><p>暂无执行历史</p></div>';
-                    }
-                    
-                    // 绑定查看结果按钮事件
-                    document.querySelectorAll('.view-result-btn').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const executionId = this.getAttribute('data-id');
-                            viewExecutionResult(executionId);
-                        });
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching execution history:', error);
-                    historyContainer.innerHTML = '<div class="error">获取执行历史失败</div>';
-                });
-        }
-        
-        // 查看执行结果
-        function viewExecutionResult(executionId) {
-            // 调用API获取执行结果
-            fetch(`${API_BASE_URL}/execution/result/${executionId}`)
-                .then(response => response.json())
-                .then(result => {
-                    if (result) {
-                        document.getElementById('result-skill-name').textContent = '技能执行';
-                        document.getElementById('result-status').textContent = result.status === 'SUCCESS' ? '成功' : '失败';
-                        document.getElementById('result-time').textContent = new Date().toLocaleString();
-                        document.getElementById('result-output').textContent = JSON.stringify(result, null, 2);
-                        document.getElementById('result-modal').style.display = 'block';
-                    } else {
-                        alert('获取执行结果失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching execution result:', error);
-                    alert('获取执行结果失败');
-                });
-        }
-        
-        // 执行技能
-        function executeSkill() {
-            const skillSelect = document.getElementById('skill-select');
-            const skillParams = document.getElementById('skill-params');
-            const executionMode = document.querySelector('input[name="execution-mode"]:checked').value;
-            
-            if (!skillSelect.value) {
-                alert('请选择技能');
-                return;
-            }
-            
-            const skillId = skillSelect.value;
-            const skillName = skillSelect.options[skillSelect.selectedIndex].text;
-            const params = skillParams.value || '{}';
-            
-            let parameters = {};
-            try {
-                parameters = JSON.parse(params);
-            } catch (e) {
-                alert('参数格式错误，请输入有效的JSON');
-                return;
-            }
-            
-            const requestData = {
-                parameters: parameters
-            };
-            
-            // 显示加载状态
-            const submitBtn = document.getElementById('submit-execute-btn');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="ri-loader-2-line"></i> 执行中...';
-            submitBtn.disabled = true;
-            
-            // 调用API执行技能
-            fetch(`${API_BASE_URL}/execution/execute/${skillId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestData)
-            })
-            .then(response => response.json())
-            .then(result => {
-                // 恢复按钮状态
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-                
-                if (result) {
-                    // 显示结果
-                    document.getElementById('result-skill-name').textContent = skillName;
-                    document.getElementById('result-status').textContent = result.status === 'SUCCESS' ? '成功' : '失败';
-                    document.getElementById('result-time').textContent = new Date().toLocaleString();
-                    document.getElementById('result-output').textContent = JSON.stringify(result, null, 2);
-                    document.getElementById('result-modal').style.display = 'block';
-                    
-                    // 重新渲染执行历史
-                    renderExecutionHistory();
-                } else {
-                    alert('执行失败');
-                }
-            })
-            .catch(error => {
-                console.error('Error executing skill:', error);
-                // 恢复按钮状态
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-                alert('执行失败');
-            });
-        }
-        
-        // 加载技能列表到下拉框
-        function loadSkills() {
-            const skillSelect = document.getElementById('skill-select');
-            skillSelect.innerHTML = '<option value="">请选择技能</option>';
-            
-            // 调用API获取技能列表
-            fetch(`${API_BASE_URL}/skills`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const skills = data.data.items || [];
-                        skills.forEach(skill => {
-                            const option = document.createElement('option');
-                            option.value = skill.id;
-                            option.textContent = skill.name;
-                            skillSelect.appendChild(option);
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading skills:', error);
-                });
-        }
-        
-        // 事件监听
-        document.addEventListener('DOMContentLoaded', function() {
-            // 加载技能列表
-            loadSkills();
-            
-            // 标签切换
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    // 移除所有标签的active类
-                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                    // 添加当前标签的active类
-                    this.classList.add('active');
-                    // 隐藏所有内容
-                    document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
-                    // 显示当前标签的内容
-                    const tabId = this.getAttribute('data-tab');
-                    document.getElementById(`${tabId}-tab`).style.display = 'block';
-                    
-                    // 如果切换到历史标签，重新渲染执行历史
-                    if (tabId === 'history') {
-                        renderExecutionHistory();
-                    }
-                });
-            });
-            
-            // 执行技能按钮
-            document.getElementById('submit-execute-btn').addEventListener('click', executeSkill);
-            
-            // 关闭结果模态框
-            document.getElementById('close-result-modal').addEventListener('click', function() {
-                document.getElementById('result-modal').style.display = 'none';
-            });
-            
-            document.getElementById('close-result-btn').addEventListener('click', function() {
-                document.getElementById('result-modal').style.display = 'none';
-            });
-            
-            // 搜索执行历史
-            document.getElementById('execution-search-input').addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                const historyItems = document.querySelectorAll('.execution-history-item');
-                historyItems.forEach(item => {
-                    const skillName = item.querySelector('h4').textContent.toLowerCase();
-                    const executionId = item.querySelector('.execution-id').textContent.toLowerCase();
-                    if (skillName.includes(searchTerm) || executionId.includes(searchTerm)) {
-                        item.style.display = 'block';
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
-            });
-        });
+        window.onPageInit = function() {
+            console.log('我的执行历史页面初始化完成');
+        };
     </script>
 </body>
 </html>

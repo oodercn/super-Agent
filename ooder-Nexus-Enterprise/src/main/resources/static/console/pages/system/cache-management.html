@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>缓存管理 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .stat-card__icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .stat-card__icon.primary { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .stat-card__icon.success { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .stat-card__icon.warning { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .stat-card__icon.danger { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        
+        .stat-card__info h3 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .stat-card__info p {
+            margin: 4px 0 0 0;
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+        }
+        
+        .panel__header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .panel__body {
+            padding: 16px 20px;
+        }
+        
+        .cache-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .cache-item:last-child {
+            border-bottom: none;
+        }
+        
+        .cache-item__key {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            color: var(--ns-dark);
+        }
+        
+        .cache-item__meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .hit-rate-bar {
+            height: 12px;
+            background: var(--ns-border);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .hit-rate-bar__fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--ns-success), var(--nx-primary));
+            border-radius: 6px;
+            transition: width 0.3s;
+        }
+        
+        .action-btn {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .action-btn.danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--ns-danger);
+        }
+        
+        .action-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">缓存管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="cleanupCache()">
+                        <i class="ri-delete-bin-line"></i> 清理过期
+                    </button>
+                    <button class="nx-btn nx-btn--danger" onclick="clearCache()">
+                        <i class="ri-delete-bin-2-line"></i> 清空缓存
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="loadStats()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-card__icon primary">
+                                <i class="ri-database-2-line"></i>
+                            </div>
+                            <div class="stat-card__info">
+                                <h3 id="entryCount">-</h3>
+                                <p>缓存条目</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon success">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                            <div class="stat-card__info">
+                                <h3 id="hitRate">-</h3>
+                                <p>命中率</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon warning">
+                                <i class="ri-arrow-up-circle-line"></i>
+                            </div>
+                            <div class="stat-card__info">
+                                <h3 id="hitCount">-</h3>
+                                <p>命中次数</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon danger">
+                                <i class="ri-arrow-down-circle-line"></i>
+                            </div>
+                            <div class="stat-card__info">
+                                <h3 id="missCount">-</h3>
+                                <p>未命中次数</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="two-column">
+                        <div class="panel">
+                            <div class="panel__header">
+                                <span class="panel__title">命中率统计</span>
+                            </div>
+                            <div class="panel__body">
+                                <div style="margin-bottom: 16px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                        <span style="color: var(--ns-dark);">缓存命中率</span>
+                                        <span id="hitRateText" style="color: var(--ns-success);">-</span>
+                                    </div>
+                                    <div class="hit-rate-bar">
+                                        <div class="hit-rate-bar__fill" id="hitRateBar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                    <div>
+                                        <span style="color: var(--ns-secondary); font-size: 13px;">内存使用</span>
+                                        <p id="memoryUsed" style="margin: 4px 0 0 0; font-size: 18px; color: var(--ns-dark);">-</p>
+                                    </div>
+                                    <div>
+                                        <span style="color: var(--ns-secondary); font-size: 13px;">驱逐次数</span>
+                                        <p id="evictionCount" style="margin: 4px 0 0 0; font-size: 18px; color: var(--ns-dark);">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="panel">
+                            <div class="panel__header">
+                                <span class="panel__title">缓存键列表</span>
+                            </div>
+                            <div class="panel__body" style="max-height: 300px; overflow-y: auto;">
+                                <div id="cacheList">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadCacheList();
+        });
+
+        async function loadStats() {
+            try {
+                var response = await fetch('/api/cache/stats', { method: 'POST' });
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    var stats = rs.data;
+                    document.getElementById('entryCount').textContent = stats.entryCount || 0;
+                    document.getElementById('hitRate').textContent = (stats.hitRate || 0).toFixed(1) + '%';
+                    document.getElementById('hitCount').textContent = stats.hitCount || 0;
+                    document.getElementById('missCount').textContent = stats.missCount || 0;
+                    
+                    document.getElementById('hitRateText').textContent = (stats.hitRate || 0).toFixed(1) + '%';
+                    document.getElementById('hitRateBar').style.width = (stats.hitRate || 0) + '%';
+                    document.getElementById('memoryUsed').textContent = stats.memoryUsedFormatted || formatBytes(stats.memoryUsed);
+                    document.getElementById('evictionCount').textContent = stats.evictionCount || 0;
+                }
+            } catch (error) {
+                console.error('Load stats failed:', error);
+                loadMockStats();
+            }
+        }
+
+        function loadMockStats() {
+            document.getElementById('entryCount').textContent = '150';
+            document.getElementById('hitRate').textContent = '98.5%';
+            document.getElementById('hitCount').textContent = '9850';
+            document.getElementById('missCount').textContent = '150';
+            document.getElementById('hitRateText').textContent = '98.5%';
+            document.getElementById('hitRateBar').style.width = '98.5%';
+            document.getElementById('memoryUsed').textContent = '12.5 MB';
+            document.getElementById('evictionCount').textContent = '25';
+        }
+
+        async function loadCacheList() {
+            try {
+                var response = await fetch('/api/cache/keys', { method: 'POST' });
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    renderCacheList(rs.data);
+                }
+            } catch (error) {
+                console.error('Load cache list failed:', error);
+                renderMockCacheList();
+            }
+        }
+
+        function renderMockCacheList() {
+            var keys = ['user:admin', 'session:sess-001', 'config:app', 'cache:menu', 'data:topology'];
+            renderCacheList(keys);
+        }
+
+        function renderCacheList(keys) {
+            var html = '';
+            keys.forEach(function(key) {
+                html += '<div class="cache-item">';
+                html += '  <span class="cache-item__key">' + key + '</span>';
+                html += '  <div class="cache-item__meta">';
+                html += '    <button class="action-btn danger" onclick="removeKey(\'' + key + '\')">删除</button>';
+                html += '  </div>';
+                html += '</div>';
+            });
+            
+            document.getElementById('cacheList').innerHTML = html || '<div style="text-align: center; color: var(--ns-secondary);">暂无缓存</div>';
+        }
+
+        async function removeKey(key) {
+            if (!confirm('确定要删除此缓存吗？')) return;
+            
+            try {
+                var response = await fetch('/api/cache/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: key })
+                });
+                var rs = await response.json();
+                if (rs.success) {
+                    loadStats();
+                    loadCacheList();
+                }
+            } catch (error) {
+                console.error('Remove key failed:', error);
+            }
+        }
+
+        async function cleanupCache() {
+            try {
+                var response = await fetch('/api/cache/cleanup', { method: 'POST' });
+                var rs = await response.json();
+                if (rs.success) {
+                    alert('过期缓存已清理');
+                    loadStats();
+                    loadCacheList();
+                }
+            } catch (error) {
+                console.error('Cleanup failed:', error);
+            }
+        }
+
+        async function clearCache() {
+            if (!confirm('确定要清空所有缓存吗？这可能会影响系统性能。')) return;
+            
+            try {
+                var response = await fetch('/api/cache/clear', { method: 'POST' });
+                var rs = await response.json();
+                if (rs.success) {
+                    alert('缓存已清空');
+                    loadStats();
+                    loadCacheList();
+                }
+            } catch (error) {
+                console.error('Clear cache failed:', error);
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (!bytes) return '0 B';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+        }
+    </script>
+</body>
+</html>

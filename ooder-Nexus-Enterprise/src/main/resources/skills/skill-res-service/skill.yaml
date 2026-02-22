@@ -1,0 +1,118 @@
+apiVersion: ooder.io/v1
+kind: Skill
+metadata:
+  skillId: "skill-res-service"
+  skillName: "资源服务"
+  skillType: "SYSTEM_SERVICE"
+  version: "1.0.0"
+  description: "提供组织管理、场景策略、资源配置功能"
+  author: "ooder Team"
+  createdAt: "2026-02-18T00:00:00Z"
+  scene: "SYS"
+
+spec:
+  capabilities:
+    - capabilityId: "cap-org-mgmt"
+      capabilityName: "组织管理"
+      description: "组织架构、人员管理"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-get-org"
+          operationName: "获取组织"
+          description: "获取组织信息"
+          inputSchema:
+            type: "object"
+            properties:
+              orgId:
+                type: "string"
+          outputSchema:
+            type: "object"
+            properties:
+              orgId:
+                type: "string"
+              orgName:
+                type: "string"
+              parentId:
+                type: "string"
+        
+        - operationId: "op-get-persons"
+          operationName: "获取人员"
+          description: "获取组织人员列表"
+        
+        - operationId: "op-create-org"
+          operationName: "创建组织"
+          description: "创建组织单元"
+        
+        - operationId: "op-update-org"
+          operationName: "更新组织"
+          description: "更新组织信息"
+    
+    - capabilityId: "cap-scene-policy"
+      capabilityName: "场景策略"
+      description: "策略创建、应用"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-create-policy"
+          operationName: "创建策略"
+          description: "创建场景策略"
+        
+        - operationId: "op-apply-policy"
+          operationName: "应用策略"
+          description: "应用场景策略"
+        
+        - operationId: "op-get-policy"
+          operationName: "获取策略"
+          description: "获取策略详情"
+    
+    - capabilityId: "cap-resource-config"
+      capabilityName: "资源配置"
+      description: "配置管理、下发"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-create-config"
+          operationName: "创建配置"
+          description: "创建资源配置"
+        
+        - operationId: "op-apply-config"
+          operationName: "应用配置"
+          description: "应用资源配置"
+
+  config:
+    port: 8085
+    host: "0.0.0.0"
+    endpoints:
+      - path: "/api/org/orgManager/getOrgByID"
+        description: "获取组织"
+      - path: "/api/org/orgManager/getPersons"
+        description: "获取人员"
+      - path: "/api/resource/scene/policy"
+        description: "场景策略接口"
+      - path: "/api/resource/config"
+        description: "资源配置接口"
+    
+    dependencies:
+      - skillId: "skill-jds-server"
+        required: true
+        description: "服务注册发现"
+      - skillId: "skill-auth-service"
+        required: true
+        description: "认证服务"
+    
+    cache:
+      enabled: true
+      expireMinutes: 30
+      maxSize: 10000
+
+  healthCheck:
+    enabled: true
+    interval: 30000
+    timeout: 5000
+    endpoint: "/api/org/health"
+
+  resources:
+    cpu:
+      request: "250m"
+      limit: "1000m"
+    memory:
+      request: "256Mi"
+      limit: "1Gi"

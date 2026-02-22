@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>托管适配性检查 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .compatibility-score {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            margin: 0 auto;
+        }
+        .score-high { background: #d1fae5; color: #065f46; }
+        .score-medium { background: #fef3c7; color: #92400e; }
+        .score-low { background: #fee2e2; color: #991b1b; }
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            background: var(--nx-bg-elevated);
+        }
+        .check-item .status-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+        .check-item .status-icon.pass { background: #d1fae5; color: #065f46; }
+        .check-item .status-icon.warning { background: #fef3c7; color: #92400e; }
+        .check-item .status-icon.fail { background: #fee2e2; color: #991b1b; }
+        .check-item .check-content { flex: 1; }
+        .check-item .check-name { font-weight: 500; }
+        .check-item .check-message { font-size: 12px; color: var(--nx-text-secondary); }
+        .check-item .required-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: var(--nx-primary-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">托管适配性检查</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">选择技能进行检查</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-flex nx-gap-4">
+                                <select class="nx-select nx-flex-1" id="skill-selector">
+                                    <option value="">请选择要检查的技能</option>
+                                </select>
+                                <button class="nx-btn nx-btn--primary" onclick="checkCompatibility()">
+                                    <i class="ri-search-line"></i> 开始检查
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="result-panel" style="display: none;">
+                        <div class="nx-grid nx-grid-cols-3 nx-gap-6 nx-mb-6">
+                            <div class="nx-card">
+                                <div class="nx-card__body nx-text-center">
+                                    <div class="compatibility-score score-high" id="score-circle">
+                                        <span id="score-value">0%</span>
+                                    </div>
+                                    <div class="nx-text-secondary nx-mt-2">托管适配度</div>
+                                </div>
+                            </div>
+                            
+                            <div class="nx-card">
+                                <div class="nx-card__body nx-text-center">
+                                    <div class="nx-text-4xl nx-font-bold nx-text-primary" id="skill-name">-</div>
+                                    <div class="nx-text-secondary nx-mt-2">技能名称</div>
+                                    <div class="nx-badge nx-badge--secondary nx-mt-2" id="skill-type">-</div>
+                                </div>
+                            </div>
+                            
+                            <div class="nx-card">
+                                <div class="nx-card__body nx-text-center">
+                                    <div class="nx-text-4xl nx-font-bold" id="recommendation-text">-</div>
+                                    <div class="nx-text-secondary nx-mt-2">托管建议</div>
+                                    <button class="nx-btn nx-btn--primary nx-btn--sm nx-mt-4" onclick="createHostingInstance()">
+                                        <i class="ri-add-line"></i> 创建托管实例
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-6 nx-mb-6">
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h3 class="nx-card__title">检查项目</h3>
+                                </div>
+                                <div class="nx-card__body" id="checks-list">
+                                </div>
+                            </div>
+                            
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h3 class="nx-card__title">问题与建议</h3>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div id="issues-section" class="nx-mb-4">
+                                        <h4 class="nx-font-semibold nx-mb-2 nx-text-error">
+                                            <i class="ri-error-warning-line"></i> 存在问题
+                                        </h4>
+                                        <ul id="issues-list" class="nx-list nx-list--disc">
+                                        </ul>
+                                    </div>
+                                    <div id="suggestions-section">
+                                        <h4 class="nx-font-semibold nx-mb-2 nx-text-primary">
+                                            <i class="ri-lightbulb-line"></i> 优化建议
+                                        </h4>
+                                        <ul id="suggestions-list" class="nx-list nx-list--disc">
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('Hosting Compatibility 页面初始化完成');
+            loadSkills();
+        };
+        
+        let currentSkillId = null;
+        
+        async function loadSkills() {
+            try {
+                const result = await ApiClient.post('/api/skills/list', { pageNum: 1, pageSize: 100 });
+                if (result && result.data) {
+                    const select = document.getElementById('skill-selector');
+                    const skills = result.data.list || [];
+                    skills.forEach(s => {
+                        const option = document.createElement('option');
+                        option.value = s.id;
+                        option.textContent = s.name || s.id;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('加载技能列表失败:', error);
+            }
+        }
+        
+        async function checkCompatibility() {
+            const skillId = document.getElementById('skill-selector').value;
+            if (!skillId) {
+                ApiClient.showError('请选择要检查的技能');
+                return;
+            }
+            
+            currentSkillId = skillId;
+            
+            try {
+                ApiClient.showLoading('正在检查托管适配性...');
+                const result = await ApiClient.post('/api/hosting/compatibility/check', { skillId });
+                ApiClient.hideLoading();
+                
+                if (result && result.data) {
+                    renderResult(result.data);
+                    document.getElementById('result-panel').style.display = 'block';
+                }
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('检查失败: ' + error.message);
+            }
+        }
+        
+        function renderResult(data) {
+            const score = data.compatibilityScore || 0;
+            document.getElementById('score-value').textContent = score.toFixed(0) + '%';
+            
+            const scoreCircle = document.getElementById('score-circle');
+            scoreCircle.className = 'compatibility-score';
+            if (score >= 80) {
+                scoreCircle.classList.add('score-high');
+            } else if (score >= 50) {
+                scoreCircle.classList.add('score-medium');
+            } else {
+                scoreCircle.classList.add('score-low');
+            }
+            
+            document.getElementById('skill-name').textContent = data.skillName || data.skillId;
+            document.getElementById('skill-type').textContent = data.skillType || '未知类型';
+            
+            const recommendationText = document.getElementById('recommendation-text');
+            if (data.recommendation === 'recommended') {
+                recommendationText.textContent = '推荐托管';
+                recommendationText.className = 'nx-text-4xl nx-font-bold nx-text-success';
+            } else if (data.recommendation === 'conditional') {
+                recommendationText.textContent = '有条件托管';
+                recommendationText.className = 'nx-text-4xl nx-font-bold nx-text-warning';
+            } else {
+                recommendationText.textContent = '不建议托管';
+                recommendationText.className = 'nx-text-4xl nx-font-bold nx-text-error';
+            }
+            
+            renderChecks(data.checks || []);
+            renderIssues(data.issues || []);
+            renderSuggestions(data.suggestions || []);
+        }
+        
+        function renderChecks(checks) {
+            const container = document.getElementById('checks-list');
+            if (!checks || checks.length === 0) {
+                container.innerHTML = '<div class="nx-text-center nx-text-secondary nx-p-4">暂无检查结果</div>';
+                return;
+            }
+            
+            container.innerHTML = checks.map(check => `
+                <div class="check-item">
+                    <div class="status-icon ${check.status}">
+                        <i class="ri-${check.status === 'pass' ? 'check' : (check.status === 'warning' ? 'alert' : 'close')}-line"></i>
+                    </div>
+                    <div class="check-content">
+                        <div class="check-name">${check.name}</div>
+                        <div class="check-message">${check.message}</div>
+                    </div>
+                    ${check.required ? '<span class="required-badge">必须</span>' : ''}
+                </div>
+            `).join('');
+        }
+        
+        function renderIssues(issues) {
+            const container = document.getElementById('issues-list');
+            const section = document.getElementById('issues-section');
+            
+            if (!issues || issues.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            container.innerHTML = issues.map(issue => `<li>${issue}</li>`).join('');
+        }
+        
+        function renderSuggestions(suggestions) {
+            const container = document.getElementById('suggestions-list');
+            if (!suggestions || suggestions.length === 0) {
+                container.innerHTML = '<li class="nx-text-secondary">暂无优化建议</li>';
+                return;
+            }
+            
+            container.innerHTML = suggestions.map(s => `<li>${s}</li>`).join('');
+        }
+        
+        function createHostingInstance() {
+            if (!currentSkillId) {
+                ApiClient.showError('请先选择技能');
+                return;
+            }
+            window.location.href = 'admin/remote-hosting.html?skillId=' + currentSkillId;
+        }
+    </script>
+</body>
+</html>

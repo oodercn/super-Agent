@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>业务分类 - Nexus Console</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+<div class="nx-page">
+    <div class="nx-page-header">
+        <div class="nx-page-title">
+            <i class="ri-folder-line"></i>
+            <h1>业务分类</h1>
+        </div>
+        <div class="nx-page-actions">
+            <button class="btn btn-primary" onclick="createCategory()">
+                <i class="ri-add-line"></i> 新建分类
+            </button>
+        </div>
+    </div>
+    
+    <div class="nx-page-content">
+        <div class="category-container">
+            <div class="category-tree">
+                <div class="tree-header">
+                    <h3>分类树</h3>
+                </div>
+                <div id="categoryTree" class="tree-content"></div>
+            </div>
+            
+            <div class="category-detail">
+                <div class="detail-header">
+                    <h3 id="detailTitle">选择分类查看详情</h3>
+                </div>
+                <div id="detailContent" class="detail-content">
+                    <div class="empty-state">
+                        <i class="ri-folder-open-line"></i>
+                        <p>请从左侧选择一个分类</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.category-container { display: flex; gap: 20px; height: calc(100vh - 180px); }
+.category-tree { width: 320px; background: var(--ns-card-bg); border-radius: 12px; border: 1px solid var(--ns-border); display: flex; flex-direction: column; }
+.tree-header { padding: 16px; border-bottom: 1px solid var(--ns-border); }
+.tree-header h3 { margin: 0; color: var(--ns-dark); }
+.tree-content { flex: 1; overflow-y: auto; padding: 8px; }
+.category-detail { flex: 1; background: var(--ns-card-bg); border-radius: 12px; border: 1px solid var(--ns-border); display: flex; flex-direction: column; }
+.detail-header { padding: 16px; border-bottom: 1px solid var(--ns-border); }
+.detail-header h3 { margin: 0; color: var(--ns-dark); }
+.detail-content { flex: 1; padding: 16px; overflow-y: auto; }
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--ns-secondary); }
+.empty-state i { font-size: 48px; margin-bottom: 16px; }
+.tree-item { padding: 10px 12px; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
+.tree-item:hover { background: var(--ns-bg-hover); }
+.tree-item.active { background: rgba(59, 130, 246, 0.1); }
+.tree-item i { color: var(--nx-primary); }
+.tree-children { margin-left: 20px; }
+.info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.info-item { padding: 12px; background: var(--ns-input-bg); border-radius: 8px; }
+.info-item .label { font-size: 12px; color: var(--ns-secondary); margin-bottom: 4px; }
+.info-item .value { font-size: 14px; color: var(--ns-dark); font-weight: 500; }
+</style>
+
+<script>
+let categories = [];
+let selectedCategory = null;
+
+async function loadCategories() {
+    try {
+        const response = await fetch('/api/gateway/business/category/tree', { method: 'POST' });
+        const result = await response.json();
+        if (result.success) {
+            categories = result.data;
+            renderTree();
+        }
+    } catch (e) {
+        console.error('加载分类失败', e);
+    }
+}
+
+function renderTree() {
+    const container = document.getElementById('categoryTree');
+    container.innerHTML = renderTreeItems(categories);
+}
+
+function renderTreeItems(items, level = 0) {
+    if (!items || items.length === 0) return '';
+    return items.map(item => `
+        <div class="tree-item" style="padding-left: ${level * 16 + 12}px" onclick="selectCategory('${item.categoryId}')">
+            <i class="${item.icon || 'ri-folder-line'}"></i>
+            <span>${item.name}</span>
+        </div>
+        ${item.children && item.children.length > 0 ? `<div class="tree-children">${renderTreeItems(item.children, level + 1)}</div>` : ''}
+    `).join('');
+}
+
+async function selectCategory(id) {
+    document.querySelectorAll('.tree-item').forEach(el => el.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    
+    try {
+        const response = await fetch('/api/gateway/business/category/list', { method: 'POST' });
+        const result = await response.json();
+        if (result.success) {
+            selectedCategory = result.data.find(c => c.categoryId === id);
+            renderDetail();
+        }
+    } catch (e) {
+        console.error('加载分类详情失败', e);
+    }
+}
+
+function renderDetail() {
+    if (!selectedCategory) return;
+    
+    document.getElementById('detailTitle').textContent = selectedCategory.name;
+    document.getElementById('detailContent').innerHTML = `
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="label">分类ID</div>
+                <div class="value">${selectedCategory.categoryId}</div>
+            </div>
+            <div class="info-item">
+                <div class="label">分类编码</div>
+                <div class="value">${selectedCategory.code || '-'}</div>
+            </div>
+            <div class="info-item">
+                <div class="label">描述</div>
+                <div class="value">${selectedCategory.description || '-'}</div>
+            </div>
+            <div class="info-item">
+                <div class="label">状态</div>
+                <div class="value">${selectedCategory.status === 1 ? '启用' : '禁用'}</div>
+            </div>
+        </div>
+        <div style="margin-top: 20px; display: flex; gap: 8px;">
+            <button class="btn btn-primary" onclick="editCategory()">
+                <i class="ri-edit-line"></i> 编辑
+            </button>
+            <button class="btn btn-danger" onclick="deleteCategory()">
+                <i class="ri-delete-bin-line"></i> 删除
+            </button>
+        </div>
+    `;
+}
+
+function createCategory() {
+    alert('创建分类功能开发中');
+}
+
+function editCategory() {
+    alert('编辑分类功能开发中');
+}
+
+function deleteCategory() {
+    if (confirm('确定要删除此分类吗？')) {
+        alert('删除分类功能开发中');
+    }
+}
+
+loadCategories();
+</script>
+</body>
+</html>

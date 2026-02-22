@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Function Calling - AI 服务 - Nexus</title>
+    <link rel="stylesheet" href="../../css/remixicon.css">
+    <link rel="stylesheet" href="../../css/nexus-ui.css">
+    <link rel="stylesheet" href="../../css/pages/llm-functions.css">
+</head>
+<body>
+    <div class="functions-container">
+        <div class="functions-header">
+            <div class="functions-title">
+                <i class="ri-flashlight-line"></i>
+                <span>Function Calling</span>
+            </div>
+            <div class="functions-controls">
+                <button class="nx-btn nx-btn--primary" id="execute-btn">
+                    <i class="ri-play-line"></i>
+                    <span>执行</span>
+                </button>
+                <button class="nx-btn nx-btn--secondary" id="clear-btn">
+                    <i class="ri-delete-bin-line"></i>
+                    <span>清空</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="functions-content">
+            <div class="left-panel">
+                <div class="panel-section">
+                    <div class="section-header">
+                        <h3><i class="ri-code-box-line"></i> 函数定义</h3>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" id="add-function-btn">
+                            <i class="ri-add-line"></i>
+                            <span>添加函数</span>
+                        </button>
+                    </div>
+                    <div class="functions-list" id="functions-list">
+                        <div class="function-card" data-id="1">
+                            <div class="function-header">
+                                <span class="function-name">get_weather</span>
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm function-delete" title="删除">
+                                    <i class="ri-close-line"></i>
+                                </button>
+                            </div>
+                            <div class="function-body">
+                                <div class="form-group">
+                                    <label>函数名称</label>
+                                    <input type="text" class="form-input function-name-input" value="get_weather" placeholder="函数名称">
+                                </div>
+                                <div class="form-group">
+                                    <label>描述</label>
+                                    <input type="text" class="form-input function-desc-input" value="获取指定城市的天气信息" placeholder="函数描述">
+                                </div>
+                                <div class="form-group">
+                                    <label>参数 (JSON Schema)</label>
+                                    <textarea class="form-textarea function-params-input" rows="4" placeholder='{"type": "object", "properties": {...}}'>{
+  "type": "object",
+  "properties": {
+    "city": {
+      "type": "string",
+      "description": "城市名称"
+    }
+  },
+  "required": ["city"]
+}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="section-header">
+                        <h3><i class="ri-chat-3-line"></i> 提示词</h3>
+                    </div>
+                    <textarea class="form-textarea prompt-input" id="prompt-input" rows="4" placeholder="输入你的问题，例如：北京今天天气怎么样？"></textarea>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="panel-section result-section">
+                    <div class="section-header">
+                        <h3><i class="ri-terminal-box-line"></i> 执行结果</h3>
+                        <div class="result-status" id="result-status"></div>
+                    </div>
+                    
+                    <div class="result-container">
+                        <div class="result-placeholder" id="result-placeholder">
+                            <i class="ri-flashlight-line"></i>
+                            <p>定义函数并输入提示词后点击"执行"</p>
+                        </div>
+                        
+                        <div class="result-content" id="result-content" style="display: none;">
+                            <div class="result-block">
+                                <div class="result-label">
+                                    <i class="ri-user-line"></i>
+                                    <span>用户输入</span>
+                                </div>
+                                <div class="result-text" id="user-input-display"></div>
+                            </div>
+                            
+                            <div class="result-block" id="function-call-block" style="display: none;">
+                                <div class="result-label">
+                                    <i class="ri-code-line"></i>
+                                    <span>函数调用</span>
+                                </div>
+                                <div class="function-call-display" id="function-call-display"></div>
+                            </div>
+                            
+                            <div class="result-block" id="function-result-block" style="display: none;">
+                                <div class="result-label">
+                                    <i class="ri-database-2-line"></i>
+                                    <span>函数返回</span>
+                                </div>
+                                <div class="function-result-display" id="function-result-display"></div>
+                            </div>
+                            
+                            <div class="result-block">
+                                <div class="result-label">
+                                    <i class="ri-robot-line"></i>
+                                    <span>AI 响应</span>
+                                </div>
+                                <div class="result-text ai-response" id="ai-response"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="section-header">
+                        <h3><i class="ri-history-line"></i> 执行历史</h3>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" id="clear-history-btn">
+                            <i class="ri-delete-bin-line"></i>
+                            <span>清空</span>
+                        </button>
+                    </div>
+                    <div class="history-list" id="history-list">
+                        <div class="history-empty">暂无历史记录</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../js/nexus-ui.js"></script>
+    <script src="../../js/pages/llm-functions.js"></script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+.shared-files-container {
+            padding: 24px;
+        }
+
+        .search-filter {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .search-filter .form-input {
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .files-list {
+            min-height: 400px;
+        }
+
+        .loading-state,
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            color: var(--ns-secondary);
+        }
+
+        .loading-state i,
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .file-card {
+            background-color: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .file-card:hover {
+            border-color: var(--nx-primary);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+        }
+
+        .file-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .file-icon {
+            font-size: 32px;
+            color: var(--nx-primary);
+        }
+
+        .file-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .file-status.status-active {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: var(--ns-success);
+        }
+
+        .file-status.status-expired,
+        .file-status.status-cancelled {
+            background-color: rgba(148, 163, 184, 0.2);
+            color: var(--ns-secondary);
+        }
+
+        .file-info {
+            margin-bottom: 16px;
+        }
+
+        .file-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 13px;
+            color: var(--ns-secondary);
+            margin-bottom: 8px;
+        }
+
+        .file-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .file-size {
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+
+        .file-password {
+            font-size: 13px;
+            color: var(--ns-warning);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .file-actions .btn {
+            flex: 1;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: var(--ns-card-bg);
+            border-radius: var(--ns-radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 20px;
+            border-top: 1px solid var(--ns-border);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--ns-dark);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: var(--ns-radius);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            z-index: 10000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background-color: rgba(34, 197, 94, 0.9);
+            color: white;
+        }
+
+        .notification.error {
+            background-color: rgba(239, 68, 68, 0.9);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .search-filter {
+                flex-direction: column;
+            }
+
+            .search-filter .form-input {
+                max-width: none;
+            }
+
+            .files-grid {
+                grid-template-columns: 1fr;
+            }
+        }

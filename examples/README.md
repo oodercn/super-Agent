@@ -1,6 +1,6 @@
 # Super Agent Examples
 
-本目录包含 Ooder Super Agent 的示例项目，展示了不同类型 Agent 的实现方式。
+本目录包含 Ooder Super Agent 的示例项目，展示了不同类型 Agent 的实现方式。所有示例基于 Nexus 架构设计，提供了完整的场景管理、技能协调和网络通信能力。
 
 ## 示例项目列表
 
@@ -17,12 +17,15 @@
 - 心跳机制和状态管理
 - 命令转发和路由
 - 场景创建和管理
+- 安全认证和授权
 
 **技术栈**:
 - Spring Boot 2.7.0
 - Agent SDK 0.7.3
 - Scene Engine 0.7.3
 - Spring Data JPA + H2 Database
+
+**架构文档**: [MCP Agent Nexus 架构说明](mcp-agent/NEXUS_ARCHITECTURE.md)
 
 ### 2. Route Agent
 **目录**: `route-agent`
@@ -31,18 +34,24 @@
 - 路由 Agent，负责在 MCP Agent 和 End Agent 之间转发请求
 - 提供负载均衡和连接管理功能
 - 支持加密传输和证书验证
+- 集成 LLM 能力，提供智能路由决策
 
 **主要特性**:
 - 请求转发和路由
 - 负载均衡
 - 连接管理
 - 安全传输
+- 场景消息转发
+- 智能路由决策
 
 **技术栈**:
 - Spring Boot 2.7.0
 - Spring Cloud Gateway
 - Agent SDK 0.7.3
 - Scene Engine 0.7.3
+- LLM 集成
+
+**架构文档**: [Route Agent Nexus 架构说明](route-agent/NEXUS_ARCHITECTURE.md)
 
 #### 2.1 RPC Skill Example
 **目录**: `route-agent/rpc-skill-example`
@@ -59,6 +68,7 @@
 - 终端 Agent，负责执行具体的技能和任务
 - 提供本地能力和资源的管理
 - 支持与外部系统的集成
+- 实现 AI 桥接协议，与大语言模型交互
 
 **主要特性**:
 - 技能发现和调用
@@ -66,11 +76,16 @@
 - 场景加入和离开
 - 智能体注册和注销
 - VFS 同步和恢复
+- AI 桥接和自然语言处理
 
 **技术栈**:
 - Spring Boot 2.7.0
 - FastJSON
 - JWT Authentication
+- Agent SDK 0.7.3
+- Scene Engine 0.7.3
+
+**架构文档**: [End Agent Nexus 架构说明](end-agent/NEXUS_ARCHITECTURE.md)
 
 ## 快速开始
 
@@ -124,6 +139,24 @@ java -jar target/end-agent-1.0.0-SNAPSHOT.jar
 - **南下协议**: MCP Agent → Route Agent → End Agent
 - **技能调用协议**: 跨 Agent 的技能调用
 - **场景管理协议**: 场景的创建、加入和管理
+- **AI 桥接协议**: 与大语言模型的通信
+
+## 场景管理
+
+所有示例项目均包含完整的场景管理模块，支持:
+
+- 场景创建和配置
+- 场景加入和离开
+- 场景消息分发
+- 场景状态同步
+- 场景成员管理
+
+### 场景管理前端
+每个项目都提供了 Web 界面用于场景管理:
+
+- MCP Agent: `http://localhost:8080/console/pages/scenario-management.html`
+- Route Agent: `http://localhost:8081/console/pages/scenario-management.html`
+- End Agent: `http://localhost:8082/console/pages/scenario-management.html`
 
 ## 开发指南
 
@@ -132,11 +165,19 @@ java -jar target/end-agent-1.0.0-SNAPSHOT.jar
 2. 注册到技能管理器
 3. 配置技能元数据
 4. 实现技能调用逻辑
+5. 测试技能调用
 
 ### 如何扩展协议
 1. 参考 `protocol-release/v0.7.3` 目录下的协议文档
 2. 在对应模块中实现协议扩展
 3. 更新相关配置和依赖
+4. 测试协议兼容性
+
+### 如何集成场景管理
+1. 参考场景管理服务的实现
+2. 集成 SceneManagementService/Manager
+3. 实现场景相关的业务逻辑
+4. 测试场景功能
 
 ## 故障排查
 
@@ -158,13 +199,17 @@ java -jar target/end-agent-1.0.0-SNAPSHOT.jar
    - 检查场景权限配置
    - 验证场景参数是否完整
 
+5. **LLM 集成失败**
+   - 检查 LLM 服务配置
+   - 验证网络连接和 API 密钥
+
 ### 日志位置
 - Spring Boot 日志: `logs/` 目录
 - Agent 日志: `agent-logs/` 目录
 
 ## 版本历史
 
-- **v0.7.3** (2026-02) - 基于 Super Agent v0.7.3 协议的完整示例
+- **v0.7.3** (2026-02) - 基于 Super Agent v0.7.3 协议的完整示例，集成 Nexus 架构
 - **v0.7.0** (2026-01) - 初始版本，基于 v0.7.0 协议
 
 ## 联系我们

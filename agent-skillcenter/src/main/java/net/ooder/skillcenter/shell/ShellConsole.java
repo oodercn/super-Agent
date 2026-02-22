@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2024 Ooder Team
+ *
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
 package net.ooder.skillcenter.shell;
 
 import java.io.BufferedReader;
@@ -7,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 控制台主类，负责初始化和启动控制台
+ * Shell Console Main Class - Initializes and runs the command line interface
  */
 public class ShellConsole {
     

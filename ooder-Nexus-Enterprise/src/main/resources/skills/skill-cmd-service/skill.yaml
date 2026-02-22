@@ -1,0 +1,126 @@
+apiVersion: ooder.io/v1
+kind: Skill
+metadata:
+  skillId: "skill-cmd-service"
+  skillName: "命令服务"
+  skillType: "SYSTEM_SERVICE"
+  version: "1.0.0"
+  description: "提供命令下发、任务调度、执行追踪功能"
+  author: "ooder Team"
+  createdAt: "2026-02-18T00:00:00Z"
+  scene: "SYS"
+
+spec:
+  capabilities:
+    - capabilityId: "cap-command-dispatch"
+      capabilityName: "命令下发"
+      description: "单播、广播命令"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-send-command"
+          operationName: "发送命令"
+          description: "发送命令到指定Agent"
+          inputSchema:
+            type: "object"
+            properties:
+              targetId:
+                type: "string"
+              commandType:
+                type: "string"
+              payload:
+                type: "object"
+              timeout:
+                type: "integer"
+          outputSchema:
+            type: "object"
+            properties:
+              commandId:
+                type: "string"
+              status:
+                type: "string"
+        
+        - operationId: "op-broadcast-command"
+          operationName: "广播命令"
+          description: "广播命令到多个Agent"
+        
+        - operationId: "op-get-command-status"
+          operationName: "获取命令状态"
+          description: "获取命令执行状态"
+    
+    - capabilityId: "cap-task-schedule"
+      capabilityName: "任务调度"
+      description: "定时任务、任务队列"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-schedule-task"
+          operationName: "调度任务"
+          description: "创建定时任务"
+        
+        - operationId: "op-cancel-task"
+          operationName: "取消任务"
+          description: "取消定时任务"
+        
+        - operationId: "op-get-task-status"
+          operationName: "获取任务状态"
+          description: "获取任务执行状态"
+    
+    - capabilityId: "cap-execution-track"
+      capabilityName: "执行追踪"
+      description: "状态查询、日志记录"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-get-execution-log"
+          operationName: "获取执行日志"
+          description: "获取命令执行日志"
+        
+        - operationId: "op-query-executions"
+          operationName: "查询执行记录"
+          description: "查询历史执行记录"
+
+  config:
+    port: 8083
+    host: "0.0.0.0"
+    endpoints:
+      - path: "/api/north/command/send"
+        description: "命令下发接口"
+      - path: "/api/north/command/broadcast"
+        description: "广播命令接口"
+      - path: "/api/north/command/status"
+        description: "命令状态接口"
+      - path: "/api/north/task/schedule"
+        description: "任务调度接口"
+    
+    dependencies:
+      - skillId: "skill-jds-server"
+        required: true
+        description: "服务注册发现"
+      - skillId: "skill-agent-service"
+        required: true
+        description: "Agent服务"
+      - skillId: "skill-msg-service"
+        required: true
+        description: "消息服务"
+    
+    command:
+      maxQueueSize: 10000
+      defaultTimeout: 30000
+      retryCount: 3
+      retryInterval: 1000
+    
+    task:
+      maxConcurrent: 100
+      threadPoolSize: 16
+
+  healthCheck:
+    enabled: true
+    interval: 30000
+    timeout: 5000
+    endpoint: "/api/north/command/health"
+
+  resources:
+    cpu:
+      request: "250m"
+      limit: "1000m"
+    memory:
+      request: "256Mi"
+      limit: "1Gi"

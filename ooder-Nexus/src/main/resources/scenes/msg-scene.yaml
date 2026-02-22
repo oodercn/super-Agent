@@ -1,0 +1,185 @@
+apiVersion: scene.ooder.net/v1
+kind: SceneDefinition
+
+metadata:
+  sceneId: msg
+  name: Message Service
+  description: |
+    消息服务场景，基于ooder-common 2.0的msg模块。
+    提供消息推送、消息队列、消息路由等功能。
+  version: "2.0.0"
+  suite: communication
+  category: messaging
+  author: Ooder Team
+  createdAt: "2026-02-18T00:00:00Z"
+
+spec:
+  type: primary
+  required: false
+  priority: 1
+  
+  capabilities:
+    - capId: msg-send
+      name: Send Message
+      description: 发送消息
+      parameters:
+        - name: channel
+          type: string
+          required: true
+          description: 渠道类型
+        - name: receivers
+          type: list
+          required: true
+          description: 接收者列表
+        - name: title
+          type: string
+          required: false
+          description: 消息标题
+        - name: body
+          type: string
+          required: true
+          description: 消息内容
+      returnType: object
+      async: true
+      mapsTo: Msg
+      
+    - capId: msg-batch
+      name: Batch Send
+      description: 批量发送消息
+      parameters:
+        - name: messages
+          type: list
+          required: true
+          description: 消息列表
+      returnType: object
+      async: true
+      
+    - capId: msg-template
+      name: Use Template
+      description: 使用模板发送消息
+      parameters:
+        - name: templateId
+          type: string
+          required: true
+          description: 模板ID
+        - name: params
+          type: object
+          required: true
+          description: 模板参数
+        - name: receivers
+          type: list
+          required: true
+          description: 接收者列表
+      returnType: object
+      async: true
+      
+    - capId: msg-subscribe
+      name: Subscribe Topic
+      description: 订阅消息主题
+      parameters:
+        - name: topic
+          type: string
+          required: true
+          description: 主题名称
+        - name: callback
+          type: string
+          required: true
+          description: 回调地址
+      returnType: boolean
+      async: false
+      mapsTo: TopicMsg
+      
+    - capId: msg-status
+      name: Get Message Status
+      description: 获取消息状态
+      parameters:
+        - name: msgId
+          type: string
+          required: true
+          description: 消息ID
+      returnType: object
+      async: false
+      mapsTo: Msg.getStatus
+      
+    - capId: msg-alarm
+      name: Send Alarm
+      description: 发送告警消息
+      parameters:
+        - name: level
+          type: string
+          required: true
+          description: 告警级别
+        - name: message
+          type: string
+          required: true
+          description: 告警内容
+        - name: receivers
+          type: list
+          required: true
+          description: 接收者列表
+      returnType: object
+      async: true
+      mapsTo: AlarmMsg
+
+  dependencies:
+    scenes:
+      - sceneId: auth
+        required: true
+    skills:
+      - skillId: skill-msg
+        required: true
+        version: ">=2.0.0"
+
+  config:
+    channels:
+      email:
+        enabled: true
+        host: ${SMTP_HOST:smtp.example.com}
+        port: ${SMTP_PORT:587}
+        username: ${SMTP_USERNAME}
+        password: ${SMTP_PASSWORD}
+      sms:
+        enabled: false
+        provider: aliyun
+        accessKeyId: ${ALIYUN_ACCESS_KEY}
+        accessKeySecret: ${ALIYUN_ACCESS_SECRET}
+      wechat:
+        enabled: false
+        corpId: ${WECHAT_CORP_ID}
+        agentId: ${WECHAT_AGENT_ID}
+        secret: ${WECHAT_SECRET}
+      dingtalk:
+        enabled: false
+        appKey: ${DINGTALK_APP_KEY}
+        appSecret: ${DINGTALK_APP_SECRET}
+      feishu:
+        enabled: false
+        appId: ${FEISHU_APP_ID}
+        appSecret: ${FEISHU_APP_SECRET}
+    
+    retryPolicy:
+      maxRetries: 3
+      retryInterval: 1000
+      backoffMultiplier: 2
+    
+    rateLimit:
+      enabled: true
+      maxPerSecond: 100
+      maxPerMinute: 5000
+
+  commonModule:
+    groupId: net.ooder
+    artifactId: ooder-common-client
+    version: "2.0.0"
+    mainClass: net.ooder.msg.MsgAdapter
+
+  deployment:
+    singleton: false
+    autoStart: true
+    healthCheck:
+      path: /api/health
+      interval: 30
+      timeout: 10
+    resources:
+      cpu: "500m"
+      memory: "512Mi"

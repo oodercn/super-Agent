@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络状态 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-online {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: var(--nx-success);
+        }
+        .status-offline {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--nx-danger);
+        }
+        .signal-strength {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .signal-bar {
+            width: 6px;
+            background-color: var(--nx-primary);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">网络状态</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-3 nx-mb-6">
+                        <div class="nx-card">
+                            <div class="nx-card__body">
+                                <h3 class="nx-text-secondary nx-text-sm nx-mb-2">网络状态</h3>
+                                <div class="nx-flex nx-items-center nx-gap-3">
+                                    <div class="status-indicator status-online">
+                                        <span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--nx-success);"></span>
+                                        在线
+                                    </div>
+                                    <span class="nx-text-secondary nx-text-sm">所有设备正常连接</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body">
+                                <h3 class="nx-text-secondary nx-text-sm nx-mb-2">连接设备</h3>
+                                <div class="nx-flex nx-gap-4">
+                                    <div>
+                                        <p class="nx-text-secondary nx-text-sm nx-mb-1">总设备数</p>
+                                        <p class="nx-text-2xl nx-font-bold">15</p>
+                                    </div>
+                                    <div>
+                                        <p class="nx-text-secondary nx-text-sm nx-mb-1">活跃设备</p>
+                                        <p class="nx-text-2xl nx-font-bold nx-text-success">12</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body">
+                                <h3 class="nx-text-secondary nx-text-sm nx-mb-2">网络延迟</h3>
+                                <div class="nx-flex nx-gap-4">
+                                    <div>
+                                        <p class="nx-text-secondary nx-text-sm nx-mb-1">平均延迟</p>
+                                        <p class="nx-text-2xl nx-font-bold">12ms</p>
+                                    </div>
+                                    <div>
+                                        <p class="nx-text-secondary nx-text-sm nx-mb-1">丢包率</p>
+                                        <p class="nx-text-2xl nx-font-bold nx-text-success">0%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">网络设备状态</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <table class="nx-table">
+                                <thead>
+                                    <tr>
+                                        <th>设备名称</th>
+                                        <th>IP 地址</th>
+                                        <th>MAC 地址</th>
+                                        <th>状态</th>
+                                        <th>信号强度</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>主路由器</td>
+                                        <td>192.168.1.1</td>
+                                        <td>00:11:22:33:44:55</td>
+                                        <td><div class="status-indicator status-online"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--nx-success);"></span>在线</div></td>
+                                        <td>
+                                            <div class="signal-strength">
+                                                <div class="signal-bar" style="height: 20px;"></div>
+                                                <div class="signal-bar" style="height: 20px;"></div>
+                                                <div class="signal-bar" style="height: 20px;"></div>
+                                                <div class="signal-bar" style="height: 20px;"></div>
+                                            </div>
+                                        </td>
+                                        <td><button class="nx-btn nx-btn--sm nx-btn--secondary">详情</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>笔记本电脑</td>
+                                        <td>192.168.1.101</td>
+                                        <td>AA:BB:CC:DD:EE:01</td>
+                                        <td><div class="status-indicator status-online"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--nx-success);"></span>在线</div></td>
+                                        <td>
+                                            <div class="signal-strength">
+                                                <div class="signal-bar" style="height: 20px;"></div>
+                                                <div class="signal-bar" style="height: 16px;"></div>
+                                                <div class="signal-bar" style="height: 12px;"></div>
+                                            </div>
+                                        </td>
+                                        <td><button class="nx-btn nx-btn--sm nx-btn--secondary">详情</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>打印机</td>
+                                        <td>192.168.1.30</td>
+                                        <td>22:33:44:55:66:77</td>
+                                        <td><div class="status-indicator status-offline"><span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--nx-danger);"></span>离线</div></td>
+                                        <td>-</td>
+                                        <td><button class="nx-btn nx-btn--sm nx-btn--secondary">详情</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">网络诊断</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-flex nx-gap-3 nx-mb-4">
+                                <button class="nx-btn nx-btn--primary" onclick="runDiagnostic()">
+                                    <i class="ri-refresh-line"></i> 运行诊断
+                                </button>
+                                <button class="nx-btn nx-btn--secondary" onclick="clearResults()">
+                                    <i class="ri-delete-bin-line"></i> 清除结果
+                                </button>
+                            </div>
+                            <div class="nx-card" style="background: var(--nx-bg-elevated);" id="diagnostic-result">
+                                <div class="nx-card__body">
+                                    <h4 class="nx-mb-3">诊断结果</h4>
+                                    <p class="nx-text-secondary">点击 "运行诊断" 按钮开始网络诊断</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/network-status.js"></script>
+</body>
+</html>

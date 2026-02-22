@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络设置 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .form-checkbox input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">网络设置</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">基本网络设置</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="form-row">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">网络名称 (SSID)</label>
+                                    <input type="text" class="nx-input" id="network-name" placeholder="请输入网络名称" value="HomeLAN">
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">网络模式</label>
+                                    <select class="nx-input" id="network-mode">
+                                        <option value="2.4ghz">2.4GHz</option>
+                                        <option value="5ghz" selected>5GHz</option>
+                                        <option value="dual">双频</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">信道</label>
+                                    <select class="nx-input" id="channel">
+                                        <option value="auto" selected>自动</option>
+                                        <option value="1">1</option>
+                                        <option value="6">6</option>
+                                        <option value="11">11</option>
+                                    </select>
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">安全模式</label>
+                                    <select class="nx-input" id="security-mode">
+                                        <option value="wpa2" selected>WPA2-PSK</option>
+                                        <option value="wpa3">WPA3-PSK</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">密码</label>
+                                    <input type="password" class="nx-input" id="network-password" placeholder="请输入网络密码" value="********">
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">确认密码</label>
+                                    <input type="password" class="nx-input" id="confirm-password" placeholder="请再次输入密码" value="********">
+                                </div>
+                            </div>
+                            <div class="form-checkbox">
+                                <input type="checkbox" id="hide-ssid" checked>
+                                <label for="hide-ssid">隐藏网络名称 (SSID)</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">IP 设置</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="form-row">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">IP 分配模式</label>
+                                    <select class="nx-input" id="ip-mode">
+                                        <option value="dhcp" selected>DHCP 自动分配</option>
+                                        <option value="static">静态 IP</option>
+                                    </select>
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">起始 IP 地址</label>
+                                    <input type="text" class="nx-input" id="start-ip" placeholder="请输入起始 IP" value="192.168.1.100">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">结束 IP 地址</label>
+                                    <input type="text" class="nx-input" id="end-ip" placeholder="请输入结束 IP" value="192.168.1.200">
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">子网掩码</label>
+                                    <input type="text" class="nx-input" id="subnet-mask" placeholder="请输入子网掩码" value="255.255.255.0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-flex nx-gap-3">
+                        <button class="nx-btn nx-btn--secondary" onclick="resetSettings()">重置</button>
+                        <button class="nx-btn nx-btn--primary" onclick="saveSettings()">保存设置</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/network-settings.js"></script>
+</body>
+</html>

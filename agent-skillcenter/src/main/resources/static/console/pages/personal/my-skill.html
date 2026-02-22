@@ -4,417 +4,98 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的技能 - SkillCenter</title>
-    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
-    <link href="../../assets/css/remixicon/remixicon.css" rel="stylesheet">
-    <script src="/skillcenter/console/js/menu.js"></script>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
 </head>
 <body>
-    <div class="container">
-        <aside class="sidebar" id="sidebar">
-            <!-- 菜单将通过menu.js动态加载 -->
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
         </aside>
-        <main class="main-content">
-            <header class="header">
-                <h1>我的技能</h1>
-                <div class="user-info">
-                    <span class="user-name">用户</span>
-                    <i class="ri-user-line"></i>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">我的技能</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
                 </div>
             </header>
-            <div class="skill-content">
-                <div class="skill-actions">
-                    <button class="btn-primary" id="publish-skill-btn">
-                        <i class="ri-upload-line"></i> 发布技能
-                    </button>
-                    <div class="skill-search">
-                        <input type="text" placeholder="搜索技能..." id="skill-search-input">
-                        <button class="btn-search">
-                            <i class="ri-search-line"></i>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-flex nx-justify-between nx-items-center nx-mb-6">
+                        <div class="nx-flex nx-gap-3">
+                            <input type="text" class="nx-input" placeholder="搜索技能..." style="width: 300px;">
+                            <button class="nx-btn nx-btn--primary">
+                                <i class="ri-search-line"></i> 搜索
+                            </button>
+                        </div>
+                        <button class="nx-btn nx-btn--primary">
+                            <i class="ri-upload-line"></i> 发布技能
                         </button>
                     </div>
-                </div>
-                <div class="skill-list" id="skill-list">
-                    <!-- 技能列表将通过JavaScript动态加载 -->
+                    
+                    <div class="nx-grid nx-grid-cols-3 nx-gap-6" id="skill-list">
+                        <div class="nx-card">
+                            <div class="nx-card__body">
+                                <div class="nx-flex nx-items-center nx-gap-3 nx-mb-3">
+                                    <i class="ri-cloud-sun-line nx-text-2xl nx-text-primary"></i>
+                                    <div>
+                                        <h4 class="nx-font-semibold">天气查询</h4>
+                                        <span class="nx-badge nx-badge--success">已发布</span>
+                                    </div>
+                                </div>
+                                <p class="nx-text-secondary nx-text-sm nx-mb-4">基于第三方API的天气查询技能</p>
+                                <div class="nx-flex nx-gap-2">
+                                    <button class="nx-btn nx-btn--secondary nx-btn--sm">编辑</button>
+                                    <button class="nx-btn nx-btn--primary nx-btn--sm">执行</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-card">
+                            <div class="nx-card__body">
+                                <div class="nx-flex nx-items-center nx-gap-3 nx-mb-3">
+                                    <i class="ri-line-chart-line nx-text-2xl nx-text-success"></i>
+                                    <div>
+                                        <h4 class="nx-font-semibold">股票分析</h4>
+                                        <span class="nx-badge nx-badge--success">已发布</span>
+                                    </div>
+                                </div>
+                                <p class="nx-text-secondary nx-text-sm nx-mb-4">基于第三方API的股票查询技能</p>
+                                <div class="nx-flex nx-gap-2">
+                                    <button class="nx-btn nx-btn--secondary nx-btn--sm">编辑</button>
+                                    <button class="nx-btn nx-btn--primary nx-btn--sm">执行</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
-    <!-- 发布技能模态框 -->
-    <div class="modal" id="publish-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>发布技能</h2>
-                <button class="close-btn" id="close-publish-modal">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="publish-skill-form">
-                    <div class="form-group">
-                        <label for="skill-id">技能ID</label>
-                        <input type="text" id="skill-id" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="skill-name">技能名称</label>
-                        <input type="text" id="skill-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="skill-description">技能描述</label>
-                        <textarea id="skill-description" rows="3" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="skill-category">技能分类</label>
-                        <select id="skill-category" required>
-                            <option value="development">开发工具</option>
-                            <option value="utilities">实用工具</option>
-                            <option value="analysis">数据分析</option>
-                            <option value="automation">自动化</option>
-                            <option value="other">其他</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="skill-version">版本</label>
-                        <input type="text" id="skill-version" value="1.0.0" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="skill-download-url">下载地址</label>
-                        <input type="text" id="skill-download-url" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="cancel-publish-btn">取消</button>
-                <button class="btn-primary" id="submit-publish-btn">发布</button>
-            </div>
-        </div>
-    </div>
-    <!-- 更新技能模态框 -->
-    <div class="modal" id="update-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>更新技能</h2>
-                <button class="close-btn" id="close-update-modal">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="update-skill-form">
-                    <input type="hidden" id="update-skill-id">
-                    <div class="form-group">
-                        <label for="update-skill-name">技能名称</label>
-                        <input type="text" id="update-skill-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="update-skill-description">技能描述</label>
-                        <textarea id="update-skill-description" rows="3" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="update-skill-category">技能分类</label>
-                        <select id="update-skill-category" required>
-                            <option value="development">开发工具</option>
-                            <option value="utilities">实用工具</option>
-                            <option value="analysis">数据分析</option>
-                            <option value="automation">自动化</option>
-                            <option value="other">其他</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="update-skill-version">版本</label>
-                        <input type="text" id="update-skill-version" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="update-skill-download-url">下载地址</label>
-                        <input type="text" id="update-skill-download-url" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="cancel-update-btn">取消</button>
-                <button class="btn-primary" id="submit-update-btn">更新</button>
-            </div>
-        </div>
-    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
     <script>
-        // 初始化菜单
-        initMenu('my-skills');
-        
-        // API基础URL
-        const API_BASE_URL = '/skillcenter/api';
-        
-        // 渲染技能列表
-        function renderSkillList() {
-            const skillList = document.getElementById('skill-list');
-            skillList.innerHTML = '<div class="loading">加载中...</div>';
-            
-            // 调用API获取技能列表
-            fetch(`${API_BASE_URL}/skills`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const skills = data.data.items || [];
-                        skillList.innerHTML = '';
-                        
-                        skills.forEach(skill => {
-                            const skillCard = document.createElement('div');
-                            skillCard.className = 'skill-card';
-                            skillCard.innerHTML = `
-                                <div class="skill-card-header">
-                                    <h3>${skill.name}</h3>
-                                    <span class="skill-category">${getCategoryName(skill.category || 'other')}</span>
-                                </div>
-                                <div class="skill-card-body">
-                                    <p>${skill.description || ''}</p>
-                                    <div class="skill-meta">
-                                        <span class="skill-version">版本: 1.0.0</span>
-                                        <span class="skill-created">创建于: ${skill.createdAt ? new Date(skill.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]}</span>
-                                        <span class="skill-executed">执行: 0次</span>
-                                    </div>
-                                </div>
-                                <div class="skill-card-footer">
-                                    <button class="btn-sm btn-primary execute-skill-btn" data-id="${skill.id}">
-                                        <i class="ri-play-line"></i> 执行
-                                    </button>
-                                    <button class="btn-sm btn-secondary update-skill-btn" data-id="${skill.id}">
-                                        <i class="ri-edit-line"></i> 更新
-                                    </button>
-                                    <button class="btn-sm btn-danger delete-skill-btn" data-id="${skill.id}">
-                                        <i class="ri-delete-line"></i> 删除
-                                    </button>
-                                </div>
-                            `;
-                            skillList.appendChild(skillCard);
-                        });
-                        
-                        // 绑定事件
-                        bindSkillEvents();
-                    } else {
-                        skillList.innerHTML = '<div class="error">获取技能列表失败</div>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching skills:', error);
-                    skillList.innerHTML = '<div class="error">获取技能列表失败</div>';
-                });
-        }
-        
-        // 获取分类名称
-        function getCategoryName(category) {
-            const categories = {
-                'development': '开发工具',
-                'utilities': '实用工具',
-                'analysis': '数据分析',
-                'automation': '自动化',
-                'other': '其他'
-            };
-            return categories[category] || category;
-        }
-        
-        // 绑定技能事件
-        function bindSkillEvents() {
-            // 执行技能按钮
-            document.querySelectorAll('.execute-skill-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const skillId = this.getAttribute('data-id');
-                    executeSkill(skillId);
-                });
-            });
-            
-            // 更新技能按钮
-            document.querySelectorAll('.update-skill-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const skillId = this.getAttribute('data-id');
-                    openUpdateModal(skillId);
-                });
-            });
-            
-            // 删除技能按钮
-            document.querySelectorAll('.delete-skill-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const skillId = this.getAttribute('data-id');
-                    deleteSkill(skillId);
-                });
-            });
-        }
-        
-        // 执行技能
-        function executeSkill(skillId) {
-            alert(`执行技能: ${skillId}`);
-            // 这里可以添加实际的执行逻辑
-        }
-        
-        // 打开更新模态框
-        function openUpdateModal(skillId) {
-            // 调用API获取技能详情
-            fetch(`${API_BASE_URL}/skills/${skillId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const skill = data.data;
-                        document.getElementById('update-skill-id').value = skill.id;
-                        document.getElementById('update-skill-name').value = skill.name;
-                        document.getElementById('update-skill-description').value = skill.description || '';
-                        document.getElementById('update-skill-category').value = skill.category || 'other';
-                        document.getElementById('update-skill-version').value = '1.0.0';
-                        document.getElementById('update-skill-download-url').value = '';
-                        document.getElementById('update-modal').style.display = 'block';
-                    } else {
-                        alert('获取技能详情失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching skill details:', error);
-                    alert('获取技能详情失败');
-                });
-        }
-        
-        // 删除技能
-        function deleteSkill(skillId) {
-            if (confirm('确定要删除这个技能吗？')) {
-                // 调用API删除技能
-                fetch(`${API_BASE_URL}/skills/${skillId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        renderSkillList();
-                        alert('技能删除成功！');
-                    } else {
-                        alert('技能删除失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error deleting skill:', error);
-                    alert('技能删除失败');
-                });
-            }
-        }
-        
-        // 事件监听
-        document.addEventListener('DOMContentLoaded', function() {
-            // 渲染技能列表
-            renderSkillList();
-            
-            // 发布技能按钮
-            document.getElementById('publish-skill-btn').addEventListener('click', function() {
-                document.getElementById('publish-modal').style.display = 'block';
-            });
-            
-            // 关闭发布模态框
-            document.getElementById('close-publish-modal').addEventListener('click', function() {
-                document.getElementById('publish-modal').style.display = 'none';
-            });
-            
-            // 取消发布
-            document.getElementById('cancel-publish-btn').addEventListener('click', function() {
-                document.getElementById('publish-modal').style.display = 'none';
-            });
-            
-            // 提交发布
-            document.getElementById('submit-publish-btn').addEventListener('click', function() {
-                const form = document.getElementById('publish-skill-form');
-                if (form.checkValidity()) {
-                    const newSkill = {
-                        id: document.getElementById('skill-id').value,
-                        name: document.getElementById('skill-name').value,
-                        description: document.getElementById('skill-description').value,
-                        category: document.getElementById('skill-category').value
-                    };
-                    
-                    // 调用API发布技能
-                    fetch(`${API_BASE_URL}/skills`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(newSkill)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            renderSkillList();
-                            document.getElementById('publish-modal').style.display = 'none';
-                            form.reset();
-                            alert('技能发布成功！');
-                        } else {
-                            alert('技能发布失败');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error publishing skill:', error);
-                        alert('技能发布失败');
-                    });
-                } else {
-                    form.reportValidity();
-                }
-            });
-            
-            // 关闭更新模态框
-            document.getElementById('close-update-modal').addEventListener('click', function() {
-                document.getElementById('update-modal').style.display = 'none';
-            });
-            
-            // 取消更新
-            document.getElementById('cancel-update-btn').addEventListener('click', function() {
-                document.getElementById('update-modal').style.display = 'none';
-            });
-            
-            // 提交更新
-            document.getElementById('submit-update-btn').addEventListener('click', function() {
-                const form = document.getElementById('update-skill-form');
-                if (form.checkValidity()) {
-                    const skillId = document.getElementById('update-skill-id').value;
-                    const updatedSkill = {
-                        name: document.getElementById('update-skill-name').value,
-                        description: document.getElementById('update-skill-description').value,
-                        category: document.getElementById('update-skill-category').value
-                    };
-                    
-                    // 调用API更新技能
-                    fetch(`${API_BASE_URL}/skills/${skillId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(updatedSkill)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            renderSkillList();
-                            document.getElementById('update-modal').style.display = 'none';
-                            alert('技能更新成功！');
-                        } else {
-                            alert('技能更新失败');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error updating skill:', error);
-                        alert('技能更新失败');
-                    });
-                } else {
-                    form.reportValidity();
-                }
-            });
-            
-            // 搜索技能
-            document.getElementById('skill-search-input').addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                const skillCards = document.querySelectorAll('.skill-card');
-                skillCards.forEach(card => {
-                    const skillName = card.querySelector('h3').textContent.toLowerCase();
-                    const skillDescription = card.querySelector('p').textContent.toLowerCase();
-                    if (skillName.includes(searchTerm) || skillDescription.includes(searchTerm)) {
-                        card.style.display = 'block';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-            });
-        });
+        window.onPageInit = function() {
+            console.log('我的技能页面初始化完成');
+        };
     </script>
 </body>
 </html>

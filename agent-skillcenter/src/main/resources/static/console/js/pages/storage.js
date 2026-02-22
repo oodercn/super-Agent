@@ -1,0 +1,383 @@
+/**
+ * 存储页面脚本
+ */
+
+// 更新时间戳
+function updateTimestamp() {
+    const now = new Date();
+    const timestamp = document.getElementById('timestamp');
+    if (timestamp) {
+        timestamp.textContent = now.toLocaleString('zh-CN');
+    }
+}
+
+// 存储管理相关函数
+
+// 加载存储状态
+async function loadStorageStatus() {
+    try {
+        // 获取存储状态
+        const statusResponse = await fetch(`${utils.API_BASE_URL}/storage/status`);
+        if (!statusResponse.ok) {
+            throw new Error('获取存储状态失败');
+        }
+        const status = await statusResponse.json();
+        
+        // 获取存储统计信息
+        const statsResponse = await fetch(`${utils.API_BASE_URL}/storage/stats`);
+        if (!statsResponse.ok) {
+            throw new Error('获取存储统计信息失败');
+        }
+        const stats = await statsResponse.json();
+        
+        // 渲染存储状态
+        renderStorageStatus(status, stats);
+    } catch (error) {
+        console.error('加载存储状态错误:', error);
+        alert('加载存储状态失败: ' + error.message);
+    }
+}
+
+// 渲染存储状态
+function renderStorageStatus(status, stats) {
+    const statusGrid = document.querySelector('.status-grid');
+    statusGrid.innerHTML = '';
+    
+    // 存储状态
+    const statusItem = document.createElement('div');
+    statusItem.className = `status-item ${status.status === '正常' ? 'ok' : 'error'}`;
+    statusItem.innerHTML = `
+        <div class="key">存储状态</div>
+        <div class="value">${status.status}</div>
+    `;
+    statusGrid.appendChild(statusItem);
+    
+    // 使用空间
+    const usageItem = document.createElement('div');
+    usageItem.className = 'status-item ok';
+    usageItem.innerHTML = `
+        <div class="key">使用空间</div>
+        <div class="value">${stats.totalSizeHuman || '0 B'} / ${stats.maxSizeHuman || '0 B'}</div>
+    `;
+    statusGrid.appendChild(usageItem);
+    
+    // 备份状态
+    const backupItem = document.createElement('div');
+    backupItem.className = 'status-item ok';
+    backupItem.innerHTML = `
+        <div class="key">备份状态</div>
+        <div class="value">已备份</div>
+    `;
+    statusGrid.appendChild(backupItem);
+    
+    // 最后备份
+    const lastBackupItem = document.createElement('div');
+    lastBackupItem.className = 'status-item ok';
+    lastBackupItem.innerHTML = `
+        <div class="key">最后备份</div>
+        <div class="value">${new Date().toLocaleDateString('zh-CN')}</div>
+    `;
+    statusGrid.appendChild(lastBackupItem);
+}
+
+// 备份数据
+async function backupData() {
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/storage/backup`, {
+            method: 'POST'
+        });
+        if (!response.ok) {
+            throw new Error('备份数据失败');
+        }
+        const result = await response.json();
+        if (result.success) {
+            alert('备份数据成功!\n备份文件: ' + result.backupFileName);
+            loadStorageStatus();
+        } else {
+            alert('备份数据失败: ' + result.message);
+        }
+    } catch (error) {
+        console.error('备份数据错误:', error);
+        alert('备份数据失败: ' + error.message);
+    }
+}
+
+// 清理数据
+async function cleanData() {
+    if (!confirm('确定要清理数据吗? 这将删除所有临时文件和缓存数据。')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/storage/clean`, {
+            method: 'POST'
+        });
+        if (!response.ok) {
+            throw new Error('清理数据失败');
+        }
+        const result = await response.json();
+        if (result.success) {
+            alert('清理数据成功!');
+            loadStorageStatus();
+        } else {
+            alert('清理数据失败: ' + result.message);
+        }
+    } catch (error) {
+        console.error('清理数据错误:', error);
+        alert('清理数据失败: ' + error.message);
+    }
+}
+
+// 恢复数据
+async function restoreData() {
+    try {
+        // 获取备份列表
+        const response = await fetch(`${utils.API_BASE_URL}/storage/backups`);
+        if (!response.ok) {
+            throw new Error('获取备份列表失败');
+        }
+        const backups = await response.json();
+        
+        if (backups.length === 0) {
+            alert('没有找到备份文件');
+            return;
+        }
+        
+        // 显示备份列表供用户选择
+        let backupOptions = backups.map((backup, index) => `${index + 1}. ${backup.name} (${backup.sizeHuman})`).join('\n');
+        const backupIndex = prompt(`请选择要恢复的备份文件:\n${backupOptions}\n\n输入对应的数字:`);
+        
+        if (backupIndex && !isNaN(backupIndex) && backupIndex > 0 && backupIndex <= backups.length) {
+            const selectedBackup = backups[backupIndex - 1];
+            const confirmRestore = confirm(`确定要恢复备份 ${selectedBackup.name} 吗?`);
+            
+            if (confirmRestore) {
+                const restoreResponse = await fetch(`${utils.API_BASE_URL}/storage/restore/${encodeURIComponent(selectedBackup.name)}`, {
+                    method: 'POST'
+                });
+                
+                if (!restoreResponse.ok) {
+                    throw new Error('恢复数据失败');
+                }
+                
+                const restoreResult = await restoreResponse.json();
+                if (restoreResult.success) {
+                    alert('恢复数据成功!');
+                    loadStorageStatus();
+                } else {
+                    alert('恢复数据失败: ' + restoreResult.message);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('恢复数据错误:', error);
+        alert('恢复数据失败: ' + error.message);
+    }
+}
+
+// 标签页切换函数
+function switchTab(tabId, event) {
+    // 隐藏所有标签页内容
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.add('hidden');
+    });
+    
+    // 显示选中的标签页内容
+    document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+    
+    // 更新标签页按钮状态
+    document.querySelectorAll('.btn-secondary').forEach(btn => {
+        btn.style.backgroundColor = '#1a1a1a';
+        btn.style.color = 'var(--ooder-secondary)';
+    });
+    
+    // 高亮当前标签页按钮
+    event.target.style.backgroundColor = 'var(--ooder-primary)';
+    event.target.style.color = 'white';
+    
+    // 根据标签页ID加载相应的数据
+    if (tabId === 'storage-status') {
+        loadStorageStatus();
+    } else if (tabId === 'storage-backup') {
+        loadBackupList();
+    }
+}
+
+// 加载备份列表
+async function loadBackupList() {
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/storage/backups`);
+        if (!response.ok) {
+            throw new Error('获取备份列表失败');
+        }
+        const backups = await response.json();
+        const backupList = document.getElementById('backup-list');
+        
+        if (backups.length === 0) {
+            backupList.innerHTML = '<p>没有找到备份文件</p>';
+            return;
+        }
+        
+        backupList.innerHTML = `
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>备份文件名</th>
+                            <th>大小</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${backups.map(backup => `
+                            <tr>
+                                <td>${backup.name}</td>
+                                <td>${backup.sizeHuman}</td>
+                                <td>${new Date(backup.createdTime).toLocaleString('zh-CN')}</td>
+                                <td>
+                                    <button class="btn btn-secondary" onclick="restoreFromBackup('${backup.name}')">恢复</button>
+                                    <button class="btn btn-danger" onclick="deleteBackup('${backup.name}')">删除</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } catch (error) {
+        console.error('获取备份列表错误:', error);
+        document.getElementById('backup-list').innerHTML = '<p style="color: var(--ooder-danger);">获取备份列表失败: ' + error.message + '</p>';
+    }
+}
+
+// 从指定备份恢复
+async function restoreFromBackup(backupName) {
+    if (!confirm(`确定要从备份 ${backupName} 恢复数据吗?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/storage/restore/${encodeURIComponent(backupName)}`, {
+            method: 'POST'
+        });
+        
+        if (!response.ok) {
+            throw new Error('恢复数据失败');
+        }
+        
+        const result = await response.json();
+        if (result.success) {
+            alert('恢复数据成功!');
+            loadStorageStatus();
+            loadBackupList();
+        } else {
+            alert('恢复数据失败: ' + result.message);
+        }
+    } catch (error) {
+        console.error('恢复数据错误:', error);
+        alert('恢复数据失败: ' + error.message);
+    }
+}
+
+// 删除备份
+async function deleteBackup(backupName) {
+    if (!confirm(`确定要删除备份 ${backupName} 吗?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/storage/backups/${encodeURIComponent(backupName)}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            throw new Error('删除备份失败');
+        }
+        
+        const result = await response.json();
+        if (result.success) {
+            alert('删除备份成功!');
+            loadBackupList();
+        } else {
+            alert('删除备份失败: ' + result.message);
+        }
+    } catch (error) {
+        console.error('删除备份错误:', error);
+        alert('删除备份失败: ' + error.message);
+    }
+}
+
+// 清理旧备份
+async function cleanOldBackups() {
+    if (!confirm('确定要清理旧备份吗? 这将删除超过保留天数的备份文件。')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/storage/clean/backups`, {
+            method: 'POST'
+        });
+        
+        if (!response.ok) {
+            throw new Error('清理旧备份失败');
+        }
+        
+        const result = await response.json();
+        const cleanResult = document.getElementById('clean-result');
+        
+        if (result.success) {
+            cleanResult.innerHTML = `<p style="color: var(--ooder-success);">清理旧备份成功! 删除了 ${result.deletedCount} 个旧备份文件。</p>`;
+            loadBackupList();
+        } else {
+            cleanResult.innerHTML = `<p style="color: var(--ooder-danger);">清理旧备份失败: ${result.message}</p>`;
+        }
+    } catch (error) {
+        console.error('清理旧备份错误:', error);
+        document.getElementById('clean-result').innerHTML = `<p style="color: var(--ooder-danger);">清理旧备份失败: ${error.message}</p>`;
+    }
+}
+
+// 保存存储设置
+window.saveStorageSettings = async function() {
+    const storagePath = document.getElementById('storage-path').value;
+    const backupDays = document.getElementById('backup-days').value;
+    
+    try {
+        const response = await fetch(`${utils.API_BASE_URL}/storage/settings`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                storagePath: storagePath,
+                backupRetentionDays: parseInt(backupDays)
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('保存存储设置失败');
+        }
+        
+        const result = await response.json();
+        if (result.success) {
+            alert('存储设置保存成功!');
+        } else {
+            alert('存储设置保存失败: ' + result.message);
+        }
+    } catch (error) {
+        console.error('保存存储设置错误:', error);
+        alert('存储设置保存失败: ' + error.message);
+    }
+}
+
+// 初始化页面
+function init() {
+    loadStorageStatus();
+}
+
+// 页面加载完成后初始化
+window.onload = function() {
+    initMenu('storage');
+    init();
+};

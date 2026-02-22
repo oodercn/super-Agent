@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络管理 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .network-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--nexus-card-bg);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--nexus-primary);
+        }
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: var(--nexus-secondary);
+            margin-top: 4px;
+        }
+        .quality-meter {
+            width: 100%;
+            height: 8px;
+            background: var(--nexus-border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .quality-meter-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .quality-excellent { background: #22c55e; }
+        .quality-good { background: #84cc16; }
+        .quality-fair { background: #eab308; }
+        .quality-poor { background: #ef4444; }
+        .topology-container {
+            background: var(--nexus-card-bg);
+            border-radius: 8px;
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+        .topology-node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--nexus-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .topology-node:hover {
+            transform: scale(1.1);
+        }
+        .topology-node.offline {
+            background: var(--nexus-secondary);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">网络管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="refreshNetworkStatus()">
+                        <i class="ri-refresh-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="network-stats-grid" id="network-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-nodes">-</div>
+                            <div class="stat-label">在线节点</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-links">-</div>
+                            <div class="stat-label">活跃链路</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-routes">-</div>
+                            <div class="stat-label">有效路由</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-latency">-</div>
+                            <div class="stat-label">平均延迟(ms)</div>
+                        </div>
+                    </div>
+
+                    <div class="nx-tabs nx-mb-6">
+                        <div class="nx-tabs__list">
+                            <button class="nx-tabs__tab active" data-tab="topology">网络拓扑</button>
+                            <button class="nx-tabs__tab" data-tab="links">链路管理</button>
+                            <button class="nx-tabs__tab" data-tab="routes">路由管理</button>
+                            <button class="nx-tabs__tab" data-tab="quality">网络质量</button>
+                        </div>
+                    </div>
+
+                    <div id="tab-topology" class="tab-content active">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">网络拓扑图</h3>
+                                <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="refreshTopology()">
+                                    <i class="ri-refresh-line"></i> 刷新
+                                </button>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="topology-container" id="topology-canvas">
+                                    <svg id="topology-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-links" class="tab-content">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">链路列表</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>链路ID</th>
+                                                <th>源节点</th>
+                                                <th>目标节点</th>
+                                                <th>类型</th>
+                                                <th>延迟(ms)</th>
+                                                <th>带宽(KB/s)</th>
+                                                <th>状态</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="links-table-body">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-routes" class="tab-content">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">路由列表</h3>
+                                <button class="nx-btn nx-btn--sm nx-btn--primary" onclick="showPathFindDialog()">
+                                    <i class="ri-route-line"></i> 路径发现
+                                </button>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>路由ID</th>
+                                                <th>源节点</th>
+                                                <th>目标节点</th>
+                                                <th>跳数</th>
+                                                <th>总延迟(ms)</th>
+                                                <th>类型</th>
+                                                <th>状态</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="routes-table-body">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-quality" class="tab-content">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">网络质量指标</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-grid nx-grid--2 nx-gap-6">
+                                    <div>
+                                        <div class="nx-mb-4">
+                                            <div class="nx-flex nx-justify-between nx-mb-2">
+                                                <span>综合评分</span>
+                                                <span id="quality-overall">-</span>
+                                            </div>
+                                            <div class="quality-meter">
+                                                <div class="quality-meter-fill quality-excellent" id="quality-overall-bar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="nx-mb-4">
+                                            <div class="nx-flex nx-justify-between nx-mb-2">
+                                                <span>延迟评分</span>
+                                                <span id="quality-latency">-</span>
+                                            </div>
+                                            <div class="quality-meter">
+                                                <div class="quality-meter-fill quality-good" id="quality-latency-bar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="nx-mb-4">
+                                            <div class="nx-flex nx-justify-between nx-mb-2">
+                                                <span>带宽评分</span>
+                                                <span id="quality-bandwidth">-</span>
+                                            </div>
+                                            <div class="quality-meter">
+                                                <div class="quality-meter-fill quality-good" id="quality-bandwidth-bar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="nx-mb-4">
+                                            <div class="nx-flex nx-justify-between nx-mb-2">
+                                                <span>稳定性评分</span>
+                                                <span id="quality-stability">-</span>
+                                            </div>
+                                            <div class="quality-meter">
+                                                <div class="quality-meter-fill quality-fair" id="quality-stability-bar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="nx-form-group nx-mb-4">
+                                            <label class="nx-form-label">平均延迟</label>
+                                            <div id="avg-latency" class="nx-text-lg nx-font-semibold">- ms</div>
+                                        </div>
+                                        <div class="nx-form-group nx-mb-4">
+                                            <label class="nx-form-label">最小/最大延迟</label>
+                                            <div id="latency-range" class="nx-text-lg nx-font-semibold">- / - ms</div>
+                                        </div>
+                                        <div class="nx-form-group nx-mb-4">
+                                            <label class="nx-form-label">丢包率</label>
+                                            <div id="packet-loss" class="nx-text-lg nx-font-semibold">- %</div>
+                                        </div>
+                                        <div class="nx-form-group nx-mb-4">
+                                            <label class="nx-form-label">抖动</label>
+                                            <div id="jitter" class="nx-text-lg nx-font-semibold">- ms</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="nx-modal" id="path-find-modal">
+        <div class="nx-modal__backdrop" onclick="closePathFindModal()"></div>
+        <div class="nx-modal__content">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">路径发现</h3>
+                <button class="nx-modal__close" onclick="closePathFindModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-form-label">源节点</label>
+                    <input type="text" class="nx-input" id="path-source" placeholder="输入源节点ID">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-form-label">目标节点</label>
+                    <input type="text" class="nx-input" id="path-target" placeholder="输入目标节点ID">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-form-label">算法</label>
+                    <select class="nx-input" id="path-algorithm">
+                        <option value="dijkstra">Dijkstra最短路径</option>
+                        <option value="astar">A*算法</option>
+                        <option value="bfs">广度优先搜索</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-form-label">最大跳数</label>
+                    <input type="number" class="nx-input" id="path-max-hops" value="5" min="1" max="10">
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closePathFindModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="findPath()">查找路径</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        function postApi(url, data) {
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data || {})
+            }).then(r => r.json());
+        }
+
+        function refreshNetworkStatus() {
+            postApi('/api/network/stats').then(res => {
+                if (res.code === 200 && res.data) {
+                    document.getElementById('stat-nodes').textContent = res.data.activeNodes + '/' + res.data.totalNodes;
+                    document.getElementById('stat-links').textContent = res.data.activeLinks + '/' + res.data.totalLinks;
+                    document.getElementById('stat-routes').textContent = res.data.activeRoutes + '/' + res.data.totalRoutes;
+                    document.getElementById('stat-latency').textContent = res.data.avgLatency.toFixed(1);
+                }
+            });
+        }
+
+        function refreshTopology() {
+            postApi('/api/network/topology').then(res => {
+                if (res.code === 200 && res.data) {
+                    renderTopology(res.data);
+                }
+            });
+        }
+
+        function renderTopology(data) {
+            const canvas = document.getElementById('topology-canvas');
+            const svg = document.getElementById('topology-svg');
+            
+            canvas.querySelectorAll('.topology-node').forEach(n => n.remove());
+            svg.innerHTML = '';
+
+            data.links.forEach(link => {
+                const sourceNode = data.nodes.find(n => n.nodeId === link.source);
+                const targetNode = data.nodes.find(n => n.nodeId === link.target);
+                if (sourceNode && targetNode) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', sourceNode.x + 30);
+                    line.setAttribute('y1', sourceNode.y + 30);
+                    line.setAttribute('x2', targetNode.x + 30);
+                    line.setAttribute('y2', targetNode.y + 30);
+                    line.setAttribute('stroke', link.status === 'active' ? '#3b82f6' : '#6b7280');
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('stroke-opacity', '0.5');
+                    svg.appendChild(line);
+                }
+            });
+
+            data.nodes.forEach(node => {
+                const div = document.createElement('div');
+                div.className = 'topology-node' + (node.status === '离线' ? ' offline' : '');
+                div.style.left = node.x + 'px';
+                div.style.top = node.y + 'px';
+                div.innerHTML = '<i class="ri-node-tree"></i>';
+                div.title = node.nodeName + ' (' + node.status + ')';
+                canvas.appendChild(div);
+            });
+        }
+
+        function loadLinks() {
+            postApi('/api/network/links', { pageNum: 1, pageSize: 20 }).then(res => {
+                if (res.code === 200 && res.data) {
+                    const tbody = document.getElementById('links-table-body');
+                    tbody.innerHTML = '';
+                    res.data.list.forEach(link => {
+                        const isActive = link.status === '活跃' || link.status === 'active';
+                        const tr = document.createElement('tr');
+                        tr.style.cursor = 'pointer';
+                        tr.innerHTML = `
+                            <td>${link.linkId}</td>
+                            <td>${link.sourceNode}</td>
+                            <td>${link.targetNode}</td>
+                            <td>${link.linkType}</td>
+                            <td>${link.latency}</td>
+                            <td>${link.bandwidth}</td>
+                            <td><span class="nx-badge ${isActive ? 'nx-badge--success' : 'nx-badge--secondary'}">${link.status}</span></td>
+                            <td>
+                                <button class="nx-btn nx-btn--sm nx-btn--ghost" onclick="viewLinkDetail('${link.linkId}')" title="详情">
+                                    <i class="ri-eye-line"></i>
+                                </button>
+                                ${isActive ? 
+                                    `<button class="nx-btn nx-btn--sm nx-btn--ghost" onclick="disconnectLink('${link.linkId}')" title="断开">
+                                        <i class="ri-link-unlink"></i>
+                                    </button>` :
+                                    `<button class="nx-btn nx-btn--sm nx-btn--primary" onclick="reconnectLink('${link.linkId}')" title="重连">
+                                        <i class="ri-link"></i>
+                                    </button>`
+                                }
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            });
+        }
+
+        function loadRoutes() {
+            postApi('/api/network/routes', { pageNum: 1, pageSize: 20 }).then(res => {
+                if (res.code === 200 && res.data) {
+                    const tbody = document.getElementById('routes-table-body');
+                    tbody.innerHTML = '';
+                    res.data.list.forEach(route => {
+                        const tr = document.createElement('tr');
+                        tr.style.cursor = 'pointer';
+                        tr.innerHTML = `
+                            <td>${route.routeId}</td>
+                            <td>${route.sourceNode}</td>
+                            <td>${route.targetNode}</td>
+                            <td>${route.hopCount}</td>
+                            <td>${route.totalLatency}</td>
+                            <td>${route.routeType}</td>
+                            <td><span class="nx-badge ${route.status === '有效' ? 'nx-badge--success' : 'nx-badge--secondary'}">${route.status}</span></td>
+                            <td>
+                                <button class="nx-btn nx-btn--sm nx-btn--ghost" onclick="viewRouteDetail('${route.routeId}')" title="详情">
+                                    <i class="ri-eye-line"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            });
+        }
+
+        function loadQuality() {
+            postApi('/api/network/quality').then(res => {
+                if (res.code === 200 && res.data) {
+                    const q = res.data;
+                    document.getElementById('quality-overall').textContent = q.overallScore;
+                    document.getElementById('quality-overall-bar').style.width = q.overallScore + '%';
+                    
+                    document.getElementById('quality-latency').textContent = q.latencyScore;
+                    document.getElementById('quality-latency-bar').style.width = q.latencyScore + '%';
+                    
+                    document.getElementById('quality-bandwidth').textContent = q.bandwidthScore;
+                    document.getElementById('quality-bandwidth-bar').style.width = q.bandwidthScore + '%';
+                    
+                    document.getElementById('quality-stability').textContent = q.stabilityScore;
+                    document.getElementById('quality-stability-bar').style.width = q.stabilityScore + '%';
+
+                    document.getElementById('avg-latency').textContent = q.avgLatency.toFixed(1) + ' ms';
+                    document.getElementById('latency-range').textContent = q.minLatency.toFixed(1) + ' / ' + q.maxLatency.toFixed(1) + ' ms';
+                    document.getElementById('packet-loss').textContent = q.packetLoss.toFixed(2) + ' %';
+                    document.getElementById('jitter').textContent = q.jitter.toFixed(2) + ' ms';
+                }
+            });
+        }
+
+        function disconnectLink(linkId) {
+            if (confirm('确定要断开链路 ' + linkId + ' 吗？')) {
+                postApi('/api/network/links/' + linkId + '/disconnect').then(res => {
+                    if (res.code === 200) {
+                        alert('链路已断开');
+                        loadLinks();
+                    }
+                });
+            }
+        }
+
+        function reconnectLink(linkId) {
+            postApi('/api/network/links/' + linkId + '/reconnect').then(res => {
+                if (res.code === 200) {
+                    alert('链路已重连');
+                    loadLinks();
+                }
+            });
+        }
+
+        function viewLinkDetail(linkId) {
+            postApi('/api/network/links/' + linkId).then(res => {
+                if (res.code === 200 && res.data) {
+                    const link = res.data;
+                    alert('链路详情\n\n' +
+                        '链路ID: ' + link.linkId + '\n' +
+                        '源节点: ' + link.sourceNode + '\n' +
+                        '目标节点: ' + link.targetNode + '\n' +
+                        '类型: ' + link.linkType + '\n' +
+                        '延迟: ' + link.latency + ' ms\n' +
+                        '带宽: ' + link.bandwidth + ' KB/s\n' +
+                        '状态: ' + link.status);
+                }
+            });
+        }
+
+        function viewRouteDetail(routeId) {
+            postApi('/api/network/routes/' + routeId).then(res => {
+                if (res.code === 200 && res.data) {
+                    const route = res.data;
+                    const hops = route.hops ? route.hops.join(' → ') : '-';
+                    alert('路由详情\n\n' +
+                        '路由ID: ' + route.routeId + '\n' +
+                        '源节点: ' + route.sourceNode + '\n' +
+                        '目标节点: ' + route.targetNode + '\n' +
+                        '跳数: ' + route.hopCount + '\n' +
+                        '路径: ' + hops + '\n' +
+                        '总延迟: ' + route.totalLatency + ' ms\n' +
+                        '类型: ' + route.routeType + '\n' +
+                        '状态: ' + route.status);
+                }
+            });
+        }
+
+        function showPathFindDialog() {
+            document.getElementById('path-find-modal').classList.add('active');
+        }
+
+        function closePathFindModal() {
+            document.getElementById('path-find-modal').classList.remove('active');
+        }
+
+        function findPath() {
+            const source = document.getElementById('path-source').value;
+            const target = document.getElementById('path-target').value;
+            const algorithm = document.getElementById('path-algorithm').value;
+            const maxHops = parseInt(document.getElementById('path-max-hops').value);
+
+            if (!source || !target) {
+                alert('请输入源节点和目标节点');
+                return;
+            }
+
+            postApi('/api/network/routes/find', {
+                sourceNode: source,
+                targetNode: target,
+                algorithm: algorithm,
+                maxHops: maxHops
+            }).then(res => {
+                if (res.code === 200 && res.data) {
+                    alert('找到路径: ' + res.data.hops.join(' -> ') + '\n总延迟: ' + res.data.totalLatency + 'ms');
+                    closePathFindModal();
+                    loadRoutes();
+                } else {
+                    alert('未找到路径');
+                }
+            });
+        }
+
+        document.querySelectorAll('.nx-tabs__tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.nx-tabs__tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                this.classList.add('active');
+                const tabId = 'tab-' + this.dataset.tab;
+                document.getElementById(tabId).classList.add('active');
+
+                if (this.dataset.tab === 'links') loadLinks();
+                if (this.dataset.tab === 'routes') loadRoutes();
+                if (this.dataset.tab === 'quality') loadQuality();
+            });
+        });
+
+        window.onPageInit = function() {
+            refreshNetworkStatus();
+            refreshTopology();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的技能 - Nexus</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .skill-tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--ns-card-bg); padding: 4px; border-radius: 8px; border: 1px solid var(--ns-border); }
+        .skill-tab { flex: 1; padding: 12px; text-align: center; font-size: 14px; color: var(--ns-secondary); background: transparent; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .skill-tab:hover { background: var(--ns-bg-hover); }
+        .skill-tab.active { background: var(--nx-primary); color: white; }
+        .skill-tab .badge { display: inline-block; background: var(--ns-danger); color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: 4px; }
+        .skill-tab.active .badge { background: rgba(255,255,255,0.3); }
+        
+        .skill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+        .skill-card { background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 8px; padding: 20px; transition: all 0.2s; }
+        .skill-card:hover { border-color: var(--nx-primary); transform: translateY(-2px); }
+        .skill-card.personal { border-left: 3px solid var(--nx-primary); }
+        .skill-card.enterprise { border-left: 3px solid var(--ns-warning); }
+        
+        .skill-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+        .skill-icon { width: 48px; height: 48px; border-radius: 10px; background: linear-gradient(135deg, var(--nx-primary), #6366f1); display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; flex-shrink: 0; }
+        .skill-title { flex: 1; min-width: 0; }
+        .skill-name { font-size: 16px; font-weight: 600; color: var(--ns-dark); margin-bottom: 4px; }
+        .skill-meta { font-size: 12px; color: var(--ns-secondary); display: flex; gap: 12px; }
+        .skill-type { padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+        .skill-type.personal { background: rgba(59, 130, 246, 0.1); color: var(--nx-primary); }
+        .skill-type.enterprise { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        
+        .skill-desc { font-size: 13px; color: var(--ns-secondary); margin-bottom: 12px; line-height: 1.4; }
+        .skill-permissions { background: var(--ns-input-bg); border-radius: 6px; padding: 12px; margin-bottom: 12px; }
+        .skill-permissions-title { font-size: 12px; font-weight: 500; color: var(--ns-dark); margin-bottom: 8px; }
+        .permission-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ns-secondary); margin-bottom: 4px; }
+        .permission-item i { color: var(--ns-warning); }
+        .permission-item.approved i { color: var(--ns-success); }
+        
+        .skill-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        
+        .auth-panel { background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 8px; margin-bottom: 20px; }
+        .auth-panel-header { padding: 16px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .auth-panel-title { font-size: 16px; font-weight: 600; color: var(--ns-dark); }
+        .auth-panel-body { padding: 20px; }
+        
+        .auth-request { background: var(--ns-input-bg); border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+        .auth-request:last-child { margin-bottom: 0; }
+        .auth-request-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .auth-request-skill { font-size: 14px; font-weight: 500; color: var(--ns-dark); }
+        .auth-request-time { font-size: 12px; color: var(--ns-secondary); }
+        .auth-request-resources { margin-bottom: 12px; }
+        .auth-request-resource { font-size: 12px; color: var(--ns-secondary); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .auth-request-actions { display: flex; gap: 8px; }
+        
+        .log-panel { background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 8px; }
+        .log-panel-header { padding: 16px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .log-panel-title { font-size: 16px; font-weight: 600; color: var(--ns-dark); }
+        .log-panel-body { padding: 20px; max-height: 400px; overflow-y: auto; }
+        
+        .log-entry { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--ns-input-bg); border-radius: 6px; margin-bottom: 8px; }
+        .log-icon { width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+        .log-icon.success { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .log-icon.failed { background: rgba(239, 68, 68, 0.1); color: var(--ns-danger); }
+        .log-icon.denied { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        .log-info { flex: 1; }
+        .log-action { font-size: 13px; font-weight: 500; color: var(--ns-dark); }
+        .log-detail { font-size: 12px; color: var(--ns-secondary); }
+        .log-time { font-size: 11px; color: var(--ns-secondary); }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--ns-card-bg); border-radius: 8px; width: 100%; max-width: 600px; max-height: 85vh; overflow-y: auto; }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 16px; font-weight: 600; color: var(--ns-dark); margin: 0; }
+        .modal-close { background: none; border: none; font-size: 20px; color: var(--ns-secondary); cursor: pointer; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid var(--ns-border); display: flex; justify-content: flex-end; gap: 8px; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; color: var(--ns-dark); margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 10px 12px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); border-radius: 6px; color: var(--ns-dark); font-size: 14px; }
+        .form-control:focus { outline: none; border-color: var(--nx-primary); }
+        
+        .scene-permissions { background: var(--ns-input-bg); border-radius: 6px; padding: 12px; margin-top: 12px; }
+        .scene-perm-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--ns-border); }
+        .scene-perm-item:last-child { border-bottom: none; }
+        .scene-perm-item label { flex: 1; font-size: 13px; color: var(--ns-dark); }
+        
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--ns-secondary); }
+        .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">我的技能</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <a href="/console/pages/skillcenter-sync/skill-categories.html" class="nx-btn nx-btn--ghost">
+                        <i class="ri-radar-line"></i> 发现技能
+                    </a>
+                    <button class="nx-btn nx-btn--primary" onclick="showInstallModal()">
+                        <i class="ri-add-line"></i> 安装技能
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="skill-tabs">
+                        <button class="skill-tab active" onclick="switchTab('installed')">已安装</button>
+                        <button class="skill-tab" onclick="switchTab('pending')">待授权 <span class="badge" id="pendingBadge" style="display:none;">0</span></button>
+                        <button class="skill-tab" onclick="switchTab('logs')">使用日志</button>
+                        <button class="skill-tab" onclick="switchTab('discover')">发现</button>
+                    </div>
+                    
+                    <div id="installedPanel">
+                        <div class="skill-grid" id="skillGrid">
+                            <div class="empty-state">
+                                <i class="ri-lightbulb-line"></i>
+                                <p>暂无已安装技能</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="pendingPanel" style="display:none;">
+                        <div class="auth-panel">
+                            <div class="auth-panel-header">
+                                <div class="auth-panel-title">待授权请求</div>
+                            </div>
+                            <div class="auth-panel-body" id="pendingList">
+                                <div class="empty-state">
+                                    <i class="ri-shield-check-line"></i>
+                                    <p>暂无待授权请求</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="logsPanel" style="display:none;">
+                        <div class="log-panel">
+                            <div class="log-panel-header">
+                                <div class="log-panel-title">资源使用日志</div>
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="refreshLogs()">
+                                    <i class="ri-refresh-line"></i> 刷新
+                                </button>
+                            </div>
+                            <div class="log-panel-body" id="logList">
+                                <div class="empty-state">
+                                    <i class="ri-file-list-line"></i>
+                                    <p>暂无使用日志</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="discoverPanel" style="display:none;">
+                        <div class="skill-grid" id="discoverGrid">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="installModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>安装技能</h3>
+                <button class="modal-close" onclick="hideInstallModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="installStep1">
+                    <div class="form-group">
+                        <label class="form-label">技能类型</label>
+                        <select class="form-control" id="installType" onchange="toggleInstallForm()">
+                            <option value="personal">个人技能</option>
+                            <option value="enterprise">企业技能</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">技能ID</label>
+                        <input type="text" class="form-control" id="installSkillId" placeholder="输入技能ID">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">技能名称</label>
+                        <input type="text" class="form-control" id="installSkillName" placeholder="输入技能名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">下载地址（可选）</label>
+                        <input type="text" class="form-control" id="installDownloadUrl" placeholder="技能包下载地址">
+                    </div>
+                </div>
+                
+                <div id="installStep2" style="display:none;">
+                    <div style="background: var(--ns-input-bg); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--ns-dark);">基本信息</h4>
+                        <div id="confirmSkillInfo"></div>
+                    </div>
+                    
+                    <div id="dependencySection" style="background: var(--ns-input-bg); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--ns-dark);">协作场景依赖</h4>
+                        <div id="confirmDependencies"></div>
+                    </div>
+                    
+                    <div style="background: var(--ns-input-bg); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--ns-dark);">资源访问权限</h4>
+                        <div id="confirmPermissions"></div>
+                    </div>
+                    
+                    <div id="skillDepsSection" style="background: rgba(245, 158, 11, 0.1); border-radius: 8px; padding: 16px; margin-bottom: 16px; display: none;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--ns-warning);">其他 Skill 依赖</h4>
+                        <div id="confirmSkillDeps"></div>
+                    </div>
+                    
+                    <div style="background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 8px; padding: 12px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="confirmAgree">
+                            <span style="font-size: 13px; color: var(--ns-dark);">我已了解该技能将访问上述资源，并同意安装</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="hideInstallModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" id="installNextBtn" onclick="nextInstallStep()">下一步</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="authDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>授权详情</h3>
+                <button class="modal-close" onclick="hideAuthDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="authDetailBody">
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="hideAuthDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var currentUserId = 'user-001';
+        var currentTab = 'installed';
+        var skills = [];
+        var pendingAuths = [];
+        var logs = [];
+        
+        window.onPageInit = function() {
+            loadSkills();
+            loadPendingAuths();
+            loadLogs();
+        };
+        
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.skill-tab').forEach(function(t) { t.classList.remove('active'); });
+            event.target.closest('.skill-tab').classList.add('active');
+            
+            document.getElementById('installedPanel').style.display = tab === 'installed' ? 'block' : 'none';
+            document.getElementById('pendingPanel').style.display = tab === 'pending' ? 'block' : 'none';
+            document.getElementById('logsPanel').style.display = tab === 'logs' ? 'block' : 'none';
+            document.getElementById('discoverPanel').style.display = tab === 'discover' ? 'block' : 'none';
+            
+            if (tab === 'discover') {
+                loadDiscoverSkills();
+            }
+        }
+        
+        function loadSkills() {
+            fetch('/api/skillcenter/installed/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    skills = rs.data || [];
+                    renderSkills();
+                }
+            });
+        }
+        
+        function renderSkills() {
+            var container = document.getElementById('skillGrid');
+            if (skills.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="ri-lightbulb-line"></i><p>暂无已安装技能</p></div>';
+                return;
+            }
+            
+            var html = '';
+            skills.forEach(function(s) {
+                var typeClass = s.skillType === 'enterprise' ? 'enterprise' : 'personal';
+                var typeText = s.skillType === 'enterprise' ? '企业' : '个人';
+                
+                html += '<div class="skill-card ' + typeClass + '">' +
+                    '<div class="skill-header">' +
+                    '<div class="skill-icon"><i class="' + (s.icon || 'ri-lightbulb-line') + '"></i></div>' +
+                    '<div class="skill-title">' +
+                    '<div class="skill-name">' + s.name + '</div>' +
+                    '<div class="skill-meta">' +
+                    '<span class="skill-type ' + typeClass + '">' + typeText + '</span>' +
+                    '<span>v' + (s.version || '1.0.0') + '</span>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="skill-desc">' + (s.description || '暂无描述') + '</div>' +
+                    '<div class="skill-permissions">' +
+                    '<div class="skill-permissions-title">已授权权限</div>' +
+                    '<div class="permission-item approved"><i class="ri-check-line"></i> 基础执行权限</div>' +
+                    (s.fileAccess ? '<div class="permission-item approved"><i class="ri-check-line"></i> 文件访问权限</div>' : '') +
+                    (s.messageAccess ? '<div class="permission-item approved"><i class="ri-check-line"></i> 消息发送权限</div>' : '') +
+                    '</div>' +
+                    '<div class="skill-actions">' +
+                    '<button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="viewAuthDetail(\'' + s.id + '\')">授权详情</button>' +
+                    '<button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="viewSkillLogs(\'' + s.id + '\')">使用日志</button>' +
+                    '<button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="configSkill(\'' + s.id + '\')">配置</button>' +
+                    '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function loadPendingAuths() {
+            fetch('/api/skill/auth/pending', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    pendingAuths = rs.data || [];
+                    renderPendingAuths();
+                    updatePendingBadge();
+                }
+            });
+        }
+        
+        function renderPendingAuths() {
+            var container = document.getElementById('pendingList');
+            if (pendingAuths.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="ri-shield-check-line"></i><p>暂无待授权请求</p></div>';
+                return;
+            }
+            
+            var html = '';
+            pendingAuths.forEach(function(a) {
+                html += '<div class="auth-request">' +
+                    '<div class="auth-request-header">' +
+                    '<div class="auth-request-skill">' + a.skillName + '</div>' +
+                    '<div class="auth-request-time">' + formatTime(a.createdAt) + '</div>' +
+                    '</div>' +
+                    '<div class="auth-request-resources">';
+                
+                a.resourcePermissions.forEach(function(r) {
+                    html += '<div class="auth-request-resource"><i class="ri-folder-line"></i> ' + r.resourceName + ' (' + r.permissions.join(', ') + ')</div>';
+                });
+                
+                a.scenePermissions.forEach(function(s) {
+                    html += '<div class="auth-request-resource"><i class="ri-apps-line"></i> ' + s.sceneName + (s.joinGroup ? ' (加入群组)' : '') + '</div>';
+                });
+                
+                html += '</div>' +
+                    '<div class="auth-request-actions">' +
+                    '<button class="nx-btn nx-btn--primary nx-btn--sm" onclick="approveAuth(\'' + a.authId + '\')">批准</button>' +
+                    '<button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="rejectAuth(\'' + a.authId + '\')">拒绝</button>' +
+                    '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function updatePendingBadge() {
+            var badge = document.getElementById('pendingBadge');
+            if (pendingAuths.length > 0) {
+                badge.textContent = pendingAuths.length;
+                badge.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        
+        function approveAuth(authId) {
+            fetch('/api/skill/auth/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ authId: authId, userId: currentUserId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    loadPendingAuths();
+                } else {
+                    alert(rs.message);
+                }
+            });
+        }
+        
+        function rejectAuth(authId) {
+            if (!confirm('确定要拒绝此授权请求吗？')) return;
+            
+            fetch('/api/skill/auth/reject', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ authId: authId, userId: currentUserId, reason: '用户拒绝' })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    loadPendingAuths();
+                } else {
+                    alert(rs.message);
+                }
+            });
+        }
+        
+        function loadLogs() {
+            fetch('/api/skill/auth/log/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    logs = rs.data || [];
+                    renderLogs();
+                }
+            });
+        }
+        
+        function renderLogs() {
+            var container = document.getElementById('logList');
+            if (logs.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="ri-file-list-line"></i><p>暂无使用日志</p></div>';
+                return;
+            }
+            
+            var html = '';
+            logs.forEach(function(l) {
+                var statusClass = l.status === 1 ? 'success' : (l.status === 2 ? 'denied' : 'failed');
+                var icon = l.status === 1 ? 'ri-check-line' : (l.status === 2 ? 'ri-forbid-line' : 'ri-close-line');
+                
+                html += '<div class="log-entry">' +
+                    '<div class="log-icon ' + statusClass + '"><i class="' + icon + '"></i></div>' +
+                    '<div class="log-info">' +
+                    '<div class="log-action">' + l.skillName + ' - ' + l.actionText + '</div>' +
+                    '<div class="log-detail">' + (l.resourceName || l.detail || '') + '</div>' +
+                    '</div>' +
+                    '<div class="log-time">' + formatTime(l.timestamp) + '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function refreshLogs() {
+            loadLogs();
+        }
+        
+        function loadDiscoverSkills() {
+            fetch('/api/skillcenter/discovery/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    renderDiscoverSkills(rs.data || []);
+                }
+            });
+        }
+        
+        function renderDiscoverSkills(data) {
+            var container = document.getElementById('discoverGrid');
+            var html = '';
+            
+            var demoSkills = [
+                { id: 'skill-001', name: '文档助手', description: '智能文档处理和格式转换', icon: 'ri-file-text-line', type: 'personal' },
+                { id: 'skill-002', name: '财务报表', description: '企业财务数据分析和报表生成', icon: 'ri-bar-chart-box-line', type: 'enterprise' },
+                { id: 'skill-003', name: '会议助手', description: '会议记录和任务跟踪', icon: 'ri-team-line', type: 'personal' },
+                { id: 'skill-004', name: '项目协作', description: '团队项目管理和进度跟踪', icon: 'ri-projector-line', type: 'enterprise' }
+            ];
+            
+            demoSkills.forEach(function(s) {
+                var typeClass = s.type === 'enterprise' ? 'enterprise' : 'personal';
+                var typeText = s.type === 'enterprise' ? '企业' : '个人';
+                
+                html += '<div class="skill-card ' + typeClass + '">' +
+                    '<div class="skill-header">' +
+                    '<div class="skill-icon"><i class="' + s.icon + '"></i></div>' +
+                    '<div class="skill-title">' +
+                    '<div class="skill-name">' + s.name + '</div>' +
+                    '<div class="skill-meta">' +
+                    '<span class="skill-type ' + typeClass + '">' + typeText + '</span>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="skill-desc">' + s.description + '</div>' +
+                    '<div class="skill-actions">' +
+                    '<button class="nx-btn nx-btn--primary nx-btn--sm" onclick="quickInstall(\'' + s.id + '\', \'' + s.name + '\', \'' + s.type + '\')">安装</button>' +
+                    '<button class="nx-btn nx-btn--ghost nx-btn--sm">详情</button>' +
+                    '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function showInstallModal() {
+            document.getElementById('installModal').classList.add('show');
+            document.getElementById('installStep1').style.display = 'block';
+            document.getElementById('installStep2').style.display = 'none';
+            document.getElementById('installNextBtn').textContent = '下一步';
+        }
+        
+        function hideInstallModal() {
+            document.getElementById('installModal').classList.remove('show');
+        }
+        
+        function toggleInstallForm() {
+        }
+        
+        var currentInstallData = null;
+        var currentPreview = null;
+        
+        function nextInstallStep() {
+            var step1 = document.getElementById('installStep1');
+            var step2 = document.getElementById('installStep2');
+            
+            if (step1.style.display !== 'none') {
+                var skillName = document.getElementById('installSkillName').value;
+                var skillId = document.getElementById('installSkillId').value;
+                var skillType = document.getElementById('installType').value;
+                var downloadUrl = document.getElementById('installDownloadUrl').value;
+                
+                if (!skillName) {
+                    alert('请输入技能名称');
+                    return;
+                }
+                
+                currentInstallData = {
+                    skillId: skillId || 'skill-' + Date.now(),
+                    skillName: skillName,
+                    skillType: skillType,
+                    downloadUrl: downloadUrl
+                };
+                
+                fetchPreviewAndRender();
+            } else {
+                if (!document.getElementById('confirmAgree').checked) {
+                    alert('请确认同意安装条款');
+                    return;
+                }
+                doInstall();
+            }
+        }
+        
+        function fetchPreviewAndRender() {
+            var skill = currentInstallData;
+            
+            fetch('/api/skill/install/preview', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    skillId: skill.skillId,
+                    userId: currentUserId,
+                    downloadUrl: skill.downloadUrl
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    currentPreview = rs.data;
+                    renderConfirmStepFromPreview();
+                    document.getElementById('installStep1').style.display = 'none';
+                    document.getElementById('installStep2').style.display = 'block';
+                    document.getElementById('installNextBtn').textContent = '确认安装';
+                } else {
+                    alert('获取安装预览失败: ' + rs.message);
+                }
+            });
+        }
+        
+        function renderConfirmStepFromPreview() {
+            var preview = currentPreview;
+            
+            document.getElementById('confirmSkillInfo').innerHTML = 
+                '<div style="font-size: 13px; color: var(--ns-dark);">' +
+                '<p style="margin: 0 0 8px 0;"><strong>名称:</strong> ' + preview.skillName + '</p>' +
+                '<p style="margin: 0 0 8px 0;"><strong>ID:</strong> ' + preview.skillId + '</p>' +
+                '<p style="margin: 0 0 8px 0;"><strong>版本:</strong> ' + preview.version + '</p>' +
+                '<p style="margin: 0;"><strong>类型:</strong> ' + (preview.skillType === 'enterprise' ? '企业技能' : '个人技能') + '</p>' +
+                '</div>';
+            
+            if (preview.scenes && preview.scenes.length > 0) {
+                document.getElementById('dependencySection').style.display = 'block';
+                var sceneHtml = '<div style="font-size: 13px;">';
+                preview.scenes.forEach(function(s) {
+                    sceneHtml += '<label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;">' +
+                        '<input type="checkbox" ' + (s.required ? 'checked disabled' : (s.willJoin ? 'checked' : '')) + ' data-scene-id="' + s.sceneId + '"> ' +
+                        '<span>' + s.sceneName + (s.required ? ' (必需)' : '') + '</span>' +
+                        '</label>';
+                });
+                sceneHtml += '</div>';
+                document.getElementById('confirmDependencies').innerHTML = sceneHtml;
+            } else {
+                document.getElementById('dependencySection').style.display = 'none';
+            }
+            
+            if (preview.permissions && preview.permissions.length > 0) {
+                var permHtml = '<div style="font-size: 13px;">';
+                preview.permissions.forEach(function(p) {
+                    permHtml += '<label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;">' +
+                        '<input type="checkbox" ' + (p.required ? 'checked disabled' : '') + ' data-permission-id="' + p.permissionId + '"> ' +
+                        '<span>' + p.resourceName + ' - ' + p.description + (p.required ? ' (必需)' : '') + '</span>' +
+                        '</label>';
+                });
+                permHtml += '</div>';
+                document.getElementById('confirmPermissions').innerHTML = permHtml;
+            } else {
+                document.getElementById('confirmPermissions').innerHTML = 
+                    '<div style="font-size: 13px; color: var(--ns-secondary);">' +
+                    '<p>无需特殊权限授权</p>' +
+                    '</div>';
+            }
+            
+            if (preview.skillDeps && preview.skillDeps.length > 0) {
+                document.getElementById('skillDepsSection').style.display = 'block';
+                var depsHtml = '<div style="font-size: 13px;">';
+                preview.skillDeps.forEach(function(d) {
+                    depsHtml += '<p style="margin: 0 0 4px 0;">' +
+                        (d.installed ? '✓' : '⚠') + ' ' + d.skillName +
+                        (d.required ? ' (必需)' : '') +
+                        (d.installed ? ' - 已安装' : ' - 需要安装') +
+                        '</p>';
+                });
+                depsHtml += '</div>';
+                document.getElementById('confirmSkillDeps').innerHTML = depsHtml;
+            } else {
+                document.getElementById('skillDepsSection').style.display = 'none';
+            }
+            
+            if (preview.warnings && preview.warnings.length > 0) {
+                preview.warnings.forEach(function(w) {
+                    console.warn('Warning: ' + w);
+                });
+            }
+            
+            if (preview.errors && preview.errors.length > 0) {
+                alert('安装存在问题: ' + preview.errors.join(', '));
+            }
+        }
+        
+        function renderConfirmStep() {
+            fetchPreviewAndRender();
+        }
+        
+        function doInstall() {
+            var skill = currentInstallData;
+            var preview = currentPreview;
+            
+            var grantedPermissions = [];
+            var joinScenes = [];
+            
+            document.querySelectorAll('#confirmPermissions input[type="checkbox"]:checked').forEach(function(cb) {
+                grantedPermissions.push(cb.getAttribute('data-permission-id'));
+            });
+            
+            document.querySelectorAll('#confirmDependencies input[type="checkbox"]:checked').forEach(function(cb) {
+                joinScenes.push(cb.getAttribute('data-scene-id'));
+            });
+            
+            fetch('/api/skill/install/confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    previewId: preview.previewId,
+                    userId: currentUserId,
+                    grantedPermissions: grantedPermissions,
+                    joinScenes: joinScenes
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    return fetch('/api/skillcenter/installed/install', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            skillId: skill.skillId,
+                            skillName: skill.skillName,
+                            downloadUrl: skill.downloadUrl || null
+                        })
+                    });
+                } else {
+                    throw new Error(rs.message || '确认失败');
+                }
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    hideInstallModal();
+                    alert('技能安装成功');
+                    loadSkills();
+                } else {
+                    alert(rs.message || '安装失败');
+                }
+            })
+            .catch(function(e) {
+                alert(e.message || '安装失败');
+            });
+        }
+        
+        function installSkill() {
+            nextInstallStep();
+        }
+        
+        function quickInstall(skillId, skillName, skillType) {
+            document.getElementById('installSkillId').value = skillId;
+            document.getElementById('installSkillName').value = skillName;
+            document.getElementById('installType').value = skillType;
+            toggleInstallForm();
+            showInstallModal();
+        }
+        
+        function viewAuthDetail(skillId) {
+            fetch('/api/skill/auth/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId, skillId: skillId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200 && rs.data && rs.data.length > 0) {
+                    var auth = rs.data[0];
+                    var html = '<div>' +
+                        '<p><strong>技能:</strong> ' + auth.skillName + '</p>' +
+                        '<p><strong>授权类型:</strong> ' + auth.authType + '</p>' +
+                        '<p><strong>状态:</strong> ' + auth.statusText + '</p>' +
+                        '<p><strong>授权时间:</strong> ' + formatTime(auth.createdAt) + '</p>';
+                    
+                    if (auth.resourcePermissions && auth.resourcePermissions.length > 0) {
+                        html += '<h4 style="margin-top: 16px;">资源权限</h4><ul>';
+                        auth.resourcePermissions.forEach(function(r) {
+                            html += '<li>' + r.resourceName + ': ' + r.permissions.join(', ') + '</li>';
+                        });
+                        html += '</ul>';
+                    }
+                    
+                    if (auth.scenePermissions && auth.scenePermissions.length > 0) {
+                        html += '<h4 style="margin-top: 16px;">场景权限</h4><ul>';
+                        auth.scenePermissions.forEach(function(s) {
+                            html += '<li>' + s.sceneName + (s.joinGroup ? ' (加入群组)' : '') + '</li>';
+                        });
+                        html += '</ul>';
+                    }
+                    
+                    html += '</div>';
+                    document.getElementById('authDetailBody').innerHTML = html;
+                    document.getElementById('authDetailModal').classList.add('show');
+                }
+            });
+        }
+        
+        function hideAuthDetailModal() {
+            document.getElementById('authDetailModal').classList.remove('show');
+        }
+        
+        function viewSkillLogs(skillId) {
+            switchTab('logs');
+            fetch('/api/skill/auth/log/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUserId, skillId: skillId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    logs = rs.data || [];
+                    renderLogs();
+                }
+            });
+        }
+        
+        function configSkill(skillId) {
+            alert('配置功能开发中');
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            var d = new Date(timestamp);
+            return d.getFullYear() + '-' + 
+                   (d.getMonth() + 1).toString().padStart(2, '0') + '-' + 
+                   d.getDate().toString().padStart(2, '0') + ' ' +
+                   d.getHours().toString().padStart(2, '0') + ':' + 
+                   d.getMinutes().toString().padStart(2, '0');
+        }
+    </script>
+</body>
+</html>

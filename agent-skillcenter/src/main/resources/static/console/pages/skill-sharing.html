@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能共享 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .share-card {
+            transition: all 0.3s ease;
+        }
+        .share-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .permission-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .permission-read { background: var(--nx-info); color: white; }
+        .permission-write { background: var(--nx-primary); color: white; }
+        .permission-execute { background: var(--nx-warning); color: white; }
+        .permission-full { background: var(--nx-danger); color: white; }
+        .status-pending { color: var(--nx-warning); }
+        .status-accepted { color: var(--nx-success); }
+        .status-rejected { color: var(--nx-danger); }
+        .status-expired { color: var(--nx-text-secondary); }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能共享</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="openShareModal()">
+                        <i class="ri-share-line"></i> 发起共享
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-tabs nx-mb-6">
+                        <button class="nx-tabs__tab nx-tabs__tab--active" data-tab="shared" onclick="switchTab('shared')">我分享的</button>
+                        <button class="nx-tabs__tab" data-tab="received" onclick="switchTab('received')">我收到的</button>
+                    </div>
+                    
+                    <div id="shared-tab" class="tab-content">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">我分享的技能</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>技能名称</th>
+                                                <th>共享对象</th>
+                                                <th>权限</th>
+                                                <th>状态</th>
+                                                <th>分享时间</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="shared-skills-body">
+                                            <tr><td colspan="6" style="text-align: center;">加载中...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="received-tab" class="tab-content" style="display: none;">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">我收到的技能</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>技能名称</th>
+                                                <th>分享者</th>
+                                                <th>权限</th>
+                                                <th>状态</th>
+                                                <th>接收时间</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="received-skills-body">
+                                            <tr><td colspan="6" style="text-align: center;">加载中...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="shareModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h3>发起共享</h3>
+                <button class="modal-close" onclick="closeShareModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">选择技能</label>
+                    <select id="shareSkillId" class="nx-select" style="width: 100%;">
+                        <option value="">请选择技能</option>
+                    </select>
+                </div>
+                
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">共享对象类型</label>
+                    <div class="nx-flex nx-gap-4">
+                        <label class="nx-flex nx-items-center nx-gap-2">
+                            <input type="radio" name="targetType" value="user" checked onchange="toggleTargetInput()">
+                            <span>用户</span>
+                        </label>
+                        <label class="nx-flex nx-items-center nx-gap-2">
+                            <input type="radio" name="targetType" value="group" onchange="toggleTargetInput()">
+                            <span>群组</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label" id="targetLabel">用户ID</label>
+                    <input type="text" id="targetId" class="nx-input" placeholder="请输入用户ID">
+                </div>
+                
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">权限设置</label>
+                    <select id="permission" class="nx-select" style="width: 100%;">
+                        <option value="read">只读 - 只能查看技能信息</option>
+                        <option value="write">读写 - 可以查看和配置技能</option>
+                        <option value="execute">执行 - 可以执行技能</option>
+                        <option value="full">完全 - 拥有所有权限</option>
+                    </select>
+                </div>
+                
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">过期时间 (可选)</label>
+                    <input type="datetime-local" id="expireAt" class="nx-input">
+                </div>
+                
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">备注</label>
+                    <textarea id="shareNote" class="nx-textarea" rows="3" placeholder="添加备注信息"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeShareModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="submitShare()">
+                    <i class="ri-share-line"></i> 确认共享
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/utils.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var currentTab = 'shared';
+        
+        window.onPageInit = function() {
+            console.log('[SkillSharing] 页面初始化');
+            if (typeof initMenu === 'function') {
+                initMenu('skill-sharing');
+            }
+            loadSharedSkills();
+            loadReceivedSkills();
+            loadSkillOptions();
+        };
+        
+        window.switchTab = function(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.nx-tabs__tab').forEach(t => t.classList.remove('nx-tabs__tab--active'));
+            document.querySelector('[data-tab="' + tab + '"]').classList.add('nx-tabs__tab--active');
+            
+            document.getElementById('shared-tab').style.display = tab === 'shared' ? 'block' : 'none';
+            document.getElementById('received-tab').style.display = tab === 'received' ? 'block' : 'none';
+        };
+        
+        async function loadSharedSkills() {
+            const tbody = document.getElementById('shared-skills-body');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">加载中...</td></tr>';
+            
+            try {
+                const result = await utils.api.post('/api/skills/shared', {});
+                
+                if (result.code === 200 && result.data) {
+                    const skills = result.data;
+                    if (skills.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--nx-text-secondary);">暂无分享记录</td></tr>';
+                        return;
+                    }
+                    
+                    tbody.innerHTML = skills.map(skill => `
+                        <tr>
+                            <td>${skill.skillId || '-'}</td>
+                            <td>${skill.groupId || '-'}</td>
+                            <td><span class="permission-badge permission-${skill.permission || 'read'}">${getPermissionText(skill.permission)}</span></td>
+                            <td><span class="status-${skill.status || 'pending'}">${getStatusText(skill.status)}</span></td>
+                            <td>${skill.sharedAt || '-'}</td>
+                            <td>
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="cancelShare('${skill.id}')">取消</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--nx-danger);">加载失败</td></tr>';
+                }
+            } catch (error) {
+                console.error('[SkillSharing] 加载分享列表错误:', error);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--nx-danger);">加载失败</td></tr>';
+            }
+        }
+        
+        async function loadReceivedSkills() {
+            const tbody = document.getElementById('received-skills-body');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">加载中...</td></tr>';
+            
+            try {
+                const result = await utils.api.post('/api/skills/received', {});
+                
+                if (result.code === 200 && result.data) {
+                    const skills = result.data;
+                    if (skills.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--nx-text-secondary);">暂无接收记录</td></tr>';
+                        return;
+                    }
+                    
+                    tbody.innerHTML = skills.map(skill => `
+                        <tr>
+                            <td>${skill.skillName || skill.skillId || '-'}</td>
+                            <td>${skill.sharerName || skill.sharerId || '-'}</td>
+                            <td><span class="permission-badge permission-read">只读</span></td>
+                            <td><span class="status-${skill.status || 'pending'}">${getStatusText(skill.status)}</span></td>
+                            <td>${skill.receivedAt || '-'}</td>
+                            <td>
+                                ${skill.status === 'pending' ? 
+                                    '<button class="nx-btn nx-btn--primary nx-btn--sm" onclick="acceptShare(\'' + skill.id + '\')">接收</button>' :
+                                    '<button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="installSharedSkill(\'' + skill.skillId + '\')">安装</button>'
+                                }
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--nx-danger);">加载失败</td></tr>';
+                }
+            } catch (error) {
+                console.error('[SkillSharing] 加载接收列表错误:', error);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--nx-danger);">加载失败</td></tr>';
+            }
+        }
+        
+        async function loadSkillOptions() {
+            try {
+                const result = await utils.api.post('/api/skills/list', { pageNum: 1, pageSize: 100 });
+                const select = document.getElementById('shareSkillId');
+                
+                if (result.code === 200 && result.data) {
+                    const skills = result.data.content || result.data.items || result.data || [];
+                    skills.forEach(skill => {
+                        const option = document.createElement('option');
+                        option.value = skill.id || skill.skillId;
+                        option.textContent = skill.name || skill.skillId;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('[SkillSharing] 加载技能选项错误:', error);
+            }
+        }
+        
+        window.openShareModal = function() {
+            document.getElementById('shareModal').style.display = 'block';
+        };
+        
+        window.closeShareModal = function() {
+            document.getElementById('shareModal').style.display = 'none';
+        };
+        
+        window.toggleTargetInput = function() {
+            const targetType = document.querySelector('input[name="targetType"]:checked').value;
+            const label = document.getElementById('targetLabel');
+            const input = document.getElementById('targetId');
+            
+            if (targetType === 'user') {
+                label.textContent = '用户ID';
+                input.placeholder = '请输入用户ID';
+            } else {
+                label.textContent = '群组ID';
+                input.placeholder = '请输入群组ID';
+            }
+        };
+        
+        window.submitShare = async function() {
+            const skillId = document.getElementById('shareSkillId').value;
+            const targetType = document.querySelector('input[name="targetType"]:checked').value;
+            const targetId = document.getElementById('targetId').value;
+            const permission = document.getElementById('permission').value;
+            const expireAt = document.getElementById('expireAt').value;
+            const note = document.getElementById('shareNote').value;
+            
+            if (!skillId) {
+                utils.msg.error('请选择要分享的技能');
+                return;
+            }
+            if (!targetId) {
+                utils.msg.error('请输入' + (targetType === 'user' ? '用户ID' : '群组ID'));
+                return;
+            }
+            
+            try {
+                const result = await utils.api.post('/api/skills/share', {
+                    skillId: skillId,
+                    groupId: targetType === 'group' ? targetId : null,
+                    targetType: targetType,
+                    targetId: targetId,
+                    permission: permission,
+                    expireAt: expireAt || null,
+                    message: note
+                });
+                
+                if (result.code === 200) {
+                    utils.msg.success('分享成功');
+                    closeShareModal();
+                    loadSharedSkills();
+                } else {
+                    utils.msg.error('分享失败: ' + (result.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('[SkillSharing] 分享错误:', error);
+                utils.msg.error('分享失败');
+            }
+        };
+        
+        window.cancelShare = async function(shareId) {
+            if (!confirm('确定要取消此分享吗？')) return;
+            
+            try {
+                const result = await utils.api.post('/api/skills/share/' + shareId + '/delete', {});
+                
+                if (result.code === 200) {
+                    utils.msg.success('已取消分享');
+                    loadSharedSkills();
+                } else {
+                    utils.msg.error('取消失败');
+                }
+            } catch (error) {
+                console.error('[SkillSharing] 取消分享错误:', error);
+                utils.msg.error('取消失败');
+            }
+        };
+        
+        window.acceptShare = async function(shareId) {
+            try {
+                utils.msg.success('已接收分享');
+                loadReceivedSkills();
+            } catch (error) {
+                utils.msg.error('接收失败');
+            }
+        };
+        
+        window.installSharedSkill = async function(skillId) {
+            try {
+                const result = await utils.api.post('/api/skills/discovery/download', { skillId: skillId });
+                
+                if (result.code === 200) {
+                    utils.msg.success('安装成功');
+                } else {
+                    utils.msg.error('安装失败');
+                }
+            } catch (error) {
+                utils.msg.error('安装失败');
+            }
+        };
+        
+        function getPermissionText(permission) {
+            const map = {
+                'read': '只读',
+                'write': '读写',
+                'execute': '执行',
+                'full': '完全'
+            };
+            return map[permission] || permission || '只读';
+        }
+        
+        function getStatusText(status) {
+            const map = {
+                'pending': '待接收',
+                'accepted': '已接收',
+                'rejected': '已拒绝',
+                'expired': '已过期',
+                'cancelled': '已取消',
+                'shared': '已分享'
+            };
+            return map[status] || status || '未知';
+        }
+    </script>
+</body>
+</html>

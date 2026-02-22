@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人仪表盘 - Nexus</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/personal-api.js"></script>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">个人仪表盘</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <span class="nx-text-sm" style="color: var(--ns-secondary);" id="username">用户</span>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="dashboard-content">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon ri-lightbulb-line"></div>
+                                <div class="stat-info">
+                                    <h3>我的技能</h3>
+                                    <p class="stat-value" id="skill-count">0</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon ri-play-circle-line"></div>
+                                <div class="stat-info">
+                                    <h3>执行次数</h3>
+                                    <p class="stat-value" id="execution-count">0</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon ri-share-line"></div>
+                                <div class="stat-info">
+                                    <h3>分享技能</h3>
+                                    <p class="stat-value" id="shared-count">0</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon ri-group-line"></div>
+                                <div class="stat-info">
+                                    <h3>我的群组</h3>
+                                    <p class="stat-value" id="group-count">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="recent-activities">
+                            <h2>最近活动</h2>
+                            <div class="activity-list" id="activity-list">
+                                <div class="loading">加载中...</div>
+                            </div>
+                        </div>
+                        <div class="skill-progress">
+                            <h2>技能执行统计</h2>
+                            <canvas id="execution-chart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="/console/js/pages/personal-dashboard.js"></script>
+</body>
+</html>

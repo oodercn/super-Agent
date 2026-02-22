@@ -1,0 +1,248 @@
+apiVersion: scene.ooder.net/v1
+kind: SceneDefinition
+
+metadata:
+  sceneId: vfs
+  name: Virtual File System
+  description: |
+    虚拟文件系统场景，基于ooder-common 2.0的ooder-vfs-web模块。
+    提供统一的文件存储、管理和共享能力，支持大文件处理和文件索引。
+  version: "2.0.0"
+  suite: infrastructure
+  category: storage
+  author: Ooder Team
+  createdAt: "2026-02-18T00:00:00Z"
+
+spec:
+  type: primary
+  required: true
+  priority: 0
+  
+  capabilities:
+    - capId: vfs-read
+      name: Read File
+      description: 读取文件内容
+      parameters:
+        - name: path
+          type: string
+          required: true
+          description: 文件路径
+        - name: encoding
+          type: string
+          required: false
+          default: UTF-8
+          description: 文件编码
+      returnType: bytes
+      async: false
+      mapsTo: CtVfsService.getFileObjectById
+      
+    - capId: vfs-write
+      name: Write File
+      description: 写入文件内容
+      parameters:
+        - name: path
+          type: string
+          required: true
+          description: 文件路径
+        - name: content
+          type: bytes
+          required: true
+          description: 文件内容
+        - name: overwrite
+          type: boolean
+          required: false
+          default: true
+          description: 是否覆盖
+      returnType: boolean
+      async: false
+      mapsTo: CtVfsService.saveFileObject
+      
+    - capId: vfs-delete
+      name: Delete File
+      description: 删除文件或目录
+      parameters:
+        - name: path
+          type: string
+          required: true
+          description: 文件或目录路径
+        - name: recursive
+          type: boolean
+          required: false
+          default: false
+          description: 是否递归删除
+      returnType: boolean
+      async: false
+      
+    - capId: vfs-list
+      name: List Directory
+      description: 列出目录内容
+      parameters:
+        - name: path
+          type: string
+          required: true
+          description: 目录路径
+        - name: pattern
+          type: string
+          required: false
+          description: 文件匹配模式
+      returnType: list
+      async: false
+      mapsTo: CtVfsService.loadFolers
+      
+    - capId: vfs-mkdir
+      name: Make Directory
+      description: 创建目录
+      parameters:
+        - name: path
+          type: string
+          required: true
+          description: 目录路径
+      returnType: boolean
+      async: false
+      
+    - capId: vfs-exists
+      name: Check Exists
+      description: 检查文件或目录是否存在
+      parameters:
+        - name: path
+          type: string
+          required: true
+          description: 文件或目录路径
+      returnType: boolean
+      async: false
+      
+    - capId: vfs-copy
+      name: Copy File
+      description: 复制文件或目录
+      parameters:
+        - name: source
+          type: string
+          required: true
+          description: 源路径
+        - name: target
+          type: string
+          required: true
+          description: 目标路径
+      returnType: boolean
+      async: true
+      mapsTo: FileCopy
+      
+    - capId: vfs-move
+      name: Move File
+      description: 移动文件或目录
+      parameters:
+        - name: source
+          type: string
+          required: true
+          description: 源路径
+        - name: target
+          type: string
+          required: true
+          description: 目标路径
+      returnType: boolean
+      async: true
+      
+    - capId: vfs-share
+      name: Share File
+      description: 共享文件或目录
+      parameters:
+        - name: path
+          type: string
+          required: true
+          description: 文件或目录路径
+        - name: users
+          type: list
+          required: false
+          description: 共享用户列表
+        - name: permission
+          type: string
+          required: false
+          default: read
+          description: 权限类型
+      returnType: string
+      async: false
+      
+    - capId: vfs-sync
+      name: Sync Files
+      description: 同步文件
+      parameters:
+        - name: source
+          type: string
+          required: true
+          description: 源路径
+        - name: target
+          type: string
+          required: true
+          description: 目标路径
+        - name: direction
+          type: string
+          required: false
+          default: upload
+          description: 同步方向
+      returnType: object
+      async: true
+      mapsTo: SyncLocal
+      
+    - capId: vfs-bigfile
+      name: Big File Support
+      description: 大文件处理
+      parameters:
+        - name: filePath
+          type: string
+          required: true
+          description: 文件路径
+        - name: blockSize
+          type: number
+          required: false
+          default: 1048576
+          description: 块大小
+      returnType: object
+      async: true
+      mapsTo: BigFileUtil
+
+  dependencies:
+    scenes: []
+    skills:
+      - skillId: skill-vfs
+        required: true
+        version: ">=2.0.0"
+
+  config:
+    rootPath: ${user.home}/.ooder/vfs
+    maxFileSize: 104857600
+    allowedExtensions:
+      - .txt
+      - .pdf
+      - .doc
+      - .docx
+      - .xls
+      - .xlsx
+      - .jpg
+      - .png
+      - .zip
+    quotaPerUser: 10737418240
+    enableVersioning: true
+    maxVersions: 10
+    enableTrash: true
+    trashRetentionDays: 30
+    cacheEnabled: true
+    cacheSize: 1000
+    cacheTtl: 3600
+
+  commonModule:
+    groupId: net.ooder
+    artifactId: ooder-vfs-web
+    version: "2.0.0"
+    mainClass: net.ooder.vfs.ct.CtVfsServiceImpl
+
+  deployment:
+    singleton: true
+    autoStart: true
+    healthCheck:
+      path: /api/health
+      interval: 30
+      timeout: 10
+    resources:
+      cpu: "500m"
+      memory: "512Mi"
+      storage: "10Gi"

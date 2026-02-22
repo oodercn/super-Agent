@@ -55,7 +55,7 @@ public class SecurityKeyGenerateCommand extends AbstractCommand {
                 }
             }
             
-            KeyGenerationResult result = keyManagementService
+            KeyGenerationResult result = KeyManagementServiceImpl.getInstance()
                 .generateKeyForAgent(agentId, keyType, options);
             
             if (result.isSuccess()) {

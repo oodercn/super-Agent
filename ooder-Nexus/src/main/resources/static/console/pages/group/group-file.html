@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>群组文件 - Nexus</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .file-container { display: flex; height: calc(100vh - 140px); background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 8px; overflow: hidden; }
+        .file-sidebar { width: 280px; border-right: 1px solid var(--ns-border); display: flex; flex-direction: column; }
+        .file-sidebar-header { padding: 16px; border-bottom: 1px solid var(--ns-border); }
+        .file-sidebar-header h3 { font-size: 14px; font-weight: 600; color: var(--ns-dark); margin-bottom: 12px; }
+        .group-list { flex: 1; overflow-y: auto; }
+        .group-item { padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid var(--ns-border); transition: background 0.2s; }
+        .group-item:hover { background: var(--ns-bg-hover); }
+        .group-item.active { background: rgba(59, 130, 246, 0.1); }
+        .group-avatar { width: 40px; height: 40px; border-radius: 8px; background: var(--nx-primary); display: flex; align-items: center; justify-content: center; color: white; }
+        .group-info { flex: 1; min-width: 0; }
+        .group-name { font-size: 14px; font-weight: 500; color: var(--ns-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .group-count { font-size: 12px; color: var(--ns-secondary); }
+        .file-main { flex: 1; display: flex; flex-direction: column; }
+        .file-header { padding: 16px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .file-title { font-size: 16px; font-weight: 600; color: var(--ns-dark); }
+        .file-actions { display: flex; gap: 8px; }
+        .file-toolbar { padding: 12px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .file-filter { display: flex; gap: 8px; }
+        .filter-btn { padding: 6px 12px; background: var(--ns-bg-hover); border: 1px solid var(--ns-border); border-radius: 6px; font-size: 13px; color: var(--ns-dark); cursor: pointer; transition: all 0.2s; }
+        .filter-btn:hover { border-color: var(--nx-primary); }
+        .filter-btn.active { background: var(--nx-primary); color: white; border-color: var(--nx-primary); }
+        .file-search { padding: 8px 12px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); border-radius: 6px; color: var(--ns-dark); font-size: 13px; width: 200px; }
+        .file-list { flex: 1; overflow-y: auto; padding: 16px; }
+        .file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+        .file-card { background: var(--ns-bg-hover); border: 1px solid var(--ns-border); border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+        .file-card:hover { border-color: var(--nx-primary); transform: translateY(-2px); }
+        .file-icon { width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 12px; }
+        .file-icon.pdf { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .file-icon.doc { background: rgba(59, 130, 246, 0.1); color: var(--nx-primary); }
+        .file-icon.xls { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .file-icon.img { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        .file-icon.other { background: rgba(148, 163, 184, 0.1); color: var(--ns-secondary); }
+        .file-name { font-size: 14px; font-weight: 500; color: var(--ns-dark); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-meta { font-size: 12px; color: var(--ns-secondary); }
+        .file-uploader { font-size: 12px; color: var(--ns-secondary); margin-top: 8px; }
+        .storage-info { padding: 16px 20px; border-top: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .storage-bar { flex: 1; height: 8px; background: var(--ns-bg-hover); border-radius: 4px; margin: 0 16px; overflow: hidden; }
+        .storage-used { height: 100%; background: var(--nx-primary); border-radius: 4px; }
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--ns-secondary); }
+        .empty-state i { font-size: 64px; margin-bottom: 16px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--ns-card-bg); border-radius: 8px; width: 100%; max-width: 480px; }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 16px; font-weight: 600; color: var(--ns-dark); }
+        .modal-close { background: none; border: none; font-size: 20px; color: var(--ns-secondary); cursor: pointer; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid var(--ns-border); display: flex; justify-content: flex-end; gap: 8px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; color: var(--ns-dark); margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 8px 12px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); border-radius: 6px; color: var(--ns-dark); font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">群组文件</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="file-container">
+                        <div class="file-sidebar">
+                            <div class="file-sidebar-header">
+                                <h3>群组列表</h3>
+                            </div>
+                            <div class="group-list" id="groupList"></div>
+                        </div>
+                        <div class="file-main">
+                            <div id="fileArea" class="empty-state">
+                                <i class="ri-folder-line"></i>
+                                <p>选择一个群组查看文件</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>上传文件</h3>
+                <button class="modal-close" onclick="hideUploadModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">文件名称</label>
+                    <input type="text" class="form-control" id="fileName" placeholder="请输入文件名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">文件路径</label>
+                    <input type="text" class="form-control" id="filePath" placeholder="请输入文件路径">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">文件大小 (字节)</label>
+                    <input type="number" class="form-control" id="fileSize" placeholder="请输入文件大小">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">文件类型</label>
+                    <select class="form-control" id="fileType">
+                        <option value="pdf">PDF</option>
+                        <option value="doc">Word</option>
+                        <option value="xls">Excel</option>
+                        <option value="img">图片</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">文件描述</label>
+                    <textarea class="form-control" id="fileDesc" rows="2" placeholder="请输入文件描述"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="hideUploadModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="uploadFile()">上传</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var groups = [];
+        var currentGroupId = null;
+        var files = [];
+        var currentFilter = 'all';
+        
+        window.onPageInit = function() {
+            loadGroups();
+        };
+        
+        function loadGroups() {
+            fetch('/api/org/group/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: 'user-001' })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    groups = rs.data || [];
+                    renderGroupList(groups);
+                }
+            });
+        }
+        
+        function renderGroupList(data) {
+            var container = document.getElementById('groupList');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--ns-secondary);">暂无群组</div>';
+                return;
+            }
+            var html = '';
+            data.forEach(function(g) {
+                html += '<div class="group-item' + (currentGroupId === g.id ? ' active' : '') + '" onclick="selectGroup(\'' + g.id + '\')">' +
+                    '<div class="group-avatar"><i class="ri-group-line"></i></div>' +
+                    '<div class="group-info">' +
+                    '<div class="group-name">' + g.name + '</div>' +
+                    '<div class="group-count">' + g.memberCount + ' 成员</div>' +
+                    '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function selectGroup(groupId) {
+            currentGroupId = groupId;
+            var group = groups.find(function(g) { return g.id === groupId; });
+            renderGroupList(groups);
+            loadFiles(groupId);
+            renderFileArea(group);
+        }
+        
+        function renderFileArea(group) {
+            var container = document.getElementById('fileArea');
+            container.innerHTML = 
+                '<div class="file-header">' +
+                '<div class="file-title">' + (group ? group.name : '群组') + ' 文件</div>' +
+                '<div class="file-actions">' +
+                '<button class="nx-btn nx-btn--primary" onclick="showUploadModal()"><i class="ri-upload-2-line"></i> 上传文件</button>' +
+                '</div>' +
+                '</div>' +
+                '<div class="file-toolbar">' +
+                '<div class="file-filter">' +
+                '<button class="filter-btn active" onclick="filterFiles(\'all\')">全部</button>' +
+                '<button class="filter-btn" onclick="filterFiles(\'pdf\')">PDF</button>' +
+                '<button class="filter-btn" onclick="filterFiles(\'doc\')">Word</button>' +
+                '<button class="filter-btn" onclick="filterFiles(\'xls\')">Excel</button>' +
+                '<button class="filter-btn" onclick="filterFiles(\'img\')">图片</button>' +
+                '</div>' +
+                '<input type="text" class="file-search" placeholder="搜索文件..." id="fileSearch" oninput="searchFiles()">' +
+                '</div>' +
+                '<div class="file-list" id="fileList"></div>' +
+                '<div class="storage-info" id="storageInfo">' +
+                '<span>已使用: 0 B</span>' +
+                '<div class="storage-bar"><div class="storage-used" style="width: 0%"></div></div>' +
+                '<span>共 10 GB</span>' +
+                '</div>';
+        }
+        
+        function loadFiles(groupId) {
+            fetch('/api/group/file/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ groupId: groupId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    files = rs.data || [];
+                    renderFiles(files);
+                    loadStorageStats(groupId);
+                }
+            });
+        }
+        
+        function renderFiles(data) {
+            var container = document.getElementById('fileList');
+            if (!container) return;
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--ns-secondary); padding: 40px;">暂无文件</div>';
+                return;
+            }
+            var html = '<div class="file-grid">';
+            data.forEach(function(f) {
+                var iconClass = getFileIconClass(f.fileType);
+                html += '<div class="file-card" onclick="downloadFile(\'' + f.fileId + '\')">' +
+                    '<div class="file-icon ' + iconClass + '"><i class="' + getFileIcon(f.fileType) + '"></i></div>' +
+                    '<div class="file-name" title="' + f.fileName + '">' + f.fileName + '</div>' +
+                    '<div class="file-meta">' + formatSize(f.fileSize) + ' · ' + f.downloadCount + ' 次下载</div>' +
+                    '<div class="file-uploader">上传者: ' + f.uploaderName + '</div>' +
+                    '</div>';
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        function loadStorageStats(groupId) {
+            fetch('/api/group/file/stats', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ groupId: groupId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    var stats = rs.data;
+                    var usedPercent = (stats.usedQuota / stats.maxQuota * 100).toFixed(1);
+                    document.querySelector('#storageInfo span:first-child').textContent = '已使用: ' + formatSize(stats.usedQuota);
+                    document.querySelector('.storage-used').style.width = usedPercent + '%';
+                }
+            });
+        }
+        
+        function filterFiles(type) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-btn').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            var filtered = files;
+            if (type !== 'all') {
+                filtered = files.filter(function(f) { return f.fileType === type; });
+            }
+            renderFiles(filtered);
+        }
+        
+        function searchFiles() {
+            var keyword = document.getElementById('fileSearch').value.toLowerCase();
+            var filtered = files.filter(function(f) {
+                return f.fileName.toLowerCase().indexOf(keyword) >= 0 ||
+                       (f.description && f.description.toLowerCase().indexOf(keyword) >= 0);
+            });
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(function(f) { return f.fileType === currentFilter; });
+            }
+            renderFiles(filtered);
+        }
+        
+        function showUploadModal() {
+            document.getElementById('uploadModal').classList.add('show');
+        }
+        
+        function hideUploadModal() {
+            document.getElementById('uploadModal').classList.remove('show');
+        }
+        
+        function uploadFile() {
+            var fileName = document.getElementById('fileName').value;
+            var filePath = document.getElementById('filePath').value;
+            var fileSize = parseInt(document.getElementById('fileSize').value) || 0;
+            var fileType = document.getElementById('fileType').value;
+            var fileDesc = document.getElementById('fileDesc').value;
+            
+            if (!fileName || !filePath) {
+                alert('请填写文件名称和路径');
+                return;
+            }
+            
+            var mimeTypes = { pdf: 'application/pdf', doc: 'application/msword', xls: 'application/vnd.ms-excel', img: 'image/jpeg', other: 'application/octet-stream' };
+            
+            fetch('/api/group/file/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    groupId: currentGroupId,
+                    uploaderId: 'user-001',
+                    uploaderName: '当前用户',
+                    fileName: fileName,
+                    filePath: filePath,
+                    fileSize: fileSize,
+                    fileType: fileType,
+                    mimeType: mimeTypes[fileType] || 'application/octet-stream',
+                    description: fileDesc
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    hideUploadModal();
+                    loadFiles(currentGroupId);
+                } else {
+                    alert('上传失败: ' + rs.message);
+                }
+            });
+        }
+        
+        function downloadFile(fileId) {
+            fetch('/api/group/file/download', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fileId: fileId, groupId: currentGroupId, operatorId: 'user-001' })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    alert('文件路径: ' + rs.data.filePath);
+                    loadFiles(currentGroupId);
+                }
+            });
+        }
+        
+        function getFileIconClass(type) {
+            var classes = { pdf: 'pdf', doc: 'doc', xls: 'xls', img: 'img' };
+            return classes[type] || 'other';
+        }
+        
+        function getFileIcon(type) {
+            var icons = { pdf: 'ri-file-pdf-line', doc: 'ri-file-word-line', xls: 'ri-file-excel-line', img: 'ri-image-line' };
+            return icons[type] || 'ri-file-line';
+        }
+        
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+            return (bytes / 1024 / 1024 / 1024).toFixed(1) + ' GB';
+        }
+    </script>
+</body>
+</html>

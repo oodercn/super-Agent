@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全管理 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .security-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--nx-color-surface);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: var(--nx-color-text-secondary);
+            margin-top: 4px;
+        }
+        .stat-card.danger .stat-value { color: #ef4444; }
+        .stat-card.warning .stat-value { color: #eab308; }
+        .stat-card.success .stat-value { color: #22c55e; }
+        .stat-card.info .stat-value { color: #3b82f6; }
+        .security-level {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .security-level.high {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+        .security-level.medium {
+            background: rgba(234, 179, 8, 0.1);
+            color: #eab308;
+        }
+        .security-level.low {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+        .threat-meter {
+            width: 100%;
+            height: 8px;
+            background: var(--nx-color-border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .threat-meter-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: var(--nx-color-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .toggle-switch.active {
+            background: #22c55e;
+        }
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+        .toggle-switch.active::after {
+            transform: translateX(24px);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: var(--nx-color-surface);
+            border-radius: 8px;
+            width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--nx-color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            margin: 0;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--nx-color-text-secondary);
+        }
+        .modal-body {
+            padding: 16px;
+        }
+        .modal-footer {
+            padding: 16px;
+            border-top: 1px solid var(--nx-color-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">安全管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="runSecurityScan()">
+                        <i class="ri-shield-search-line"></i> 安全扫描
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">安全状态</h3>
+                            <span class="security-level high" id="security-level">
+                                <i class="ri-shield-check-line"></i> 安全等级：高
+                            </span>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="security-stats-grid">
+                                <div class="stat-card success">
+                                    <div class="stat-value" id="stat-active-policies">-</div>
+                                    <div class="stat-label">活跃策略</div>
+                                </div>
+                                <div class="stat-card warning">
+                                    <div class="stat-value" id="stat-alerts">-</div>
+                                    <div class="stat-label">近期告警</div>
+                                </div>
+                                <div class="stat-card danger">
+                                    <div class="stat-value" id="stat-blocked">-</div>
+                                    <div class="stat-label">拦截次数</div>
+                                </div>
+                                <div class="stat-card info">
+                                    <div class="stat-value" id="stat-threats">-</div>
+                                    <div class="stat-label">活跃威胁</div>
+                                </div>
+                            </div>
+                            <div class="nx-grid nx-grid--3 nx-gap-6">
+                                <div class="nx-form-group">
+                                    <div class="nx-flex nx-justify-between nx-items-center">
+                                        <label class="nx-form-label nx-mb-0">防火墙</label>
+                                        <div class="toggle-switch active" id="firewall-toggle" onclick="toggleFirewall()"></div>
+                                    </div>
+                                </div>
+                                <div class="nx-form-group">
+                                    <div class="nx-flex nx-justify-between nx-items-center">
+                                        <label class="nx-form-label nx-mb-0">数据加密</label>
+                                        <div class="toggle-switch active" id="encryption-toggle"></div>
+                                    </div>
+                                </div>
+                                <div class="nx-form-group">
+                                    <div class="nx-flex nx-justify-between nx-items-center">
+                                        <label class="nx-form-label nx-mb-0">审计日志</label>
+                                        <div class="toggle-switch active" id="audit-toggle"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nx-tabs nx-mb-6">
+                        <div class="nx-tabs__list">
+                            <button class="nx-tabs__tab active" data-tab="policies">安全策略</button>
+                            <button class="nx-tabs__tab" data-tab="audit">审计日志</button>
+                            <button class="nx-tabs__tab" data-tab="acl">访问控制</button>
+                            <button class="nx-tabs__tab" data-tab="threats">威胁管理</button>
+                        </div>
+                    </div>
+
+                    <div id="tab-policies" class="tab-content active">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">安全策略列表</h3>
+                                <button class="nx-btn nx-btn--sm nx-btn--primary" onclick="openPolicyModal()">
+                                    <i class="ri-add-line"></i> 新建策略
+                                </button>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>策略名称</th>
+                                                <th>类型</th>
+                                                <th>优先级</th>
+                                                <th>动作</th>
+                                                <th>状态</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="policies-table-body">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-audit" class="tab-content">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">审计日志</h3>
+                                <div class="nx-flex nx-gap-2">
+                                    <input type="text" id="audit-search" class="nx-input" placeholder="搜索日志..." style="width: 200px;">
+                                    <button class="nx-btn nx-btn--secondary" onclick="searchAuditLogs()">
+                                        <i class="ri-search-line"></i> 搜索
+                                    </button>
+                                    <button class="nx-btn nx-btn--ghost" onclick="exportAuditLogs()">
+                                        <i class="ri-download-line"></i> 导出
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>时间</th>
+                                                <th>事件类型</th>
+                                                <th>严重程度</th>
+                                                <th>来源</th>
+                                                <th>目标</th>
+                                                <th>结果</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="audit-table-body">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-acl" class="tab-content">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">访问控制列表</h3>
+                                <button class="nx-btn nx-btn--sm nx-btn--primary" onclick="openAclModal()">
+                                    <i class="ri-add-line"></i> 添加权限
+                                </button>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>资源类型</th>
+                                                <th>资源ID</th>
+                                                <th>主体</th>
+                                                <th>权限</th>
+                                                <th>状态</th>
+                                                <th>授权时间</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="acl-table-body">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tab-threats" class="tab-content">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">威胁列表</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-table-container">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>威胁ID</th>
+                                                <th>类型</th>
+                                                <th>严重程度</th>
+                                                <th>来源</th>
+                                                <th>状态</th>
+                                                <th>检测时间</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="threats-table-body">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="policyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新建安全策略</h3>
+                <button class="modal-close" onclick="closePolicyModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">策略名称</label>
+                    <input type="text" id="policy-name" class="nx-input" placeholder="输入策略名称">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">策略类型</label>
+                    <select id="policy-type" class="nx-select" style="width: 100%;">
+                        <option value="访问控制">访问控制</option>
+                        <option value="入侵检测">入侵检测</option>
+                        <option value="数据保护">数据保护</option>
+                        <option value="审计策略">审计策略</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">优先级</label>
+                    <select id="policy-priority" class="nx-select" style="width: 100%;">
+                        <option value="1">1 - 最高</option>
+                        <option value="2">2 - 高</option>
+                        <option value="3" selected>3 - 中</option>
+                        <option value="4">4 - 低</option>
+                        <option value="5">5 - 最低</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">动作</label>
+                    <select id="policy-action" class="nx-select" style="width: 100%;">
+                        <option value="允许">允许</option>
+                        <option value="拒绝">拒绝</option>
+                        <option value="告警">告警</option>
+                        <option value="记录">记录</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">描述</label>
+                    <textarea id="policy-description" class="nx-textarea" rows="3" placeholder="策略描述"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closePolicyModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createPolicy()">创建策略</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="aclModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加访问权限</h3>
+                <button class="modal-close" onclick="closeAclModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">资源类型</label>
+                    <select id="acl-resource-type" class="nx-select" style="width: 100%;">
+                        <option value="技能">技能</option>
+                        <option value="场景">场景</option>
+                        <option value="数据">数据</option>
+                        <option value="配置">配置</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">资源ID</label>
+                    <input type="text" id="acl-resource-id" class="nx-input" placeholder="输入资源ID">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">主体类型</label>
+                    <select id="acl-principal-type" class="nx-select" style="width: 100%;">
+                        <option value="用户">用户</option>
+                        <option value="角色">角色</option>
+                        <option value="群组">群组</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">主体ID</label>
+                    <input type="text" id="acl-principal-id" class="nx-input" placeholder="输入用户/角色/群组ID">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">权限</label>
+                    <select id="acl-permission" class="nx-select" style="width: 100%;">
+                        <option value="读取">读取</option>
+                        <option value="写入">写入</option>
+                        <option value="执行">执行</option>
+                        <option value="管理">管理</option>
+                        <option value="完全控制">完全控制</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeAclModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createAcl()">添加权限</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        function postApi(url, data) {
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data || {})
+            }).then(r => r.json());
+        }
+
+        function loadSecurityStatus() {
+            postApi('/api/security/status').then(res => {
+                if (res.code === 200 && res.data) {
+                    const s = res.data;
+                    document.getElementById('stat-active-policies').textContent = s.activePolicies + '/' + s.totalPolicies;
+                    document.getElementById('stat-alerts').textContent = s.recentAlerts;
+                    document.getElementById('stat-blocked').textContent = s.blockedAttempts;
+                    document.getElementById('stat-threats').textContent = s.activeThreats;
+
+                    document.getElementById('firewall-toggle').classList.toggle('active', s.firewallEnabled);
+                    document.getElementById('encryption-toggle').classList.toggle('active', s.encryptionEnabled);
+                    document.getElementById('audit-toggle').classList.toggle('active', s.auditEnabled);
+
+                    const levelEl = document.getElementById('security-level');
+                    if (s.securityLevel === '高') {
+                        levelEl.className = 'security-level high';
+                        levelEl.innerHTML = '<i class="ri-shield-check-line"></i> 安全等级：高';
+                    } else if (s.securityLevel === '中') {
+                        levelEl.className = 'security-level medium';
+                        levelEl.innerHTML = '<i class="ri-shield-line"></i> 安全等级：中';
+                    } else {
+                        levelEl.className = 'security-level low';
+                        levelEl.innerHTML = '<i class="ri-shield-alert-line"></i> 安全等级：低';
+                    }
+                }
+            });
+        }
+
+        function loadPolicies() {
+            postApi('/api/security/policies', { pageNum: 1, pageSize: 20 }).then(res => {
+                if (res.code === 200 && res.data) {
+                    const tbody = document.getElementById('policies-table-body');
+                    tbody.innerHTML = '';
+                    res.data.list.forEach(p => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${p.policyName}</td>
+                            <td>${p.policyType}</td>
+                            <td>${p.priority}</td>
+                            <td><span class="nx-badge nx-badge--secondary">${p.action}</span></td>
+                            <td><span class="nx-badge ${p.status === '启用' ? 'nx-badge--success' : 'nx-badge--secondary'}">${p.status}</span></td>
+                            <td>
+                                <button class="nx-btn nx-btn--sm nx-btn--ghost" onclick="togglePolicy('${p.policyId}', '${p.status}')" title="${p.status === '启用' ? '禁用' : '启用'}">
+                                    <i class="ri-${p.status === '启用' ? 'pause' : 'play'}-line"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            });
+        }
+
+        function loadAuditLogs() {
+            postApi('/api/security/audit', { pageNum: 1, pageSize: 20 }).then(res => {
+                if (res.code === 200 && res.data) {
+                    const tbody = document.getElementById('audit-table-body');
+                    tbody.innerHTML = '';
+                    res.data.list.forEach(a => {
+                        const severityClass = {
+                            '严重': 'nx-badge--danger',
+                            '警告': 'nx-badge--warning',
+                            '信息': 'nx-badge--info'
+                        }[a.severity] || 'nx-badge--secondary';
+                        
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${new Date(a.timestamp).toLocaleString()}</td>
+                            <td>${a.eventType}</td>
+                            <td><span class="nx-badge ${severityClass}">${a.severity}</span></td>
+                            <td>${a.source}</td>
+                            <td>${a.target}</td>
+                            <td><span class="nx-badge ${a.result === '成功' ? 'nx-badge--success' : 'nx-badge--danger'}">${a.result}</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            });
+        }
+
+        function loadAclList() {
+            postApi('/api/security/acl', { pageNum: 1, pageSize: 20 }).then(res => {
+                if (res.code === 200 && res.data) {
+                    const tbody = document.getElementById('acl-table-body');
+                    tbody.innerHTML = '';
+                    res.data.list.forEach(a => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${a.resourceType}</td>
+                            <td>${a.resourceId}</td>
+                            <td>${a.principalType}: ${a.principalId}</td>
+                            <td><span class="nx-badge nx-badge--primary">${a.permission}</span></td>
+                            <td><span class="nx-badge nx-badge--success">${a.status}</span></td>
+                            <td>${new Date(a.grantedAt).toLocaleString()}</td>
+                            <td>
+                                <button class="nx-btn nx-btn--sm nx-btn--ghost nx-text-danger" onclick="deleteAcl('${a.id}')" title="删除">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            });
+        }
+
+        function loadThreats() {
+            postApi('/api/security/threats', { pageNum: 1, pageSize: 20 }).then(res => {
+                if (res.code === 200 && res.data) {
+                    const tbody = document.getElementById('threats-table-body');
+                    tbody.innerHTML = '';
+                    res.data.list.forEach(t => {
+                        const severityClass = {
+                            '严重': 'nx-badge--danger',
+                            '高': 'nx-badge--danger',
+                            '中': 'nx-badge--warning',
+                            '低': 'nx-badge--info'
+                        }[t.severity] || 'nx-badge--secondary';
+                        
+                        const statusClass = {
+                            '待处理': 'nx-badge--warning',
+                            '处理中': 'nx-badge--info',
+                            '已解决': 'nx-badge--success',
+                            '已忽略': 'nx-badge--secondary'
+                        }[t.status] || 'nx-badge--secondary';
+                        
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${t.threatId}</td>
+                            <td>${t.threatType}</td>
+                            <td><span class="nx-badge ${severityClass}">${t.severity}</span></td>
+                            <td>${t.source}</td>
+                            <td><span class="nx-badge ${statusClass}">${t.status}</span></td>
+                            <td>${new Date(t.detectedAt).toLocaleString()}</td>
+                            <td>
+                                ${t.status !== '已解决' ? `<button class="nx-btn nx-btn--sm nx-btn--primary" onclick="resolveThreat('${t.threatId}')">处理</button>` : ''}
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            });
+        }
+
+        function togglePolicy(policyId, currentStatus) {
+            const action = currentStatus === '启用' ? 'disable' : 'enable';
+            postApi('/api/security/policies/' + policyId + '/' + action).then(res => {
+                if (res.code === 200) {
+                    loadPolicies();
+                    loadSecurityStatus();
+                }
+            });
+        }
+
+        function resolveThreat(threatId) {
+            postApi('/api/security/threats/' + threatId + '/resolve').then(res => {
+                if (res.code === 200) {
+                    loadThreats();
+                    loadSecurityStatus();
+                }
+            });
+        }
+
+        function runSecurityScan() {
+            postApi('/api/security/scan').then(res => {
+                if (res.code === 200) {
+                    alert('安全扫描已启动，请稍后查看结果');
+                    setTimeout(loadSecurityStatus, 2000);
+                }
+            });
+        }
+
+        function toggleFirewall() {
+            postApi('/api/security/firewall/toggle').then(res => {
+                if (res.code === 200) {
+                    loadSecurityStatus();
+                }
+            });
+        }
+
+        function openPolicyModal() {
+            document.getElementById('policy-name').value = '';
+            document.getElementById('policy-type').value = '访问控制';
+            document.getElementById('policy-priority').value = '3';
+            document.getElementById('policy-action').value = '允许';
+            document.getElementById('policy-description').value = '';
+            document.getElementById('policyModal').style.display = 'flex';
+        }
+
+        function closePolicyModal() {
+            document.getElementById('policyModal').style.display = 'none';
+        }
+
+        function createPolicy() {
+            const name = document.getElementById('policy-name').value;
+            const type = document.getElementById('policy-type').value;
+            const priority = parseInt(document.getElementById('policy-priority').value);
+            const action = document.getElementById('policy-action').value;
+            const description = document.getElementById('policy-description').value;
+
+            if (!name) {
+                alert('请输入策略名称');
+                return;
+            }
+
+            postApi('/api/security/policies', {
+                policyName: name,
+                policyType: type,
+                priority: priority,
+                action: action,
+                description: description
+            }).then(res => {
+                if (res.code === 200) {
+                    alert('策略创建成功');
+                    closePolicyModal();
+                    loadPolicies();
+                    loadSecurityStatus();
+                } else {
+                    alert('创建失败: ' + (res.message || '未知错误'));
+                }
+            });
+        }
+
+        function openAclModal() {
+            document.getElementById('acl-resource-type').value = '技能';
+            document.getElementById('acl-resource-id').value = '';
+            document.getElementById('acl-principal-type').value = '用户';
+            document.getElementById('acl-principal-id').value = '';
+            document.getElementById('acl-permission').value = '读取';
+            document.getElementById('aclModal').style.display = 'flex';
+        }
+
+        function closeAclModal() {
+            document.getElementById('aclModal').style.display = 'none';
+        }
+
+        function createAcl() {
+            const resourceType = document.getElementById('acl-resource-type').value;
+            const resourceId = document.getElementById('acl-resource-id').value;
+            const principalType = document.getElementById('acl-principal-type').value;
+            const principalId = document.getElementById('acl-principal-id').value;
+            const permission = document.getElementById('acl-permission').value;
+
+            if (!resourceId) {
+                alert('请输入资源ID');
+                return;
+            }
+            if (!principalId) {
+                alert('请输入主体ID');
+                return;
+            }
+
+            postApi('/api/security/acl', {
+                resourceType: resourceType,
+                resourceId: resourceId,
+                principalType: principalType,
+                principalId: principalId,
+                permission: permission
+            }).then(res => {
+                if (res.code === 200) {
+                    alert('权限添加成功');
+                    closeAclModal();
+                    loadAclList();
+                } else {
+                    alert('添加失败: ' + (res.message || '未知错误'));
+                }
+            });
+        }
+
+        function deleteAcl(aclId) {
+            if (!confirm('确定要删除此权限吗？')) return;
+            
+            postApi('/api/security/acl/' + aclId + '/delete').then(res => {
+                if (res.code === 200) {
+                    loadAclList();
+                } else {
+                    alert('删除失败');
+                }
+            });
+        }
+
+        function searchAuditLogs() {
+            const keyword = document.getElementById('audit-search').value;
+            postApi('/api/security/audit', { 
+                pageNum: 1, 
+                pageSize: 20,
+                keyword: keyword
+            }).then(res => {
+                if (res.code === 200 && res.data) {
+                    const tbody = document.getElementById('audit-table-body');
+                    tbody.innerHTML = '';
+                    res.data.list.forEach(a => {
+                        const severityClass = {
+                            '严重': 'nx-badge--danger',
+                            '警告': 'nx-badge--warning',
+                            '信息': 'nx-badge--info'
+                        }[a.severity] || 'nx-badge--secondary';
+                        
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${new Date(a.timestamp).toLocaleString()}</td>
+                            <td>${a.eventType}</td>
+                            <td><span class="nx-badge ${severityClass}">${a.severity}</span></td>
+                            <td>${a.source}</td>
+                            <td>${a.target}</td>
+                            <td><span class="nx-badge ${a.result === '成功' ? 'nx-badge--success' : 'nx-badge--danger'}">${a.result}</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            });
+        }
+
+        function exportAuditLogs() {
+            alert('审计日志导出功能开发中...');
+        }
+
+        document.querySelectorAll('.nx-tabs__tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.nx-tabs__tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                this.classList.add('active');
+                const tabId = 'tab-' + this.dataset.tab;
+                document.getElementById(tabId).classList.add('active');
+
+                if (this.dataset.tab === 'policies') loadPolicies();
+                if (this.dataset.tab === 'audit') loadAuditLogs();
+                if (this.dataset.tab === 'acl') loadAclList();
+                if (this.dataset.tab === 'threats') loadThreats();
+            });
+        });
+
+        window.onPageInit = function() {
+            loadSecurityStatus();
+            loadPolicies();
+        };
+    </script>
+</body>
+</html>

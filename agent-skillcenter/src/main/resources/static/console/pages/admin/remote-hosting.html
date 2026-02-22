@@ -3,332 +3,387 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理中心 - 远程托管</title>
-    <link rel="stylesheet" href="/skillcenter/console/css/style.css">
-    <link href="../../assets/css/remixicon/remixicon.css" rel="stylesheet">
-    <script src="/skillcenter/console/js/menu.js"></script>
-
+    <title>实例管理 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--nx-card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--nx-border-color);
+        }
+        .stat-card .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--nx-text-primary);
+        }
+        .stat-card .stat-label {
+            font-size: 14px;
+            color: var(--nx-text-secondary);
+            margin-top: 4px;
+        }
+        .stat-card.total .stat-value { color: #3b82f6; }
+        .stat-card.running .stat-value { color: #10b981; }
+        .stat-card.stopped .stat-value { color: #f59e0b; }
+        .stat-card.error .stat-value { color: #ef4444; }
+        .hosting-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .hosting-status.status-running { background: #d1fae5; color: #065f46; }
+        .hosting-status.status-stopped { background: #fef3c7; color: #92400e; }
+        .hosting-status.status-pending { background: #dbeafe; color: #1e40af; }
+        .hosting-status.status-error { background: #fee2e2; color: #991b1b; }
+        .hosting-status.status-unknown { background: #f3f4f6; color: #4b5563; }
+        .health-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .health-status.status-healthy { background: #d1fae5; color: #065f46; }
+        .health-status.status-unhealthy { background: #fee2e2; color: #991b1b; }
+        .health-status.status-unknown { background: #f3f4f6; color: #4b5563; }
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .filter-bar .nx-input {
+            flex: 1;
+            max-width: 300px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .action-buttons .nx-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        .detail-section {
+            margin-bottom: 20px;
+        }
+        .detail-section h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--nx-text-primary);
+            border-bottom: 1px solid var(--nx-border-color);
+            padding-bottom: 8px;
+        }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+        }
+        .detail-item .label {
+            color: var(--nx-text-secondary);
+        }
+        .detail-item .value {
+            font-weight: 500;
+        }
+        .log-container {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin-bottom: 4px;
+        }
+        .log-entry.info { color: #4fc3f7; }
+        .log-entry.warn { color: #ffb74d; }
+        .log-entry.error { color: #ef5350; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <aside class="sidebar" id="sidebar">
-            <!-- 菜单将通过menu.js动态加载 -->
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
         </aside>
-        <main class="main-content">
-            <header class="header">
-                <h1>远程托管管理</h1>
-                <div class="user-info">
-                    <span class="user-name">管理员</span>
-                    <i class="ri-user-line"></i>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">实例管理</h2>
                 </div>
-            </header>
-            <div class="admin-dashboard-content">
-                <div class="page-header">
-                    <button class="btn btn-primary" onclick="openAddHostingModal()">
-                        <i class="ri-server-add-line"></i> 添加托管
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="openAddHostingModal()">
+                        <i class="ri-add-line"></i> 创建实例
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
                     </button>
                 </div>
-        
-        <!-- 统计卡片 -->
-        <div class="admin-stats-grid">
-            <div class="system-info-card">
-                <div class="value">12</div>
-                <div class="label">总托管实例</div>
-            </div>
-            <div class="system-info-card">
-                <div class="value">8</div>
-                <div class="label">运行中实例</div>
-            </div>
-            <div class="system-info-card">
-                <div class="value">4</div>
-                <div class="label">已停止实例</div>
-            </div>
-            <div class="system-info-card">
-                <div class="value">98%</div>
-                <div class="label">服务可用性</div>
-            </div>
-        </div>
-        
-        <!-- 搜索框 -->
-        <div class="search-box">
-            <input type="text" class="form-control" placeholder="搜索托管实例名称或ID" id="hostingSearch">
-        </div>
-        
-        <!-- 托管实例列表 -->
-        <div class="hosting-list">
-            <table class="skills-table">
-                <thead>
-                    <tr>
-                        <th>实例ID</th>
-                        <th>实例名称</th>
-                        <th>技能ID</th>
-                        <th>状态</th>
-                        <th>部署时间</th>
-                        <th>运行时间</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="hostingTableBody">
-                    <!-- 托管实例数据将通过JavaScript动态填充 -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-    
-    <!-- 添加/编辑托管模态框 -->
-    <div id="hostingModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalTitle">添加托管实例</h3>
-                <span class="close" onclick="closeHostingModal()">&times;</span>
-            </div>
-            <form id="hostingForm">
-                <input type="hidden" id="hostingId">
-                <div class="form-group">
-                    <label for="hostingName">实例名称</label>
-                    <input type="text" class="form-control" id="hostingName" required>
-                </div>
-                <div class="form-group">
-                    <label for="skillId">技能ID</label>
-                    <input type="text" class="form-control" id="skillId" required>
-                </div>
-                <div class="form-group">
-                    <label for="hostingDescription">描述</label>
-                    <textarea class="form-control" id="hostingDescription"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="hostingStatus">初始状态</label>
-                    <select class="form-control" id="hostingStatus" required>
-                        <option value="running">运行中</option>
-                        <option value="stopped">已停止</option>
-                    </select>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeHostingModal()">取消</button>
-                    <button type="submit" class="btn btn-primary">保存</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <script>
-        // 模拟托管实例数据
-        const hostingInstances = [
-            {
-                id: "hosting-001",
-                name: "Text to Uppercase Service",
-                skillId: "text-to-uppercase-skill",
-                status: "running",
-                deployedAt: "2026-01-31 10:00:00",
-                uptime: "10h 30m"
-            },
-            {
-                id: "hosting-002",
-                name: "Code Generator Service",
-                skillId: "code-generation-skill",
-                status: "running",
-                deployedAt: "2026-01-30 15:30:00",
-                uptime: "25h"
-            },
-            {
-                id: "hosting-003",
-                name: "Local Deployment Service",
-                skillId: "local-deployment-skill",
-                status: "stopped",
-                deployedAt: "2026-01-29 09:15:00",
-                uptime: "0h"
-            },
-            {
-                id: "hosting-004",
-                name: "Weather API Service",
-                skillId: "weather-api-skill",
-                status: "running",
-                deployedAt: "2026-01-28 14:45:00",
-                uptime: "72h"
-            },
-            {
-                id: "hosting-005",
-                name: "Stock API Service",
-                skillId: "stock-api-skill",
-                status: "running",
-                deployedAt: "2026-01-27 11:20:00",
-                uptime: "96h"
-            },
-            {
-                id: "hosting-006",
-                name: "Image Resizer Service",
-                skillId: "image-resizer-skill",
-                status: "stopped",
-                deployedAt: "2026-01-26 16:50:00",
-                uptime: "0h"
-            }
-        ];
-        
-        // 页面加载时渲染托管实例列表
-        document.addEventListener('DOMContentLoaded', function() {
-            renderHostingList();
-        });
-        
-        // 渲染托管实例列表
-        function renderHostingList() {
-            const tableBody = document.getElementById('hostingTableBody');
-            tableBody.innerHTML = '';
+            </header>
             
-            const searchTerm = document.getElementById('hostingSearch').value.toLowerCase();
-            
-            const filteredInstances = hostingInstances.filter(instance => 
-                instance.name.toLowerCase().includes(searchTerm) || 
-                instance.id.toLowerCase().includes(searchTerm)
-            );
-            
-            filteredInstances.forEach(instance => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${instance.id}</td>
-                    <td>${instance.name}</td>
-                    <td>${instance.skillId}</td>
-                    <td><span class="hosting-status status-${instance.status}">${getStatusText(instance.status)}</span></td>
-                    <td>${instance.deployedAt}</td>
-                    <td>${instance.uptime}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn btn-success" onclick="startHosting('${instance.id}')" ${instance.status === 'running' ? 'disabled' : ''}>
-                                <i class="ri-play-line"></i> 启动
-                            </button>
-                            <button class="btn btn-danger" onclick="stopHosting('${instance.id}')" ${instance.status === 'stopped' ? 'disabled' : ''}>
-                                <i class="ri-stop-line"></i> 停止
-                            </button>
-                            <button class="btn btn-secondary" onclick="editHosting('${instance.id}')">
-                                <i class="ri-edit-line"></i> 编辑
-                            </button>
-                            <button class="btn btn-danger" onclick="deleteHosting('${instance.id}')">
-                                <i class="ri-delete-line"></i> 删除
-                            </button>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="stats-grid">
+                        <div class="stat-card total">
+                            <div class="stat-value" id="totalInstances">0</div>
+                            <div class="stat-label">总实例</div>
                         </div>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-        
-        // 获取状态文本
-        function getStatusText(status) {
-            switch (status) {
-                case 'running': return '运行中';
-                case 'stopped': return '已停止';
-                case 'pending': return '待处理';
-                default: return status;
-            }
-        }
-        
-        // 打开添加托管模态框
-        function openAddHostingModal() {
-            document.getElementById('modalTitle').textContent = '添加托管实例';
-            document.getElementById('hostingId').value = '';
-            document.getElementById('hostingName').value = '';
-            document.getElementById('skillId').value = '';
-            document.getElementById('hostingDescription').value = '';
-            document.getElementById('hostingStatus').value = 'running';
-            document.getElementById('hostingModal').style.display = 'block';
-        }
-        
-        // 打开编辑托管模态框
-        function editHosting(hostingId) {
-            const instance = hostingInstances.find(h => h.id === hostingId);
-            if (instance) {
-                document.getElementById('modalTitle').textContent = '编辑托管实例';
-                document.getElementById('hostingId').value = instance.id;
-                document.getElementById('hostingName').value = instance.name;
-                document.getElementById('skillId').value = instance.skillId;
-                document.getElementById('hostingDescription').value = instance.description || '';
-                document.getElementById('hostingStatus').value = instance.status;
-                document.getElementById('hostingModal').style.display = 'block';
-            }
-        }
-        
-        // 关闭托管模态框
-        function closeHostingModal() {
-            document.getElementById('hostingModal').style.display = 'none';
-        }
-        
-        // 启动托管实例
-        function startHosting(hostingId) {
-            const instanceIndex = hostingInstances.findIndex(h => h.id === hostingId);
-            if (instanceIndex !== -1) {
-                hostingInstances[instanceIndex].status = 'running';
-                hostingInstances[instanceIndex].uptime = '0h 1m';
-                renderHostingList();
-            }
-        }
-        
-        // 停止托管实例
-        function stopHosting(hostingId) {
-            const instanceIndex = hostingInstances.findIndex(h => h.id === hostingId);
-            if (instanceIndex !== -1) {
-                hostingInstances[instanceIndex].status = 'stopped';
-                hostingInstances[instanceIndex].uptime = '0h';
-                renderHostingList();
-            }
-        }
-        
-        // 删除托管实例
-        function deleteHosting(hostingId) {
-            if (confirm('确定要删除这个托管实例吗？')) {
-                const instanceIndex = hostingInstances.findIndex(h => h.id === hostingId);
-                if (instanceIndex !== -1) {
-                    hostingInstances.splice(instanceIndex, 1);
-                    renderHostingList();
-                }
-            }
-        }
-        
-        // 提交托管表单
-        document.getElementById('hostingForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const hostingId = document.getElementById('hostingId').value;
-            const hostingName = document.getElementById('hostingName').value;
-            const skillId = document.getElementById('skillId').value;
-            const hostingDescription = document.getElementById('hostingDescription').value;
-            const hostingStatus = document.getElementById('hostingStatus').value;
-            
-            if (hostingId) {
-                // 编辑现有托管实例
-                const instanceIndex = hostingInstances.findIndex(h => h.id === hostingId);
-                if (instanceIndex !== -1) {
-                    hostingInstances[instanceIndex] = {
-                        ...hostingInstances[instanceIndex],
-                        name: hostingName,
-                        skillId: skillId,
-                        description: hostingDescription,
-                        status: hostingStatus
-                    };
-                }
-            } else {
-                // 添加新托管实例
-                const newInstance = {
-                    id: `hosting-${Date.now()}`,
-                    name: hostingName,
-                    skillId: skillId,
-                    description: hostingDescription,
-                    status: hostingStatus,
-                    deployedAt: new Date().toLocaleString(),
-                    uptime: hostingStatus === 'running' ? '0h 1m' : '0h'
-                };
-                hostingInstances.push(newInstance);
-            }
-            
-            renderHostingList();
-            closeHostingModal();
-        });
-        
-        // 搜索事件
-        document.getElementById('hostingSearch').addEventListener('input', renderHostingList);
-        
-        // 初始化菜单
-        initMenu('remote-hosting');
-    </script>
+                        <div class="stat-card running">
+                            <div class="stat-value" id="runningInstances">0</div>
+                            <div class="stat-label">运行中</div>
+                        </div>
+                        <div class="stat-card stopped">
+                            <div class="stat-value" id="stoppedInstances">0</div>
+                            <div class="stat-label">已停止</div>
+                        </div>
+                        <div class="stat-card error">
+                            <div class="stat-value" id="errorInstances">0</div>
+                            <div class="stat-label">异常</div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-4">
+                        <div class="nx-card__body">
+                            <div class="filter-bar">
+                                <input type="text" id="hostingSearch" class="nx-input" placeholder="搜索实例名称或ID...">
+                                <select id="statusFilter" class="nx-input" style="width: 150px;">
+                                    <option value="">全部状态</option>
+                                    <option value="running">运行中</option>
+                                    <option value="stopped">已停止</option>
+                                    <option value="error">异常</option>
+                                </select>
+                                <button class="nx-btn nx-btn--primary" id="btnSearchHosting">
+                                    <i class="ri-search-line"></i> 搜索
+                                </button>
+                                <button class="nx-btn nx-btn--ghost" id="btnResetFilters">
+                                    <i class="ri-refresh-line"></i> 重置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">托管实例列表</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table nx-table--striped">
+                                    <thead>
+                                        <tr>
+                                            <th>实例ID</th>
+                                            <th>实例名称</th>
+                                            <th>关联技能</th>
+                                            <th>状态</th>
+                                            <th>健康状态</th>
+                                            <th>创建时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="hostingTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
+    
+    <div id="hostingModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 600px;">
+            <div class="modal-header">
+                <h3 id="modalTitle">添加托管实例</h3>
+                <button class="modal-close" onclick="closeHostingModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="hostingId">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">实例名称 <span style="color: red;">*</span></label>
+                    <input type="text" id="hostingName" class="nx-input" placeholder="请输入实例名称">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">关联技能 <span style="color: red;">*</span></label>
+                    <select id="skillId" class="nx-input">
+                        <option value="">请选择技能</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">描述</label>
+                    <textarea id="hostingDescription" class="nx-input" rows="3" placeholder="请输入描述"></textarea>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">初始状态</label>
+                    <select id="hostingStatus" class="nx-input">
+                        <option value="stopped">已停止</option>
+                        <option value="running">运行中</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeHostingModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="submitHostingForm()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="instanceDetailModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 800px;">
+            <div class="modal-header">
+                <h3>实例详情</h3>
+                <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-section">
+                    <h4>基本信息</h4>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="label">实例ID:</span>
+                            <span class="value" id="detailId">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">实例名称:</span>
+                            <span class="value" id="detailName">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">关联技能:</span>
+                            <span class="value" id="detailSkill">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">状态:</span>
+                            <span class="value" id="detailStatus">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">创建时间:</span>
+                            <span class="value" id="detailCreatedAt">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">健康状态:</span>
+                            <span class="value" id="detailHealth">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>资源配置</h4>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="label">CPU限制:</span>
+                            <span class="value" id="detailCpu">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">内存限制:</span>
+                            <span class="value" id="detailMemory">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">当前副本:</span>
+                            <span class="value" id="detailReplicas">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">最大副本:</span>
+                            <span class="value" id="detailMaxReplicas">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>网络配置</h4>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="label">主机:</span>
+                            <span class="value" id="detailHost">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">端口:</span>
+                            <span class="value" id="detailPort">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">协议:</span>
+                            <span class="value" id="detailProtocol">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">端点:</span>
+                            <span class="value" id="detailEndpoint">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>执行日志</h4>
+                    <div class="log-container" id="detailLogs">
+                        <div class="log-entry info">[INFO] 暂无日志记录</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeDetailModal()">关闭</button>
+                <button class="nx-btn nx-btn--success" id="detailStartBtn" onclick="startFromDetail()">启动</button>
+                <button class="nx-btn nx-btn--warning" id="detailStopBtn" onclick="stopFromDetail()">停止</button>
+                <button class="nx-btn nx-btn--primary" onclick="restartFromDetail()">重启</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="scaleModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 400px;">
+            <div class="modal-header">
+                <h3>扩缩容配置</h3>
+                <button class="modal-close" onclick="closeScaleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="scaleInstanceId">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">当前副本数</label>
+                    <input type="text" id="currentReplicas" class="nx-input" readonly>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">目标副本数</label>
+                    <input type="number" id="targetReplicas" class="nx-input" min="0" max="10" value="1">
+                </div>
+                <div class="nx-alert nx-alert--info">
+                    <i class="ri-information-line"></i>
+                    <span>副本数范围: 0-10，设置为0等同于停止实例</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeScaleModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="submitScale()">确认扩缩容</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/utils.js"></script>
+    <script src="/skillcenter/console/js/remote-hosting.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
 </body>
 </html>

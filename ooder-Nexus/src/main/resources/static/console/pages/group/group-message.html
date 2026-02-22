@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>群组消息 - Nexus</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .chat-container { display: flex; height: calc(100vh - 140px); background: var(--ns-card-bg); border: 1px solid var(--ns-border); border-radius: 8px; overflow: hidden; }
+        .chat-sidebar { width: 280px; border-right: 1px solid var(--ns-border); display: flex; flex-direction: column; }
+        .chat-sidebar-header { padding: 16px; border-bottom: 1px solid var(--ns-border); }
+        .chat-sidebar-header h3 { font-size: 14px; font-weight: 600; color: var(--ns-dark); margin-bottom: 12px; }
+        .chat-search { width: 100%; padding: 8px 12px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); border-radius: 6px; color: var(--ns-dark); font-size: 13px; }
+        .chat-list { flex: 1; overflow-y: auto; }
+        .chat-item { padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid var(--ns-border); transition: background 0.2s; }
+        .chat-item:hover { background: var(--ns-bg-hover); }
+        .chat-item.active { background: rgba(59, 130, 246, 0.1); }
+        .chat-avatar { width: 40px; height: 40px; border-radius: 8px; background: var(--nx-primary); display: flex; align-items: center; justify-content: center; color: white; }
+        .chat-info { flex: 1; min-width: 0; }
+        .chat-name { font-size: 14px; font-weight: 500; color: var(--ns-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-preview { font-size: 12px; color: var(--ns-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-meta { text-align: right; }
+        .chat-time { font-size: 11px; color: var(--ns-secondary); }
+        .chat-badge { background: var(--nx-primary); color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-top: 4px; display: inline-block; }
+        .chat-main { flex: 1; display: flex; flex-direction: column; }
+        .chat-header { padding: 16px 20px; border-bottom: 1px solid var(--ns-border); display: flex; justify-content: space-between; align-items: center; }
+        .chat-title { font-size: 16px; font-weight: 600; color: var(--ns-dark); }
+        .chat-members { font-size: 13px; color: var(--ns-secondary); }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; }
+        .message { display: flex; gap: 12px; margin-bottom: 16px; }
+        .message-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--ns-bg-hover); display: flex; align-items: center; justify-content: center; color: var(--ns-secondary); font-size: 14px; flex-shrink: 0; }
+        .message-content { flex: 1; }
+        .message-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .message-sender { font-size: 13px; font-weight: 500; color: var(--ns-dark); }
+        .message-time { font-size: 11px; color: var(--ns-secondary); }
+        .message-text { font-size: 14px; color: var(--ns-dark); line-height: 1.5; background: var(--ns-bg-hover); padding: 10px 14px; border-radius: 8px; display: inline-block; max-width: 80%; }
+        .message-own { flex-direction: row-reverse; }
+        .message-own .message-text { background: var(--nx-primary); color: white; }
+        .message-own .message-header { flex-direction: row-reverse; }
+        .message-file { display: flex; align-items: center; gap: 10px; background: var(--ns-bg-hover); padding: 12px; border-radius: 8px; max-width: 300px; }
+        .message-file-icon { width: 40px; height: 40px; background: var(--nx-primary); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; }
+        .message-file-info { flex: 1; }
+        .message-file-name { font-size: 13px; color: var(--ns-dark); margin-bottom: 2px; }
+        .message-file-size { font-size: 11px; color: var(--ns-secondary); }
+        .chat-input { padding: 16px 20px; border-top: 1px solid var(--ns-border); display: flex; gap: 12px; align-items: flex-end; }
+        .chat-input textarea { flex: 1; padding: 10px 14px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); border-radius: 8px; color: var(--ns-dark); font-size: 14px; resize: none; min-height: 40px; max-height: 120px; }
+        .chat-input textarea:focus { outline: none; border-color: var(--nx-primary); }
+        .chat-actions { display: flex; gap: 8px; }
+        .empty-chat { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--ns-secondary); }
+        .empty-chat i { font-size: 64px; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">群组消息</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="chat-container">
+                        <div class="chat-sidebar">
+                            <div class="chat-sidebar-header">
+                                <h3>消息列表</h3>
+                                <input type="text" class="chat-search" placeholder="搜索群组...">
+                            </div>
+                            <div class="chat-list" id="chatList"></div>
+                        </div>
+                        <div class="chat-main">
+                            <div id="chatArea" class="empty-chat">
+                                <i class="ri-message-3-line"></i>
+                                <p>选择一个群组开始聊天</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var groups = [];
+        var currentGroupId = null;
+        var messages = [];
+        
+        window.onPageInit = function() {
+            loadGroups();
+            var params = new URLSearchParams(window.location.search);
+            var groupId = params.get('groupId');
+            if (groupId) {
+                setTimeout(function() { selectGroup(groupId); }, 500);
+            }
+        };
+        
+        function loadGroups() {
+            fetch('/api/org/group/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: 'user-001' })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    groups = rs.data || [];
+                    renderChatList(groups);
+                }
+            });
+        }
+        
+        function renderChatList(data) {
+            var container = document.getElementById('chatList');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--ns-secondary);">暂无群组</div>';
+                return;
+            }
+            var html = '';
+            data.forEach(function(g) {
+                html += '<div class="chat-item' + (currentGroupId === g.id ? ' active' : '') + '" onclick="selectGroup(\'' + g.id + '\')">' +
+                    '<div class="chat-avatar"><i class="ri-group-line"></i></div>' +
+                    '<div class="chat-info">' +
+                    '<div class="chat-name">' + g.name + '</div>' +
+                    '<div class="chat-preview">' + g.memberCount + ' 成员</div>' +
+                    '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function selectGroup(groupId) {
+            currentGroupId = groupId;
+            var group = groups.find(function(g) { return g.id === groupId; });
+            renderChatList(groups);
+            loadMessages(groupId);
+            renderChatArea(group);
+        }
+        
+        function renderChatArea(group) {
+            var container = document.getElementById('chatArea');
+            container.innerHTML = 
+                '<div class="chat-header">' +
+                '<div>' +
+                '<div class="chat-title">' + (group ? group.name : '群组') + '</div>' +
+                '<div class="chat-members">' + (group ? group.memberCount : 0) + ' 成员</div>' +
+                '</div>' +
+                '</div>' +
+                '<div class="chat-messages" id="messageList"></div>' +
+                '<div class="chat-input">' +
+                '<textarea id="messageInput" placeholder="输入消息..." rows="1" onkeydown="handleKeydown(event)"></textarea>' +
+                '<div class="chat-actions">' +
+                '<button class="nx-btn nx-btn--ghost nx-btn--icon" title="发送文件"><i class="ri-attachment-2"></i></button>' +
+                '<button class="nx-btn nx-btn--primary" onclick="sendMessage()">发送</button>' +
+                '</div>' +
+                '</div>';
+        }
+        
+        function loadMessages(groupId) {
+            fetch('/api/group/message/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ groupId: groupId })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    messages = rs.data || [];
+                    renderMessages(messages);
+                }
+            });
+        }
+        
+        function renderMessages(data) {
+            var container = document.getElementById('messageList');
+            if (!container) return;
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--ns-secondary); padding: 40px;">暂无消息</div>';
+                return;
+            }
+            var html = '';
+            var currentUserId = 'user-001';
+            data.forEach(function(m) {
+                var isOwn = m.senderId === currentUserId;
+                html += '<div class="message' + (isOwn ? ' message-own' : '') + '">' +
+                    '<div class="message-avatar">' + (m.senderName ? m.senderName.charAt(0) : '?') + '</div>' +
+                    '<div class="message-content">' +
+                    '<div class="message-header">' +
+                    '<span class="message-sender">' + m.senderName + '</span>' +
+                    '<span class="message-time">' + formatTime(m.sendTime) + '</span>' +
+                    '</div>';
+                if (m.msgType === 'file') {
+                    html += '<div class="message-file">' +
+                        '<div class="message-file-icon"><i class="ri-file-line"></i></div>' +
+                        '<div class="message-file-info">' +
+                        '<div class="message-file-name">' + m.fileName + '</div>' +
+                        '<div class="message-file-size">' + formatSize(m.fileSize) + '</div>' +
+                        '</div>' +
+                        '</div>';
+                } else {
+                    html += '<div class="message-text">' + m.content + '</div>';
+                }
+                html += '</div></div>';
+            });
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function sendMessage() {
+            var input = document.getElementById('messageInput');
+            var content = input.value.trim();
+            if (!content || !currentGroupId) return;
+            
+            fetch('/api/group/message/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    groupId: currentGroupId,
+                    senderId: 'user-001',
+                    senderName: '当前用户',
+                    msgType: 'text',
+                    content: content
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    input.value = '';
+                    loadMessages(currentGroupId);
+                }
+            });
+        }
+        
+        function handleKeydown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        function formatTime(timestamp) {
+            var d = new Date(timestamp);
+            return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+        }
+        
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+        }
+    </script>
+</body>
+</html>

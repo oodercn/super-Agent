@@ -1,0 +1,179 @@
+apiVersion: ooder.io/v1
+kind: Skill
+metadata:
+  skillId: "skill-jds-server"
+  skillName: "JDSServer 核心服务管理中心"
+  skillType: "SYSTEM_SERVICE"
+  version: "1.0.0"
+  description: "ENexus核心服务管理中心，提供服务注册发现、配置管理、心跳检测、负载均衡、安全认证等功能"
+  author: "ooder Team"
+  createdAt: "2026-02-18T00:00:00Z"
+  scene: "SYS"
+
+spec:
+  capabilities:
+    - capabilityId: "cap-service-discovery"
+      capabilityName: "服务发现"
+      description: "服务注册、发现、健康检查"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-register-service"
+          operationName: "注册服务"
+          description: "注册新的服务实例"
+          inputSchema:
+            type: "object"
+            properties:
+              serviceId:
+                type: "string"
+              serviceName:
+                type: "string"
+              endpoint:
+                type: "string"
+              metadata:
+                type: "object"
+          outputSchema:
+            type: "object"
+            properties:
+              success:
+                type: "boolean"
+              message:
+                type: "string"
+        
+        - operationId: "op-discover-service"
+          operationName: "发现服务"
+          description: "发现可用服务实例"
+          inputSchema:
+            type: "object"
+            properties:
+              serviceName:
+                type: "string"
+          outputSchema:
+            type: "object"
+            properties:
+              services:
+                type: "array"
+        
+        - operationId: "op-health-check"
+          operationName: "健康检查"
+          description: "检查服务健康状态"
+          inputSchema:
+            type: "object"
+            properties:
+              serviceId:
+                type: "string"
+          outputSchema:
+            type: "object"
+            properties:
+              healthy:
+                type: "boolean"
+              lastCheck:
+                type: "string"
+    
+    - capabilityId: "cap-config-center"
+      capabilityName: "配置中心"
+      description: "配置管理、热更新、推送"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-get-config"
+          operationName: "获取配置"
+          description: "获取服务配置"
+        
+        - operationId: "op-push-config"
+          operationName: "推送配置"
+          description: "推送配置更新"
+        
+        - operationId: "op-watch-config"
+          operationName: "监听配置"
+          description: "监听配置变化"
+    
+    - capabilityId: "cap-security-auth"
+      capabilityName: "安全认证"
+      description: "Token管理、权限验证、密钥分发"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-verify-token"
+          operationName: "验证Token"
+          description: "验证访问令牌"
+        
+        - operationId: "op-generate-token"
+          operationName: "生成Token"
+          description: "生成访问令牌"
+        
+        - operationId: "op-refresh-token"
+          operationName: "刷新Token"
+          description: "刷新访问令牌"
+    
+    - capabilityId: "cap-audit-log"
+      capabilityName: "审计日志"
+      description: "操作审计、访问日志、安全审计"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-log-audit"
+          operationName: "记录审计"
+          description: "记录审计日志"
+        
+        - operationId: "op-query-audit"
+          operationName: "查询审计"
+          description: "查询审计日志"
+
+  config:
+    port: 8080
+    host: "0.0.0.0"
+    endpoints:
+      - path: "/api/jds/service"
+        description: "服务管理接口"
+      - path: "/api/jds/config"
+        description: "配置管理接口"
+      - path: "/api/jds/auth"
+        description: "认证管理接口"
+      - path: "/api/jds/heartbeat"
+        description: "心跳接口"
+      - path: "/api/jds/audit"
+        description: "审计接口"
+    
+    dependencies: []
+    
+    threadPool:
+      coreSize: 16
+      maxSize: 32
+      queueCapacity: 1000
+    
+    connection:
+      maxConnections: 1000
+      timeout: 30000
+      idleTimeout: 60000
+
+  healthCheck:
+    enabled: true
+    interval: 30000
+    timeout: 5000
+    endpoint: "/api/jds/health"
+    failureThreshold: 3
+    successThreshold: 1
+
+  resources:
+    cpu:
+      request: "500m"
+      limit: "2000m"
+    memory:
+      request: "512Mi"
+      limit: "2Gi"
+
+  lifecycle:
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      failureThreshold: 30
+    
+    livenessProbe:
+      enabled: true
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      failureThreshold: 3
+    
+    readinessProbe:
+      enabled: true
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      failureThreshold: 3

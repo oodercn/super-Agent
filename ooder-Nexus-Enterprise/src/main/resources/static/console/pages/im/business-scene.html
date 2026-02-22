@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>业务场景 - Nexus Console</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+<div class="nx-page">
+    <div class="nx-page-header">
+        <div class="nx-page-title">
+            <i class="ri-layout-grid-line"></i>
+            <h1>业务场景</h1>
+        </div>
+        <div class="nx-page-actions">
+            <select id="categoryFilter" class="form-select" style="width: 150px; margin-right: 8px;">
+                <option value="">全部分类</option>
+            </select>
+            <button class="btn btn-primary" onclick="createScene()">
+                <i class="ri-add-line"></i> 新建场景
+            </button>
+        </div>
+    </div>
+    
+    <div class="nx-page-content">
+        <div class="scene-grid" id="sceneGrid"></div>
+    </div>
+</div>
+
+<style>
+.scene-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.scene-card { background: var(--ns-card-bg); border-radius: 12px; border: 1px solid var(--ns-border); padding: 20px; transition: all 0.2s; }
+.scene-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
+.scene-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.scene-name { font-size: 16px; font-weight: 600; color: var(--ns-dark); }
+.scene-category { font-size: 12px; padding: 2px 8px; background: rgba(59, 130, 246, 0.1); color: var(--nx-primary); border-radius: 4px; }
+.scene-desc { font-size: 13px; color: var(--ns-secondary); margin-bottom: 16px; line-height: 1.5; }
+.scene-capabilities { margin-bottom: 16px; }
+.capability-tag { display: inline-block; padding: 4px 10px; background: var(--ns-input-bg); border-radius: 6px; font-size: 12px; color: var(--ns-dark); margin: 4px 4px 4px 0; }
+.scene-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--ns-border); }
+.scene-owner { font-size: 12px; color: var(--ns-secondary); }
+.scene-actions { display: flex; gap: 8px; }
+</style>
+
+<script>
+let scenes = [];
+
+async function loadScenes() {
+    try {
+        const response = await fetch('/api/gateway/business/scene/list', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+        const result = await response.json();
+        if (result.success) {
+            scenes = result.data;
+            renderScenes();
+        }
+    } catch (e) {
+        console.error('加载场景失败', e);
+    }
+}
+
+function renderScenes() {
+    const container = document.getElementById('sceneGrid');
+    container.innerHTML = scenes.map(scene => `
+        <div class="scene-card">
+            <div class="scene-header">
+                <div class="scene-name">${scene.name}</div>
+                <div class="scene-category">${getCategoryName(scene.category)}</div>
+            </div>
+            <div class="scene-desc">${scene.description || '暂无描述'}</div>
+            <div class="scene-capabilities">
+                <div style="font-size: 12px; color: var(--ns-secondary); margin-bottom: 8px;">能力列表:</div>
+                ${(scene.capabilities || []).map(cap => `<span class="capability-tag">${cap.name}</span>`).join('')}
+            </div>
+            <div class="scene-footer">
+                <div class="scene-owner">负责人: ${scene.owner || '-'}</div>
+                <div class="scene-actions">
+                    <button class="btn btn-sm btn-outline" onclick="viewScene('${scene.sceneId}')">
+                        <i class="ri-eye-line"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline" onclick="invokeScene('${scene.sceneId}')">
+                        <i class="ri-play-line"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getCategoryName(code) {
+    const map = {
+        'finance': '财务',
+        'hr': '人事',
+        'admin': '行政',
+        'project': '项目',
+        'sales': '销售'
+    };
+    return map[code] || code;
+}
+
+function createScene() {
+    alert('创建场景功能开发中');
+}
+
+function viewScene(id) {
+    alert('查看场景: ' + id);
+}
+
+function invokeScene(id) {
+    alert('调用场景: ' + id);
+}
+
+loadScenes();
+</script>
+</body>
+</html>

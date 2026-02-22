@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拓扑监控 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .stat-card__icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .stat-card__icon.total { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .stat-card__icon.online { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .stat-card__icon.offline { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        .stat-card__icon.warning { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        
+        .stat-card__info h3 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .stat-card__info p {
+            margin: 4px 0 0 0;
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        
+        .topology-container {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .topology-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .topology-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .topology-canvas {
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .topology-svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .node-circle {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .node-circle:hover {
+            filter: brightness(1.2);
+        }
+        
+        .node-label {
+            font-size: 12px;
+            fill: var(--ns-dark);
+            text-anchor: middle;
+        }
+        
+        .link-line {
+            stroke: var(--ns-border);
+            stroke-width: 2;
+            fill: none;
+        }
+        
+        .link-line.active {
+            stroke: var(--nx-primary);
+            stroke-width: 3;
+        }
+        
+        .node-list {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+        }
+        
+        .node-list-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .node-list-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .node-list-body {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .node-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .node-table th,
+        .node-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .node-table th {
+            background: var(--ns-input-bg);
+            font-weight: 500;
+            color: var(--ns-secondary);
+            font-size: 13px;
+        }
+        
+        .node-table td {
+            color: var(--ns-dark);
+        }
+        
+        .node-table tr:hover td {
+            background: var(--ns-bg-hover);
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .status-dot.online { background: var(--ns-success); }
+        .status-dot.offline { background: var(--ns-danger); }
+        .status-dot.warning { background: var(--ns-warning); }
+        
+        .node-type-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .node-type-badge.hub {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--nx-primary);
+        }
+        
+        .node-type-badge.end {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--ns-success);
+        }
+        
+        .node-type-badge.router {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--ns-warning);
+        }
+        
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .filter-select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--ns-border);
+            background: var(--ns-input-bg);
+            color: var(--ns-dark);
+            font-size: 13px;
+        }
+        
+        .search-input {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--ns-border);
+            background: var(--ns-input-bg);
+            color: var(--ns-dark);
+            font-size: 13px;
+            width: 200px;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            padding: 12px 20px;
+            border-top: 1px solid var(--ns-border);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .legend-color.hub { background: var(--nx-primary); }
+        .legend-color.end { background: var(--ns-success); }
+        .legend-color.router { background: var(--ns-warning); }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">网络拓扑监控</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="exportTopology()">
+                        <i class="ri-download-line"></i> 导出
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="refreshTopology()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-card__icon total">
+                                <i class="ri-node-tree"></i>
+                            </div>
+                            <div class="stat-card__info">
+                                <h3 id="totalNodes">-</h3>
+                                <p>总节点数</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon online">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                            <div class="stat-card__info">
+                                <h3 id="onlineNodes">-</h3>
+                                <p>在线节点</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon offline">
+                                <i class="ri-close-circle-line"></i>
+                            </div>
+                            <div class="stat-card__info">
+                                <h3 id="offlineNodes">-</h3>
+                                <p>离线节点</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon warning">
+                                <i class="ri-error-warning-line"></i>
+                            </div>
+                            <div class="stat-card__info">
+                                <h3 id="warningNodes">-</h3>
+                                <p>警告节点</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="topology-container">
+                        <div class="topology-header">
+                            <span class="topology-title">网络拓扑图</span>
+                            <div class="filter-bar">
+                                <select class="filter-select" id="nodeTypeFilter" onchange="filterNodes()">
+                                    <option value="">全部类型</option>
+                                    <option value="HUB">Hub节点</option>
+                                    <option value="END">End节点</option>
+                                    <option value="ROUTER">Router节点</option>
+                                </select>
+                                <input type="text" class="search-input" id="nodeSearch" placeholder="搜索节点..." oninput="searchNodes()">
+                            </div>
+                        </div>
+                        <div class="topology-canvas" id="topologyCanvas">
+                            <svg class="topology-svg" id="topologySvg"></svg>
+                        </div>
+                        <div class="legend">
+                            <div class="legend-item">
+                                <div class="legend-color hub"></div>
+                                <span>Hub节点</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color end"></div>
+                                <span>End节点</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color router"></div>
+                                <span>Router节点</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="node-list">
+                        <div class="node-list-header">
+                            <span class="node-list-title">节点列表</span>
+                            <span id="nodeCount" style="color: var(--ns-secondary); font-size: 13px;">-</span>
+                        </div>
+                        <div class="node-list-body">
+                            <table class="node-table">
+                                <thead>
+                                    <tr>
+                                        <th>节点ID</th>
+                                        <th>名称</th>
+                                        <th>类型</th>
+                                        <th>状态</th>
+                                        <th>IP地址</th>
+                                        <th>最后更新</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="nodeTableBody">
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; color: var(--ns-secondary);">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var allNodes = [];
+        var allLinks = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTopology();
+        });
+
+        async function loadTopology() {
+            try {
+                var response = await fetch('/api/observation/topology', { method: 'POST' });
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    allNodes = rs.data.nodes || [];
+                    allLinks = rs.data.links || [];
+                    renderTopology();
+                    renderNodeTable();
+                    updateStats();
+                }
+            } catch (error) {
+                console.error('Load topology failed:', error);
+                loadMockData();
+            }
+        }
+
+        function loadMockData() {
+            allNodes = [
+                { id: 'nexus-hub', name: 'Nexus Hub', type: 'HUB', status: 'online', ip: '192.168.1.100', lastUpdate: Date.now() },
+                { id: 'end-001', name: 'EndAgent 1', type: 'END', status: 'online', ip: '192.168.1.101', lastUpdate: Date.now() },
+                { id: 'end-002', name: 'EndAgent 2', type: 'END', status: 'online', ip: '192.168.1.102', lastUpdate: Date.now() },
+                { id: 'end-003', name: 'EndAgent 3', type: 'END', status: 'offline', ip: '192.168.1.103', lastUpdate: Date.now() - 60000 },
+                { id: 'router-001', name: 'Router 1', type: 'ROUTER', status: 'warning', ip: '192.168.1.1', lastUpdate: Date.now() }
+            ];
+            
+            allLinks = [
+                { source: 'nexus-hub', target: 'end-001' },
+                { source: 'nexus-hub', target: 'end-002' },
+                { source: 'nexus-hub', target: 'end-003' },
+                { source: 'router-001', target: 'nexus-hub' }
+            ];
+            
+            renderTopology();
+            renderNodeTable();
+            updateStats();
+        }
+
+        function renderTopology() {
+            var svg = document.getElementById('topologySvg');
+            var canvas = document.getElementById('topologyCanvas');
+            var width = canvas.offsetWidth;
+            var height = canvas.offsetHeight;
+            
+            var nodePositions = calculateNodePositions(allNodes, width, height);
+            
+            var svgContent = '';
+            
+            allLinks.forEach(function(link) {
+                var sourcePos = nodePositions[link.source];
+                var targetPos = nodePositions[link.target];
+                if (sourcePos && targetPos) {
+                    svgContent += '<line class="link-line" x1="' + sourcePos.x + '" y1="' + sourcePos.y + '" x2="' + targetPos.x + '" y2="' + targetPos.y + '"/>';
+                }
+            });
+            
+            allNodes.forEach(function(node) {
+                var pos = nodePositions[node.id];
+                if (pos) {
+                    var color = getNodeColor(node.type);
+                    var statusColor = getStatusColor(node.status);
+                    
+                    svgContent += '<g class="node-group" onclick="showNodeDetail(\'' + node.id + '\')">';
+                    svgContent += '  <circle class="node-circle" cx="' + pos.x + '" cy="' + pos.y + '" r="24" fill="' + color + '"/>';
+                    svgContent += '  <circle cx="' + pos.x + '" cy="' + (pos.y - 20) + '" r="6" fill="' + statusColor + '"/>';
+                    svgContent += '  <text class="node-label" x="' + pos.x + '" y="' + (pos.y + 40) + '">' + node.name + '</text>';
+                    svgContent += '</g>';
+                }
+            });
+            
+            svg.innerHTML = svgContent;
+        }
+
+        function calculateNodePositions(nodes, width, height) {
+            var positions = {};
+            var centerX = width / 2;
+            var centerY = height / 2;
+            var radius = Math.min(width, height) * 0.35;
+            
+            var hubNodes = nodes.filter(function(n) { return n.type === 'HUB'; });
+            var endNodes = nodes.filter(function(n) { return n.type === 'END'; });
+            var routerNodes = nodes.filter(function(n) { return n.type === 'ROUTER'; });
+            
+            hubNodes.forEach(function(node, i) {
+                positions[node.id] = { x: centerX, y: centerY };
+            });
+            
+            endNodes.forEach(function(node, i) {
+                var angle = (2 * Math.PI * i) / endNodes.length - Math.PI / 2;
+                positions[node.id] = {
+                    x: centerX + radius * Math.cos(angle),
+                    y: centerY + radius * Math.sin(angle)
+                };
+            });
+            
+            routerNodes.forEach(function(node, i) {
+                var angle = (2 * Math.PI * i) / routerNodes.length + Math.PI;
+                positions[node.id] = {
+                    x: centerX + (radius * 0.5) * Math.cos(angle),
+                    y: centerY + (radius * 0.5) * Math.sin(angle)
+                };
+            });
+            
+            return positions;
+        }
+
+        function getNodeColor(type) {
+            switch (type) {
+                case 'HUB': return 'var(--nx-primary)';
+                case 'END': return 'var(--ns-success)';
+                case 'ROUTER': return 'var(--ns-warning)';
+                default: return 'var(--ns-secondary)';
+            }
+        }
+
+        function getStatusColor(status) {
+            switch (status) {
+                case 'online': return 'var(--ns-success)';
+                case 'offline': return 'var(--ns-danger)';
+                case 'warning': return 'var(--ns-warning)';
+                default: return 'var(--ns-secondary)';
+            }
+        }
+
+        function renderNodeTable() {
+            var filterType = document.getElementById('nodeTypeFilter').value;
+            var searchText = document.getElementById('nodeSearch').value.toLowerCase();
+            
+            var filteredNodes = allNodes.filter(function(node) {
+                var matchType = !filterType || node.type === filterType;
+                var matchSearch = !searchText || 
+                    node.id.toLowerCase().includes(searchText) || 
+                    node.name.toLowerCase().includes(searchText) ||
+                    node.ip.toLowerCase().includes(searchText);
+                return matchType && matchSearch;
+            });
+            
+            var html = '';
+            filteredNodes.forEach(function(node) {
+                html += '<tr>';
+                html += '  <td><span class="status-dot ' + node.status + '"></span>' + node.id + '</td>';
+                html += '  <td>' + node.name + '</td>';
+                html += '  <td><span class="node-type-badge ' + node.type.toLowerCase() + '">' + node.type + '</span></td>';
+                html += '  <td>' + node.status + '</td>';
+                html += '  <td>' + node.ip + '</td>';
+                html += '  <td>' + formatTime(node.lastUpdate) + '</td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('nodeTableBody').innerHTML = html || '<tr><td colspan="6" style="text-align: center; color: var(--ns-secondary);">暂无数据</td></tr>';
+            document.getElementById('nodeCount').textContent = filteredNodes.length + ' 个节点';
+        }
+
+        function updateStats() {
+            var total = allNodes.length;
+            var online = allNodes.filter(function(n) { return n.status === 'online'; }).length;
+            var offline = allNodes.filter(function(n) { return n.status === 'offline'; }).length;
+            var warning = allNodes.filter(function(n) { return n.status === 'warning'; }).length;
+            
+            document.getElementById('totalNodes').textContent = total;
+            document.getElementById('onlineNodes').textContent = online;
+            document.getElementById('offlineNodes').textContent = offline;
+            document.getElementById('warningNodes').textContent = warning;
+        }
+
+        function filterNodes() {
+            renderNodeTable();
+            renderTopology();
+        }
+
+        function searchNodes() {
+            renderNodeTable();
+        }
+
+        function showNodeDetail(nodeId) {
+            var node = allNodes.find(function(n) { return n.id === nodeId; });
+            if (node) {
+                alert('节点详情:\nID: ' + node.id + '\n名称: ' + node.name + '\n类型: ' + node.type + '\n状态: ' + node.status + '\nIP: ' + node.ip);
+            }
+        }
+
+        function refreshTopology() {
+            loadTopology();
+        }
+
+        function exportTopology() {
+            var data = { nodes: allNodes, links: allLinks };
+            var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'topology-' + Date.now() + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            var date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+    </script>
+</body>
+</html>

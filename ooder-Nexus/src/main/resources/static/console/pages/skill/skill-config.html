@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能配置 - Nexus</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .skill-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--ns-border);
+            padding-bottom: 12px;
+        }
+        .skill-tab {
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--ns-secondary);
+            background: transparent;
+            border: none;
+            transition: all 0.2s;
+        }
+        .skill-tab:hover {
+            background: var(--ns-bg-hover);
+        }
+        .skill-tab.active {
+            background: var(--nx-primary);
+            color: white;
+        }
+        
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 16px;
+        }
+        
+        .config-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .config-card-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .config-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .config-icon.org { background: rgba(59, 130, 246, 0.1); color: var(--nx-primary); }
+        .config-icon.db { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .config-icon.ai { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+        .config-icon.storage { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        
+        .config-title {
+            flex: 1;
+        }
+        .config-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        .config-type {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .config-status {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-connected { background: rgba(34, 197, 94, 0.1); color: var(--ns-success); }
+        .status-disconnected { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .status-pending { background: rgba(245, 158, 11, 0.1); color: var(--ns-warning); }
+        
+        .config-body {
+            padding: 16px;
+        }
+        .config-field {
+            margin-bottom: 12px;
+        }
+        .config-field:last-child {
+            margin-bottom: 0;
+        }
+        .field-label {
+            font-size: 12px;
+            color: var(--ns-secondary);
+            margin-bottom: 4px;
+        }
+        .field-value {
+            font-size: 14px;
+            color: var(--ns-dark);
+            font-family: monospace;
+            background: var(--ns-input-bg);
+            padding: 6px 10px;
+            border-radius: 4px;
+        }
+        .field-value.masked {
+            color: var(--ns-secondary);
+        }
+        
+        .config-actions {
+            padding: 12px 16px;
+            border-top: 1px solid var(--ns-border);
+            display: flex;
+            gap: 8px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: var(--ns-card-bg);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--ns-secondary);
+            cursor: pointer;
+        }
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ns-dark);
+            margin-bottom: 6px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 6px;
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--nx-primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        .btn-secondary {
+            background: var(--ns-card-bg);
+            color: var(--ns-dark);
+            border: 1px solid var(--ns-border);
+        }
+        .btn-secondary:hover {
+            background: var(--ns-bg-hover);
+        }
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+        .btn-success {
+            background: var(--ns-success);
+            color: white;
+        }
+        
+        .db-connection-list {
+            margin-top: 16px;
+        }
+        .db-connection-item {
+            background: var(--ns-bg-hover);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .db-connection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .db-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        .db-status {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .db-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 12px;
+        }
+        .db-info-item {
+            color: var(--ns-secondary);
+        }
+        .db-info-item span {
+            color: var(--ns-dark);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能配置</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="skill-tabs">
+                        <button class="skill-tab active" onclick="switchTab('org')">组织服务</button>
+                        <button class="skill-tab" onclick="switchTab('db')">数据库连接</button>
+                        <button class="skill-tab" onclick="switchTab('ai')">AI服务</button>
+                        <button class="skill-tab" onclick="switchTab('storage')">存储服务</button>
+                    </div>
+                    
+                    <div id="orgTab" class="tab-content">
+                        <div class="config-grid" id="orgList"></div>
+                    </div>
+                    
+                    <div id="dbTab" class="tab-content" style="display: none;">
+                        <div style="margin-bottom: 16px;">
+                            <button class="btn btn-primary" onclick="showDbModal()">
+                                <i class="ri-add-line"></i> 新建数据库连接
+                            </button>
+                        </div>
+                        <div class="db-connection-list" id="dbList"></div>
+                    </div>
+                    
+                    <div id="aiTab" class="tab-content" style="display: none;">
+                        <div class="config-grid" id="aiList"></div>
+                    </div>
+                    
+                    <div id="storageTab" class="tab-content" style="display: none;">
+                        <div class="config-grid" id="storageList"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="configModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="configModalTitle">配置</h3>
+                <button class="modal-close" onclick="hideConfigModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="configModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideConfigModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveConfig()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="dbModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新建数据库连接</h3>
+                <button class="modal-close" onclick="hideDbModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">连接名称</label>
+                    <input type="text" class="form-control" id="dbName" placeholder="输入连接名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">数据库类型</label>
+                    <select class="form-control" id="dbType">
+                        <option value="mysql">MySQL</option>
+                        <option value="postgresql">PostgreSQL</option>
+                        <option value="oracle">Oracle</option>
+                        <option value="sqlserver">SQL Server</option>
+                        <option value="sqlite">SQLite</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">主机地址</label>
+                    <input type="text" class="form-control" id="dbHost" placeholder="localhost">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">端口</label>
+                    <input type="number" class="form-control" id="dbPort" placeholder="3306">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">数据库名</label>
+                    <input type="text" class="form-control" id="dbDatabase" placeholder="数据库名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <input type="text" class="form-control" id="dbUsername" placeholder="数据库用户名">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input type="password" class="form-control" id="dbPassword" placeholder="数据库密码">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideDbModal()">取消</button>
+                <button class="btn btn-success" onclick="testDbConnection()">测试连接</button>
+                <button class="btn btn-primary" onclick="saveDbConnection()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        var currentTab = 'org';
+        var currentSkillId = null;
+        
+        window.onPageInit = function() {
+            loadOrgConfigs();
+            loadDbConnections();
+            loadAiConfigs();
+            loadStorageConfigs();
+        };
+        
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.skill-tab').forEach(function(t) {
+                t.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.getElementById('orgTab').style.display = tab === 'org' ? 'block' : 'none';
+            document.getElementById('dbTab').style.display = tab === 'db' ? 'block' : 'none';
+            document.getElementById('aiTab').style.display = tab === 'ai' ? 'block' : 'none';
+            document.getElementById('storageTab').style.display = tab === 'storage' ? 'block' : 'none';
+        }
+        
+        function loadOrgConfigs() {
+            fetch('/api/skill/configs/org')
+                .then(function(res) { return res.json(); })
+                .then(function(rs) {
+                    if (rs.requestStatus === 200) {
+                        renderOrgConfigs(rs.data || []);
+                    }
+                });
+        }
+        
+        function loadDbConnections() {
+            fetch('/api/skill/database/connections')
+                .then(function(res) { return res.json(); })
+                .then(function(rs) {
+                    if (rs.requestStatus === 200) {
+                        renderDbConnections(rs.data || []);
+                    }
+                });
+        }
+        
+        function loadAiConfigs() {
+            fetch('/api/skill/configs/ai')
+                .then(function(res) { return res.json(); })
+                .then(function(rs) {
+                    if (rs.requestStatus === 200) {
+                        renderAiConfigs(rs.data || []);
+                    }
+                });
+        }
+        
+        function loadStorageConfigs() {
+            fetch('/api/skill/configs/storage')
+                .then(function(res) { return res.json(); })
+                .then(function(rs) {
+                    if (rs.requestStatus === 200) {
+                        renderStorageConfigs(rs.data || []);
+                    }
+                });
+        }
+        
+        function renderOrgConfigs(configs) {
+            var container = document.getElementById('orgList');
+            if (!configs || configs.length === 0) {
+                container.innerHTML = '<div style="color: var(--ns-secondary); padding: 20px;">暂无组织服务配置</div>';
+                return;
+            }
+            
+            var html = '';
+            configs.forEach(function(c) {
+                var statusClass = c.connected ? 'status-connected' : 'status-pending';
+                var statusText = c.connected ? '已连接' : '待配置';
+                
+                html += '<div class="config-card">' +
+                    '<div class="config-card-header">' +
+                    '<div class="config-icon org"><i class="ri-building-line"></i></div>' +
+                    '<div class="config-title">' +
+                    '<div class="config-name">' + c.name + '</div>' +
+                    '<div class="config-type">' + c.type + '</div>' +
+                    '</div>' +
+                    '<span class="config-status ' + statusClass + '">' + statusText + '</span>' +
+                    '</div>' +
+                    '<div class="config-body">';
+                
+                if (c.config) {
+                    for (var key in c.config) {
+                        if (c.config.hasOwnProperty(key)) {
+                            var value = c.config[key];
+                            var isSecret = key.toLowerCase().indexOf('secret') >= 0 || 
+                                           key.toLowerCase().indexOf('key') >= 0 ||
+                                           key.toLowerCase().indexOf('token') >= 0;
+                            html += '<div class="config-field">' +
+                                '<div class="field-label">' + key + '</div>' +
+                                '<div class="field-value' + (isSecret ? ' masked' : '') + '">' + 
+                                (isSecret ? '******' : value) + '</div>' +
+                                '</div>';
+                        }
+                    }
+                }
+                
+                html += '</div>' +
+                    '<div class="config-actions">' +
+                    '<button class="btn btn-sm btn-secondary" onclick="editConfig(\'' + c.skillId + '\')"><i class="ri-edit-line"></i> 编辑</button>' +
+                    '<button class="btn btn-sm btn-secondary" onclick="testConnection(\'' + c.skillId + '\')"><i class="ri-link"></i> 测试连接</button>' +
+                    '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function renderDbConnections(connections) {
+            var container = document.getElementById('dbList');
+            if (!connections || connections.length === 0) {
+                container.innerHTML = '<div style="color: var(--ns-secondary); padding: 20px;">暂无数据库连接</div>';
+                return;
+            }
+            
+            var html = '';
+            connections.forEach(function(c) {
+                var statusClass = c.connected ? 'status-connected' : 'status-disconnected';
+                var statusText = c.connected ? '已连接' : '断开';
+                
+                html += '<div class="db-connection-item">' +
+                    '<div class="db-connection-header">' +
+                    '<span class="db-name"><i class="ri-database-2-line"></i> ' + c.name + '</span>' +
+                    '<span class="config-status ' + statusClass + '">' + statusText + '</span>' +
+                    '</div>' +
+                    '<div class="db-info">' +
+                    '<div class="db-info-item">类型: <span>' + c.type + '</span></div>' +
+                    '<div class="db-info-item">主机: <span>' + c.host + ':' + c.port + '</span></div>' +
+                    '<div class="db-info-item">数据库: <span>' + c.database + '</span></div>' +
+                    '<div class="db-info-item">用户: <span>' + c.username + '</span></div>' +
+                    '</div>' +
+                    '<div style="margin-top: 12px; display: flex; gap: 8px;">' +
+                    '<button class="btn btn-sm btn-secondary" onclick="editDbConnection(\'' + c.id + '\')"><i class="ri-edit-line"></i> 编辑</button>' +
+                    '<button class="btn btn-sm btn-secondary" onclick="deleteDbConnection(\'' + c.id + '\')"><i class="ri-delete-bin-line"></i> 删除</button>' +
+                    '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function renderAiConfigs(configs) {
+            var container = document.getElementById('aiList');
+            if (!configs || configs.length === 0) {
+                container.innerHTML = '<div style="color: var(--ns-secondary); padding: 20px;">暂无AI服务配置</div>';
+                return;
+            }
+            
+            var html = '';
+            configs.forEach(function(c) {
+                var statusClass = c.connected ? 'status-connected' : 'status-pending';
+                var statusText = c.connected ? '已连接' : '待配置';
+                
+                html += '<div class="config-card">' +
+                    '<div class="config-card-header">' +
+                    '<div class="config-icon ai"><i class="ri-robot-line"></i></div>' +
+                    '<div class="config-title">' +
+                    '<div class="config-name">' + c.name + '</div>' +
+                    '<div class="config-type">' + c.type + '</div>' +
+                    '</div>' +
+                    '<span class="config-status ' + statusClass + '">' + statusText + '</span>' +
+                    '</div>' +
+                    '<div class="config-body">' +
+                    '<div class="config-field">' +
+                    '<div class="field-label">API Endpoint</div>' +
+                    '<div class="field-value">' + (c.endpoint || '-') + '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="config-actions">' +
+                    '<button class="btn btn-sm btn-secondary" onclick="editConfig(\'' + c.skillId + '\')"><i class="ri-edit-line"></i> 编辑</button>' +
+                    '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function renderStorageConfigs(configs) {
+            var container = document.getElementById('storageList');
+            if (!configs || configs.length === 0) {
+                container.innerHTML = '<div style="color: var(--ns-secondary); padding: 20px;">暂无存储服务配置</div>';
+                return;
+            }
+            
+            var html = '';
+            configs.forEach(function(c) {
+                var statusClass = c.connected ? 'status-connected' : 'status-pending';
+                var statusText = c.connected ? '已连接' : '待配置';
+                
+                html += '<div class="config-card">' +
+                    '<div class="config-card-header">' +
+                    '<div class="config-icon storage"><i class="ri-cloud-line"></i></div>' +
+                    '<div class="config-title">' +
+                    '<div class="config-name">' + c.name + '</div>' +
+                    '<div class="config-type">' + c.type + '</div>' +
+                    '</div>' +
+                    '<span class="config-status ' + statusClass + '">' + statusText + '</span>' +
+                    '</div>' +
+                    '<div class="config-actions">' +
+                    '<button class="btn btn-sm btn-secondary" onclick="editConfig(\'' + c.skillId + '\')"><i class="ri-edit-line"></i> 编辑</button>' +
+                    '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        function showDbModal() {
+            document.getElementById('dbModal').classList.add('show');
+        }
+        
+        function hideDbModal() {
+            document.getElementById('dbModal').classList.remove('show');
+        }
+        
+        function hideConfigModal() {
+            document.getElementById('configModal').classList.remove('show');
+        }
+        
+        function editConfig(skillId) {
+            currentSkillId = skillId;
+            fetch('/api/skill/configs/' + skillId)
+                .then(function(res) { return res.json(); })
+                .then(function(rs) {
+                    if (rs.requestStatus === 200) {
+                        showConfigModal(rs.data);
+                    }
+                });
+        }
+        
+        function showConfigModal(config) {
+            document.getElementById('configModalTitle').textContent = config.name || '配置';
+            
+            var html = '';
+            if (config.schema && config.schema.fields) {
+                config.schema.fields.forEach(function(field) {
+                    var value = config.config && config.config[field.name] ? config.config[field.name] : '';
+                    var inputType = field.type === 'password' ? 'password' : 'text';
+                    
+                    html += '<div class="form-group">' +
+                        '<label class="form-label">' + (field.label || field.name) + '</label>';
+                    
+                    if (field.type === 'select' && field.options) {
+                        html += '<select class="form-control" id="field_' + field.name + '">';
+                        field.options.forEach(function(opt) {
+                            var selected = value === opt.value ? ' selected' : '';
+                            html += '<option value="' + opt.value + '"' + selected + '>' + opt.label + '</option>';
+                        });
+                        html += '</select>';
+                    } else {
+                        html += '<input type="' + inputType + '" class="form-control" id="field_' + field.name + '" value="' + value + '" placeholder="' + (field.placeholder || '') + '">';
+                    }
+                    
+                    html += '</div>';
+                });
+            }
+            
+            document.getElementById('configModalBody').innerHTML = html;
+            document.getElementById('configModal').classList.add('show');
+        }
+        
+        function saveConfig() {
+            alert('保存配置: ' + currentSkillId);
+            hideConfigModal();
+        }
+        
+        function testConnection(skillId) {
+            fetch('/api/skill/configs/' + skillId + '/test', { method: 'POST' })
+                .then(function(res) { return res.json(); })
+                .then(function(rs) {
+                    if (rs.requestStatus === 200 && rs.data && rs.data.success) {
+                        alert('连接成功');
+                    } else {
+                        alert('连接失败: ' + (rs.message || '未知错误'));
+                    }
+                });
+        }
+        
+        function testDbConnection() {
+            var data = {
+                type: document.getElementById('dbType').value,
+                host: document.getElementById('dbHost').value,
+                port: parseInt(document.getElementById('dbPort').value) || 3306,
+                database: document.getElementById('dbDatabase').value,
+                username: document.getElementById('dbUsername').value,
+                password: document.getElementById('dbPassword').value
+            };
+            
+            fetch('/api/skill/database/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200 && rs.data && rs.data.success) {
+                    alert('连接成功');
+                } else {
+                    alert('连接失败: ' + (rs.message || '未知错误'));
+                }
+            });
+        }
+        
+        function saveDbConnection() {
+            var data = {
+                name: document.getElementById('dbName').value,
+                type: document.getElementById('dbType').value,
+                host: document.getElementById('dbHost').value,
+                port: parseInt(document.getElementById('dbPort').value) || 3306,
+                database: document.getElementById('dbDatabase').value,
+                username: document.getElementById('dbUsername').value,
+                password: document.getElementById('dbPassword').value
+            };
+            
+            fetch('/api/skill/database/connections', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    hideDbModal();
+                    loadDbConnections();
+                } else {
+                    alert('保存失败: ' + (rs.message || '未知错误'));
+                }
+            });
+        }
+        
+        function editDbConnection(id) {
+            alert('编辑数据库连接: ' + id);
+        }
+        
+        function deleteDbConnection(id) {
+            if (!confirm('确定要删除此数据库连接吗？')) {
+                return;
+            }
+            fetch('/api/skill/database/connections/' + id, {
+                method: 'DELETE'
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(rs) {
+                if (rs.requestStatus === 200) {
+                    loadDbConnections();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

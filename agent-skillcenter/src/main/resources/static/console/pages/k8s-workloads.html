@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作负载管理 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .status-running { color: #10b981; }
+        .status-updating { color: #f59e0b; }
+        .status-stopped { color: #6b7280; }
+        .status-error { color: #ef4444; }
+        .replica-bar {
+            display: flex;
+            gap: 2px;
+        }
+        .replica-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .replica-ready { background: #10b981; }
+        .replica-pending { background: #f59e0b; }
+        .replica-failed { background: #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">工作负载管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="showCreateModal()">
+                        <i class="ri-add-line"></i> 创建Deployment
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-tabs nx-mb-6">
+                        <button class="nx-tabs__tab" onclick="location.href='k8s-cluster.html'">集群概览</button>
+                        <button class="nx-tabs__tab nx-tabs__tab--active" onclick="location.href='k8s-workloads.html'">工作负载</button>
+                        <button class="nx-tabs__tab" onclick="location.href='k8s-skill-deploy.html'">技能部署</button>
+                    </div>
+                    
+                    <div class="nx-tabs nx-mb-4">
+                        <button class="nx-tabs__tab nx-tabs__tab--active" data-tab="deployments" onclick="switchWorkloadTab('deployments', this)">Deployments</button>
+                        <button class="nx-tabs__tab" data-tab="pods" onclick="switchWorkloadTab('pods', this)">Pods</button>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-4">
+                        <div class="nx-card__header">
+                            <div class="nx-flex nx-items-center nx-gap-4">
+                                <select class="nx-select" id="namespace-filter" onchange="loadDeployments()">
+                                    <option value="default">default</option>
+                                    <option value="all">全部命名空间</option>
+                                </select>
+                                <input type="text" class="nx-input" id="search-input" placeholder="搜索..." onkeyup="filterDeployments()">
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div id="deployments-panel">
+                                <div class="nx-table-container">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>名称</th>
+                                                <th>命名空间</th>
+                                                <th>镜像</th>
+                                                <th>副本</th>
+                                                <th>状态</th>
+                                                <th>创建时间</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="deployment-list">
+                                            <tr>
+                                                <td colspan="7" class="nx-text-center nx-text-secondary">加载中...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div id="pods-panel" style="display: none;">
+                                <div class="nx-table-container">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Pod名称</th>
+                                                <th>命名空间</th>
+                                                <th>节点</th>
+                                                <th>状态</th>
+                                                <th>IP</th>
+                                                <th>创建时间</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pod-list">
+                                            <tr>
+                                                <td colspan="7" class="nx-text-center nx-text-secondary">加载中...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="create-modal" class="nx-modal" style="display: none;">
+        <div class="nx-modal__backdrop" onclick="hideCreateModal()"></div>
+        <div class="nx-modal__content" style="max-width: 500px;">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">创建Deployment</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="hideCreateModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">名称 <span style="color: red;">*</span></label>
+                    <input type="text" class="nx-input" id="create-name" placeholder="deployment名称">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">命名空间</label>
+                    <select class="nx-select" id="create-namespace">
+                        <option value="default">default</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">镜像 <span style="color: red;">*</span></label>
+                    <input type="text" class="nx-input" id="create-image" placeholder="例如: nginx:latest">
+                </div>
+                <div class="nx-grid nx-grid-cols-3 nx-gap-4 nx-mb-4">
+                    <div class="nx-form-group">
+                        <label class="nx-label">副本数</label>
+                        <input type="number" class="nx-input" id="create-replicas" value="1" min="1">
+                    </div>
+                    <div class="nx-form-group">
+                        <label class="nx-label">CPU(核)</label>
+                        <input type="number" class="nx-input" id="create-cpu" value="0.5" step="0.1">
+                    </div>
+                    <div class="nx-form-group">
+                        <label class="nx-label">内存(MB)</label>
+                        <input type="number" class="nx-input" id="create-memory" value="256">
+                    </div>
+                </div>
+                <div class="nx-form-group">
+                    <label class="nx-label">容器端口</label>
+                    <input type="number" class="nx-input" id="create-port" placeholder="例如: 8080">
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="hideCreateModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createDeployment()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="scale-modal" class="nx-modal" style="display: none;">
+        <div class="nx-modal__backdrop" onclick="hideScaleModal()"></div>
+        <div class="nx-modal__content" style="max-width: 400px;">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">扩缩容</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="hideScaleModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <input type="hidden" id="scale-name">
+                <input type="hidden" id="scale-namespace">
+                <div class="nx-form-group">
+                    <label class="nx-label">副本数</label>
+                    <input type="number" class="nx-input" id="scale-replicas" min="0" max="100">
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="hideScaleModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="scaleDeployment()">确认</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="logs-modal" class="nx-modal" style="display: none;">
+        <div class="nx-modal__backdrop" onclick="hideLogsModal()"></div>
+        <div class="nx-modal__content" style="max-width: 800px;">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">日志 - <span id="logs-pod-name"></span></h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="hideLogsModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <pre id="logs-content" style="max-height: 400px; overflow: auto; background: var(--nx-bg-secondary); padding: 12px; border-radius: 8px; font-size: 12px;"></pre>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('K8S Workloads 页面初始化完成');
+            loadNamespaces();
+            loadDeployments();
+        };
+        
+        let allDeployments = [];
+        let allPods = [];
+        
+        async function loadNamespaces() {
+            try {
+                const result = await ApiClient.post('/api/k8s/clusters/namespaces', { cluster: 'default' });
+                if (result && result.data) {
+                    const select = document.getElementById('namespace-filter');
+                    select.innerHTML = '<option value="default">default</option><option value="all">全部命名空间</option>';
+                    result.data.forEach(ns => {
+                        if (ns !== 'default') {
+                            select.innerHTML += `<option value="${ns}">${ns}</option>`;
+                        }
+                    });
+                    
+                    document.getElementById('create-namespace').innerHTML = 
+                        result.data.map(ns => `<option value="${ns}">${ns}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('加载命名空间失败:', error);
+            }
+        }
+        
+        async function loadDeployments() {
+            const namespace = document.getElementById('namespace-filter').value;
+            
+            try {
+                const result = await ApiClient.post('/api/k8s/deployments/list', { namespace: namespace });
+                const container = document.getElementById('deployment-list');
+                
+                if (result && result.data) {
+                    allDeployments = result.data;
+                    renderDeployments(allDeployments);
+                }
+            } catch (error) {
+                console.error('加载Deployment失败:', error);
+                document.getElementById('deployment-list').innerHTML = 
+                    '<tr><td colspan="7" class="nx-text-center nx-text-error">加载失败</td></tr>';
+            }
+        }
+        
+        function renderDeployments(deployments) {
+            const container = document.getElementById('deployment-list');
+            
+            if (deployments.length === 0) {
+                container.innerHTML = '<tr><td colspan="7" class="nx-text-center nx-text-secondary">暂无数据</td></tr>';
+                return;
+            }
+            
+            container.innerHTML = deployments.map(d => `
+                <tr>
+                    <td>${d.name}</td>
+                    <td><span class="nx-badge nx-badge--secondary">${d.namespace}</span></td>
+                    <td class="nx-text-sm" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${d.image}</td>
+                    <td>
+                        <span class="${getStatusClass(d.status)}">${d.readyReplicas}/${d.replicas}</span>
+                    </td>
+                    <td>
+                        <span class="nx-badge nx-badge--${getStatusBadge(d.status)}">${getStatusText(d.status)}</span>
+                    </td>
+                    <td>${formatTime(d.createdAt)}</td>
+                    <td>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="showScaleModal('${d.namespace}', '${d.name}', ${d.replicas})" title="扩缩容">
+                            <i class="ri-expand-diagonal-line"></i>
+                        </button>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="restartDeployment('${d.namespace}', '${d.name}')" title="重启">
+                            <i class="ri-refresh-line"></i>
+                        </button>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm nx-text-error" onclick="deleteDeployment('${d.namespace}', '${d.name}')" title="删除">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function filterDeployments() {
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const filtered = allDeployments.filter(d => 
+                d.name.toLowerCase().includes(search) || 
+                d.image.toLowerCase().includes(search)
+            );
+            renderDeployments(filtered);
+        }
+        
+        async function loadPods() {
+            const namespace = document.getElementById('namespace-filter').value;
+            
+            try {
+                const result = await ApiClient.post('/api/k8s/pods/list', { namespace: namespace });
+                const container = document.getElementById('pod-list');
+                
+                if (result && result.data) {
+                    allPods = result.data;
+                    renderPods(allPods);
+                }
+            } catch (error) {
+                console.error('加载Pod失败:', error);
+                document.getElementById('pod-list').innerHTML = 
+                    '<tr><td colspan="7" class="nx-text-center nx-text-error">加载失败</td></tr>';
+            }
+        }
+        
+        function renderPods(pods) {
+            const container = document.getElementById('pod-list');
+            
+            if (pods.length === 0) {
+                container.innerHTML = '<tr><td colspan="7" class="nx-text-center nx-text-secondary">暂无数据</td></tr>';
+                return;
+            }
+            
+            container.innerHTML = pods.map(p => `
+                <tr>
+                    <td>${p.name}</td>
+                    <td><span class="nx-badge nx-badge--secondary">${p.namespace}</span></td>
+                    <td>${p.nodeName || '-'}</td>
+                    <td>
+                        <span class="nx-badge nx-badge--${getPodStatusBadge(p.status)}">${p.status}</span>
+                    </td>
+                    <td>${p.podIP || '-'}</td>
+                    <td>${formatTime(p.createdAt)}</td>
+                    <td>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="showPodLogs('${p.namespace}', '${p.name}')" title="查看日志">
+                            <i class="ri-file-list-line"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function switchWorkloadTab(tab, btn) {
+            document.querySelectorAll('.nx-tabs__tab[data-tab]').forEach(t => t.classList.remove('nx-tabs__tab--active'));
+            btn.classList.add('nx-tabs__tab--active');
+            
+            if (tab === 'deployments') {
+                document.getElementById('deployments-panel').style.display = 'block';
+                document.getElementById('pods-panel').style.display = 'none';
+                loadDeployments();
+            } else {
+                document.getElementById('deployments-panel').style.display = 'none';
+                document.getElementById('pods-panel').style.display = 'block';
+                loadPods();
+            }
+        }
+        
+        function showCreateModal() {
+            document.getElementById('create-modal').style.display = 'flex';
+        }
+        
+        function hideCreateModal() {
+            document.getElementById('create-modal').style.display = 'none';
+        }
+        
+        async function createDeployment() {
+            const name = document.getElementById('create-name').value;
+            const namespace = document.getElementById('create-namespace').value;
+            const image = document.getElementById('create-image').value;
+            const replicas = parseInt(document.getElementById('create-replicas').value) || 1;
+            const cpu = parseFloat(document.getElementById('create-cpu').value) || 0.5;
+            const memory = parseInt(document.getElementById('create-memory').value) * 1024 * 1024 || 256 * 1024 * 1024;
+            const port = parseInt(document.getElementById('create-port').value) || 0;
+            
+            if (!name || !image) {
+                ApiClient.showError('请填写名称和镜像');
+                return;
+            }
+            
+            try {
+                await ApiClient.post('/api/k8s/deployments/create', {
+                    cluster: 'default',
+                    namespace: namespace,
+                    name: name,
+                    image: image,
+                    replicas: replicas,
+                    cpuLimit: cpu,
+                    memoryLimit: memory,
+                    containerPort: port
+                });
+                
+                ApiClient.showSuccess('创建成功');
+                hideCreateModal();
+                loadDeployments();
+            } catch (error) {
+                ApiClient.showError('创建失败: ' + error.message);
+            }
+        }
+        
+        function showScaleModal(namespace, name, currentReplicas) {
+            document.getElementById('scale-namespace').value = namespace;
+            document.getElementById('scale-name').value = name;
+            document.getElementById('scale-replicas').value = currentReplicas;
+            document.getElementById('scale-modal').style.display = 'flex';
+        }
+        
+        function hideScaleModal() {
+            document.getElementById('scale-modal').style.display = 'none';
+        }
+        
+        async function scaleDeployment() {
+            const namespace = document.getElementById('scale-namespace').value;
+            const name = document.getElementById('scale-name').value;
+            const replicas = parseInt(document.getElementById('scale-replicas').value);
+            
+            try {
+                await ApiClient.post('/api/k8s/deployments/scale', {
+                    cluster: 'default',
+                    namespace: namespace,
+                    name: name,
+                    replicas: replicas
+                });
+                
+                ApiClient.showSuccess('扩缩容成功');
+                hideScaleModal();
+                loadDeployments();
+            } catch (error) {
+                ApiClient.showError('扩缩容失败: ' + error.message);
+            }
+        }
+        
+        async function restartDeployment(namespace, name) {
+            if (!confirm('确定要重启 ' + name + ' 吗？')) return;
+            
+            try {
+                await ApiClient.post('/api/k8s/deployments/restart', {
+                    cluster: 'default',
+                    namespace: namespace,
+                    name: name
+                });
+                
+                ApiClient.showSuccess('重启成功');
+                loadDeployments();
+            } catch (error) {
+                ApiClient.showError('重启失败: ' + error.message);
+            }
+        }
+        
+        async function deleteDeployment(namespace, name) {
+            if (!confirm('确定要删除 ' + name + ' 吗？此操作不可恢复。')) return;
+            
+            try {
+                await ApiClient.post('/api/k8s/deployments/delete', {
+                    cluster: 'default',
+                    namespace: namespace,
+                    name: name
+                });
+                
+                ApiClient.showSuccess('删除成功');
+                loadDeployments();
+            } catch (error) {
+                ApiClient.showError('删除失败: ' + error.message);
+            }
+        }
+        
+        async function showPodLogs(namespace, podName) {
+            document.getElementById('logs-pod-name').textContent = podName;
+            document.getElementById('logs-content').textContent = '加载中...';
+            document.getElementById('logs-modal').style.display = 'flex';
+            
+            try {
+                const result = await ApiClient.post('/api/k8s/pods/logs', {
+                    namespace: namespace,
+                    podName: podName,
+                    tailLines: 100
+                });
+                
+                if (result && result.data) {
+                    document.getElementById('logs-content').textContent = result.data.join('\n');
+                }
+            } catch (error) {
+                document.getElementById('logs-content').textContent = '加载失败: ' + error.message;
+            }
+        }
+        
+        function hideLogsModal() {
+            document.getElementById('logs-modal').style.display = 'none';
+        }
+        
+        function getStatusClass(status) {
+            if (status === 'running') return 'status-running';
+            if (status === 'updating') return 'status-updating';
+            if (status === 'stopped') return 'status-stopped';
+            return 'status-error';
+        }
+        
+        function getStatusBadge(status) {
+            if (status === 'running') return 'success';
+            if (status === 'updating') return 'warning';
+            if (status === 'stopped') return 'secondary';
+            return 'error';
+        }
+        
+        function getPodStatusBadge(status) {
+            if (status === 'Running') return 'success';
+            if (status === 'Pending') return 'warning';
+            if (status === 'Succeeded') return 'info';
+            return 'error';
+        }
+        
+        function getStatusText(status) {
+            const map = {
+                'running': '运行中',
+                'updating': '更新中',
+                'stopped': '已停止',
+                'creating': '创建中'
+            };
+            return map[status] || status;
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            return new Date(timestamp).toLocaleString();
+        }
+    </script>
+</body>
+</html>

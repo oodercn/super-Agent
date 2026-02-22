@@ -1,0 +1,161 @@
+apiVersion: scene.ooder.net/v1
+kind: SceneDefinition
+
+metadata:
+  sceneId: auth
+  name: Authentication
+  description: |
+    认证场景，基于ooder-common 2.0的组织模块。
+    提供用户认证、Token管理、会话管理等功能。
+  version: "2.0.0"
+  suite: security
+  category: authentication
+  author: Ooder Team
+  createdAt: "2026-02-18T00:00:00Z"
+
+spec:
+  type: primary
+  required: true
+  priority: 0
+  
+  capabilities:
+    - capId: auth-login
+      name: User Login
+      description: 用户登录
+      parameters:
+        - name: username
+          type: string
+          required: true
+          description: 用户名
+        - name: password
+          type: string
+          required: true
+          description: 密码
+        - name: rememberMe
+          type: boolean
+          required: false
+          default: false
+          description: 记住登录
+      returnType: object
+      async: false
+      
+    - capId: auth-logout
+      name: User Logout
+      description: 用户登出
+      parameters:
+        - name: token
+          type: string
+          required: true
+          description: 认证Token
+      returnType: boolean
+      async: false
+      
+    - capId: auth-validate
+      name: Validate Token
+      description: 验证Token有效性
+      parameters:
+        - name: token
+          type: string
+          required: true
+          description: 认证Token
+      returnType: object
+      async: false
+      
+    - capId: auth-refresh
+      name: Refresh Token
+      description: 刷新Token
+      parameters:
+        - name: refreshToken
+          type: string
+          required: true
+          description: 刷新Token
+      returnType: object
+      async: false
+      
+    - capId: auth-changepwd
+      name: Change Password
+      description: 修改密码
+      parameters:
+        - name: userId
+          type: string
+          required: true
+          description: 用户ID
+        - name: oldPassword
+          type: string
+          required: true
+          description: 旧密码
+        - name: newPassword
+          type: string
+          required: true
+          description: 新密码
+      returnType: boolean
+      async: false
+      
+    - capId: auth-oauth
+      name: OAuth Login
+      description: OAuth第三方登录
+      parameters:
+        - name: provider
+          type: string
+          required: true
+          description: 提供商(feishu/dingtalk/wechat)
+        - name: code
+          type: string
+          required: true
+          description: 授权码
+      returnType: object
+      async: false
+
+  dependencies:
+    scenes:
+      - sceneId: org
+        required: true
+    skills:
+      - skillId: skill-user-auth
+        required: true
+        version: ">=0.7.0"
+      - skillId: skill-org-feishu
+        required: false
+      - skillId: skill-org-dingding
+        required: false
+
+  config:
+    tokenType: jwt
+    tokenExpire: 7200
+    refreshTokenExpire: 604800
+    hashAlgorithm: bcrypt
+    maxLoginAttempts: 5
+    lockoutDuration: 1800
+    passwordPolicy:
+      minLength: 8
+      requireUppercase: true
+      requireLowercase: true
+      requireNumber: true
+      requireSpecial: false
+    providers:
+      local:
+        enabled: true
+      feishu:
+        enabled: false
+        appId: ${FEISHU_APP_ID}
+        appSecret: ${FEISHU_APP_SECRET}
+      dingtalk:
+        enabled: false
+        appKey: ${DINGTALK_APP_KEY}
+        appSecret: ${DINGTALK_APP_SECRET}
+      wechat:
+        enabled: false
+        corpId: ${WECHAT_CORP_ID}
+        agentId: ${WECHAT_AGENT_ID}
+        secret: ${WECHAT_SECRET}
+
+  deployment:
+    singleton: true
+    autoStart: true
+    healthCheck:
+      path: /api/health
+      interval: 30
+      timeout: 10
+    resources:
+      cpu: "250m"
+      memory: "256Mi"

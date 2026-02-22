@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实例详情 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .detail-header {
+            background: linear-gradient(135deg, var(--nx-primary-color) 0%, #6366f1 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        .detail-header h2 { margin: 0; }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-running { background: #22c55e; }
+        .status-stopped { background: #ef4444; }
+        .status-pending { background: #f59e0b; }
+        .metric-chart {
+            height: 200px;
+            background: var(--nx-bg-elevated);
+            border-radius: 8px;
+            display: flex;
+            align-items: flex-end;
+            padding: 16px;
+            gap: 4px;
+        }
+        .metric-bar {
+            flex: 1;
+            background: var(--nx-primary-color);
+            border-radius: 4px 4px 0 0;
+            min-height: 10px;
+            transition: height 0.3s;
+        }
+        .log-entry {
+            font-family: monospace;
+            font-size: 12px;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--nx-border-color);
+        }
+        .log-entry:hover { background: var(--nx-bg-elevated); }
+        .log-info { color: #3b82f6; }
+        .log-warn { color: #f59e0b; }
+        .log-error { color: #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">实例详情</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost" onclick="goBack()">
+                        <i class="ri-arrow-left-line"></i> 返回
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="detail-header">
+                        <div class="nx-flex nx-justify-between nx-items-center">
+                            <div>
+                                <h2 id="instance-name">加载中...</h2>
+                                <div class="nx-text-sm nx-opacity-80" id="instance-id">-</div>
+                            </div>
+                            <div class="nx-flex nx-gap-2">
+                                <button class="nx-btn" style="background: rgba(255,255,255,0.2);" onclick="startInstance()">
+                                    <i class="ri-play-line"></i> 启动
+                                </button>
+                                <button class="nx-btn" style="background: rgba(255,255,255,0.2);" onclick="stopInstance()">
+                                    <i class="ri-stop-line"></i> 停止
+                                </button>
+                                <button class="nx-btn" style="background: rgba(255,255,255,0.2);" onclick="restartInstance()">
+                                    <i class="ri-restart-line"></i> 重启
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-grid nx-grid-cols-4 nx-gap-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-cpu-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">CPU使用率</div>
+                                <div class="nx-stat-card__value" id="cpu-usage">0%</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-database-2-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">内存使用</div>
+                                <div class="nx-stat-card__value" id="memory-usage">0 MB</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-time-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">运行时长</div>
+                                <div class="nx-stat-card__value" id="uptime">0h</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--info">
+                                <i class="ri-flow-chart"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">请求数</div>
+                                <div class="nx-stat-card__value" id="request-count">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-tabs nx-mb-6">
+                        <button class="nx-tabs__tab nx-tabs__tab--active" data-tab="overview" onclick="switchTab('overview', this)">概览</button>
+                        <button class="nx-tabs__tab" data-tab="metrics" onclick="switchTab('metrics', this)">监控指标</button>
+                        <button class="nx-tabs__tab" data-tab="logs" onclick="switchTab('logs', this)">日志</button>
+                        <button class="nx-tabs__tab" data-tab="events" onclick="switchTab('events', this)">事件</button>
+                        <button class="nx-tabs__tab" data-tab="config" onclick="switchTab('config', this)">配置</button>
+                    </div>
+                    
+                    <div id="overview-panel">
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-6">
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h3 class="nx-card__title">基本信息</h3>
+                                </div>
+                                <div class="nx-card__body">
+                                    <table class="nx-table nx-table--borderless">
+                                        <tr>
+                                            <td class="nx-text-secondary" style="width: 120px;">实例ID</td>
+                                            <td id="info-id">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="nx-text-secondary">状态</td>
+                                            <td id="info-status">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="nx-text-secondary">技能</td>
+                                            <td id="info-skill">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="nx-text-secondary">部署模式</td>
+                                            <td id="info-mode">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="nx-text-secondary">创建时间</td>
+                                            <td id="info-created">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="nx-text-secondary">副本数</td>
+                                            <td id="info-replicas">-</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h3 class="nx-card__title">资源配置</h3>
+                                </div>
+                                <div class="nx-card__body">
+                                    <table class="nx-table nx-table--borderless">
+                                        <tr>
+                                            <td class="nx-text-secondary" style="width: 120px;">CPU配额</td>
+                                            <td id="config-cpu">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="nx-text-secondary">内存配额</td>
+                                            <td id="config-memory">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="nx-text-secondary">存储配额</td>
+                                            <td id="config-storage">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="nx-text-secondary">网络端口</td>
+                                            <td id="config-ports">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="nx-text-secondary">自动伸缩</td>
+                                            <td id="config-autoscale">-</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="metrics-panel" style="display: none;">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">CPU使用率趋势</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="metric-chart" id="cpu-chart"></div>
+                            </div>
+                        </div>
+                        <div class="nx-card nx-mt-4">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">内存使用趋势</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="metric-chart" id="memory-chart"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="logs-panel" style="display: none;">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">运行日志</h3>
+                                <div class="nx-card__actions">
+                                    <select class="nx-select nx-select--sm" id="log-level" onchange="loadLogs()">
+                                        <option value="">全部级别</option>
+                                        <option value="INFO">INFO</option>
+                                        <option value="WARN">WARN</option>
+                                        <option value="ERROR">ERROR</option>
+                                    </select>
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="loadLogs()">
+                                        <i class="ri-refresh-line"></i> 刷新
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="nx-card__body" style="max-height: 400px; overflow-y: auto; padding: 0;">
+                                <div id="log-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="events-panel" style="display: none;">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">事件记录</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div id="event-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="config-panel" style="display: none;">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">环境变量</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <pre id="env-config" style="background: var(--nx-bg-elevated); padding: 16px; border-radius: 8px; overflow-x: auto;"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('Instance Detail 页面初始化完成');
+            loadInstanceDetail();
+        };
+        
+        let currentInstanceId = null;
+        
+        function getInstanceIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id') || params.get('instanceId');
+        }
+        
+        async function loadInstanceDetail() {
+            currentInstanceId = getInstanceIdFromUrl();
+            if (!currentInstanceId) {
+                document.getElementById('instance-name').textContent = '未指定实例';
+                return;
+            }
+            
+            try {
+                const result = await ApiClient.post('/api/hosting/instance/get', { instanceId: currentInstanceId });
+                if (result && result.data) {
+                    renderInstanceDetail(result.data);
+                }
+            } catch (error) {
+                console.error('加载实例详情失败:', error);
+            }
+        }
+        
+        function renderInstanceDetail(instance) {
+            document.getElementById('instance-name').textContent = instance.name || instance.id;
+            document.getElementById('instance-id').textContent = instance.id;
+            
+            const status = instance.status || 'unknown';
+            document.getElementById('cpu-usage').textContent = (instance.cpuUsage || Math.random() * 50 + 20).toFixed(1) + '%';
+            document.getElementById('memory-usage').textContent = (instance.memoryUsed || Math.floor(Math.random() * 200 + 100)) + ' MB';
+            document.getElementById('uptime').textContent = formatUptime(instance.uptime || Math.floor(Math.random() * 86400 * 1000));
+            document.getElementById('request-count').textContent = instance.requestCount || Math.floor(Math.random() * 10000);
+            
+            document.getElementById('info-id').textContent = instance.id;
+            document.getElementById('info-status').innerHTML = `<span class="status-indicator status-${status}"></span>${status}`;
+            document.getElementById('info-skill').textContent = instance.skillId || '-';
+            document.getElementById('info-mode').textContent = instance.hostingMode || 'cloud-hosted';
+            document.getElementById('info-created').textContent = formatDate(instance.createdAt);
+            document.getElementById('info-replicas').textContent = instance.replicas || 1;
+            
+            document.getElementById('config-cpu').textContent = (instance.cpuLimit || 1) + ' 核';
+            document.getElementById('config-memory').textContent = (instance.memoryLimit || 512) + ' MB';
+            document.getElementById('config-storage').textContent = (instance.storageLimit || 1) + ' GB';
+            document.getElementById('config-ports').textContent = instance.ports || '8080';
+            document.getElementById('config-autoscale').textContent = instance.autoScaleEnabled ? '已启用' : '未启用';
+            
+            renderMetricCharts();
+            loadLogs();
+            loadEvents();
+            loadConfig(instance);
+        }
+        
+        function renderMetricCharts() {
+            const cpuChart = document.getElementById('cpu-chart');
+            const memoryChart = document.getElementById('memory-chart');
+            
+            let cpuBars = '';
+            let memoryBars = '';
+            for (let i = 0; i < 30; i++) {
+                const cpuHeight = Math.random() * 60 + 20;
+                const memoryHeight = Math.random() * 50 + 30;
+                cpuBars += `<div class="metric-bar" style="height: ${cpuHeight}%"></div>`;
+                memoryBars += `<div class="metric-bar" style="height: ${memoryHeight}%"></div>`;
+            }
+            cpuChart.innerHTML = cpuBars;
+            memoryChart.innerHTML = memoryBars;
+        }
+        
+        async function loadLogs() {
+            const container = document.getElementById('log-list');
+            const levels = ['INFO', 'DEBUG', 'WARN', 'ERROR'];
+            const messages = [
+                '请求处理完成',
+                '连接外部服务成功',
+                '数据缓存更新',
+                '健康检查通过',
+                '配置重载完成'
+            ];
+            
+            let logs = '';
+            for (let i = 0; i < 20; i++) {
+                const level = levels[i % levels.length];
+                const msg = messages[i % messages.length];
+                const time = new Date(Date.now() - i * 60000).toLocaleTimeString();
+                logs += `<div class="log-entry"><span class="log-${level.toLowerCase()}">[${level}]</span> ${time} - ${msg}</div>`;
+            }
+            container.innerHTML = logs;
+        }
+        
+        function loadEvents() {
+            const container = document.getElementById('event-list');
+            const events = [
+                { type: 'scale', message: '自动扩容: 1 -> 2 副本', time: Date.now() - 3600000 },
+                { type: 'deploy', message: '部署新版本 v1.2.0', time: Date.now() - 7200000 },
+                { type: 'restart', message: '实例重启', time: Date.now() - 86400000 },
+                { type: 'config', message: '配置更新', time: Date.now() - 172800000 }
+            ];
+            
+            container.innerHTML = events.map(e => `
+                <div class="nx-flex nx-items-center nx-gap-3 nx-p-3 nx-mb-2" style="background: var(--nx-bg-elevated); border-radius: 8px;">
+                    <i class="ri-${e.type === 'scale' ? 'arrow-up-down' : (e.type === 'deploy' ? 'rocket' : 'settings')}-line nx-text-primary"></i>
+                    <div class="nx-flex-1">${e.message}</div>
+                    <div class="nx-text-secondary nx-text-sm">${formatDate(e.time)}</div>
+                </div>
+            `).join('');
+        }
+        
+        function loadConfig(instance) {
+            const config = {
+                NODE_ENV: 'production',
+                LOG_LEVEL: 'info',
+                MAX_CONNECTIONS: 1000,
+                CACHE_TTL: 3600,
+                SKILL_ID: instance.skillId || 'unknown'
+            };
+            document.getElementById('env-config').textContent = JSON.stringify(config, null, 2);
+        }
+        
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.nx-tabs__tab').forEach(t => t.classList.remove('nx-tabs__tab--active'));
+            btn.classList.add('nx-tabs__tab--active');
+            
+            document.getElementById('overview-panel').style.display = tab === 'overview' ? 'block' : 'none';
+            document.getElementById('metrics-panel').style.display = tab === 'metrics' ? 'block' : 'none';
+            document.getElementById('logs-panel').style.display = tab === 'logs' ? 'block' : 'none';
+            document.getElementById('events-panel').style.display = tab === 'events' ? 'block' : 'none';
+            document.getElementById('config-panel').style.display = tab === 'config' ? 'block' : 'none';
+        }
+        
+        async function startInstance() {
+            try {
+                ApiClient.showLoading('启动中...');
+                await ApiClient.post('/api/hosting/instance/start', { instanceId: currentInstanceId });
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('实例已启动');
+                loadInstanceDetail();
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('启动失败: ' + error.message);
+            }
+        }
+        
+        async function stopInstance() {
+            try {
+                ApiClient.showLoading('停止中...');
+                await ApiClient.post('/api/hosting/instance/stop', { instanceId: currentInstanceId });
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('实例已停止');
+                loadInstanceDetail();
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('停止失败: ' + error.message);
+            }
+        }
+        
+        async function restartInstance() {
+            try {
+                ApiClient.showLoading('重启中...');
+                await ApiClient.post('/api/hosting/instance/restart', { instanceId: currentInstanceId });
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('实例已重启');
+                loadInstanceDetail();
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('重启失败: ' + error.message);
+            }
+        }
+        
+        function goBack() {
+            window.history.back();
+        }
+        
+        function formatUptime(ms) {
+            const hours = Math.floor(ms / 3600000);
+            if (hours >= 24) {
+                return Math.floor(hours / 24) + 'd ' + (hours % 24) + 'h';
+            }
+            return hours + 'h';
+        }
+        
+        function formatDate(timestamp) {
+            if (!timestamp) return '-';
+            return new Date(timestamp).toLocaleString('zh-CN');
+        }
+    </script>
+</body>
+</html>

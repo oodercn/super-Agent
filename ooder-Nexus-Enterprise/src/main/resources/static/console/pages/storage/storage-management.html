@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>存储管理 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        .stat-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .stat-card__title {
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        
+        .stat-card__icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .stat-card__icon.primary { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .stat-card__icon.success { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .stat-card__icon.warning { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .stat-card__icon.info { background: rgba(148, 163, 184, 0.2); color: var(--ns-secondary); }
+        
+        .stat-card__value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--ns-dark);
+            margin-bottom: 4px;
+        }
+        
+        .stat-card__sub {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .panel {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+        }
+        
+        .panel__header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .panel__body {
+            padding: 16px 20px;
+        }
+        
+        .capability-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .capability-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: var(--ns-input-bg);
+            border-radius: 8px;
+        }
+        
+        .capability-item__icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .capability-item__icon.supported { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .capability-item__icon.unsupported { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        
+        .capability-item__info {
+            flex: 1;
+        }
+        
+        .capability-item__name {
+            font-size: 13px;
+            color: var(--ns-dark);
+        }
+        
+        .capability-item__status {
+            font-size: 11px;
+            color: var(--ns-secondary);
+        }
+        
+        .file-tree {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+        }
+        
+        .tree-node {
+            padding: 6px 0;
+            cursor: pointer;
+        }
+        
+        .tree-node:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .tree-node__content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tree-node__icon {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .tree-node__icon.folder { color: var(--nx-primary); }
+        .tree-node__icon.file { color: var(--ns-secondary); }
+        
+        .tree-children {
+            padding-left: 24px;
+        }
+        
+        .operation-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .operation-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .operation-item:last-child {
+            border-bottom: none;
+        }
+        
+        .operation-item__type {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        .operation-item__type.read { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .operation-item__type.write { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .operation-item__type.delete { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        
+        .operation-item__path {
+            flex: 1;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            color: var(--ns-dark);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .operation-item__latency {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .operation-item__time {
+            font-size: 11px;
+            color: var(--ns-secondary);
+        }
+        
+        .usage-bar {
+            height: 8px;
+            background: var(--ns-border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .usage-bar__fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        
+        .usage-bar__fill.low { background: var(--ns-success); }
+        .usage-bar__fill.medium { background: var(--ns-warning); }
+        .usage-bar__fill.high { background: var(--ns-danger); }
+        
+        .storage-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--nx-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">存储管理</h2>
+                    <span class="storage-type-badge" id="storageType">
+                        <i class="ri-hard-drive-2-line"></i>
+                        <span>-</span>
+                    </span>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="refreshCache()">
+                        <i class="ri-refresh-line"></i> 刷新缓存
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="loadAll()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-card__header">
+                                <span class="stat-card__title">文件数量</span>
+                                <div class="stat-card__icon primary">
+                                    <i class="ri-file-line"></i>
+                                </div>
+                            </div>
+                            <div class="stat-card__value" id="fileCount">-</div>
+                            <div class="stat-card__sub">文件夹: <span id="folderCount">-</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__header">
+                                <span class="stat-card__title">存储空间</span>
+                                <div class="stat-card__icon success">
+                                    <i class="ri-hard-drive-line"></i>
+                                </div>
+                            </div>
+                            <div class="stat-card__value" id="usedQuota">-</div>
+                            <div class="stat-card__sub">总计: <span id="totalQuota">-</span></div>
+                            <div class="usage-bar">
+                                <div class="usage-bar__fill low" id="usageBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__header">
+                                <span class="stat-card__title">操作统计</span>
+                                <div class="stat-card__icon warning">
+                                    <i class="ri-pie-chart-line"></i>
+                                </div>
+                            </div>
+                            <div class="stat-card__value" id="totalOps">-</div>
+                            <div class="stat-card__sub">读 <span id="readOps">-</span> / 写 <span id="writeOps">-</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__header">
+                                <span class="stat-card__title">平均延迟</span>
+                                <div class="stat-card__icon info">
+                                    <i class="ri-timer-line"></i>
+                                </div>
+                            </div>
+                            <div class="stat-card__value" id="avgLatency">-</div>
+                            <div class="stat-card__sub">错误数: <span id="errorCount">-</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="two-column">
+                        <div class="panel">
+                            <div class="panel__header">
+                                <span class="panel__title">能力支持</span>
+                            </div>
+                            <div class="panel__body">
+                                <div class="capability-grid" id="capabilityGrid">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="panel">
+                            <div class="panel__header">
+                                <span class="panel__title">文件目录</span>
+                            </div>
+                            <div class="panel__body">
+                                <div class="file-tree" id="fileTree">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <div class="panel__header">
+                            <span class="panel__title">最近操作</span>
+                        </div>
+                        <div class="panel__body">
+                            <div class="operation-list" id="operationList">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAll();
+        });
+
+        function loadAll() {
+            loadStatus();
+            loadStatistics();
+            loadCapabilities();
+            loadFileTree();
+            loadOperations();
+        }
+
+        async function loadStatus() {
+            try {
+                var response = await fetch('/api/storage/status');
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    document.getElementById('storageType').querySelector('span').textContent = rs.data.storageType || 'local';
+                }
+            } catch (error) {
+                console.error('Load status failed:', error);
+            }
+        }
+
+        async function loadStatistics() {
+            try {
+                var response = await fetch('/api/storage/statistics');
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    var stats = rs.data;
+                    document.getElementById('fileCount').textContent = stats.fileCount || 0;
+                    document.getElementById('folderCount').textContent = stats.folderCount || 0;
+                    document.getElementById('usedQuota').textContent = stats.usedQuotaFormatted || formatBytes(stats.usedQuota);
+                    document.getElementById('totalQuota').textContent = stats.totalQuotaFormatted || formatBytes(stats.totalQuota);
+                    
+                    var usagePercent = stats.usagePercent || 0;
+                    var usageBar = document.getElementById('usageBar');
+                    usageBar.style.width = usagePercent + '%';
+                    usageBar.className = 'usage-bar__fill ' + getUsageClass(usagePercent);
+                    
+                    var totalOps = (stats.readOps || 0) + (stats.writeOps || 0) + (stats.deleteOps || 0);
+                    document.getElementById('totalOps').textContent = totalOps;
+                    document.getElementById('readOps').textContent = stats.readOps || 0;
+                    document.getElementById('writeOps').textContent = stats.writeOps || 0;
+                    document.getElementById('avgLatency').textContent = (stats.avgLatency || 0).toFixed(1) + 'ms';
+                    document.getElementById('errorCount').textContent = stats.errorCount || 0;
+                }
+            } catch (error) {
+                console.error('Load statistics failed:', error);
+            }
+        }
+
+        async function loadCapabilities() {
+            try {
+                var response = await fetch('/api/storage/capabilities');
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    renderCapabilities(rs.data);
+                }
+            } catch (error) {
+                console.error('Load capabilities failed:', error);
+            }
+        }
+
+        function renderCapabilities(capabilities) {
+            var html = '';
+            capabilities.forEach(function(cap) {
+                var iconClass = cap.supported ? 'supported' : 'unsupported';
+                var icon = cap.supported ? 'ri-check-line' : 'ri-close-line';
+                var status = cap.supported ? '支持' : (cap.fallback || '不支持');
+                
+                html += '<div class="capability-item">';
+                html += '  <div class="capability-item__icon ' + iconClass + '">';
+                html += '    <i class="' + icon + '"></i>';
+                html += '  </div>';
+                html += '  <div class="capability-item__info">';
+                html += '    <div class="capability-item__name">' + cap.name + '</div>';
+                html += '    <div class="capability-item__status">' + status + '</div>';
+                html += '  </div>';
+                html += '</div>';
+            });
+            
+            document.getElementById('capabilityGrid').innerHTML = html;
+        }
+
+        async function loadFileTree() {
+            try {
+                var response = await fetch('/api/storage/tree');
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    renderFileTree(rs.data);
+                }
+            } catch (error) {
+                console.error('Load file tree failed:', error);
+            }
+        }
+
+        function renderFileTree(node) {
+            var html = renderTreeNode(node, 0);
+            document.getElementById('fileTree').innerHTML = html;
+        }
+
+        function renderTreeNode(node, depth) {
+            var indent = depth * 20;
+            var isFolder = node.type === 'folder';
+            var icon = isFolder ? 'ri-folder-fill' : 'ri-file-line';
+            var iconClass = isFolder ? 'folder' : 'file';
+            
+            var html = '<div class="tree-node" style="padding-left: ' + indent + 'px">';
+            html += '  <div class="tree-node__content">';
+            html += '    <span class="tree-node__icon ' + iconClass + '"><i class="' + icon + '"></i></span>';
+            html += '    <span>' + node.name + '</span>';
+            if (!isFolder && node.size) {
+                html += '    <span style="color: var(--ns-secondary); font-size: 11px;">(' + formatBytes(node.size) + ')</span>';
+            }
+            if (isFolder && node.childCount) {
+                html += '    <span style="color: var(--ns-secondary); font-size: 11px;">(' + node.childCount + ' items)</span>';
+            }
+            html += '  </div>';
+            html += '</div>';
+            
+            if (node.children && node.children.length > 0) {
+                html += '<div class="tree-children">';
+                node.children.forEach(function(child) {
+                    html += renderTreeNode(child, depth + 1);
+                });
+                html += '</div>';
+            }
+            
+            return html;
+        }
+
+        async function loadOperations() {
+            try {
+                var response = await fetch('/api/storage/operations?limit=10');
+                var rs = await response.json();
+                if (rs.success && rs.data) {
+                    renderOperations(rs.data);
+                }
+            } catch (error) {
+                console.error('Load operations failed:', error);
+            }
+        }
+
+        function renderOperations(operations) {
+            if (!operations || operations.length === 0) {
+                document.getElementById('operationList').innerHTML = '<div style="text-align: center; color: var(--ns-secondary); padding: 20px;">暂无操作记录</div>';
+                return;
+            }
+            
+            var html = '';
+            operations.forEach(function(op) {
+                html += '<div class="operation-item">';
+                html += '  <span class="operation-item__type ' + op.type + '">' + op.type.toUpperCase() + '</span>';
+                html += '  <span class="operation-item__path">' + op.path + '</span>';
+                html += '  <span class="operation-item__latency">' + op.latency + 'ms</span>';
+                html += '  <span class="operation-item__time">' + formatTime(op.timestamp) + '</span>';
+                html += '</div>';
+            });
+            
+            document.getElementById('operationList').innerHTML = html;
+        }
+
+        async function refreshCache() {
+            try {
+                var response = await fetch('/api/storage/cache/refresh', { method: 'POST' });
+                var rs = await response.json();
+                if (rs.success) {
+                    alert('缓存已刷新');
+                    loadAll();
+                }
+            } catch (error) {
+                console.error('Refresh cache failed:', error);
+            }
+        }
+
+        function getUsageClass(percent) {
+            if (percent >= 80) return 'high';
+            if (percent >= 50) return 'medium';
+            return 'low';
+        }
+
+        function formatBytes(bytes) {
+            if (!bytes) return '0 B';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            var date = new Date(timestamp);
+            return date.toLocaleTimeString('zh-CN');
+        }
+    </script>
+</body>
+</html>

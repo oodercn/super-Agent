@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资源配置 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .resource-card {
+            background: var(--nx-bg-elevated);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .resource-bar {
+            height: 8px;
+            background: var(--nx-border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .resource-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        .resource-bar-fill.low { background: #22c55e; }
+        .resource-bar-fill.medium { background: #f59e0b; }
+        .resource-bar-fill.high { background: #ef4444; }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .slider-container input[type="range"] {
+            flex: 1;
+            height: 8px;
+            -webkit-appearance: none;
+            background: var(--nx-border-color);
+            border-radius: 4px;
+            outline: none;
+        }
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--nx-primary-color);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">资源配置</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="saveAllConfig()">
+                        <i class="ri-save-line"></i> 保存配置
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">选择实例</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <select class="nx-select" id="instance-selector" onchange="loadInstanceConfig()">
+                                <option value="">请选择实例</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="config-panel" style="display: none;">
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-6 nx-mb-6">
+                            <div class="resource-card">
+                                <div class="nx-flex nx-justify-between nx-items-center nx-mb-4">
+                                    <div>
+                                        <h4 class="nx-font-semibold"><i class="ri-cpu-line nx-text-primary"></i> CPU配额</h4>
+                                        <div class="nx-text-secondary nx-text-sm">处理器核心数</div>
+                                    </div>
+                                    <div class="nx-text-2xl nx-font-bold" id="cpu-value">1 核</div>
+                                </div>
+                                <div class="slider-container">
+                                    <span>0.1</span>
+                                    <input type="range" id="cpu-slider" min="0.1" max="8" step="0.1" value="1" oninput="updateCpuValue()">
+                                    <span>8</span>
+                                </div>
+                                <div class="nx-flex nx-justify-between nx-mt-2">
+                                    <span class="nx-text-secondary nx-text-sm">当前使用: <span id="cpu-used">0.3</span> 核</span>
+                                    <span class="nx-text-secondary nx-text-sm"><span id="cpu-percent">30</span>%</span>
+                                </div>
+                                <div class="resource-bar">
+                                    <div class="resource-bar-fill low" id="cpu-bar" style="width: 30%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="resource-card">
+                                <div class="nx-flex nx-justify-between nx-items-center nx-mb-4">
+                                    <div>
+                                        <h4 class="nx-font-semibold"><i class="ri-database-2-line nx-text-primary"></i> 内存配额</h4>
+                                        <div class="nx-text-secondary nx-text-sm">内存大小</div>
+                                    </div>
+                                    <div class="nx-text-2xl nx-font-bold" id="memory-value">512 MB</div>
+                                </div>
+                                <div class="slider-container">
+                                    <span>128MB</span>
+                                    <input type="range" id="memory-slider" min="128" max="8192" step="128" value="512" oninput="updateMemoryValue()">
+                                    <span>8GB</span>
+                                </div>
+                                <div class="nx-flex nx-justify-between nx-mt-2">
+                                    <span class="nx-text-secondary nx-text-sm">当前使用: <span id="memory-used">256</span> MB</span>
+                                    <span class="nx-text-secondary nx-text-sm"><span id="memory-percent">50</span>%</span>
+                                </div>
+                                <div class="resource-bar">
+                                    <div class="resource-bar-fill medium" id="memory-bar" style="width: 50%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-6 nx-mb-6">
+                            <div class="resource-card">
+                                <div class="nx-flex nx-justify-between nx-items-center nx-mb-4">
+                                    <div>
+                                        <h4 class="nx-font-semibold"><i class="ri-hard-drive-2-line nx-text-primary"></i> 存储配额</h4>
+                                        <div class="nx-text-secondary nx-text-sm">持久化存储</div>
+                                    </div>
+                                    <div class="nx-text-2xl nx-font-bold" id="storage-value">1 GB</div>
+                                </div>
+                                <div class="slider-container">
+                                    <span>1GB</span>
+                                    <input type="range" id="storage-slider" min="1" max="100" step="1" value="1" oninput="updateStorageValue()">
+                                    <span>100GB</span>
+                                </div>
+                                <div class="nx-flex nx-justify-between nx-mt-2">
+                                    <span class="nx-text-secondary nx-text-sm">当前使用: <span id="storage-used">0.5</span> GB</span>
+                                    <span class="nx-text-secondary nx-text-sm"><span id="storage-percent">50</span>%</span>
+                                </div>
+                                <div class="resource-bar">
+                                    <div class="resource-bar-fill low" id="storage-bar" style="width: 50%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="resource-card">
+                                <div class="nx-flex nx-justify-between nx-items-center nx-mb-4">
+                                    <div>
+                                        <h4 class="nx-font-semibold"><i class="ri-git-network-line nx-text-primary"></i> 网络带宽</h4>
+                                        <div class="nx-text-secondary nx-text-sm">网络吞吐量限制</div>
+                                    </div>
+                                    <div class="nx-text-2xl nx-font-bold" id="bandwidth-value">10 Mbps</div>
+                                </div>
+                                <div class="slider-container">
+                                    <span>1Mbps</span>
+                                    <input type="range" id="bandwidth-slider" min="1" max="1000" step="1" value="10" oninput="updateBandwidthValue()">
+                                    <span>1Gbps</span>
+                                </div>
+                                <div class="nx-flex nx-justify-between nx-mt-2">
+                                    <span class="nx-text-secondary nx-text-sm">当前使用: <span id="bandwidth-used">3</span> Mbps</span>
+                                    <span class="nx-text-secondary nx-text-sm"><span id="bandwidth-percent">30</span>%</span>
+                                </div>
+                                <div class="resource-bar">
+                                    <div class="resource-bar-fill low" id="bandwidth-bar" style="width: 30%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-card nx-mb-6">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">高级配置</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                                    <div class="nx-form-group">
+                                        <label class="nx-label">最大副本数</label>
+                                        <input type="number" class="nx-input" id="max-replicas" value="5" min="1" max="100">
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-label">最小副本数</label>
+                                        <input type="number" class="nx-input" id="min-replicas" value="1" min="0" max="100">
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-label">健康检查间隔(秒)</label>
+                                        <input type="number" class="nx-input" id="health-interval" value="30" min="5">
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-label">健康检查超时(秒)</label>
+                                        <input type="number" class="nx-input" id="health-timeout" value="5" min="1">
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-label">健康检查路径</label>
+                                        <input type="text" class="nx-input" id="health-path" value="/health">
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-label">优雅关闭超时(秒)</label>
+                                        <input type="number" class="nx-input" id="grace-timeout" value="30" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">资源配额限制</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-alert nx-alert--info nx-mb-4">
+                                    <i class="ri-information-line"></i>
+                                    以下为平台级别的资源配额限制，实例配置不能超过这些限制。
+                                </div>
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>资源类型</th>
+                                            <th>已使用</th>
+                                            <th>配额限制</th>
+                                            <th>使用率</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>CPU总核数</td>
+                                            <td id="quota-cpu-used">12.5</td>
+                                            <td id="quota-cpu-limit">32 核</td>
+                                            <td>
+                                                <div class="resource-bar" style="width: 100px;">
+                                                    <div class="resource-bar-fill medium" style="width: 39%"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>内存总量</td>
+                                            <td id="quota-memory-used">8.5 GB</td>
+                                            <td id="quota-memory-limit">64 GB</td>
+                                            <td>
+                                                <div class="resource-bar" style="width: 100px;">
+                                                    <div class="resource-bar-fill low" style="width: 13%"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>存储总量</td>
+                                            <td id="quota-storage-used">45 GB</td>
+                                            <td id="quota-storage-limit">500 GB</td>
+                                            <td>
+                                                <div class="resource-bar" style="width: 100px;">
+                                                    <div class="resource-bar-fill low" style="width: 9%"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>实例数量</td>
+                                            <td id="quota-instance-used">15</td>
+                                            <td id="quota-instance-limit">100</td>
+                                            <td>
+                                                <div class="resource-bar" style="width: 100px;">
+                                                    <div class="resource-bar-fill low" style="width: 15%"></div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('Resource Config 页面初始化完成');
+            loadInstances();
+        };
+        
+        let currentInstanceId = null;
+        
+        async function loadInstances() {
+            try {
+                const result = await ApiClient.post('/api/hosting/instances', {});
+                if (result && result.data) {
+                    const select = document.getElementById('instance-selector');
+                    (result.data || []).forEach(inst => {
+                        select.innerHTML += `<option value="${inst.id}">${inst.name || inst.id}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('加载实例失败:', error);
+            }
+        }
+        
+        async function loadInstanceConfig() {
+            currentInstanceId = document.getElementById('instance-selector').value;
+            if (!currentInstanceId) {
+                document.getElementById('config-panel').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('config-panel').style.display = 'block';
+            
+            try {
+                const result = await ApiClient.post('/api/hosting/instance/get', { instanceId: currentInstanceId });
+                if (result && result.data) {
+                    const inst = result.data;
+                    document.getElementById('cpu-slider').value = inst.cpuLimit || 1;
+                    document.getElementById('memory-slider').value = inst.memoryLimit || 512;
+                    document.getElementById('storage-slider').value = inst.storageLimit || 1;
+                    document.getElementById('max-replicas').value = inst.maxReplicas || 5;
+                    document.getElementById('min-replicas').value = inst.minReplicas || 1;
+                    
+                    updateCpuValue();
+                    updateMemoryValue();
+                    updateStorageValue();
+                    updateBandwidthValue();
+                }
+            } catch (error) {
+                console.error('加载配置失败:', error);
+            }
+        }
+        
+        function updateCpuValue() {
+            const value = parseFloat(document.getElementById('cpu-slider').value);
+            document.getElementById('cpu-value').textContent = value + ' 核';
+            
+            const used = (Math.random() * value * 0.8).toFixed(1);
+            const percent = Math.round((used / value) * 100);
+            document.getElementById('cpu-used').textContent = used;
+            document.getElementById('cpu-percent').textContent = percent;
+            
+            const bar = document.getElementById('cpu-bar');
+            bar.style.width = percent + '%';
+            bar.className = 'resource-bar-fill ' + (percent < 50 ? 'low' : (percent < 80 ? 'medium' : 'high'));
+        }
+        
+        function updateMemoryValue() {
+            const value = parseInt(document.getElementById('memory-slider').value);
+            document.getElementById('memory-value').textContent = value >= 1024 ? (value / 1024).toFixed(1) + ' GB' : value + ' MB';
+            
+            const used = Math.floor(Math.random() * value * 0.8);
+            const percent = Math.round((used / value) * 100);
+            document.getElementById('memory-used').textContent = used;
+            document.getElementById('memory-percent').textContent = percent;
+            
+            const bar = document.getElementById('memory-bar');
+            bar.style.width = percent + '%';
+            bar.className = 'resource-bar-fill ' + (percent < 50 ? 'low' : (percent < 80 ? 'medium' : 'high'));
+        }
+        
+        function updateStorageValue() {
+            const value = parseInt(document.getElementById('storage-slider').value);
+            document.getElementById('storage-value').textContent = value + ' GB';
+            
+            const used = (Math.random() * value * 0.5).toFixed(1);
+            const percent = Math.round((used / value) * 100);
+            document.getElementById('storage-used').textContent = used;
+            document.getElementById('storage-percent').textContent = percent;
+            
+            const bar = document.getElementById('storage-bar');
+            bar.style.width = percent + '%';
+            bar.className = 'resource-bar-fill ' + (percent < 50 ? 'low' : (percent < 80 ? 'medium' : 'high'));
+        }
+        
+        function updateBandwidthValue() {
+            const value = parseInt(document.getElementById('bandwidth-slider').value);
+            document.getElementById('bandwidth-value').textContent = value >= 1000 ? (value / 1000).toFixed(1) + ' Gbps' : value + ' Mbps';
+            
+            const used = Math.floor(Math.random() * value * 0.5);
+            const percent = Math.round((used / value) * 100);
+            document.getElementById('bandwidth-used').textContent = used;
+            document.getElementById('bandwidth-percent').textContent = percent;
+            
+            const bar = document.getElementById('bandwidth-bar');
+            bar.style.width = percent + '%';
+            bar.className = 'resource-bar-fill ' + (percent < 50 ? 'low' : (percent < 80 ? 'medium' : 'high'));
+        }
+        
+        async function saveAllConfig() {
+            if (!currentInstanceId) {
+                ApiClient.showError('请先选择实例');
+                return;
+            }
+            
+            const config = {
+                instanceId: currentInstanceId,
+                cpuLimit: parseFloat(document.getElementById('cpu-slider').value),
+                memoryLimit: parseInt(document.getElementById('memory-slider').value),
+                storageLimit: parseInt(document.getElementById('storage-slider').value),
+                bandwidthLimit: parseInt(document.getElementById('bandwidth-slider').value),
+                maxReplicas: parseInt(document.getElementById('max-replicas').value),
+                minReplicas: parseInt(document.getElementById('min-replicas').value),
+                healthCheckInterval: parseInt(document.getElementById('health-interval').value),
+                healthCheckTimeout: parseInt(document.getElementById('health-timeout').value),
+                healthCheckPath: document.getElementById('health-path').value,
+                graceShutdownTimeout: parseInt(document.getElementById('grace-timeout').value)
+            };
+            
+            try {
+                ApiClient.showLoading('保存配置中...');
+                await ApiClient.post('/api/hosting/instance/update', config);
+                ApiClient.hideLoading();
+                ApiClient.showSuccess('配置保存成功');
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('保存失败: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

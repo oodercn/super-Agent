@@ -1,0 +1,124 @@
+apiVersion: ooder.io/v1
+kind: Skill
+metadata:
+  skillId: "skill-msg-service"
+  skillName: "消息服务"
+  skillType: "SYSTEM_SERVICE"
+  version: "1.0.0"
+  description: "提供消息推送、P2P通信、Topic订阅功能"
+  author: "ooder Team"
+  createdAt: "2026-02-18T00:00:00Z"
+  scene: "SYS"
+
+spec:
+  capabilities:
+    - capabilityId: "cap-msg-push"
+      capabilityName: "消息推送"
+      description: "单播、广播消息"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-push-message"
+          operationName: "推送消息"
+          description: "推送消息到指定目标"
+          inputSchema:
+            type: "object"
+            properties:
+              targetId:
+                type: "string"
+              messageType:
+                type: "string"
+              content:
+                type: "object"
+          outputSchema:
+            type: "object"
+            properties:
+              success:
+                type: "boolean"
+              messageId:
+                type: "string"
+        
+        - operationId: "op-broadcast-message"
+          operationName: "广播消息"
+          description: "广播消息到多个目标"
+    
+    - capabilityId: "cap-p2p-comm"
+      capabilityName: "P2P通信"
+      description: "点对点通信"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-send-p2p"
+          operationName: "发送P2P消息"
+          description: "发送P2P消息"
+        
+        - operationId: "op-receive-p2p"
+          operationName: "接收P2P消息"
+          description: "接收P2P消息"
+    
+    - capabilityId: "cap-topic-sub"
+      capabilityName: "Topic订阅"
+      description: "主题订阅、发布"
+      version: "1.0.0"
+      operations:
+        - operationId: "op-subscribe"
+          operationName: "订阅Topic"
+          description: "订阅消息主题"
+        
+        - operationId: "op-unsubscribe"
+          operationName: "取消订阅"
+          description: "取消消息订阅"
+        
+        - operationId: "op-publish"
+          operationName: "发布消息"
+          description: "发布主题消息"
+
+  config:
+    port: 8086
+    mqttPort: 1883
+    websocketPort: 8088
+    host: "0.0.0.0"
+    endpoints:
+      - path: "/api/msg/push"
+        description: "消息推送接口"
+      - path: "/api/msg/p2p"
+        description: "P2P通信接口"
+      - path: "/api/msg/topic"
+        description: "Topic订阅接口"
+      - path: "/ws/agent/message"
+        description: "WebSocket消息接口"
+    
+    dependencies:
+      - skillId: "skill-jds-server"
+        required: true
+        description: "服务注册发现"
+      - skillId: "skill-auth-service"
+        required: true
+        description: "认证服务"
+    
+    mqtt:
+      enabled: true
+      port: 1883
+      maxConnections: 5000
+    
+    websocket:
+      enabled: true
+      port: 8088
+      maxConnections: 5000
+    
+    message:
+      maxQueueSize: 10000
+      deliveryTimeout: 30000
+      retryCount: 3
+
+  healthCheck:
+    enabled: true
+    interval: 30000
+    timeout: 5000
+    endpoint: "/api/msg/health"
+
+  resources:
+    cpu:
+      request: "250m"
+      limit: "1000m"
+    memory:
+      request: "512Mi"
+      limit: "2Gi"

@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>存储类型管理 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .storage-types-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .storage-type-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .storage-type-card:hover {
+            border-color: var(--nx-primary);
+            transform: translateY(-2px);
+        }
+        
+        .storage-type-card.selected {
+            border-color: var(--nx-primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .storage-type-card__header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .storage-type-card__icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .storage-type-card__icon.local { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .storage-type-card__icon.database { background: rgba(59, 130, 246, 0.2); color: var(--nx-primary); }
+        .storage-type-card__icon.s3 { background: rgba(245, 158, 11, 0.2); color: var(--ns-warning); }
+        .storage-type-card__icon.webdav { background: rgba(148, 163, 184, 0.2); color: var(--ns-secondary); }
+        
+        .storage-type-card__title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .storage-type-card__status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-left: auto;
+        }
+        
+        .storage-type-card__status.ready { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .storage-type-card__status.unconfigured { background: rgba(148, 163, 184, 0.2); color: var(--ns-secondary); }
+        .storage-type-card__status.error { background: rgba(239, 68, 68, 0.2); color: var(--ns-danger); }
+        
+        .storage-type-card__stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .storage-stat {
+            text-align: center;
+            padding: 8px;
+            background: var(--ns-input-bg);
+            border-radius: 8px;
+        }
+        
+        .storage-stat__value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .storage-stat__label {
+            font-size: 11px;
+            color: var(--ns-secondary);
+        }
+        
+        .storage-type-card__capabilities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .capability-tag {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: var(--ns-input-bg);
+            color: var(--ns-secondary);
+        }
+        
+        .capability-tag.supported {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--ns-success);
+        }
+        
+        .capability-tag.unsupported {
+            background: rgba(148, 163, 184, 0.1);
+            color: var(--ns-secondary);
+        }
+        
+        .detail-panel {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 12px;
+            margin-top: 24px;
+        }
+        
+        .detail-panel__header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .detail-panel__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .detail-panel__body {
+            padding: 20px;
+        }
+        
+        .config-form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ns-secondary);
+        }
+        
+        .form-group input,
+        .form-group select {
+            padding: 10px 12px;
+            background: var(--ns-input-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        
+        .capabilities-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .capabilities-table th,
+        .capabilities-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .capabilities-table th {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--ns-secondary);
+            text-transform: uppercase;
+        }
+        
+        .capabilities-table td {
+            font-size: 14px;
+            color: var(--ns-dark);
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .status-badge.success { background: rgba(34, 197, 94, 0.2); color: var(--ns-success); }
+        .status-badge.secondary { background: rgba(148, 163, 184, 0.2); color: var(--ns-secondary); }
+        
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: var(--nx-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-secondary {
+            background: var(--ns-card-bg);
+            color: var(--ns-dark);
+            border: 1px solid var(--ns-border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--ns-bg-hover);
+            border-color: var(--nx-primary);
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--ns-input-bg);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .connection-status.success {
+            background: rgba(34, 197, 94, 0.1);
+        }
+        
+        .connection-status.error {
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        .connection-status__icon {
+            font-size: 20px;
+        }
+        
+        .connection-status.success .connection-status__icon {
+            color: var(--ns-success);
+        }
+        
+        .connection-status.error .connection-status__icon {
+            color: var(--ns-danger);
+        }
+        
+        .wizard-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .wizard-modal.active {
+            display: flex;
+        }
+        
+        .wizard-content {
+            background: var(--ns-card-bg);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow: hidden;
+        }
+        
+        .wizard-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .wizard-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        
+        .wizard-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--ns-secondary);
+            cursor: pointer;
+        }
+        
+        .wizard-steps {
+            display: flex;
+            padding: 16px 24px;
+            background: var(--ns-input-bg);
+            gap: 8px;
+        }
+        
+        .wizard-step {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--ns-secondary);
+        }
+        
+        .wizard-step.active {
+            background: var(--nx-primary);
+            color: white;
+        }
+        
+        .wizard-step.completed {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--ns-success);
+        }
+        
+        .wizard-body {
+            padding: 24px;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+        
+        .wizard-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--ns-border);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .type-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .type-option {
+            padding: 20px;
+            border: 2px solid var(--ns-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .type-option:hover {
+            border-color: var(--nx-primary);
+        }
+        
+        .type-option.selected {
+            border-color: var(--nx-primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .type-option__icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        
+        .type-option__title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+            margin-bottom: 8px;
+        }
+        
+        .type-option__features {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .type-option__features li {
+            font-size: 13px;
+            color: var(--ns-secondary);
+            padding: 4px 0;
+        }
+        
+        .type-option__features li i {
+            color: var(--ns-success);
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold"><i class="ri-database-2-line"></i> 存储类型管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="btn btn-primary" onclick="openWizard()">
+                        <i class="ri-add-line"></i> 添加存储
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadStorageTypes()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div id="storageTypesGrid" class="storage-types-grid">
+                    </div>
+                    
+                    <div id="detailPanel" class="detail-panel" style="display: none;">
+                        <div class="detail-panel__header">
+                            <span class="detail-panel__title" id="detailTitle">存储详情</span>
+                            <div class="btn-group">
+                                <button class="btn btn-secondary" onclick="testConnection()">
+                                    <i class="ri-link"></i> 测试连接
+                                </button>
+                                <button class="btn btn-primary" onclick="saveConfig()">
+                                    <i class="ri-save-line"></i> 保存配置
+                                </button>
+                            </div>
+                        </div>
+                        <div class="detail-panel__body">
+                            <div id="connectionStatus" class="connection-status" style="display: none;">
+                                <i class="connection-status__icon ri-checkbox-circle-line"></i>
+                                <span id="connectionMessage">连接成功</span>
+                            </div>
+                            
+                            <div class="config-form" id="configForm">
+                            </div>
+                            
+                            <h3 style="margin-top: 24px; margin-bottom: 16px; font-size: 14px; color: var(--ns-secondary);">能力支持</h3>
+                            <table class="capabilities-table" id="capabilitiesTable">
+                                <thead>
+                                    <tr>
+                                        <th>能力</th>
+                                        <th>说明</th>
+                                        <th>状态</th>
+                                        <th>来源</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="capabilitiesBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="wizardModal" class="wizard-modal">
+        <div class="wizard-content">
+            <div class="wizard-header">
+                <span class="wizard-title">存储配置向导</span>
+                <button class="wizard-close" onclick="closeWizard()">&times;</button>
+            </div>
+            <div class="wizard-steps">
+                <div class="wizard-step active" data-step="1">选择类型</div>
+                <div class="wizard-step" data-step="2">配置参数</div>
+                <div class="wizard-step" data-step="3">能力确认</div>
+                <div class="wizard-step" data-step="4">完成测试</div>
+            </div>
+            <div class="wizard-body" id="wizardBody">
+            </div>
+            <div class="wizard-footer">
+                <button class="btn btn-secondary" id="wizardPrev" onclick="prevStep()" style="visibility: hidden;">上一步</button>
+                <div>
+                    <button class="btn btn-secondary" onclick="closeWizard()">取消</button>
+                    <button class="btn btn-primary" id="wizardNext" onclick="nextStep()">下一步</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let storageTypes = [];
+        let selectedType = null;
+        let currentStep = 1;
+        let wizardData = {};
+        
+        window.onPageInit = function() {
+            loadStorageTypes();
+        };
+        
+        async function loadStorageTypes() {
+            try {
+                const response = await fetch('/api/vfs/storage-types');
+                const result = await response.json();
+                
+                if (result.success) {
+                    storageTypes = result.data;
+                    renderStorageTypes();
+                }
+            } catch (error) {
+                console.error('Failed to load storage types:', error);
+            }
+        }
+        
+        function renderStorageTypes() {
+            const grid = document.getElementById('storageTypesGrid');
+            grid.innerHTML = '';
+            
+            storageTypes.forEach(type => {
+                const card = document.createElement('div');
+                card.className = 'storage-type-card' + (selectedType === type.type ? ' selected' : '');
+                card.onclick = () => selectType(type.type);
+                
+                const iconClass = type.type;
+                const iconMap = {
+                    'local': 'ri-folder-line',
+                    'database': 'ri-database-2-line',
+                    's3': 'ri-cloud-line',
+                    'webdav': 'ri-global-line'
+                };
+                
+                const statusClass = type.status === 'ready' ? 'ready' : 
+                                   type.status === 'configured' ? 'ready' : 'unconfigured';
+                const statusText = type.status === 'ready' ? '就绪' : 
+                                  type.status === 'configured' ? '已配置' : '未配置';
+                
+                card.innerHTML = `
+                    <div class="storage-type-card__header">
+                        <div class="storage-type-card__icon ${iconClass}">
+                            <i class="${iconMap[type.type] || 'ri-folder-line'}"></i>
+                        </div>
+                        <div>
+                            <div class="storage-type-card__title">${type.name}</div>
+                        </div>
+                        <span class="storage-type-card__status ${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="storage-type-card__stats">
+                        <div class="storage-stat">
+                            <div class="storage-stat__value">${formatNumber(type.fileCount || 0)}</div>
+                            <div class="storage-stat__label">文件数</div>
+                        </div>
+                        <div class="storage-stat">
+                            <div class="storage-stat__value">${formatSize(type.totalSize || 0)}</div>
+                            <div class="storage-stat__label">存储容量</div>
+                        </div>
+                        <div class="storage-stat">
+                            <div class="storage-stat__value">${type.connected ? '✓' : '✗'}</div>
+                            <div class="storage-stat__label">连接状态</div>
+                        </div>
+                    </div>
+                    <div class="storage-type-card__capabilities">
+                        ${(type.capabilities || []).slice(0, 5).map(cap => 
+                            `<span class="capability-tag ${cap.supported ? 'supported' : 'unsupported'}">${cap.name}</span>`
+                        ).join('')}
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+        
+        async function selectType(type) {
+            selectedType = type;
+            renderStorageTypes();
+            
+            try {
+                const response = await fetch(`/api/vfs/storage-types/${type}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    showDetailPanel(result.data);
+                }
+            } catch (error) {
+                console.error('Failed to load storage type details:', error);
+            }
+        }
+        
+        function showDetailPanel(typeInfo) {
+            const panel = document.getElementById('detailPanel');
+            panel.style.display = 'block';
+            
+            document.getElementById('detailTitle').textContent = typeInfo.name + ' 配置';
+            
+            renderConfigForm(typeInfo.type);
+            renderCapabilities(typeInfo.capabilities || []);
+        }
+        
+        function renderConfigForm(type) {
+            const form = document.getElementById('configForm');
+            let html = '';
+            
+            if (type === 'local') {
+                html = `
+                    <div class="form-group full-width">
+                        <label>存储路径</label>
+                        <input type="text" id="config_path" value="./data/vfs" placeholder="存储路径">
+                    </div>
+                    <div class="form-group">
+                        <label>最大容量 (GB)</label>
+                        <input type="number" id="config_maxSize" value="100" placeholder="最大容量">
+                    </div>
+                    <div class="form-group">
+                        <label>单文件限制 (MB)</label>
+                        <input type="number" id="config_maxFileSize" value="100" placeholder="单文件限制">
+                    </div>
+                `;
+            } else if (type === 'database') {
+                html = `
+                    <div class="form-group full-width">
+                        <label>数据库URL</label>
+                        <input type="text" id="config_dbUrl" value="jdbc:mysql://localhost:3306/vfs" placeholder="数据库URL">
+                    </div>
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input type="text" id="config_dbUser" placeholder="数据库用户名">
+                    </div>
+                    <div class="form-group">
+                        <label>密码</label>
+                        <input type="password" id="config_dbPassword" placeholder="数据库密码">
+                    </div>
+                `;
+            } else if (type === 's3') {
+                html = `
+                    <div class="form-group full-width">
+                        <label>Endpoint</label>
+                        <input type="text" id="config_endpoint" value="https://oss-cn-hangzhou.aliyuncs.com" placeholder="Endpoint URL">
+                    </div>
+                    <div class="form-group">
+                        <label>Access Key</label>
+                        <input type="text" id="config_accessKey" placeholder="Access Key">
+                    </div>
+                    <div class="form-group">
+                        <label>Secret Key</label>
+                        <input type="password" id="config_secretKey" placeholder="Secret Key">
+                    </div>
+                    <div class="form-group">
+                        <label>Bucket</label>
+                        <input type="text" id="config_bucket" value="nexus-storage" placeholder="Bucket名称">
+                    </div>
+                    <div class="form-group">
+                        <label>Region</label>
+                        <input type="text" id="config_region" value="cn-hangzhou" placeholder="Region">
+                    </div>
+                `;
+            } else if (type === 'webdav') {
+                html = `
+                    <div class="form-group full-width">
+                        <label>WebDAV URL</label>
+                        <input type="text" id="config_webdavUrl" placeholder="WebDAV服务器地址">
+                    </div>
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input type="text" id="config_username" placeholder="用户名">
+                    </div>
+                    <div class="form-group">
+                        <label>密码</label>
+                        <input type="password" id="config_password" placeholder="密码">
+                    </div>
+                `;
+            }
+            
+            html += `
+                <div class="form-group">
+                    <label>降级策略</label>
+                    <select id="config_fallback">
+                        <option value="local">降级到 Local 存储</option>
+                        <option value="none">不启用降级</option>
+                    </select>
+                </div>
+            `;
+            
+            form.innerHTML = html;
+        }
+        
+        function renderCapabilities(capabilities) {
+            const tbody = document.getElementById('capabilitiesBody');
+            tbody.innerHTML = capabilities.map(cap => `
+                <tr>
+                    <td>${cap.name}</td>
+                    <td>${cap.description || '-'}</td>
+                    <td>
+                        <span class="status-badge ${cap.supported ? 'success' : 'secondary'}">
+                            <i class="${cap.supported ? 'ri-checkbox-circle-line' : 'ri-close-circle-line'}"></i>
+                            ${cap.supported ? '支持' : '不支持'}
+                        </span>
+                    </td>
+                    <td>${cap.source || '-'}</td>
+                </tr>
+            `).join('');
+        }
+        
+        async function testConnection() {
+            if (!selectedType) return;
+            
+            const statusDiv = document.getElementById('connectionStatus');
+            const messageSpan = document.getElementById('connectionMessage');
+            statusDiv.style.display = 'flex';
+            statusDiv.className = 'connection-status';
+            messageSpan.textContent = '正在测试连接...';
+            
+            const config = collectConfig();
+            
+            try {
+                const response = await fetch('/api/vfs/storage-types/test-connection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusDiv.className = 'connection-status success';
+                    statusDiv.querySelector('i').className = 'connection-status__icon ri-checkbox-circle-line';
+                    messageSpan.textContent = '连接成功';
+                } else {
+                    statusDiv.className = 'connection-status error';
+                    statusDiv.querySelector('i').className = 'connection-status__icon ri-close-circle-line';
+                    messageSpan.textContent = result.error || '连接失败';
+                }
+            } catch (error) {
+                statusDiv.className = 'connection-status error';
+                statusDiv.querySelector('i').className = 'connection-status__icon ri-close-circle-line';
+                messageSpan.textContent = '连接测试失败: ' + error.message;
+            }
+        }
+        
+        function collectConfig() {
+            const inputs = document.querySelectorAll('#configForm input, #configForm select');
+            const params = {};
+            inputs.forEach(input => {
+                if (input.id && input.id.startsWith('config_')) {
+                    const key = input.id.replace('config_', '');
+                    params[key] = input.value;
+                }
+            });
+            
+            return {
+                type: selectedType,
+                params: params,
+                fallbackEnabled: params.fallback === 'local'
+            };
+        }
+        
+        async function saveConfig() {
+            if (!selectedType) return;
+            
+            const config = collectConfig();
+            
+            try {
+                const response = await fetch('/api/vfs/storage-types/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('配置保存成功');
+                    loadStorageTypes();
+                } else {
+                    alert('配置保存失败: ' + (result.error || '未知错误'));
+                }
+            } catch (error) {
+                alert('配置保存失败: ' + error.message);
+            }
+        }
+        
+        function openWizard() {
+            currentStep = 1;
+            wizardData = {};
+            document.getElementById('wizardModal').classList.add('active');
+            renderWizardStep();
+        }
+        
+        function closeWizard() {
+            document.getElementById('wizardModal').classList.remove('active');
+        }
+        
+        function renderWizardStep() {
+            const steps = document.querySelectorAll('.wizard-step');
+            steps.forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    step.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+            
+            document.getElementById('wizardPrev').style.visibility = currentStep > 1 ? 'visible' : 'hidden';
+            document.getElementById('wizardNext').textContent = currentStep === 4 ? '完成' : '下一步';
+            
+            const body = document.getElementById('wizardBody');
+            
+            if (currentStep === 1) {
+                body.innerHTML = `
+                    <h3 style="margin-bottom: 20px;">选择存储类型</h3>
+                    <div class="type-selector">
+                        <div class="type-option" onclick="selectWizardType('local')">
+                            <div class="type-option__icon" style="color: var(--ns-success);"><i class="ri-folder-line"></i></div>
+                            <div class="type-option__title">本地存储</div>
+                            <ul class="type-option__features">
+                                <li><i class="ri-check-line"></i>无需配置</li>
+                                <li><i class="ri-check-line"></i>开发测试</li>
+                                <li><i class="ri-check-line"></i>默认降级</li>
+                            </ul>
+                        </div>
+                        <div class="type-option" onclick="selectWizardType('database')">
+                            <div class="type-option__icon" style="color: var(--nx-primary);"><i class="ri-database-2-line"></i></div>
+                            <div class="type-option__title">数据库存储</div>
+                            <ul class="type-option__features">
+                                <li><i class="ri-check-line"></i>事务支持</li>
+                                <li><i class="ri-check-line"></i>企业部署</li>
+                                <li><i class="ri-check-line"></i>复杂查询</li>
+                            </ul>
+                        </div>
+                        <div class="type-option" onclick="selectWizardType('s3')">
+                            <div class="type-option__icon" style="color: var(--ns-warning);"><i class="ri-cloud-line"></i></div>
+                            <div class="type-option__title">S3对象存储</div>
+                            <ul class="type-option__features">
+                                <li><i class="ri-check-line"></i>云原生</li>
+                                <li><i class="ri-check-line"></i>分布式</li>
+                                <li><i class="ri-check-line"></i>文件分享</li>
+                            </ul>
+                        </div>
+                        <div class="type-option" onclick="selectWizardType('webdav')">
+                            <div class="type-option__icon" style="color: var(--ns-secondary);"><i class="ri-global-line"></i></div>
+                            <div class="type-option__title">WebDAV存储</div>
+                            <ul class="type-option__features">
+                                <li><i class="ri-check-line"></i>NAS集成</li>
+                                <li><i class="ri-check-line"></i>网络共享</li>
+                                <li><i class="ri-check-line"></i>协作编辑</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            } else if (currentStep === 2) {
+                body.innerHTML = `
+                    <h3 style="margin-bottom: 20px;">配置参数</h3>
+                    <div class="config-form" id="wizardConfigForm">
+                    </div>
+                `;
+                renderWizardConfigForm();
+            } else if (currentStep === 3) {
+                body.innerHTML = `
+                    <h3 style="margin-bottom: 20px;">能力确认</h3>
+                    <p style="color: var(--ns-secondary); margin-bottom: 16px;">存储类型: ${wizardData.type}</p>
+                    <table class="capabilities-table">
+                        <thead>
+                            <tr><th>能力</th><th>说明</th><th>状态</th></tr>
+                        </thead>
+                        <tbody id="wizardCapabilitiesBody"></tbody>
+                    </table>
+                `;
+                loadWizardCapabilities();
+            } else if (currentStep === 4) {
+                body.innerHTML = `
+                    <h3 style="margin-bottom: 20px;">连接测试</h3>
+                    <div id="wizardTestResult">
+                        <p style="color: var(--ns-secondary);">点击"完成"按钮进行连接测试并保存配置。</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function selectWizardType(type) {
+            wizardData.type = type;
+            document.querySelectorAll('.type-option').forEach(el => el.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+        }
+        
+        function renderWizardConfigForm() {
+            const form = document.getElementById('wizardConfigForm');
+            if (!wizardData.type) {
+                form.innerHTML = '<p style="color: var(--ns-secondary);">请先选择存储类型</p>';
+                return;
+            }
+            
+            let html = '';
+            if (wizardData.type === 's3') {
+                html = `
+                    <div class="form-group full-width">
+                        <label>平台选择</label>
+                        <select id="wizard_platform" onchange="updatePlatformDefaults()">
+                            <option value="aws">AWS S3</option>
+                            <option value="minio">MinIO</option>
+                            <option value="aliyun" selected>阿里云 OSS</option>
+                            <option value="tencent">腾讯云 COS</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Endpoint</label>
+                        <input type="text" id="wizard_endpoint" value="https://oss-cn-hangzhou.aliyuncs.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Access Key</label>
+                        <input type="text" id="wizard_accessKey">
+                    </div>
+                    <div class="form-group">
+                        <label>Secret Key</label>
+                        <input type="password" id="wizard_secretKey">
+                    </div>
+                    <div class="form-group">
+                        <label>Bucket</label>
+                        <input type="text" id="wizard_bucket" value="nexus-storage">
+                    </div>
+                    <div class="form-group">
+                        <label>Region</label>
+                        <input type="text" id="wizard_region" value="cn-hangzhou">
+                    </div>
+                `;
+            } else if (wizardData.type === 'local') {
+                html = `
+                    <div class="form-group full-width">
+                        <label>存储路径</label>
+                        <input type="text" id="wizard_path" value="./data/vfs">
+                    </div>
+                    <div class="form-group">
+                        <label>最大容量 (GB)</label>
+                        <input type="number" id="wizard_maxSize" value="100">
+                    </div>
+                    <div class="form-group">
+                        <label>单文件限制 (MB)</label>
+                        <input type="number" id="wizard_maxFileSize" value="100">
+                    </div>
+                `;
+            } else if (wizardData.type === 'database') {
+                html = `
+                    <div class="form-group full-width">
+                        <label>数据库URL</label>
+                        <input type="text" id="wizard_dbUrl" value="jdbc:mysql://localhost:3306/vfs">
+                    </div>
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input type="text" id="wizard_dbUser">
+                    </div>
+                    <div class="form-group">
+                        <label>密码</label>
+                        <input type="password" id="wizard_dbPassword">
+                    </div>
+                `;
+            }
+            form.innerHTML = html;
+        }
+        
+        async function loadWizardCapabilities() {
+            if (!wizardData.type) return;
+            
+            try {
+                const response = await fetch(`/api/vfs/storage-types/${wizardData.type}/capabilities`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const tbody = document.getElementById('wizardCapabilitiesBody');
+                    tbody.innerHTML = result.data.map(cap => `
+                        <tr>
+                            <td>${cap.name}</td>
+                            <td>${cap.description || '-'}</td>
+                            <td>
+                                <span class="status-badge ${cap.supported ? 'success' : 'secondary'}">
+                                    ${cap.supported ? '支持' : '不支持'}
+                                </span>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Failed to load capabilities:', error);
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                renderWizardStep();
+            }
+        }
+        
+        async function nextStep() {
+            if (currentStep === 1 && !wizardData.type) {
+                alert('请选择存储类型');
+                return;
+            }
+            
+            if (currentStep === 4) {
+                await completeWizard();
+                return;
+            }
+            
+            currentStep++;
+            renderWizardStep();
+        }
+        
+        async function completeWizard() {
+            const config = {
+                type: wizardData.type,
+                params: {},
+                fallbackEnabled: true
+            };
+            
+            const inputs = document.querySelectorAll('#wizardConfigForm input, #wizardConfigForm select');
+            inputs.forEach(input => {
+                if (input.id && input.id.startsWith('wizard_')) {
+                    const key = input.id.replace('wizard_', '');
+                    config.params[key] = input.value;
+                }
+            });
+            
+            try {
+                const testResponse = await fetch('/api/vfs/storage-types/test-connection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                const testResult = await testResponse.json();
+                
+                if (!testResult.success) {
+                    document.getElementById('wizardTestResult').innerHTML = `
+                        <div class="connection-status error">
+                            <i class="connection-status__icon ri-close-circle-line"></i>
+                            <span>连接测试失败: ${testResult.error || '未知错误'}</span>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const saveResponse = await fetch('/api/vfs/storage-types/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                const saveResult = await saveResponse.json();
+                
+                if (saveResult.success) {
+                    document.getElementById('wizardTestResult').innerHTML = `
+                        <div class="connection-status success">
+                            <i class="connection-status__icon ri-checkbox-circle-line"></i>
+                            <span>配置完成！存储已成功添加。</span>
+                        </div>
+                    `;
+                    setTimeout(() => {
+                        closeWizard();
+                        loadStorageTypes();
+                    }, 1500);
+                }
+            } catch (error) {
+                document.getElementById('wizardTestResult').innerHTML = `
+                    <div class="connection-status error">
+                        <i class="connection-status__icon ri-close-circle-line"></i>
+                        <span>配置失败: ${error.message}</span>
+                    </div>
+                `;
+            }
+        }
+        
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+        
+        function formatSize(bytes) {
+            if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(1) + ' GB';
+            if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+            if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return bytes + ' B';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1401 @@
+/**
+ * 统一主题样式
+ * 所有页面必须使用此文件的CSS变量
+ */
+
+/* ========== 基础主题变量 ========== */
+:root {
+    /* 主色调 */
+    --nexus-primary: #3b82f6;
+    --nexus-secondary: #94a3b8;
+    --nexus-success: #22c55e;
+    --nexus-warning: #f59e0b;
+    --nexus-danger: #ef4444;
+    
+    /* 深色主题（默认） */
+    --nexus-light: #0f0f0f;
+    --nexus-dark: #ffffff;
+    --nexus-border: #2a2a2a;
+    --nexus-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    --nexus-radius: 8px;
+    --nexus-spacing: 16px;
+    --nexus-background: #000000;
+    --nexus-card-bg: #121212;
+    --nexus-sidebar-bg: #121212;
+    --nexus-input-bg: #1a1a1a;
+    --nexus-text: #ffffff;
+    --nexus-bg-secondary: #1a1a1a;
+    --nexus-bg-hover: #2a2a2a;
+    
+    /* 兼容旧变量名 */
+    --ooder-primary: var(--nexus-primary);
+    --ooder-secondary: var(--nexus-secondary);
+    --ooder-success: var(--nexus-success);
+    --ooder-warning: var(--nexus-warning);
+    --ooder-danger: var(--nexus-danger);
+    --ooder-light: var(--nexus-light);
+    --ooder-dark: var(--nexus-dark);
+    --ooder-border: var(--nexus-border);
+    --ooder-shadow: var(--nexus-shadow);
+    --ooder-radius: var(--nexus-radius);
+    --ooder-spacing: var(--nexus-spacing);
+    --ooder-background: var(--nexus-background);
+    --ooder-card-bg: var(--nexus-card-bg);
+    --ooder-sidebar-bg: var(--nexus-sidebar-bg);
+    --ooder-input-bg: var(--nexus-input-bg);
+    --ooder-text: var(--nexus-text);
+    --ooder-bg-secondary: var(--nexus-bg-secondary);
+    --ooder-bg-hover: var(--nexus-bg-hover);
+}
+
+/* ========== 浅色主题 ========== */
+.light-theme,
+:root.light-theme,
+html.light-theme {
+    --nexus-primary: #3b82f6;
+    --nexus-secondary: #64748b;
+    --nexus-success: #22c55e;
+    --nexus-warning: #f59e0b;
+    --nexus-danger: #ef4444;
+    --nexus-light: #f8fafc;
+    --nexus-dark: #1e293b;
+    --nexus-border: #e2e8f0;
+    --nexus-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    --nexus-background: #ffffff;
+    --nexus-card-bg: #f1f5f9;
+    --nexus-sidebar-bg: #f8fafc;
+    --nexus-input-bg: #f8fafc;
+    --nexus-text: #1e293b;
+    --nexus-bg-secondary: #f1f5f9;
+    --nexus-bg-hover: #e2e8f0;
+    
+    /* 兼容旧变量名 */
+    --ooder-primary: var(--nexus-primary);
+    --ooder-secondary: var(--nexus-secondary);
+    --ooder-success: var(--nexus-success);
+    --ooder-warning: var(--nexus-warning);
+    --ooder-danger: var(--nexus-danger);
+    --ooder-light: var(--nexus-light);
+    --ooder-dark: var(--nexus-dark);
+    --ooder-border: var(--nexus-border);
+    --ooder-shadow: var(--nexus-shadow);
+    --ooder-background: var(--nexus-background);
+    --ooder-card-bg: var(--nexus-card-bg);
+    --ooder-sidebar-bg: var(--nexus-sidebar-bg);
+    --ooder-input-bg: var(--nexus-input-bg);
+    --ooder-text: var(--nexus-text);
+    --ooder-bg-secondary: var(--nexus-bg-secondary);
+    --ooder-bg-hover: var(--nexus-bg-hover);
+}
+
+/* ========== 基础样式 ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--nexus-background);
+    color: var(--nexus-dark);
+    line-height: 1.5;
+    transition: all 0.3s ease;
+}
+
+/* ========== 布局样式 ========== */
+.container {
+    display: flex;
+    height: 100vh;
+    background-color: var(--nexus-background);
+}
+
+/* 侧边栏样式 */
+.sidebar {
+    width: 260px;
+    background-color: var(--nexus-sidebar-bg);
+    border-right: 1px solid var(--nexus-border);
+    padding: 24px;
+    box-shadow: var(--nexus-shadow);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.sidebar h2 {
+    flex-shrink: 0;
+    margin-bottom: 24px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--nexus-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 导航菜单 */
+.nav-menu {
+    list-style: none;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-right: -8px;
+    padding-right: 8px;
+}
+
+/* 自定义滚动条样式 */
+.nav-menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.nav-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.nav-menu::-webkit-scrollbar-thumb {
+    background: var(--nexus-border);
+    border-radius: 2px;
+}
+
+.nav-menu::-webkit-scrollbar-thumb:hover {
+    background: var(--nexus-secondary);
+}
+
+/* Firefox 滚动条样式 */
+.nav-menu {
+    scrollbar-width: thin;
+    scrollbar-color: var(--nexus-border) transparent;
+}
+
+/* 菜单项 */
+.nav-menu li {
+    margin-bottom: 4px;
+}
+
+.nav-menu a {
+    color: var(--nexus-secondary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: var(--nexus-radius);
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 500;
+    position: relative;
+}
+
+.nav-menu a:hover {
+    background-color: var(--nexus-light);
+    color: var(--nexus-primary);
+}
+
+.nav-menu a.active {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--nexus-primary);
+    font-weight: 600;
+}
+
+/* 二级菜单 */
+.nav-menu .submenu {
+    list-style: none;
+    margin-left: 16px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    display: none;
+}
+
+.nav-menu .submenu li {
+    margin-bottom: 2px;
+}
+
+.nav-menu .submenu a {
+    padding: 10px 16px;
+    font-size: 13px;
+    border-left: 2px solid var(--nexus-border);
+}
+
+/* 三级菜单 */
+.nav-menu .submenu .submenu {
+    margin-left: 32px;
+}
+
+.nav-menu .submenu .submenu a {
+    padding: 8px 16px;
+    font-size: 12px;
+    border-left: 2px solid var(--nexus-secondary);
+}
+
+/* 展开/折叠图标 */
+.nav-menu .toggle-icon {
+    margin-left: auto;
+    transition: transform 0.2s ease;
+}
+
+.nav-menu .toggle-icon.collapsed {
+    transform: rotate(-90deg);
+}
+
+/* 菜单分隔线 */
+.nav-menu .menu-divider {
+    height: 1px;
+    background-color: var(--nexus-border);
+    margin: 16px 0;
+}
+
+/* 主内容区 */
+.main-content {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+    background-color: var(--nexus-background);
+    transition: all 0.3s ease;
+}
+
+/* 页面头部 */
+.header {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--nexus-border);
+}
+
+.header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--nexus-dark);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header .subtitle {
+    color: var(--nexus-secondary);
+    font-size: 14px;
+}
+
+/* ========== 按钮样式 ========== */
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--nexus-radius);
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--nexus-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+}
+
+.btn-secondary {
+    background: var(--nexus-card-bg);
+    color: var(--nexus-text);
+    border: 1px solid var(--nexus-border);
+}
+
+.btn-secondary:hover {
+    background: var(--nexus-light);
+}
+
+/* 主题切换按钮 */
+.theme-toggle-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+/* ========== 卡片样式 ========== */
+.card {
+    background-color: var(--nexus-card-bg);
+    padding: 24px;
+    border-radius: var(--nexus-radius);
+    box-shadow: var(--nexus-shadow);
+    border: 1px solid var(--nexus-border);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+/* ========== 表单样式 ========== */
+input, select, textarea {
+    background-color: var(--nexus-input-bg);
+    border: 1px solid var(--nexus-border);
+    color: var(--nexus-dark);
+    padding: 8px 12px;
+    border-radius: var(--nexus-radius);
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--nexus-primary);
+}
+
+/* ========== 表格样式 ========== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--nexus-border);
+}
+
+th {
+    font-weight: 600;
+    color: var(--nexus-secondary);
+}
+
+/* ========== 徽章样式 ========== */
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.badge-primary {
+    background-color: var(--nexus-primary);
+    color: white;
+}
+
+.badge-secondary {
+    background-color: var(--nexus-secondary);
+    color: white;
+}
+
+.badge-success {
+    background-color: var(--nexus-success);
+    color: white;
+}
+
+.badge-warning {
+    background-color: var(--nexus-warning);
+    color: white;
+}
+
+.badge-danger {
+    background-color: var(--nexus-danger);
+    color: white;
+}
+
+/* ========== 按钮大小 ========== */
+.btn-sm {
+    padding: 4px 12px;
+    font-size: 12px;
+}
+
+/* ========== 模态框样式 ========== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--nexus-card-bg);
+    border-radius: var(--nexus-radius);
+    box-shadow: var(--nexus-shadow);
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--nexus-border);
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--nexus-dark);
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--nexus-secondary);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background-color: var(--nexus-light);
+    color: var(--nexus-dark);
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--nexus-border);
+}
+
+/* ========== 表单样式 ========== */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--nexus-dark);
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px 14px;
+    background-color: var(--nexus-input-bg);
+    border: 1px solid var(--nexus-border);
+    border-radius: var(--nexus-radius);
+    color: var(--nexus-dark);
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--nexus-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input::placeholder {
+    color: var(--nexus-secondary);
+}
+
+/* ========== 网格布局 ========== */
+.grid {
+    display: grid;
+    gap: 20px;
+}
+
+/* ========== 主题切换按钮样式 ========== */
+.theme-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--nexus-card-bg);
+    border: 1px solid var(--nexus-border);
+    border-radius: var(--nexus-radius);
+    color: var(--nexus-dark);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle-btn:hover {
+    background: var(--nexus-light);
+    transform: translateY(-1px);
+}
+
+.theme-toggle-btn i {
+    font-size: 16px;
+}
+
+/* 头部主题切换按钮 */
+.header-theme-toggle {
+    margin-left: auto;
+}
+
+/* 内容头部样式 - 支持 .content-header 和 .header */
+.content-header,
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--nexus-border);
+}
+
+.content-header h1,
+.header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--nexus-dark);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+}
+
+.content-actions,
+.header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* ========== 响应式布局 ========== */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+        padding: 16px;
+    }
+    
+    .main-content {
+        padding: 16px;
+    }
+    
+    .header h1,
+    .content-header h1 {
+        font-size: 20px;
+    }
+
+    .content-header,
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .header-theme-toggle {
+        margin-left: 0;
+    }
+}
+
+/* ========== 操作按钮组样式 ========== */
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+/* ========== 搜索和过滤样式 ========== */
+.search-filter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--nexus-border);
+    border-radius: var(--nexus-radius);
+    background: var(--nexus-input-bg);
+    color: var(--nexus-dark);
+}
+
+.filter-select {
+    padding: 8px 12px;
+    border: 1px solid var(--nexus-border);
+    border-radius: var(--nexus-radius);
+    background: var(--nexus-input-bg);
+    color: var(--nexus-dark);
+    min-width: 120px;
+}
+
+/* ========== 表格容器样式 ========== */
+.table-container {
+    overflow-x: auto;
+    margin-bottom: 16px;
+}
+
+/* ========== 分页样式 ========== */
+.pagination {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.page-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--nexus-border);
+    background: var(--nexus-card-bg);
+    color: var(--nexus-dark);
+    border-radius: var(--nexus-radius);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.page-btn:hover {
+    background: var(--nexus-primary);
+    color: white;
+    border-color: var(--nexus-primary);
+}
+
+.page-btn.active {
+    background: var(--nexus-primary);
+    color: white;
+    border-color: var(--nexus-primary);
+}
+
+/* ========== 状态指示器样式 ========== */
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.status-online {
+    background: var(--nexus-success);
+}
+
+.status-offline {
+    background: var(--nexus-danger);
+}
+
+.status-warning {
+    background: var(--nexus-warning);
+}
+
+/* ========== 设备图标样式 ========== */
+.device-icon {
+    margin-right: 8px;
+    color: var(--nexus-primary);
+}
+
+/* ========== 仪表盘布局样式 ========== */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.dashboard .card {
+    text-align: center;
+    padding: 20px;
+}
+
+.dashboard .card h3 {
+    font-size: 14px;
+    color: var(--nexus-secondary);
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.dashboard .card .value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--nexus-dark);
+    margin-bottom: 4px;
+}
+
+.dashboard .card .label {
+    font-size: 12px;
+    color: var(--nexus-secondary);
+}
+
+/* ========== 区块样式 ========== */
+.section {
+    margin-bottom: 32px;
+}
+
+.section h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--nexus-dark);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ========== 状态网格样式 ========== */
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.status-item {
+    background-color: var(--nexus-card-bg);
+    border: 1px solid var(--nexus-border);
+    border-radius: var(--nexus-radius);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.status-item .key {
+    font-size: 13px;
+    color: var(--nexus-secondary);
+}
+
+.status-item .value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--nexus-dark);
+}
+
+.status-item.ok {
+    border-left: 4px solid var(--nexus-success);
+}
+
+.status-item.warning {
+    border-left: 4px solid var(--nexus-warning);
+}
+
+.status-item.error {
+    border-left: 4px solid var(--nexus-danger);
+}
+
+/* ========== 网络拓扑样式 ========== */
+.network-topology {
+    background-color: var(--nexus-card-bg);
+    border: 1px solid var(--nexus-border);
+    border-radius: var(--nexus-radius);
+    padding: 24px;
+    min-height: 320px;
+    position: relative;
+    overflow: hidden;
+}
+
+.topology-node {
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    background: var(--nexus-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+}
+
+.topology-link {
+    position: absolute;
+    height: 2px;
+    background: var(--nexus-border);
+    transform-origin: left center;
+    z-index: 1;
+}
+
+/* ========== 统计卡片样式 ========== */
+.status-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.status-card .status-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    color: white;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.status-card .status-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--nexus-dark);
+    margin-bottom: 8px;
+    line-height: 1;
+}
+
+.status-card .status-label {
+    font-size: 14px;
+    color: var(--nexus-secondary);
+    font-weight: 500;
+}
+
+/* 浅色主题下的统计卡片 */
+.light-theme .status-card .status-value {
+    color: var(--nexus-dark);
+}
+
+.light-theme .status-card .status-label {
+    color: var(--nexus-secondary);
+}
+
+/* ========== Nexus 前缀样式别名（统一命名规范） ========== */
+/* 布局 */
+.nexus-container,
+.container {
+    display: flex;
+    height: 100vh;
+    background-color: var(--nexus-background);
+}
+
+.nexus-sidebar,
+.sidebar {
+    width: 260px;
+    background-color: var(--nexus-sidebar-bg);
+    border-right: 1px solid var(--nexus-border);
+    padding: 24px;
+    box-shadow: var(--nexus-shadow);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.nexus-sidebar h2,
+.sidebar h2 {
+    flex-shrink: 0;
+    margin-bottom: 24px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--nexus-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nexus-main-content,
+.main-content {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+    background-color: var(--nexus-background);
+    transition: all 0.3s ease;
+}
+
+.nexus-header,
+.header {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--nexus-border);
+}
+
+.nexus-header h1,
+.header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--nexus-dark);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nexus-header-actions,
+.header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* 按钮 */
+.nexus-btn,
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--nexus-radius);
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+}
+
+.nexus-btn-primary,
+.btn-primary {
+    background: var(--nexus-primary);
+    color: white;
+}
+
+.nexus-btn-primary:hover,
+.btn-primary:hover {
+    background: #2563eb;
+}
+
+.nexus-btn-secondary,
+.btn-secondary {
+    background: var(--nexus-card-bg);
+    color: var(--nexus-text);
+    border: 1px solid var(--nexus-border);
+}
+
+.nexus-btn-secondary:hover,
+.btn-secondary:hover {
+    background: var(--nexus-light);
+}
+
+.nexus-btn-danger,
+.btn-danger {
+    background: var(--nexus-danger);
+    color: white;
+}
+
+.nexus-btn-danger:hover,
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.nexus-btn-warning,
+.btn-warning {
+    background: var(--nexus-warning);
+    color: white;
+}
+
+.nexus-btn-warning:hover,
+.btn-warning:hover {
+    background: #d97706;
+}
+
+.nexus-btn-sm,
+.btn-sm {
+    padding: 4px 12px;
+    font-size: 12px;
+}
+
+/* 卡片 */
+.nexus-card,
+.card {
+    background-color: var(--nexus-card-bg);
+    padding: 24px;
+    border-radius: var(--nexus-radius);
+    box-shadow: var(--nexus-shadow);
+    border: 1px solid var(--nexus-border);
+    transition: all 0.3s ease;
+}
+
+.nexus-card:hover,
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.nexus-card-header,
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.nexus-card-title,
+.card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--nexus-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nexus-card-body,
+.card-body {
+    color: var(--nexus-secondary);
+}
+
+/* 表单 */
+.nexus-form-group,
+.form-group {
+    margin-bottom: 20px;
+}
+
+.nexus-form-label,
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--nexus-dark);
+}
+
+.nexus-form-input,
+.form-input {
+    width: 100%;
+    padding: 10px 14px;
+    background-color: var(--nexus-input-bg);
+    border: 1px solid var(--nexus-border);
+    border-radius: var(--nexus-radius);
+    color: var(--nexus-dark);
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.nexus-form-input:focus,
+.form-input:focus {
+    outline: none;
+    border-color: var(--nexus-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.nexus-form-input::placeholder,
+.form-input::placeholder {
+    color: var(--nexus-secondary);
+}
+
+/* 网格 */
+.nexus-grid,
+.grid {
+    display: grid;
+    gap: 20px;
+}
+
+/* 徽章 */
+.nexus-badge,
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.nexus-badge-primary,
+.badge-primary {
+    background-color: var(--nexus-primary);
+    color: white;
+}
+
+.nexus-badge-secondary,
+.badge-secondary {
+    background-color: var(--nexus-secondary);
+    color: white;
+}
+
+.nexus-badge-success,
+.badge-success {
+    background-color: var(--nexus-success);
+    color: white;
+}
+
+.nexus-badge-warning,
+.badge-warning {
+    background-color: var(--nexus-warning);
+    color: white;
+}
+
+.nexus-badge-danger,
+.badge-danger {
+    background-color: var(--nexus-danger);
+    color: white;
+}
+
+/* 模态框 */
+.nexus-modal,
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.nexus-modal-content,
+.modal-content {
+    background-color: var(--nexus-card-bg);
+    border-radius: var(--nexus-radius);
+    box-shadow: var(--nexus-shadow);
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.nexus-modal-header,
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--nexus-border);
+}
+
+.nexus-modal-title,
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--nexus-dark);
+    margin: 0;
+}
+
+.nexus-modal-close,
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--nexus-secondary);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.nexus-modal-close:hover,
+.modal-close:hover {
+    background-color: var(--nexus-light);
+    color: var(--nexus-dark);
+}
+
+.nexus-modal-body,
+.modal-body {
+    padding: 24px;
+}
+
+.nexus-modal-footer,
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--nexus-border);
+}
+
+/* 表格 */
+.nexus-table,
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.nexus-table th,
+.nexus-table td,
+.table th,
+.table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--nexus-border);
+}
+
+.nexus-table th,
+.table th {
+    font-weight: 600;
+    color: var(--nexus-secondary);
+}
+
+/* 信息项 */
+.nexus-info-item,
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nexus-info-label,
+.info-label {
+    font-size: 12px;
+    color: var(--nexus-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nexus-info-value,
+.info-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--nexus-dark);
+}
+
+/* 统计卡片 */
+.nexus-status-card,
+.status-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.nexus-status-icon,
+.status-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    color: white;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.nexus-status-value,
+.status-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--nexus-dark);
+    margin-bottom: 8px;
+    line-height: 1;
+}
+
+.nexus-status-label,
+.status-label {
+    font-size: 14px;
+    color: var(--nexus-secondary);
+    font-weight: 500;
+}
+
+/* 状态徽章 */
+.nexus-status-badge,
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.nexus-status-online,
+.status-online {
+    background-color: var(--nexus-success);
+    color: white;
+}
+
+.nexus-status-offline,
+.status-offline {
+    background-color: var(--nexus-secondary);
+    color: white;
+}
+
+/* 响应式表格容器 */
+.nexus-table-responsive,
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 提示消息 */
+.nexus-toast,
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 24px;
+    border-radius: var(--nexus-radius);
+    color: white;
+    font-size: 14px;
+    z-index: 9999;
+    animation: slideIn 0.3s ease-out;
+}
+
+/* 表单网格 */
+.nexus-form-grid,
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+/* 导航菜单 */
+.nexus-nav-menu,
+.nav-menu {
+    list-style: none;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-right: -8px;
+    padding-right: 8px;
+}
+
+/* 子标题 */
+.nexus-subtitle,
+.subtitle {
+    color: var(--nexus-secondary);
+    font-size: 14px;
+}
+
+/* 动画 */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}

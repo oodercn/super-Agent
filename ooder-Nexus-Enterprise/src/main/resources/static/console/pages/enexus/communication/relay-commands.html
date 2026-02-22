@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>命令转发 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">命令转发</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-2 nx-gap-6">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">发送命令</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-mb-4">
+                                    <label class="nx-label">来源 Nexus ID</label>
+                                    <input type="text" class="nx-input" id="sourceNexusId" placeholder="输入来源 Nexus ID">
+                                </div>
+                                <div class="nx-mb-4">
+                                    <label class="nx-label">目标 Nexus ID</label>
+                                    <input type="text" class="nx-input" id="targetNexusId" placeholder="输入目标 Nexus ID">
+                                </div>
+                                <div class="nx-mb-4">
+                                    <label class="nx-label">命令类型</label>
+                                    <select class="nx-select" id="commandType">
+                                        <option value="SCENE_INVITE">场景邀请</option>
+                                        <option value="SCENE_JOIN">加入场景</option>
+                                        <option value="TASK_ASSIGN">任务分配</option>
+                                        <option value="CAPABILITY_INVOKE">能力调用</option>
+                                        <option value="DATA_SYNC">数据同步</option>
+                                        <option value="FILE_TRANSFER">文件传输</option>
+                                        <option value="MESSAGE_SEND">发送消息</option>
+                                        <option value="SYSTEM_PING">心跳检测</option>
+                                    </select>
+                                </div>
+                                <div class="nx-mb-4">
+                                    <label class="nx-label">场景 ID (可选)</label>
+                                    <input type="text" class="nx-input" id="sceneId" placeholder="输入场景 ID">
+                                </div>
+                                <div class="nx-mb-4">
+                                    <label class="nx-label">命令载荷 (JSON)</label>
+                                    <textarea class="nx-textarea" id="payload" rows="5" placeholder='{"key": "value"}'>{}</textarea>
+                                </div>
+                                <div class="nx-grid nx-grid-cols-2 nx-gap-4 nx-mb-4">
+                                    <div>
+                                        <label class="nx-label">超时时间(秒)</label>
+                                        <input type="number" class="nx-input" id="timeout" value="30">
+                                    </div>
+                                    <div>
+                                        <label class="nx-label">优先级</label>
+                                        <select class="nx-select" id="priority">
+                                            <option value="LOW">低</option>
+                                            <option value="NORMAL" selected>普通</option>
+                                            <option value="HIGH">高</option>
+                                            <option value="URGENT">紧急</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="nx-flex nx-gap-2">
+                                    <button class="nx-btn nx-btn--primary" onclick="sendCommand()">
+                                        <i class="ri-send-plane-line"></i> 发送命令
+                                    </button>
+                                    <button class="nx-btn nx-btn--secondary" onclick="broadcastCommand()">
+                                        <i class="ri-broadcast-line"></i> 广播命令
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">执行结果</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div id="resultPanel">
+                                    <p class="nx-text-secondary">发送命令后查看结果</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">命令历史</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>命令ID</th>
+                                            <th>类型</th>
+                                            <th>来源</th>
+                                            <th>目标</th>
+                                            <th>状态</th>
+                                            <th>执行时间</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="historyTableBody">
+                                        <tr><td colspan="6" class="nx-text-center">暂无历史记录</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let commandHistory = [];
+
+        async function sendCommand() {
+            const sourceNexusId = document.getElementById('sourceNexusId').value;
+            const targetNexusId = document.getElementById('targetNexusId').value;
+            const commandType = document.getElementById('commandType').value;
+            const sceneId = document.getElementById('sceneId').value;
+            const payloadStr = document.getElementById('payload').value;
+            const timeout = parseInt(document.getElementById('timeout').value);
+            const priority = document.getElementById('priority').value;
+            
+            if (!sourceNexusId || !targetNexusId) {
+                alert('请输入来源和目标 Nexus ID');
+                return;
+            }
+            
+            let payload = {};
+            try {
+                payload = JSON.parse(payloadStr);
+            } catch (e) {
+                alert('载荷 JSON 格式错误');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/enexus/relay/command/send', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        requestId: 'req-' + Date.now(),
+                        sourceNexusId: sourceNexusId,
+                        targetNexusId: targetNexusId,
+                        commandType: commandType,
+                        sceneId: sceneId || null,
+                        payload: payload,
+                        timeout: timeout,
+                        priority: priority,
+                        requireAck: true
+                    })
+                });
+                const rs = await response.json();
+                
+                if (rs.data) {
+                    const result = rs.data;
+                    let html = '';
+                    html += '<div class="nx-mb-2"><strong>命令ID:</strong> ' + (result.commandId || '-') + '</div>';
+                    html += '<div class="nx-mb-2"><strong>状态:</strong> <span class="nx-badge nx-badge--' + getStatusBadge(result.status) + '">' + (result.status || '-') + '</span></div>';
+                    html += '<div class="nx-mb-2"><strong>执行时间:</strong> ' + (result.executeTime ? new Date(result.executeTime).toLocaleString('zh-CN') : '-') + '</div>';
+                    
+                    if (result.result) {
+                        html += '<div class="nx-mt-4"><strong>结果:</strong></div>';
+                        html += '<pre class="nx-code-block">' + JSON.stringify(result.result, null, 2) + '</pre>';
+                    }
+                    
+                    if (result.errorMessage) {
+                        html += '<div class="nx-mt-4 nx-text-danger"><strong>错误:</strong> ' + result.errorMessage + '</div>';
+                    }
+                    
+                    document.getElementById('resultPanel').innerHTML = html;
+                    
+                    commandHistory.unshift(result);
+                    renderHistory();
+                }
+            } catch (error) {
+                document.getElementById('resultPanel').innerHTML = '<div class="nx-text-danger">发送失败: ' + error.message + '</div>';
+            }
+        }
+
+        async function broadcastCommand() {
+            alert('广播命令功能开发中...');
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'PENDING': 'warning',
+                'SUCCESS': 'success',
+                'FAILED': 'danger',
+                'TIMEOUT': 'warning'
+            };
+            return map[status] || 'secondary';
+        }
+
+        function renderHistory() {
+            if (commandHistory.length === 0) {
+                document.getElementById('historyTableBody').innerHTML = '<tr><td colspan="6" class="nx-text-center">暂无历史记录</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            commandHistory.slice(0, 10).forEach(cmd => {
+                html += '<tr>';
+                html += '  <td>' + (cmd.commandId || '-') + '</td>';
+                html += '  <td>' + (cmd.commandType || '-') + '</td>';
+                html += '  <td>' + (cmd.sourceNexusId || '-') + '</td>';
+                html += '  <td>' + (cmd.targetNexusId || '-') + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--' + getStatusBadge(cmd.status) + '">' + (cmd.status || '-') + '</span></td>';
+                html += '  <td>' + (cmd.executeTime ? new Date(cmd.executeTime).toLocaleString('zh-CN') : '-') + '</td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('historyTableBody').innerHTML = html;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>流程设计 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .flow-canvas {
+            background: var(--nexus-card-bg);
+            border-radius: 8px;
+            height: calc(100vh - 200px);
+            min-height: 500px;
+            position: relative;
+            overflow: hidden;
+        }
+        .flow-node {
+            position: absolute;
+            background: var(--nexus-input-bg);
+            border: 2px solid var(--nexus-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            min-width: 150px;
+            cursor: move;
+            user-select: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .flow-node:hover {
+            border-color: var(--nexus-primary);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+        .flow-node.selected {
+            border-color: var(--nexus-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        .flow-node .node-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .flow-node .node-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .flow-node .node-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .flow-node .node-content {
+            font-size: 12px;
+            color: var(--nexus-secondary);
+        }
+        .node-skill .node-icon { background: #3b82f6; color: white; }
+        .node-condition .node-icon { background: #f59e0b; color: white; }
+        .node-loop .node-icon { background: #8b5cf6; color: white; }
+        .node-parallel .node-icon { background: #10b981; color: white; }
+        .node-delay .node-icon { background: #6b7280; color: white; }
+        
+        .flow-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            background: var(--nexus-card-bg);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .toolbar-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            background: var(--nexus-input-bg);
+            border: 1px solid var(--nexus-border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .toolbar-btn:hover {
+            border-color: var(--nexus-primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .toolbar-btn i {
+            font-size: 20px;
+            color: var(--nexus-primary);
+        }
+        .toolbar-btn span {
+            font-size: 11px;
+            color: var(--nexus-secondary);
+        }
+        
+        .properties-panel {
+            background: var(--nexus-card-bg);
+            border-radius: 8px;
+            padding: 16px;
+            height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+        .properties-panel .panel-title {
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--nexus-border);
+        }
+        
+        .connection-line {
+            stroke: var(--nexus-primary);
+            stroke-width: 2;
+            fill: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">流程设计</h2>
+                    <span class="nx-badge nx-badge--secondary" id="template-name">新建模板</span>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--secondary" onclick="previewTemplate()">
+                        <i class="ri-eye-line"></i> 预览
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="saveTemplate()">
+                        <i class="ri-save-line"></i> 保存
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container" style="padding: 16px;">
+                    <div class="nx-grid nx-grid-cols-4 nx-gap-4">
+                        <div class="nx-col-span-3">
+                            <div class="flow-toolbar">
+                                <div class="toolbar-btn" draggable="true" data-type="skill" ondragstart="dragStart(event)">
+                                    <i class="ri-robot-line"></i>
+                                    <span>技能节点</span>
+                                </div>
+                                <div class="toolbar-btn" draggable="true" data-type="condition" ondragstart="dragStart(event)">
+                                    <i class="ri-git-branch-line"></i>
+                                    <span>条件分支</span>
+                                </div>
+                                <div class="toolbar-btn" draggable="true" data-type="loop" ondragstart="dragStart(event)">
+                                    <i class="ri-loop-left-line"></i>
+                                    <span>循环</span>
+                                </div>
+                                <div class="toolbar-btn" draggable="true" data-type="parallel" ondragstart="dragStart(event)">
+                                    <i class="ri-git-merge-line"></i>
+                                    <span>并行</span>
+                                </div>
+                                <div class="toolbar-btn" draggable="true" data-type="delay" ondragstart="dragStart(event)">
+                                    <i class="ri-time-line"></i>
+                                    <span>延迟</span>
+                                </div>
+                                <div style="flex: 1;"></div>
+                                <div class="toolbar-btn" onclick="zoomIn()">
+                                    <i class="ri-zoom-in-line"></i>
+                                    <span>放大</span>
+                                </div>
+                                <div class="toolbar-btn" onclick="zoomOut()">
+                                    <i class="ri-zoom-out-line"></i>
+                                    <span>缩小</span>
+                                </div>
+                                <div class="toolbar-btn" onclick="resetZoom()">
+                                    <i class="ri-refresh-line"></i>
+                                    <span>重置</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flow-canvas" id="flow-canvas" ondrop="drop(event)" ondragover="allowDrop(event)">
+                                <svg id="connections-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></svg>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="properties-panel">
+                                <div class="panel-title">属性配置</div>
+                                <div id="properties-content">
+                                    <div class="nx-text-center nx-text-secondary nx-py-8">
+                                        <i class="ri-cursor-line" style="font-size: 32px;"></i>
+                                        <p class="nx-mt-2">选择节点查看属性</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="skill-select-modal" class="nx-modal" style="display: none;">
+        <div class="nx-modal__backdrop" onclick="closeSkillSelectModal()"></div>
+        <div class="nx-modal__content" style="max-width: 600px;">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">选择技能</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeSkillSelectModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-form-group nx-mb-4">
+                    <input type="text" class="nx-input" id="skill-search" placeholder="搜索技能..." onkeyup="filterSkills()">
+                </div>
+                <div id="skill-list" style="max-height: 300px; overflow-y: auto;">
+                    <div class="nx-text-center nx-text-secondary">加载中...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/api-client.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let templateId = null;
+        let nodes = [];
+        let connections = [];
+        let selectedNode = null;
+        let nodeIdCounter = 1;
+        let scale = 1;
+        let skills = [];
+        
+        window.onPageInit = function() {
+            console.log('Flow Design 页面初始化完成');
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            templateId = urlParams.get('id');
+            
+            if (templateId) {
+                loadTemplate(templateId);
+            }
+            
+            loadSkills();
+        };
+        
+        async function loadSkills() {
+            try {
+                const result = await ApiClient.post('/api/skills/list', {});
+                if (result.code === 200 && result.data) {
+                    skills = result.data;
+                }
+            } catch (error) {
+                console.error('加载技能列表失败:', error);
+            }
+        }
+        
+        async function loadTemplate(id) {
+            try {
+                const result = await ApiClient.post('/api/orchestration/templates/' + id, {});
+                if (result.code === 200 && result.data) {
+                    document.getElementById('template-name').textContent = result.data.name;
+                    if (result.data.flowData) {
+                        nodes = result.data.flowData.nodes || [];
+                        connections = result.data.flowData.connections || [];
+                        nodeIdCounter = nodes.length + 1;
+                        renderNodes();
+                    }
+                }
+            } catch (error) {
+                console.error('加载模板失败:', error);
+            }
+        }
+        
+        function dragStart(event) {
+            event.dataTransfer.setData('nodeType', event.target.dataset.type);
+        }
+        
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+        
+        function drop(event) {
+            event.preventDefault();
+            const nodeType = event.dataTransfer.getData('nodeType');
+            if (!nodeType) return;
+            
+            const canvas = document.getElementById('flow-canvas');
+            const rect = canvas.getBoundingClientRect();
+            const x = (event.clientX - rect.left) / scale;
+            const y = (event.clientY - rect.top) / scale;
+            
+            createNode(nodeType, x, y);
+        }
+        
+        function createNode(type, x, y) {
+            const node = {
+                id: 'node-' + nodeIdCounter++,
+                type: type,
+                x: x,
+                y: y,
+                name: getNodeDefaultName(type),
+                config: {}
+            };
+            
+            nodes.push(node);
+            renderNodes();
+            selectNode(node.id);
+        }
+        
+        function getNodeDefaultName(type) {
+            const names = {
+                'skill': '技能节点',
+                'condition': '条件分支',
+                'loop': '循环',
+                'parallel': '并行执行',
+                'delay': '延迟等待'
+            };
+            return names[type] || '节点';
+        }
+        
+        function getNodeIcon(type) {
+            const icons = {
+                'skill': 'ri-robot-line',
+                'condition': 'ri-git-branch-line',
+                'loop': 'ri-loop-left-line',
+                'parallel': 'ri-git-merge-line',
+                'delay': 'ri-time-line'
+            };
+            return icons[type] || 'ri-checkbox-blank-circle-line';
+        }
+        
+        function renderNodes() {
+            const canvas = document.getElementById('flow-canvas');
+            canvas.querySelectorAll('.flow-node').forEach(n => n.remove());
+            
+            nodes.forEach(node => {
+                const div = document.createElement('div');
+                div.className = `flow-node node-${node.type}${selectedNode === node.id ? ' selected' : ''}`;
+                div.style.left = node.x + 'px';
+                div.style.top = node.y + 'px';
+                div.dataset.nodeId = node.id;
+                div.onclick = (e) => {
+                    e.stopPropagation();
+                    selectNode(node.id);
+                };
+                
+                div.innerHTML = `
+                    <div class="node-header">
+                        <div class="node-icon"><i class="${getNodeIcon(node.type)}"></i></div>
+                        <div class="node-title">${node.name}</div>
+                    </div>
+                    <div class="node-content">${getNodeDescription(node)}</div>
+                `;
+                
+                makeDraggable(div, node);
+                canvas.appendChild(div);
+            });
+            
+            renderConnections();
+        }
+        
+        function getNodeDescription(node) {
+            if (node.type === 'skill' && node.config.skillId) {
+                return node.config.skillName || node.config.skillId;
+            }
+            if (node.type === 'delay' && node.config.delay) {
+                return `延迟 ${node.config.delay} 秒`;
+            }
+            if (node.type === 'loop' && node.config.count) {
+                return `循环 ${node.config.count} 次`;
+            }
+            return '点击配置';
+        }
+        
+        function makeDraggable(element, node) {
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
+            
+            element.onmousedown = (e) => {
+                if (e.button !== 0) return;
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                initialX = node.x;
+                initialY = node.y;
+                element.style.zIndex = 1000;
+            };
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const dx = (e.clientX - startX) / scale;
+                const dy = (e.clientY - startY) / scale;
+                node.x = initialX + dx;
+                node.y = initialY + dy;
+                element.style.left = node.x + 'px';
+                element.style.top = node.y + 'px';
+                renderConnections();
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    element.style.zIndex = '';
+                }
+            });
+        }
+        
+        function renderConnections() {
+            const svg = document.getElementById('connections-svg');
+            svg.innerHTML = '';
+            
+            connections.forEach(conn => {
+                const sourceNode = nodes.find(n => n.id === conn.source);
+                const targetNode = nodes.find(n => n.id === conn.target);
+                
+                if (sourceNode && targetNode) {
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    
+                    const sx = sourceNode.x + 75;
+                    const sy = sourceNode.y + 50;
+                    const tx = targetNode.x + 75;
+                    const ty = targetNode.y;
+                    
+                    const midY = (sy + ty) / 2;
+                    const d = `M ${sx} ${sy} C ${sx} ${midY}, ${tx} ${midY}, ${tx} ${ty}`;
+                    
+                    path.setAttribute('d', d);
+                    path.setAttribute('class', 'connection-line');
+                    path.setAttribute('marker-end', 'url(#arrowhead)');
+                    svg.appendChild(path);
+                }
+            });
+        }
+        
+        function selectNode(nodeId) {
+            selectedNode = nodeId;
+            renderNodes();
+            showNodeProperties(nodeId);
+        }
+        
+        function showNodeProperties(nodeId) {
+            const node = nodes.find(n => n.id === nodeId);
+            if (!node) return;
+            
+            const content = document.getElementById('properties-content');
+            
+            let html = `
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">节点名称</label>
+                    <input type="text" class="nx-input" value="${node.name}" onchange="updateNodeName('${nodeId}', this.value)">
+                </div>
+            `;
+            
+            if (node.type === 'skill') {
+                html += `
+                    <div class="nx-form-group nx-mb-4">
+                        <label class="nx-label">选择技能</label>
+                        <div class="nx-flex nx-gap-2">
+                            <input type="text" class="nx-input nx-flex-1" id="selected-skill-name" value="${node.config.skillName || ''}" readonly placeholder="点击选择技能">
+                            <button class="nx-btn nx-btn--secondary" onclick="openSkillSelectModal('${nodeId}')">选择</button>
+                        </div>
+                    </div>
+                `;
+            } else if (node.type === 'delay') {
+                html += `
+                    <div class="nx-form-group nx-mb-4">
+                        <label class="nx-label">延迟时间(秒)</label>
+                        <input type="number" class="nx-input" value="${node.config.delay || 1}" min="1" onchange="updateNodeConfig('${nodeId}', 'delay', this.value)">
+                    </div>
+                `;
+            } else if (node.type === 'loop') {
+                html += `
+                    <div class="nx-form-group nx-mb-4">
+                        <label class="nx-label">循环次数</label>
+                        <input type="number" class="nx-input" value="${node.config.count || 1}" min="1" onchange="updateNodeConfig('${nodeId}', 'count', this.value)">
+                    </div>
+                `;
+            }
+            
+            html += `
+                <div class="nx-mt-6">
+                    <button class="nx-btn nx-btn--danger nx-w-full" onclick="deleteNode('${nodeId}')">
+                        <i class="ri-delete-bin-line"></i> 删除节点
+                    </button>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+        }
+        
+        function updateNodeName(nodeId, name) {
+            const node = nodes.find(n => n.id === nodeId);
+            if (node) {
+                node.name = name;
+                renderNodes();
+            }
+        }
+        
+        function updateNodeConfig(nodeId, key, value) {
+            const node = nodes.find(n => n.id === nodeId);
+            if (node) {
+                node.config[key] = value;
+                renderNodes();
+            }
+        }
+        
+        function deleteNode(nodeId) {
+            if (!confirm('确定要删除此节点吗？')) return;
+            
+            nodes = nodes.filter(n => n.id !== nodeId);
+            connections = connections.filter(c => c.source !== nodeId && c.target !== nodeId);
+            selectedNode = null;
+            
+            document.getElementById('properties-content').innerHTML = `
+                <div class="nx-text-center nx-text-secondary nx-py-8">
+                    <i class="ri-cursor-line" style="font-size: 32px;"></i>
+                    <p class="nx-mt-2">选择节点查看属性</p>
+                </div>
+            `;
+            
+            renderNodes();
+        }
+        
+        function openSkillSelectModal(nodeId) {
+            currentEditingNode = nodeId;
+            renderSkillList();
+            document.getElementById('skill-select-modal').style.display = 'flex';
+        }
+        
+        function closeSkillSelectModal() {
+            document.getElementById('skill-select-modal').style.display = 'none';
+        }
+        
+        let currentEditingNode = null;
+        
+        function renderSkillList() {
+            const container = document.getElementById('skill-list');
+            
+            if (skills.length === 0) {
+                container.innerHTML = '<div class="nx-text-center nx-text-secondary">暂无技能</div>';
+                return;
+            }
+            
+            container.innerHTML = skills.map(skill => `
+                <div class="nx-card nx-mb-2" style="cursor: pointer;" onclick="selectSkill('${skill.id}', '${skill.name}')">
+                    <div class="nx-card__body" style="padding: 12px;">
+                        <div class="nx-flex nx-items-center nx-gap-3">
+                            <i class="ri-robot-line" style="font-size: 24px; color: var(--nexus-primary);"></i>
+                            <div>
+                                <div class="nx-font-semibold">${skill.name}</div>
+                                <div class="nx-text-secondary nx-text-sm">${skill.description || ''}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function filterSkills() {
+            const search = document.getElementById('skill-search').value.toLowerCase();
+            const filtered = skills.filter(s => 
+                s.name.toLowerCase().includes(search) || 
+                (s.description && s.description.toLowerCase().includes(search))
+            );
+            skills = filtered;
+            renderSkillList();
+        }
+        
+        function selectSkill(skillId, skillName) {
+            if (currentEditingNode) {
+                const node = nodes.find(n => n.id === currentEditingNode);
+                if (node) {
+                    node.config.skillId = skillId;
+                    node.config.skillName = skillName;
+                    renderNodes();
+                    showNodeProperties(currentEditingNode);
+                }
+            }
+            closeSkillSelectModal();
+        }
+        
+        function zoomIn() {
+            scale = Math.min(scale + 0.1, 2);
+            applyZoom();
+        }
+        
+        function zoomOut() {
+            scale = Math.max(scale - 0.1, 0.5);
+            applyZoom();
+        }
+        
+        function resetZoom() {
+            scale = 1;
+            applyZoom();
+        }
+        
+        function applyZoom() {
+            const canvas = document.getElementById('flow-canvas');
+            canvas.style.transform = `scale(${scale})`;
+            canvas.style.transformOrigin = 'top left';
+        }
+        
+        function previewTemplate() {
+            ApiClient.showSuccess('预览功能开发中...');
+        }
+        
+        async function saveTemplate() {
+            const name = prompt('请输入模板名称:', document.getElementById('template-name').textContent);
+            if (!name) return;
+            
+            const templateData = {
+                name: name,
+                category: 'custom',
+                flowData: {
+                    nodes: nodes,
+                    connections: connections
+                }
+            };
+            
+            try {
+                ApiClient.showLoading('保存中...');
+                
+                const url = templateId ? 
+                    '/api/orchestration/templates/update' : 
+                    '/api/orchestration/templates/create';
+                
+                const result = await ApiClient.post(url, templateId ? 
+                    { ...templateData, templateId: templateId } : templateData);
+                
+                ApiClient.hideLoading();
+                
+                if (result.code === 200) {
+                    ApiClient.showSuccess('保存成功');
+                    if (!templateId && result.data) {
+                        templateId = result.data;
+                    }
+                    document.getElementById('template-name').textContent = name;
+                } else {
+                    ApiClient.showError('保存失败: ' + (result.message || '未知错误'));
+                }
+            } catch (error) {
+                ApiClient.hideLoading();
+                ApiClient.showError('保存失败: ' + error.message);
+            }
+        }
+        
+        document.getElementById('flow-canvas').addEventListener('click', (e) => {
+            if (e.target.id === 'flow-canvas' || e.target.id === 'connections-svg') {
+                selectedNode = null;
+                renderNodes();
+                document.getElementById('properties-content').innerHTML = `
+                    <div class="nx-text-center nx-text-secondary nx-py-8">
+                        <i class="ri-cursor-line" style="font-size: 32px;"></i>
+                        <p class="nx-mt-2">选择节点查看属性</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

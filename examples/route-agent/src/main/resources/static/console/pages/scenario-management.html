@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景管理 - Route Agent</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/scenario-management.css">
+</head>
+<body>
+    <div class="scene-management-container">
+        <header class="scene-header">
+            <h1>场景管理</h1>
+            <div class="header-actions">
+                <button id="create-scene-btn" class="btn btn-primary">创建场景</button>
+                <button id="refresh-btn" class="btn btn-secondary">刷新</button>
+            </div>
+        </header>
+
+        <div class="scene-content">
+            <!-- 场景列表 -->
+            <div class="scene-section">
+                <h2>场景列表</h2>
+                <div class="scene-list" id="scene-list">
+                    <!-- 场景项将通过 JS 动态生成 -->
+                </div>
+            </div>
+
+            <!-- 我的场景 -->
+            <div class="scene-section">
+                <h2>我的场景</h2>
+                <div class="my-scenes" id="my-scenes">
+                    <!-- 我的场景将通过 JS 动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建场景模态框 -->
+    <div id="create-scene-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>创建场景</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="create-scene-form">
+                    <div class="form-group">
+                        <label for="scene-id">场景ID</label>
+                        <input type="text" id="scene-id" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="scene-name">场景名称</label>
+                        <input type="text" id="scene-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="scene-description">场景描述</label>
+                        <textarea id="scene-description" class="form-control" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-create">取消</button>
+                <button class="btn btn-primary" id="confirm-create">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/common.js"></script>
+    <script src="../js/scenario-management.js"></script>
+    <script>
+        // 初始化场景管理
+        document.addEventListener('DOMContentLoaded', function() {
+            initSceneManagement();
+        });
+
+        function initSceneManagement() {
+            loadScenes();
+            loadMyScenes();
+
+            // 创建场景按钮事件
+            document.getElementById('create-scene-btn').addEventListener('click', function() {
+                document.getElementById('create-scene-modal').style.display = 'block';
+            });
+
+            // 关闭模态框
+            document.querySelector('.close-btn').addEventListener('click', function() {
+                document.getElementById('create-scene-modal').style.display = 'none';
+            });
+
+            document.getElementById('cancel-create').addEventListener('click', function() {
+                document.getElementById('create-scene-modal').style.display = 'none';
+            });
+
+            // 确认创建场景
+            document.getElementById('confirm-create').addEventListener('click', function() {
+                createScene();
+            });
+
+            // 刷新按钮事件
+            document.getElementById('refresh-btn').addEventListener('click', function() {
+                loadScenes();
+                loadMyScenes();
+            });
+        }
+
+        function loadScenes() {
+            const sceneList = document.getElementById('scene-list');
+            sceneList.innerHTML = '<div class="loading">加载中...</div>';
+
+            // 模拟加载场景数据
+            setTimeout(function() {
+                const scenes = [
+                    {
+                        sceneId: 'scene-001',
+                        name: '智能家庭',
+                        description: '家庭自动化场景',
+                        creator: 'user-001',
+                        createdTime: new Date().toLocaleString(),
+                        status: 'ACTIVE',
+                        memberCount: 5
+                    },
+                    {
+                        sceneId: 'scene-002',
+                        name: '办公室',
+                        description: '办公环境场景',
+                        creator: 'user-002',
+                        createdTime: new Date().toLocaleString(),
+                        status: 'ACTIVE',
+                        memberCount: 3
+                    }
+                ];
+
+                sceneList.innerHTML = '';
+                scenes.forEach(scene => {
+                    const sceneItem = document.createElement('div');
+                    sceneItem.className = 'scene-item';
+                    sceneItem.innerHTML = `
+                        <div class="scene-info">
+                            <h4>${scene.name}</h4>
+                            <p>${scene.description}</p>
+                            <div class="scene-meta">
+                                <span>创建者: ${scene.creator}</span>
+                                <span>创建时间: ${scene.createdTime}</span>
+                                <span>状态: ${scene.status}</span>
+                                <span>成员: ${scene.memberCount}</span>
+                            </div>
+                        </div>
+                        <div class="scene-actions">
+                            <button class="btn btn-sm btn-primary join-scene" data-scene-id="${scene.sceneId}">加入</button>
+                            <button class="btn btn-sm btn-info view-scene" data-scene-id="${scene.sceneId}">查看</button>
+                        </div>
+                    `;
+                    sceneList.appendChild(sceneItem);
+                });
+
+                // 添加事件监听器
+                document.querySelectorAll('.join-scene').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const sceneId = this.getAttribute('data-scene-id');
+                        joinScene(sceneId);
+                    });
+                });
+
+                document.querySelectorAll('.view-scene').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const sceneId = this.getAttribute('data-scene-id');
+                        viewScene(sceneId);
+                    });
+                });
+            }, 500);
+        }
+
+        function loadMyScenes() {
+            const myScenes = document.getElementById('my-scenes');
+            myScenes.innerHTML = '<div class="loading">加载中...</div>';
+
+            // 模拟加载我的场景数据
+            setTimeout(function() {
+                const scenes = [
+                    {
+                        sceneId: 'scene-001',
+                        name: '智能家庭',
+                        role: '路由节点',
+                        joinedTime: new Date().toLocaleString()
+                    }
+                ];
+
+                myScenes.innerHTML = '';
+                if (scenes.length === 0) {
+                    myScenes.innerHTML = '<div class="empty-state">您还没有加入任何场景</div>';
+                } else {
+                    scenes.forEach(scene => {
+                        const sceneItem = document.createElement('div');
+                        sceneItem.className = 'my-scene-item';
+                        sceneItem.innerHTML = `
+                            <div class="scene-info">
+                                <h4>${scene.name}</h4>
+                                <div class="scene-meta">
+                                    <span>角色: ${scene.role}</span>
+                                    <span>加入时间: ${scene.joinedTime}</span>
+                                </div>
+                            </div>
+                            <div class="scene-actions">
+                                <button class="btn btn-sm btn-danger leave-scene" data-scene-id="${scene.sceneId}">离开</button>
+                                <button class="btn btn-sm btn-info view-scene" data-scene-id="${scene.sceneId}">查看</button>
+                            </div>
+                        `;
+                        myScenes.appendChild(sceneItem);
+                    });
+
+                    // 添加事件监听器
+                    document.querySelectorAll('.leave-scene').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const sceneId = this.getAttribute('data-scene-id');
+                            leaveScene(sceneId);
+                        });
+                    });
+                }
+            }, 500);
+        }
+
+        function createScene() {
+            const sceneId = document.getElementById('scene-id').value;
+            const sceneName = document.getElementById('scene-name').value;
+            const sceneDescription = document.getElementById('scene-description').value;
+
+            // 模拟创建场景
+            console.log('创建场景:', { sceneId, sceneName, sceneDescription });
+
+            // 关闭模态框
+            document.getElementById('create-scene-modal').style.display = 'none';
+            
+            // 刷新场景列表
+            loadScenes();
+        }
+
+        function joinScene(sceneId) {
+            console.log('加入场景:', sceneId);
+            alert('已申请加入场景');
+            loadMyScenes();
+        }
+
+        function leaveScene(sceneId) {
+            if (confirm('确定要离开这个场景吗？')) {
+                console.log('离开场景:', sceneId);
+                loadMyScenes();
+            }
+        }
+
+        function viewScene(sceneId) {
+            console.log('查看场景:', sceneId);
+            alert('查看场景详情: ' + sceneId);
+        }
+    </script>
+</body>
+</html>

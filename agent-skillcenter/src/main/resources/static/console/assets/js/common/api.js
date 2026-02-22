@@ -146,8 +146,7 @@ class ApiClient {
 }
 
 // 创建默认的API客户端实例
-const API_BASE_URL = '/skillcenter/api';
-const apiClient = new ApiClient(API_BASE_URL);
+const apiClient = new ApiClient('/skillcenter/api');
 
 // 导出API客户端
-export { ApiClient, apiClient, API_BASE_URL };
+export { ApiClient, apiClient };

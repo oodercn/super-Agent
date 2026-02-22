@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备资产 - Nexus</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <style>
+        .asset-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .asset-stat-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            padding: 20px;
+            text-align: center;
+        }
+        .asset-stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--nx-primary);
+        }
+        .asset-stat-label {
+            font-size: 13px;
+            color: var(--ns-secondary);
+            margin-top: 4px;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .filter-bar input,
+        .filter-bar select {
+            padding: 10px 16px;
+            border: 1px solid var(--ns-border);
+            border-radius: var(--ns-radius);
+            background: var(--ns-input-bg);
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        .filter-bar input {
+            flex: 1;
+            min-width: 200px;
+        }
+        .filter-bar input:focus,
+        .filter-bar select:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">设备资产</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="showAddDevice()">
+                        <i class="ri-add-line"></i> 添加设备
+                    </button>
+                </div>
+            </header>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <!-- 资产统计 -->
+                    <div class="asset-stats">
+                        <div class="asset-stat-card">
+                            <div class="asset-stat-value">24</div>
+                            <div class="asset-stat-label">总设备数</div>
+                        </div>
+                        <div class="asset-stat-card">
+                            <div class="asset-stat-value" style="color: var(--ns-success);">18</div>
+                            <div class="asset-stat-label">在线设备</div>
+                        </div>
+                        <div class="asset-stat-card">
+                            <div class="asset-stat-value" style="color: var(--ns-danger);">6</div>
+                            <div class="asset-stat-label">离线设备</div>
+                        </div>
+                        <div class="asset-stat-card">
+                            <div class="asset-stat-value" style="color: var(--ns-warning);">3</div>
+                            <div class="asset-stat-label">需要关注</div>
+                        </div>
+                    </div>
+
+                    <!-- 筛选栏 -->
+                    <div class="filter-bar">
+                        <input type="text" placeholder="搜索设备名称、IP 或 MAC 地址...">
+                        <select>
+                            <option value="">所有类型</option>
+                            <option value="computer">电脑</option>
+                            <option value="mobile">移动设备</option>
+                            <option value="iot">物联网设备</option>
+                            <option value="server">服务器</option>
+                        </select>
+                        <select>
+                            <option value="">所有状态</option>
+                            <option value="online">在线</option>
+                            <option value="offline">离线</option>
+                        </select>
+                    </div>
+
+                    <!-- 设备列表 -->
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>设备名称</th>
+                                        <th>IP 地址</th>
+                                        <th>MAC 地址</th>
+                                        <th>设备类型</th>
+                                        <th>连接方式</th>
+                                        <th>状态</th>
+                                        <th>最后在线</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <i class="ri-computer-line" style="color: var(--nx-primary);"></i>
+                                                MacBook Pro
+                                            </div>
+                                        </td>
+                                        <td>192.168.1.101</td>
+                                        <td>AA:BB:CC:DD:EE:FF</td>
+                                        <td>电脑</td>
+                                        <td>WiFi (5GHz)</td>
+                                        <td><span class="badge badge-success">在线</span></td>
+                                        <td>刚刚</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-secondary">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <i class="ri-smartphone-line" style="color: var(--nx-primary);"></i>
+                                                iPhone 14 Pro
+                                            </div>
+                                        </td>
+                                        <td>192.168.1.102</td>
+                                        <td>BB:CC:DD:EE:FF:AA</td>
+                                        <td>移动设备</td>
+                                        <td>WiFi (5GHz)</td>
+                                        <td><span class="badge badge-success">在线</span></td>
+                                        <td>5分钟前</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-secondary">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <i class="ri-tv-line" style="color: var(--nx-primary);"></i>
+                                                智能电视
+                                            </div>
+                                        </td>
+                                        <td>192.168.1.103</td>
+                                        <td>CC:DD:EE:FF:AA:BB</td>
+                                        <td>物联网设备</td>
+                                        <td>WiFi (2.4GHz)</td>
+                                        <td><span class="badge badge-success">在线</span></td>
+                                        <td>10分钟前</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-secondary">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <i class="ri-gamepad-line" style="color: var(--nx-primary);"></i>
+                                                PlayStation 5
+                                            </div>
+                                        </td>
+                                        <td>192.168.1.104</td>
+                                        <td>DD:EE:FF:AA:BB:CC</td>
+                                        <td>游戏主机</td>
+                                        <td>有线</td>
+                                        <td><span class="badge badge-success">在线</span></td>
+                                        <td>刚刚</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-secondary">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <i class="ri-database-2-line" style="color: var(--nx-primary);"></i>
+                                                NAS 服务器
+                                            </div>
+                                        </td>
+                                        <td>192.168.1.10</td>
+                                        <td>EE:FF:AA:BB:CC:DD</td>
+                                        <td>服务器</td>
+                                        <td>有线</td>
+                                        <td><span class="badge badge-success">在线</span></td>
+                                        <td>刚刚</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-secondary">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <i class="ri-printer-line" style="color: var(--ns-secondary);"></i>
+                                                打印机
+                                            </div>
+                                        </td>
+                                        <td>192.168.1.20</td>
+                                        <td>FF:AA:BB:CC:DD:EE</td>
+                                        <td>外设</td>
+                                        <td>有线</td>
+                                        <td><span class="badge badge-secondary">离线</span></td>
+                                        <td>2小时前</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-secondary">编辑</button>
+                                            <button class="btn btn-sm btn-danger">删除</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/pages/device-assets.js"></script>
+
+    <!-- 添加/编辑设备模态框 -->
+    <div id="deviceModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 id="deviceModalTitle">添加设备</h3>
+                <button class="modal-close" onclick="closeDeviceModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="deviceForm">
+                    <div class="form-group">
+                        <label class="form-label">设备名称 *</label>
+                        <input type="text" id="deviceName" class="form-control" placeholder="输入设备名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">IP 地址 *</label>
+                        <input type="text" id="deviceIp" class="form-control" placeholder="例如: 192.168.1.100">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">MAC 地址</label>
+                        <input type="text" id="deviceMac" class="form-control" placeholder="例如: AA:BB:CC:DD:EE:FF">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">设备类型</label>
+                        <select id="deviceType" class="form-control">
+                            <option value="computer">电脑</option>
+                            <option value="mobile">移动设备</option>
+                            <option value="iot">物联网设备</option>
+                            <option value="server">服务器</option>
+                            <option value="printer">打印机</option>
+                            <option value="game">游戏主机</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--primary" onclick="saveDevice()">保存</button>
+                <button class="nx-btn nx-btn--secondary" onclick="closeDeviceModal()">取消</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

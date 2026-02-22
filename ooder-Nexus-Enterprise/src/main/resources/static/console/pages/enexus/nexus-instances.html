@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus 实例 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">Nexus 实例</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="loadInstances()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">在线</div>
+                                <div class="nx-stat-card__value" id="onlineCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--secondary">
+                                <i class="ri-close-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">离线</div>
+                                <div class="nx-stat-card__value" id="offlineCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-error-warning-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">告警</div>
+                                <div class="nx-stat-card__value" id="warningCount">-</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-server-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">总数</div>
+                                <div class="nx-stat-card__value" id="totalCount">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">实例列表</h3>
+                            <div class="nx-flex nx-gap-2">
+                                <input type="text" class="nx-input" id="searchInput" placeholder="搜索实例..." style="width: 200px;">
+                                <select class="nx-select" id="statusFilter">
+                                    <option value="">全部状态</option>
+                                    <option value="ONLINE">在线</option>
+                                    <option value="OFFLINE">离线</option>
+                                    <option value="WARNING">告警</option>
+                                    <option value="DISABLED">禁用</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nexus ID</th>
+                                            <th>名称</th>
+                                            <th>域</th>
+                                            <th>MCP Agent</th>
+                                            <th>状态</th>
+                                            <th>最后心跳</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="instanceTableBody">
+                                        <tr><td colspan="7" class="nx-text-center">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="nx-modal" id="detailModal">
+        <div class="nx-modal__backdrop" onclick="closeModal()"></div>
+        <div class="nx-modal__content nx-modal__content--lg">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">实例详情</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body" id="modalBody">
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let allInstances = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInstances();
+        });
+
+        async function loadInstances() {
+            try {
+                const response = await fetch('/api/enexus/nexus/list', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                const rs = await response.json();
+                allInstances = rs.data?.list || [];
+                renderTable(allInstances);
+                updateStats();
+            } catch (error) {
+                document.getElementById('instanceTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="nx-text-center nx-text-danger">加载失败: ' + error.message + '</td></tr>';
+            }
+        }
+
+        function updateStats() {
+            let online = 0, offline = 0, warning = 0;
+            allInstances.forEach(i => {
+                if (i.status === 'ONLINE') online++;
+                else if (i.status === 'OFFLINE') offline++;
+                else if (i.status === 'WARNING') warning++;
+            });
+            document.getElementById('onlineCount').textContent = online;
+            document.getElementById('offlineCount').textContent = offline;
+            document.getElementById('warningCount').textContent = warning;
+            document.getElementById('totalCount').textContent = allInstances.length;
+        }
+
+        function renderTable(instances) {
+            if (!instances || instances.length === 0) {
+                document.getElementById('instanceTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="nx-text-center">暂无数据</td></tr>';
+                return;
+            }
+
+            let html = '';
+            instances.forEach(instance => {
+                const statusBadge = getStatusBadge(instance.status);
+                const lastHeartbeat = formatTime(instance.lastHeartbeat);
+                
+                html += '<tr>';
+                html += '  <td>' + (instance.nexusId || '-') + '</td>';
+                html += '  <td>' + (instance.instanceName || '-') + '</td>';
+                html += '  <td>' + (instance.domainId || '-') + '</td>';
+                html += '  <td>' + (instance.mcpId || '-') + '</td>';
+                html += '  <td><span class="nx-badge nx-badge--' + statusBadge + '">' + (instance.status || '-') + '</span></td>';
+                html += '  <td>' + lastHeartbeat + '</td>';
+                html += '  <td>';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="viewInstance(\'' + instance.nexusId + '\')">详情</button> ';
+                html += '    <button class="nx-btn nx-btn--sm nx-btn--primary" onclick="sendCommand(\'' + instance.nexusId + '\')">发送命令</button>';
+                html += '  </td>';
+                html += '</tr>';
+            });
+            
+            document.getElementById('instanceTableBody').innerHTML = html;
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'ONLINE': 'success',
+                'OFFLINE': 'secondary',
+                'WARNING': 'warning',
+                'DISABLED': 'danger'
+            };
+            return map[status] || 'secondary';
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+
+        async function viewInstance(nexusId) {
+            try {
+                const response = await fetch('/api/enexus/nexus/get', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({nexusId: nexusId})
+                });
+                const rs = await response.json();
+                const instance = rs.data;
+                
+                let html = '';
+                html += '<div class="nx-grid nx-grid-cols-2 nx-gap-4">';
+                html += '  <div><strong>Nexus ID:</strong> ' + (instance.nexusId || '-') + '</div>';
+                html += '  <div><strong>名称:</strong> ' + (instance.instanceName || '-') + '</div>';
+                html += '  <div><strong>域 ID:</strong> ' + (instance.domainId || '-') + '</div>';
+                html += '  <div><strong>MCP ID:</strong> ' + (instance.mcpId || '-') + '</div>';
+                html += '  <div><strong>状态:</strong> <span class="nx-badge nx-badge--' + getStatusBadge(instance.status) + '">' + (instance.status || '-') + '</span></div>';
+                html += '  <div><strong>最后心跳:</strong> ' + formatTime(instance.lastHeartbeat) + '</div>';
+                html += '  <div><strong>创建时间:</strong> ' + formatTime(instance.createdAt) + '</div>';
+                html += '  <div><strong>版本:</strong> ' + (instance.version || '-') + '</div>';
+                html += '</div>';
+                
+                if (instance.networkInfo) {
+                    html += '<div class="nx-mt-4"><strong>网络信息:</strong></div>';
+                    html += '<div class="nx-ml-4">';
+                    html += '<div>IP: ' + (instance.networkInfo.ip || '-') + '</div>';
+                    html += '<div>端口: ' + (instance.networkInfo.port || '-') + '</div>';
+                    html += '<div>P2P端口: ' + (instance.networkInfo.p2pPort || '-') + '</div>';
+                    html += '</div>';
+                }
+                
+                if (instance.resources) {
+                    html += '<div class="nx-mt-4"><strong>资源状态:</strong></div>';
+                    html += '<div class="nx-ml-4">';
+                    html += '<div>CPU: ' + (instance.resources.cpuUsage || 0) + '%</div>';
+                    html += '<div>内存: ' + (instance.resources.memoryUsage || 0) + '%</div>';
+                    html += '<div>磁盘: ' + (instance.resources.diskUsage || 0) + '%</div>';
+                    html += '</div>';
+                }
+                
+                document.getElementById('modalBody').innerHTML = html;
+                document.getElementById('detailModal').classList.add('nx-modal--open');
+            } catch (error) {
+                alert('获取详情失败: ' + error.message);
+            }
+        }
+
+        function sendCommand(nexusId) {
+            window.location.href = '/console/pages/enexus/communication/relay-commands.html?target=' + nexusId;
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('nx-modal--open');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterInstances();
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            filterInstances();
+        });
+
+        function filterInstances() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            
+            let filtered = allInstances;
+            
+            if (search) {
+                filtered = filtered.filter(i => 
+                    (i.nexusId && i.nexusId.toLowerCase().includes(search)) ||
+                    (i.instanceName && i.instanceName.toLowerCase().includes(search)) ||
+                    (i.domainId && i.domainId.toLowerCase().includes(search))
+                );
+            }
+            
+            if (status) {
+                filtered = filtered.filter(i => i.status === status);
+            }
+            
+            renderTable(filtered);
+        }
+    </script>
+</body>
+</html>

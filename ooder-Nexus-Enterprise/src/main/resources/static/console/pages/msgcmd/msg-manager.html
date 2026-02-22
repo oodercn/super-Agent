@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消息管理 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .msg-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--ns-card-bg); border-radius: 8px; padding: 20px; border: 1px solid var(--ns-border); }
+        .stat-card .stat-value { font-size: 32px; font-weight: 600; color: var(--nx-primary); }
+        .stat-card .stat-label { color: var(--ns-secondary); margin-top: 8px; }
+        
+        .filter-bar { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        .filter-bar select, .filter-bar input { 
+            background: var(--ns-input-bg); 
+            border: 1px solid var(--ns-border); 
+            color: var(--ns-dark);
+            padding: 8px 12px; 
+            border-radius: 6px; 
+        }
+        
+        .msg-table { width: 100%; border-collapse: collapse; }
+        .msg-table th, .msg-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--ns-border); }
+        .msg-table th { background: var(--ns-card-bg); color: var(--ns-secondary); font-weight: 500; }
+        .msg-table tr:hover { background: var(--ns-bg-hover); }
+        
+        .msg-type { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+        .msg-type-ctmsg { background: rgba(59, 130, 246, 0.12); color: var(--nx-primary); }
+        .msg-type-topicmsg { background: rgba(34, 197, 94, 0.12); color: var(--ns-success); }
+        .msg-type-alarmmsg { background: rgba(239, 68, 68, 0.12); color: var(--ns-danger); }
+        .msg-type-commandmsg { background: rgba(245, 158, 11, 0.12); color: var(--ns-warning); }
+        
+        .msg-status { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .status-read { background: rgba(34, 197, 94, 0.12); color: var(--ns-success); }
+        .status-unread { background: rgba(59, 130, 246, 0.12); color: var(--nx-primary); }
+        .status-processing { background: rgba(245, 158, 11, 0.12); color: var(--ns-warning); }
+        
+        .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .btn-primary { background: var(--nx-primary); color: white; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-secondary { background: var(--ns-card-bg); color: var(--ns-dark); border: 1px solid var(--ns-border); }
+        .btn-secondary:hover { background: var(--ns-bg-hover); }
+        .btn-sm { padding: 4px 8px; font-size: 12px; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal.active { display: flex; justify-content: center; align-items: center; }
+        .modal-content { background: var(--ns-card-bg); border-radius: 12px; padding: 24px; width: 500px; max-width: 90%; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h3 { margin: 0; color: var(--ns-dark); }
+        .modal-close { background: none; border: none; color: var(--ns-secondary); font-size: 24px; cursor: pointer; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--ns-secondary); }
+        .form-group input, .form-group textarea, .form-group select { 
+            width: 100%; 
+            background: var(--ns-input-bg); 
+            border: 1px solid var(--ns-border); 
+            color: var(--ns-dark);
+            padding: 10px 12px; 
+            border-radius: 6px; 
+        }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+        .pagination button { padding: 8px 12px; border: 1px solid var(--ns-border); background: var(--ns-card-bg); color: var(--ns-dark); border-radius: 4px; cursor: pointer; }
+        .pagination button.active { background: var(--nx-primary); color: white; border-color: var(--nx-primary); }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 1px solid var(--ns-border); }
+        .tab { padding: 12px 24px; color: var(--ns-secondary); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .tab:hover { color: var(--ns-dark); }
+        .tab.active { color: var(--nx-primary); border-bottom-color: var(--nx-primary); }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold"><i class="ri-mail-line"></i> 消息管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="btn btn-primary" onclick="openSendModal()">
+                        <i class="ri-send-plane-line"></i> 发送消息
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="msg-stats" id="statsContainer">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalMessages">-</div>
+                            <div class="stat-label">总消息数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="unreadMessages">-</div>
+                            <div class="stat-label">未读消息</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalTopics">-</div>
+                            <div class="stat-label">Topic 数量</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="activeSubscribers">-</div>
+                            <div class="stat-label">活跃订阅者</div>
+                        </div>
+                    </div>
+
+                    <div class="tabs">
+                        <div class="tab active" data-tab="messages">消息列表</div>
+                        <div class="tab" data-tab="topics">Topic 管理</div>
+                        <div class="tab" data-tab="capabilities">消息能力</div>
+                    </div>
+
+                    <div class="filter-bar">
+                        <select id="filterType">
+                            <option value="">全部类型</option>
+                            <option value="CtMsg">CtMsg</option>
+                            <option value="TopicMsg">TopicMsg</option>
+                            <option value="AlarmMsg">AlarmMsg</option>
+                            <option value="CommandMsg">CommandMsg</option>
+                        </select>
+                        <select id="filterStatus">
+                            <option value="">全部状态</option>
+                            <option value="READ">已读</option>
+                            <option value="UNREAD">未读</option>
+                            <option value="PROCESSING">处理中</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="loadMessages()">
+                            <i class="ri-search-line"></i> 搜索
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetFilters()">
+                            <i class="ri-refresh-line"></i> 重置
+                        </button>
+                    </div>
+
+                    <div id="messagesTab" class="tab-content">
+                        <table class="msg-table">
+                            <thead>
+                                <tr>
+                                    <th>类型</th>
+                                    <th>标题</th>
+                                    <th>发送者</th>
+                                    <th>接收者</th>
+                                    <th>状态</th>
+                                    <th>时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="messagesTableBody">
+                            </tbody>
+                        </table>
+                        <div class="pagination" id="pagination"></div>
+                    </div>
+
+                    <div id="topicsTab" class="tab-content" style="display: none;">
+                        <div class="topic-tree" id="topicTree"></div>
+                    </div>
+
+                    <div id="capabilitiesTab" class="tab-content" style="display: none;">
+                        <table class="msg-table">
+                            <thead>
+                                <tr>
+                                    <th>能力ID</th>
+                                    <th>能力名称</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="capabilitiesTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="sendModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>发送消息</h3>
+                <button class="modal-close" onclick="closeSendModal()">&times;</button>
+            </div>
+            <form id="sendForm">
+                <div class="form-group">
+                    <label>消息类型</label>
+                    <select id="sendMsgType" required>
+                        <option value="CtMsg">CtMsg (点对点)</option>
+                        <option value="TopicMsg">TopicMsg (主题)</option>
+                        <option value="AlarmMsg">AlarmMsg (告警)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>接收者</label>
+                    <input type="text" id="sendReceiver" placeholder="输入接收者ID" required>
+                </div>
+                <div class="form-group">
+                    <label>消息标题</label>
+                    <input type="text" id="sendTitle" placeholder="输入消息标题" required>
+                </div>
+                <div class="form-group">
+                    <label>消息内容</label>
+                    <textarea id="sendContent" placeholder="输入消息内容" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>优先级</label>
+                    <select id="sendPriority">
+                        <option value="NORMAL">普通</option>
+                        <option value="HIGH">重要</option>
+                        <option value="URGENT">紧急</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeSendModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">发送</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let currentPage = 0;
+        const pageSize = 10;
+
+        window.onPageInit = function() {
+            loadStats();
+            loadMessages();
+            initTabs();
+        };
+
+        function initTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+                    this.classList.add('active');
+                    const tabId = this.dataset.tab;
+                    document.getElementById(tabId + 'Tab').style.display = 'block';
+                    
+                    if (tabId === 'topics') loadTopics();
+                    if (tabId === 'capabilities') loadCapabilities();
+                });
+            });
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/msgcmd/stats');
+                const result = await response.json();
+                if (result.success) {
+                    const stats = result.data;
+                    document.getElementById('totalMessages').textContent = stats.totalMessages || 0;
+                    document.getElementById('unreadMessages').textContent = stats.unreadMessages || 0;
+                    document.getElementById('totalTopics').textContent = stats.totalTopics || 0;
+                    document.getElementById('activeSubscribers').textContent = stats.activeSubscribers || 0;
+                }
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        async function loadMessages() {
+            const msgType = document.getElementById('filterType').value;
+            const status = document.getElementById('filterStatus').value;
+            
+            try {
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    size: pageSize
+                });
+                if (msgType) params.append('msgType', msgType);
+                if (status) params.append('status', status);
+                
+                const response = await fetch('/api/msgcmd/messages?' + params);
+                const result = await response.json();
+                
+                if (result.success) {
+                    renderMessages(result.data);
+                }
+            } catch (error) {
+                console.error('Failed to load messages:', error);
+            }
+        }
+
+        function renderMessages(messages) {
+            const tbody = document.getElementById('messagesTableBody');
+            tbody.innerHTML = messages.map(msg => `
+                <tr>
+                    <td><span class="msg-type msg-type-${msg.msgType.toLowerCase()}">${msg.msgType}</span></td>
+                    <td>${msg.title || '-'}</td>
+                    <td>${msg.senderName || msg.senderId}</td>
+                    <td>${msg.receiverName || msg.receiverId}</td>
+                    <td><span class="msg-status status-${msg.status.toLowerCase()}">${getStatusText(msg.status)}</span></td>
+                    <td>${formatTime(msg.timestamp)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="viewMessage('${msg.msgId}')">详情</button>
+                        ${msg.status === 'UNREAD' ? `<button class="btn btn-sm btn-primary" onclick="ackMessage('${msg.msgId}')">已读</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadTopics() {
+            try {
+                const response = await fetch('/api/msgcmd/topics/tree');
+                const result = await response.json();
+                if (result.success) {
+                    renderTopicTree(result.data);
+                }
+            } catch (error) {
+                console.error('Failed to load topics:', error);
+            }
+        }
+
+        function renderTopicTree(topic) {
+            const container = document.getElementById('topicTree');
+            container.innerHTML = renderTopicNode(topic, 0);
+        }
+
+        function renderTopicNode(topic, level) {
+            const indent = level * 20;
+            let html = `
+                <div class="topic-node" style="padding-left: ${indent}px; padding: 12px; border-bottom: 1px solid var(--ns-border);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <i class="ri-folder-line" style="color: var(--nx-primary);"></i>
+                            <span style="margin-left: 8px; color: var(--ns-dark);">${topic.topicName || topic.topicPath}</span>
+                        </div>
+                        <div style="color: var(--ns-secondary); font-size: 12px;">
+                            订阅: ${topic.subscriberCount || 0} | 消息: ${topic.messageCount || 0}
+                        </div>
+                    </div>
+                </div>
+            `;
+            if (topic.children) {
+                topic.children.forEach(child => {
+                    html += renderTopicNode(child, level + 1);
+                });
+            }
+            return html;
+        }
+
+        async function loadCapabilities() {
+            try {
+                const response = await fetch('/api/msgcmd/capabilities/messages');
+                const result = await response.json();
+                if (result.success) {
+                    renderCapabilities(result.data);
+                }
+            } catch (error) {
+                console.error('Failed to load capabilities:', error);
+            }
+        }
+
+        function renderCapabilities(capabilities) {
+            const tbody = document.getElementById('capabilitiesTableBody');
+            tbody.innerHTML = capabilities.map(cap => `
+                <tr>
+                    <td>${cap.capabilityId}</td>
+                    <td>${cap.capabilityName}</td>
+                    <td><span class="msg-status status-${cap.status.toLowerCase()}">${cap.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" ${cap.status === 'NOT_SUPPORTED' ? '' : 'disabled'}>
+                            ${cap.status === 'NOT_SUPPORTED' ? '申请' : '已启用'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openSendModal() {
+            document.getElementById('sendModal').classList.add('active');
+        }
+
+        function closeSendModal() {
+            document.getElementById('sendModal').classList.remove('active');
+            document.getElementById('sendForm').reset();
+        }
+
+        document.getElementById('sendForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const data = {
+                msgType: document.getElementById('sendMsgType').value,
+                receiverId: document.getElementById('sendReceiver').value,
+                title: document.getElementById('sendTitle').value,
+                content: document.getElementById('sendContent').value,
+                options: {
+                    priority: document.getElementById('sendPriority').value
+                }
+            };
+            
+            try {
+                const response = await fetch('/api/msgcmd/messages/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    closeSendModal();
+                    loadMessages();
+                    loadStats();
+                    alert('消息发送成功');
+                }
+            } catch (error) {
+                console.error('Failed to send message:', error);
+                alert('发送失败');
+            }
+        });
+
+        async function ackMessage(msgId) {
+            try {
+                const response = await fetch(`/api/msgcmd/messages/${msgId}/ack`, { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    loadMessages();
+                    loadStats();
+                }
+            } catch (error) {
+                console.error('Failed to ack message:', error);
+            }
+        }
+
+        function viewMessage(msgId) {
+            alert('查看消息详情: ' + msgId);
+        }
+
+        function resetFilters() {
+            document.getElementById('filterType').value = '';
+            document.getElementById('filterStatus').value = '';
+            currentPage = 0;
+            loadMessages();
+        }
+
+        function getStatusText(status) {
+            const map = { 'READ': '已读', 'UNREAD': '未读', 'PROCESSING': '处理中', 'SENT': '已发送' };
+            return map[status] || status;
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+    </script>
+</body>
+</html>

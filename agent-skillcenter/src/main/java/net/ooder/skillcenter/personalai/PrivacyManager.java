@@ -1,76 +1,86 @@
+/*
+ * Copyright (c) 2024 Ooder Team
+ *
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
 package net.ooder.skillcenter.personalai;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
- * 隐私控制管理器，管理个人AI中心的隐私设置
+ * Privacy Control Manager - Manages privacy settings for Personal AI Center
  */
 public class PrivacyManager {
-    // 当前隐私级别
+    private static final Logger logger = LoggerFactory.getLogger(PrivacyManager.class);
+
+    // Current privacy level
     private PrivacyLevel privacyLevel;
-    
+
     /**
-     * 构造方法
+     * Constructor
      */
     public PrivacyManager() {
         this.privacyLevel = PrivacyLevel.MEDIUM;
     }
-    
+
     /**
-     * 启动隐私管理器
+     * Start privacy manager
      */
     public void start() {
-        System.out.println("Privacy Manager started with level: " + privacyLevel);
+        logger.info("Privacy Manager started with level: {}", privacyLevel);
     }
-    
+
     /**
-     * 停止隐私管理器
+     * Stop privacy manager
      */
     public void stop() {
-        System.out.println("Privacy Manager stopped");
+        logger.info("Privacy Manager stopped");
     }
-    
+
     /**
-     * 获取当前隐私级别
-     * @return 当前隐私级别
+     * Get current privacy level
+     * @return Current privacy level
      */
     public PrivacyLevel getPrivacyLevel() {
         return privacyLevel;
     }
-    
+
     /**
-     * 设置隐私级别
-     * @param level 隐私级别
+     * Set privacy level
+     * @param level Privacy level
      */
     public void setPrivacyLevel(PrivacyLevel level) {
         this.privacyLevel = level;
-        System.out.println("Privacy level set to: " + level);
+        logger.info("Privacy level set to: {}", level);
     }
-    
+
     /**
-     * 检查是否允许数据共享
-     * @param dataType 数据类型
-     * @return 是否允许数据共享
+     * Check if data sharing is allowed
+     * @param dataType Data type
+     * @return Whether data sharing is allowed
      */
     public boolean isDataSharingAllowed(String dataType) {
         switch (privacyLevel) {
             case LOW:
-                return true; // 低隐私级别，允许所有数据共享
+                return true; // Low privacy level, allow all data sharing
             case MEDIUM:
-                // 中等隐私级别，允许非敏感数据共享
+                // Medium privacy level, allow non-sensitive data sharing
                 return !isSensitiveDataType(dataType);
             case HIGH:
-                return false; // 高隐私级别，不允许任何数据共享
+                return false; // High privacy level, no data sharing allowed
             default:
                 return false;
         }
     }
-    
+
     /**
-     * 检查数据类型是否敏感
-     * @param dataType 数据类型
-     * @return 是否敏感数据类型
+     * Check if data type is sensitive
+     * @param dataType Data type
+     * @return Whether it's a sensitive data type
      */
     private boolean isSensitiveDataType(String dataType) {
-        // 定义敏感数据类型
         String[] sensitiveTypes = {"personal", "financial", "health", "location"};
         for (String type : sensitiveTypes) {
             if (type.equalsIgnoreCase(dataType)) {
@@ -79,67 +89,67 @@ public class PrivacyManager {
         }
         return false;
     }
-    
+
     /**
-     * 检查是否允许技能共享
-     * @param skillId 技能ID
-     * @return 是否允许技能共享
+     * Check if skill sharing is allowed
+     * @param skillId Skill ID
+     * @return Whether skill sharing is allowed
      */
     public boolean isSkillSharingAllowed(String skillId) {
         switch (privacyLevel) {
             case LOW:
-                return true; // 低隐私级别，允许所有技能共享
+                return true; // Low privacy level, allow all skill sharing
             case MEDIUM:
-                return true; // 中等隐私级别，允许技能共享
+                return true; // Medium privacy level, allow skill sharing
             case HIGH:
-                return false; // 高隐私级别，不允许技能共享
+                return false; // High privacy level, no skill sharing allowed
             default:
                 return false;
         }
     }
-    
+
     /**
-     * 检查是否允许设备访问
-     * @param deviceId 设备ID
-     * @return 是否允许设备访问
+     * Check if device access is allowed
+     * @param deviceId Device ID
+     * @return Whether device access is allowed
      */
     public boolean isDeviceAccessAllowed(String deviceId) {
         switch (privacyLevel) {
             case LOW:
-                return true; // 低隐私级别，允许所有设备访问
+                return true; // Low privacy level, allow all device access
             case MEDIUM:
-                return true; // 中等隐私级别，允许设备访问
+                return true; // Medium privacy level, allow device access
             case HIGH:
-                return false; // 高隐私级别，不允许设备访问
+                return false; // High privacy level, no device access allowed
             default:
                 return false;
         }
     }
-    
+
     /**
-     * 隐私级别枚举
+     * Privacy Level Enum
      */
     public enum PrivacyLevel {
-        LOW("低", "允许大部分数据和技能共享"),
-        MEDIUM("中", "允许非敏感数据和技能共享"),
-        HIGH("高", "不允许任何数据和技能共享");
-        
+        LOW("Low", "Allow most data and skill sharing"),
+        MEDIUM("Medium", "Allow non-sensitive data and skill sharing"),
+        HIGH("High", "No data or skill sharing allowed");
+
         private String name;
         private String description;
-        
+
         PrivacyLevel(String name, String description) {
             this.name = name;
             this.description = description;
         }
-        
+
         public String getName() {
             return name;
         }
-        
+
         public String getDescription() {
             return description;
         }
-        
+
         @Override
         public String toString() {
             return name;

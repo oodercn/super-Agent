@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能下载 - Nexus</title>
+
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .content-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--ns-dark);
+        }
+        .content-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .search-box {
+            position: relative;
+        }
+        .search-box .form-input {
+            padding: 10px 12px 10px 36px;
+            border: 1px solid var(--ns-border);
+            border-radius: 6px;
+            background: var(--ns-input-bg);
+            color: var(--ns-dark);
+            font-size: 14px;
+            width: 250px;
+        }
+        .search-box .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--ns-secondary);
+        }
+        .form-select {
+            padding: 10px 12px;
+            border: 1px solid var(--ns-border);
+            border-radius: 6px;
+            background: var(--ns-input-bg);
+            color: var(--ns-dark);
+            font-size: 14px;
+        }
+        .skill-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 16px;
+        }
+        .skill-item {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            gap: 16px;
+            transition: all 0.3s;
+        }
+        .skill-item:hover { border-color: var(--nx-primary); }
+        .skill-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--nx-primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .skill-info { flex: 1; min-width: 0; }
+        .skill-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ns-dark);
+            margin-bottom: 4px;
+        }
+        .skill-description {
+            font-size: 13px;
+            color: var(--ns-secondary);
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .skill-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        .skill-actions {
+            display: flex;
+            align-items: center;
+        }
+        .loading, .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--ns-secondary);
+            grid-column: 1 / -1;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 10000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+        .notification.show { transform: translateX(0); }
+        .notification.success { background: rgba(34, 197, 94, 0.9); color: white; }
+        .notification.error { background: rgba(239, 68, 68, 0.9); color: white; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能下载</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="content-header">
+                        <h1>技能下载</h1>
+                        <div class="content-actions">
+                            <div class="search-box">
+                                <input type="text" id="search-input" class="form-input" placeholder="搜索技能...">
+                                <i class="ri-search-line search-icon"></i>
+                            </div>
+                            <select id="category-filter" class="form-select">
+                                <option value="">所有分类</option>
+                            </select>
+                            <button class="nx-btn nx-btn--secondary" onclick="refreshSkillList()">
+                                <i class="ri-refresh-line"></i> 刷新
+                            </button>
+                        </div>
+                    </div>
+                    <div class="skill-list" id="skill-list">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/common/api-client.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/skillcenter-sync-api.js"></script>
+    <script src="/console/js/pages/skill-download.js"></script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>组织架构 - Nexus Console</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+<div class="nx-page">
+    <div class="nx-page-header">
+        <div class="nx-page-title">
+            <i class="ri-organization-chart"></i>
+            <h1>组织架构</h1>
+        </div>
+        <div class="nx-page-actions">
+            <button class="btn btn-outline" onclick="syncOrg()">
+                <i class="ri-refresh-line"></i> 同步
+            </button>
+            <button class="btn btn-primary" onclick="createDepartment()">
+                <i class="ri-add-line"></i> 新建部门
+            </button>
+        </div>
+    </div>
+    
+    <div class="nx-page-content">
+        <div class="org-container">
+            <div class="org-tree">
+                <div class="tree-header">
+                    <h3>部门结构</h3>
+                </div>
+                <div id="orgTree" class="tree-content"></div>
+            </div>
+            
+            <div class="org-detail">
+                <div class="detail-header">
+                    <h3 id="detailTitle">选择部门查看详情</h3>
+                </div>
+                <div id="detailContent" class="detail-content">
+                    <div class="empty-state">
+                        <i class="ri-building-line"></i>
+                        <p>请从左侧选择一个部门</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.org-container { display: flex; gap: 20px; height: calc(100vh - 180px); }
+.org-tree { width: 320px; background: var(--ns-card-bg); border-radius: 12px; border: 1px solid var(--ns-border); display: flex; flex-direction: column; }
+.tree-header { padding: 16px; border-bottom: 1px solid var(--ns-border); }
+.tree-header h3 { margin: 0; color: var(--ns-dark); }
+.tree-content { flex: 1; overflow-y: auto; padding: 8px; }
+.org-detail { flex: 1; background: var(--ns-card-bg); border-radius: 12px; border: 1px solid var(--ns-border); display: flex; flex-direction: column; }
+.detail-header { padding: 16px; border-bottom: 1px solid var(--ns-border); }
+.detail-header h3 { margin: 0; color: var(--ns-dark); }
+.detail-content { flex: 1; padding: 16px; overflow-y: auto; }
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--ns-secondary); }
+.empty-state i { font-size: 48px; margin-bottom: 16px; }
+.dept-item { padding: 10px 12px; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
+.dept-item:hover { background: var(--ns-bg-hover); }
+.dept-item.active { background: rgba(59, 130, 246, 0.1); }
+.dept-item i { color: var(--nx-primary); }
+.dept-children { margin-left: 20px; }
+.member-list { margin-top: 16px; }
+.member-item { display: flex; align-items: center; padding: 12px; background: var(--ns-input-bg); border-radius: 8px; margin-bottom: 8px; }
+.member-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--nx-primary); display: flex; align-items: center; justify-content: center; color: white; margin-right: 12px; }
+.member-info { flex: 1; }
+.member-name { font-weight: 500; color: var(--ns-dark); }
+.member-position { font-size: 12px; color: var(--ns-secondary); }
+</style>
+
+<script>
+let departments = [];
+let selectedDept = null;
+
+async function loadDepartments() {
+    try {
+        const response = await fetch('/api/gateway/org/tree', { method: 'GET' });
+        const result = await response.json();
+        if (result.success) {
+            departments = result.data;
+            renderTree();
+        }
+    } catch (e) {
+        console.error('加载部门失败', e);
+    }
+}
+
+function renderTree() {
+    const container = document.getElementById('orgTree');
+    container.innerHTML = renderTreeItems(departments);
+}
+
+function renderTreeItems(items, level = 0) {
+    if (!items || items.length === 0) return '';
+    return items.map(item => `
+        <div class="dept-item" style="padding-left: ${level * 16 + 12}px" onclick="selectDepartment('${item.departmentId}', event)">
+            <i class="ri-building-line"></i>
+            <span>${item.name}</span>
+            <span style="margin-left: auto; font-size: 12px; color: var(--ns-secondary);">${item.memberCount || 0}人</span>
+        </div>
+        ${item.children && item.children.length > 0 ? `<div class="dept-children">${renderTreeItems(item.children, level + 1)}</div>` : ''}
+    `).join('');
+}
+
+async function selectDepartment(id, evt) {
+    document.querySelectorAll('.dept-item').forEach(el => el.classList.remove('active'));
+    evt.currentTarget.classList.add('active');
+    
+    selectedDept = findDepartment(departments, id);
+    await loadDepartmentUsers(id);
+}
+
+function findDepartment(depts, id) {
+    for (const dept of depts) {
+        if (dept.departmentId === id) return dept;
+        if (dept.children) {
+            const found = findDepartment(dept.children, id);
+            if (found) return found;
+        }
+    }
+    return null;
+}
+
+async function loadDepartmentUsers(deptId) {
+    if (!selectedDept) return;
+    
+    try {
+        const response = await fetch('/api/gateway/org/user/list', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ departmentId: deptId })
+        });
+        const result = await response.json();
+        
+        document.getElementById('detailTitle').textContent = selectedDept.name;
+        document.getElementById('detailContent').innerHTML = `
+            <div style="margin-bottom: 16px;">
+                <div style="font-size: 14px; color: var(--ns-secondary);">部门编码: ${selectedDept.code || '-'}</div>
+                <div style="font-size: 14px; color: var(--ns-secondary);">负责人: ${selectedDept.managerName || '-'}</div>
+            </div>
+            <h4 style="margin: 16px 0 12px; color: var(--ns-dark);">部门成员 (${result.data ? result.data.length : 0})</h4>
+            <div class="member-list">
+                ${(result.data || []).map(user => `
+                    <div class="member-item">
+                        <div class="member-avatar">${user.name ? user.name.charAt(0) : '?'}</div>
+                        <div class="member-info">
+                            <div class="member-name">${user.name}</div>
+                            <div class="member-position">${user.position || '-'}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } catch (e) {
+        console.error('加载用户失败', e);
+    }
+}
+
+function syncOrg() {
+    alert('同步组织架构功能开发中');
+}
+
+function createDepartment() {
+    alert('创建部门功能开发中');
+}
+
+loadDepartments();
+</script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>运行监控 - SkillCenter</title>
+    
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">运行监控</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="refreshMonitor()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-apps-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">技能总数</div>
+                                <div class="nx-stat-card__value" id="total-skills">0</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-play-circle-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">运行中</div>
+                                <div class="nx-stat-card__value" id="running-skills">0</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-cpu-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">平均CPU</div>
+                                <div class="nx-stat-card__value" id="avg-cpu">0%</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--info">
+                                <i class="ri-database-2-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">平均内存</div>
+                                <div class="nx-stat-card__value" id="avg-memory">0%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">技能监控列表</h3>
+                            <div class="nx-card__actions">
+                                <select class="nx-select" id="status-filter" onchange="applyFilterAndRender()">
+                                    <option value="">全部状态</option>
+                                    <option value="running">运行中</option>
+                                    <option value="stopped">已停止</option>
+                                    <option value="error">错误</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>技能名称</th>
+                                            <th>状态</th>
+                                            <th>CPU</th>
+                                            <th>内存</th>
+                                            <th>执行次数</th>
+                                            <th>成功率</th>
+                                            <th>运行时长</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="monitor-list">
+                                        <tr>
+                                            <td colspan="8" class="nx-text-center nx-text-secondary">
+                                                加载中...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-grid nx-grid-cols-2 nx-mb-6">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">告警信息</h3>
+                                <span class="nx-badge nx-badge--error" id="alert-count">0</span>
+                            </div>
+                            <div class="nx-card__body">
+                                <div id="alert-list" style="max-height: 300px; overflow-y: auto;">
+                                    <div class="nx-text-center nx-text-secondary nx-p-4">暂无告警</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">执行统计</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                                    <div class="nx-text-center nx-p-4" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                        <div class="nx-text-2xl nx-font-bold nx-text-primary" id="total-executions">0</div>
+                                        <div class="nx-text-secondary nx-text-sm">总执行次数</div>
+                                    </div>
+                                    <div class="nx-text-center nx-p-4" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius);">
+                                        <div class="nx-text-2xl nx-font-bold nx-text-success" id="success-rate">0%</div>
+                                        <div class="nx-text-secondary nx-text-sm">成功率</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/api-client.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('Monitor 页面初始化完成');
+            loadMonitorData();
+            loadAlerts();
+            loadMonitorStats();
+        };
+        
+        let allMonitors = [];
+        
+        async function loadMonitorData() {
+            try {
+                const result = await ApiClient.post('/api/monitor/list', {});
+                if (result && result.data) {
+                    const data = result.data;
+                    
+                    document.getElementById('total-skills').textContent = data.total || 0;
+                    document.getElementById('running-skills').textContent = data.running || 0;
+                    document.getElementById('avg-cpu').textContent = (data.avgCpuUsage || 0).toFixed(1) + '%';
+                    document.getElementById('avg-memory').textContent = (data.avgMemoryUsage || 0).toFixed(1) + '%';
+                    
+                    allMonitors = data.monitors || [];
+                    applyFilterAndRender();
+                }
+            } catch (error) {
+                console.error('加载监控数据失败:', error);
+            }
+        }
+        
+        async function loadMonitorStats() {
+            try {
+                const result = await ApiClient.post('/api/monitor/stats', {});
+                if (result && result.data) {
+                    document.getElementById('total-executions').textContent = result.data.totalExecutions || 0;
+                    document.getElementById('success-rate').textContent = (result.data.successRate || 0).toFixed(1) + '%';
+                }
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+            }
+        }
+        
+        function applyFilterAndRender() {
+            const status = document.getElementById('status-filter').value;
+            let filtered = allMonitors;
+            if (status) {
+                filtered = allMonitors.filter(m => m.status === status);
+            }
+            renderMonitorList(filtered);
+        }
+        
+        function renderMonitorList(monitors) {
+            const tbody = document.getElementById('monitor-list');
+            if (!monitors || monitors.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="nx-text-center nx-text-secondary">暂无数据</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = monitors.map(m => `
+                <tr>
+                    <td>
+                        <div class="nx-flex nx-items-center nx-gap-2">
+                            <i class="ri-lightbulb-line nx-text-primary"></i>
+                            <span>${m.name || m.skillId}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="nx-badge nx-badge--${m.status === 'running' ? 'success' : (m.status === 'error' ? 'error' : 'secondary')}">
+                            ${m.status === 'running' ? '运行中' : (m.status === 'error' ? '错误' : '已停止')}
+                        </span>
+                    </td>
+                    <td>${m.resources ? m.resources.cpuUsage.toFixed(1) : 0}%</td>
+                    <td>${m.resources ? m.resources.memoryUsagePercent.toFixed(1) : 0}%</td>
+                    <td>${m.execution ? m.execution.totalExecutions : 0}</td>
+                    <td>${m.execution ? m.execution.successRate.toFixed(1) : 0}%</td>
+                    <td>${formatUptime(m.uptime || 0)}</td>
+                    <td>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="viewDetail('${m.skillId}')">
+                            <i class="ri-eye-line"></i>
+                        </button>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="viewLogs('${m.skillId}')">
+                            <i class="ri-file-list-line"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        async function loadAlerts() {
+            try {
+                const result = await ApiClient.post('/api/monitor/alerts', { pageSize: 5 });
+                if (result && result.data) {
+                    const alerts = result.data.list || [];
+                    document.getElementById('alert-count').textContent = alerts.length;
+                    renderAlerts(alerts);
+                }
+            } catch (error) {
+                console.error('加载告警失败:', error);
+            }
+        }
+        
+        function renderAlerts(alerts) {
+            const container = document.getElementById('alert-list');
+            if (!alerts || alerts.length === 0) {
+                container.innerHTML = '<div class="nx-text-center nx-text-secondary nx-p-4">暂无告警</div>';
+                return;
+            }
+            
+            container.innerHTML = alerts.map(a => `
+                <div class="nx-flex nx-items-start nx-gap-3 nx-p-3 nx-mb-2" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius); border-left: 3px solid var(--nx-${a.severity === 'error' ? 'error' : 'warning'}-color);">
+                    <i class="ri-alert-line nx-text-${a.severity === 'error' ? 'error' : 'warning'}"></i>
+                    <div class="nx-flex-1">
+                        <div class="nx-font-medium">${a.title}</div>
+                        <div class="nx-text-secondary nx-text-sm">${a.message}</div>
+                    </div>
+                    <span class="nx-text-secondary nx-text-sm">${formatTime(a.timestamp)}</span>
+                </div>
+            `).join('');
+        }
+        
+        function formatUptime(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            }
+            return `${minutes}m`;
+        }
+        
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+        
+        function refreshMonitor() {
+            loadMonitorData();
+            loadAlerts();
+            loadMonitorStats();
+        }
+        
+        function viewDetail(skillId) {
+            window.location.href = 'skill-detail.html?id=' + skillId;
+        }
+        
+        function viewLogs(skillId) {
+            showLogModal(skillId);
+        }
+        
+        async function showLogModal(skillId) {
+            const modal = document.createElement('div');
+            modal.className = 'nx-modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="nx-modal__backdrop" onclick="this.parentElement.remove()"></div>
+                <div class="nx-modal__content" style="width: 800px; max-width: 90%;">
+                    <div class="nx-modal__header">
+                        <h3 class="nx-modal__title">技能日志 - ${skillId}</h3>
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="this.closest('.nx-modal').remove()">
+                            <i class="ri-close-line"></i>
+                        </button>
+                    </div>
+                    <div class="nx-modal__body" style="max-height: 500px; overflow-y: auto;">
+                        <div id="log-content" class="nx-text-center nx-text-secondary nx-p-4">加载中...</div>
+                    </div>
+                    <div class="nx-modal__footer">
+                        <select class="nx-select" id="log-level-filter" onchange="filterLogs('${skillId}')">
+                            <option value="">全部级别</option>
+                            <option value="INFO">INFO</option>
+                            <option value="DEBUG">DEBUG</option>
+                            <option value="WARN">WARN</option>
+                            <option value="ERROR">ERROR</option>
+                        </select>
+                        <button class="nx-btn nx-btn--secondary" onclick="this.closest('.nx-modal').remove()">关闭</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            await loadLogs(skillId);
+        }
+        
+        let currentLogs = [];
+        
+        async function loadLogs(skillId) {
+            try {
+                const result = await ApiClient.post(`/api/monitor/logs/${skillId}`, { pageSize: 50 });
+                if (result && result.data) {
+                    currentLogs = result.data.list || [];
+                    renderLogs(currentLogs);
+                }
+            } catch (error) {
+                document.getElementById('log-content').innerHTML = '<div class="nx-text-error">加载日志失败: ' + error.message + '</div>';
+            }
+        }
+        
+        function filterLogs(skillId) {
+            const level = document.getElementById('log-level-filter').value;
+            let filtered = currentLogs;
+            if (level) {
+                filtered = currentLogs.filter(l => l.level === level);
+            }
+            renderLogs(filtered);
+        }
+        
+        function renderLogs(logs) {
+            const container = document.getElementById('log-content');
+            if (!logs || logs.length === 0) {
+                container.innerHTML = '<div class="nx-text-center nx-text-secondary nx-p-4">暂无日志</div>';
+                return;
+            }
+            
+            container.innerHTML = logs.map(l => `
+                <div class="nx-flex nx-items-start nx-gap-2 nx-p-2 nx-mb-1" style="background: var(--nx-bg-elevated); border-radius: var(--nx-radius); font-family: monospace; font-size: 12px;">
+                    <span class="nx-badge nx-badge--${l.level === 'ERROR' ? 'error' : (l.level === 'WARN' ? 'warning' : 'secondary')}" style="min-width: 50px;">${l.level}</span>
+                    <span class="nx-text-secondary" style="min-width: 150px;">${formatTime(l.timestamp)}</span>
+                    <span class="nx-flex-1">${l.message}</span>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

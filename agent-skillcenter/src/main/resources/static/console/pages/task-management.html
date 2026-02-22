@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务管理 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+    <style>
+        .task-status-pending { background: var(--nx-warning); color: white; }
+        .task-status-assigned { background: var(--nx-info); color: white; }
+        .task-status-running { background: var(--nx-primary); color: white; }
+        .task-status-completed { background: var(--nx-success); color: white; }
+        .task-status-failed { background: var(--nx-danger); color: white; }
+        .priority-high { color: var(--nx-danger); font-weight: bold; }
+        .priority-medium { color: var(--nx-warning); }
+        .priority-low { color: var(--nx-text-secondary); }
+        .task-card { border-left: 3px solid var(--nx-primary); }
+        .task-card.priority-high { border-left-color: var(--nx-danger); }
+        .task-card.priority-medium { border-left-color: var(--nx-warning); }
+        .task-card.priority-low { border-left-color: var(--nx-text-secondary); }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">任务管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="openCreateModal()">
+                        <i class="ri-add-line"></i> 创建任务
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-5 nx-gap-4 nx-mb-6">
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-2xl nx-font-bold" id="totalTasks">0</div>
+                                <div class="nx-text-sm nx-text-muted">总任务</div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-2xl nx-font-bold nx-text-warning" id="pendingTasks">0</div>
+                                <div class="nx-text-sm nx-text-muted">待分配</div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-2xl nx-font-bold nx-text-primary" id="runningTasks">0</div>
+                                <div class="nx-text-sm nx-text-muted">执行中</div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-2xl nx-font-bold nx-text-success" id="completedTasks">0</div>
+                                <div class="nx-text-sm nx-text-muted">已完成</div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body nx-text-center">
+                                <div class="nx-text-2xl nx-font-bold nx-text-danger" id="failedTasks">0</div>
+                                <div class="nx-text-sm nx-text-muted">失败</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                            <h3 class="nx-card__title">任务列表</h3>
+                            <div class="nx-flex nx-gap-2">
+                                <select id="statusFilter" class="nx-select" style="width: 120px;" onchange="loadTasks()">
+                                    <option value="">全部状态</option>
+                                    <option value="pending">待分配</option>
+                                    <option value="assigned">已分配</option>
+                                    <option value="running">执行中</option>
+                                    <option value="completed">已完成</option>
+                                    <option value="failed">失败</option>
+                                </select>
+                                <button class="nx-btn nx-btn--secondary" onclick="loadTasks()">
+                                    <i class="ri-refresh-line"></i> 刷新
+                                </button>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table nx-table--striped">
+                                    <thead>
+                                        <tr>
+                                            <th>任务ID</th>
+                                            <th>任务名称</th>
+                                            <th>类型</th>
+                                            <th>优先级</th>
+                                            <th>状态</th>
+                                            <th>执行者</th>
+                                            <th>创建时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="task-table-body">
+                                        <tr><td colspan="8" style="text-align: center;">加载中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">任务组汇总</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-table-container">
+                                <table class="nx-table nx-table--striped">
+                                    <thead>
+                                        <tr>
+                                            <th>组ID</th>
+                                            <th>组名称</th>
+                                            <th>任务数</th>
+                                            <th>完成数</th>
+                                            <th>成功率</th>
+                                            <th>总耗时</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="summary-table-body">
+                                        <tr><td colspan="7" style="text-align: center;">暂无数据</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="createModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 600px;">
+            <div class="modal-header">
+                <h3>创建任务</h3>
+                <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">任务名称 <span class="nx-text-danger">*</span></label>
+                    <input type="text" id="taskName" class="nx-input" placeholder="输入任务名称">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">任务类型</label>
+                    <select id="taskType" class="nx-select" style="width: 100%;">
+                        <option value="skill_execution">技能执行</option>
+                        <option value="data_processing">数据处理</option>
+                        <option value="batch_operation">批量操作</option>
+                        <option value="scheduled_task">定时任务</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">优先级</label>
+                    <select id="taskPriority" class="nx-select" style="width: 100%;">
+                        <option value="high">高</option>
+                        <option value="medium" selected>中</option>
+                        <option value="low">低</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">关联技能ID</label>
+                    <input type="text" id="skillId" class="nx-input" placeholder="输入技能ID">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">任务组ID</label>
+                    <input type="text" id="groupId" class="nx-input" placeholder="可选，用于批量任务管理">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">任务参数 (JSON)</label>
+                    <textarea id="taskParams" class="nx-textarea" rows="3" placeholder='{"key": "value"}'></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeCreateModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createTask()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="assignModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h3>分配任务</h3>
+                <button class="modal-close" onclick="closeAssignModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">选择执行者</label>
+                    <select id="assigneeId" class="nx-select" style="width: 100%;">
+                        <option value="agent-001">agent-001</option>
+                        <option value="agent-002">agent-002</option>
+                        <option value="agent-003">agent-003</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-flex nx-items-center nx-gap-2">
+                        <input type="checkbox" id="autoAssign" checked>
+                        <span>自动分配</span>
+                    </label>
+                    <span class="nx-text-sm nx-text-muted">系统将自动选择最优执行者</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeAssignModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="assignTask()">分配</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="detailModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 700px;">
+            <div class="modal-header">
+                <h3>任务详情</h3>
+                <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="detailContent">
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="resultModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 700px;">
+            <div class="modal-header">
+                <h3>执行结果</h3>
+                <button class="modal-close" onclick="closeResultModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="resultContent">
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeResultModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let currentTaskId = null;
+        let tasks = [];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTasks();
+            loadSummary();
+        });
+        
+        function loadTasks() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            fetch('/api/task/list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pageNum: 1, pageSize: 50, status: statusFilter })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.code === 200) {
+                    tasks = data.data.list || [];
+                    renderTasks(tasks);
+                    updateStats(tasks);
+                }
+            });
+        }
+        
+        function renderTasks(taskList) {
+            const tbody = document.getElementById('task-table-body');
+            if (taskList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">暂无数据</td></tr>';
+                return;
+            }
+            tbody.innerHTML = taskList.map(t => `
+                <tr>
+                    <td><code>${t.taskId}</code></td>
+                    <td>${t.name}</td>
+                    <td>${t.type || 'skill_execution'}</td>
+                    <td><span class="priority-${t.priority || 'medium'}">${getPriorityLabel(t.priority)}</span></td>
+                    <td><span class="nx-badge task-status-${t.status}">${getStatusLabel(t.status)}</span></td>
+                    <td>${t.assigneeId || '-'}</td>
+                    <td>${formatTime(t.createdAt)}</td>
+                    <td>
+                        <div class="nx-flex nx-gap-1">
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="viewDetail('${t.taskId}')" title="详情">
+                                <i class="ri-eye-line"></i>
+                            </button>
+                            ${t.status === 'pending' ? `
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="openAssignModal('${t.taskId}')" title="分配">
+                                    <i class="ri-user-add-line"></i>
+                                </button>
+                            ` : ''}
+                            ${t.status === 'running' ? `
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm nx-text-warning" onclick="cancelTask('${t.taskId}')" title="取消">
+                                    <i class="ri-stop-line"></i>
+                                </button>
+                            ` : ''}
+                            ${t.status === 'completed' || t.status === 'failed' ? `
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="viewResult('${t.taskId}')" title="结果">
+                                    <i class="ri-file-list-line"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function updateStats(taskList) {
+            document.getElementById('totalTasks').textContent = taskList.length;
+            document.getElementById('pendingTasks').textContent = taskList.filter(t => t.status === 'pending').length;
+            document.getElementById('runningTasks').textContent = taskList.filter(t => t.status === 'running').length;
+            document.getElementById('completedTasks').textContent = taskList.filter(t => t.status === 'completed').length;
+            document.getElementById('failedTasks').textContent = taskList.filter(t => t.status === 'failed').length;
+        }
+        
+        function loadSummary() {
+            fetch('/api/task/summary/group-001', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.code === 200 && data.data) {
+                    const s = data.data;
+                    document.getElementById('summary-table-body').innerHTML = `
+                        <tr>
+                            <td><code>group-001</code></td>
+                            <td>默认任务组</td>
+                            <td>${s.totalTasks || 0}</td>
+                            <td>${s.completedTasks || 0}</td>
+                            <td>${s.successRate || '0%'}</td>
+                            <td>${s.totalDuration ? formatDuration(s.totalDuration) : '-'}</td>
+                            <td>
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="viewGroupResults('group-001')">
+                                    <i class="ri-file-list-line"></i> 查看结果
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+        
+        function openCreateModal() {
+            document.getElementById('createModal').style.display = 'flex';
+            document.getElementById('taskName').value = '';
+            document.getElementById('taskType').value = 'skill_execution';
+            document.getElementById('taskPriority').value = 'medium';
+            document.getElementById('skillId').value = '';
+            document.getElementById('groupId').value = '';
+            document.getElementById('taskParams').value = '';
+        }
+        
+        function closeCreateModal() {
+            document.getElementById('createModal').style.display = 'none';
+        }
+        
+        function createTask() {
+            const data = {
+                name: document.getElementById('taskName').value,
+                type: document.getElementById('taskType').value,
+                priority: document.getElementById('taskPriority').value,
+                skillId: document.getElementById('skillId').value,
+                groupId: document.getElementById('groupId').value
+            };
+            if (!data.name) {
+                alert('请输入任务名称');
+                return;
+            }
+            try {
+                const params = document.getElementById('taskParams').value;
+                if (params) data.params = JSON.parse(params);
+            } catch (e) {
+                alert('参数格式错误，请输入有效的JSON');
+                return;
+            }
+            fetch('/api/task/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.code === 200) {
+                    closeCreateModal();
+                    loadTasks();
+                    alert('任务创建成功');
+                } else {
+                    alert('创建失败: ' + result.message);
+                }
+            });
+        }
+        
+        function openAssignModal(taskId) {
+            currentTaskId = taskId;
+            document.getElementById('assignModal').style.display = 'flex';
+        }
+        
+        function closeAssignModal() {
+            document.getElementById('assignModal').style.display = 'none';
+        }
+        
+        function assignTask() {
+            const autoAssign = document.getElementById('autoAssign').checked;
+            const url = autoAssign ? '/api/task/auto-assign' : '/api/task/assign';
+            const body = autoAssign 
+                ? { groupId: 'group-001' }
+                : { taskId: currentTaskId, assigneeId: document.getElementById('assigneeId').value };
+            
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.code === 200) {
+                    closeAssignModal();
+                    loadTasks();
+                    alert('任务分配成功');
+                } else {
+                    alert('分配失败: ' + result.message);
+                }
+            });
+        }
+        
+        function viewDetail(taskId) {
+            fetch('/api/task/get', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ taskId })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.code === 200) {
+                    const t = result.data;
+                    document.getElementById('detailContent').innerHTML = `
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                            <div class="nx-form-group">
+                                <label class="nx-label">任务ID</label>
+                                <div><code>${t.taskId}</code></div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">名称</label>
+                                <div>${t.name}</div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">类型</label>
+                                <div>${t.type}</div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">优先级</label>
+                                <div><span class="priority-${t.priority}">${getPriorityLabel(t.priority)}</span></div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">状态</label>
+                                <div><span class="nx-badge task-status-${t.status}">${getStatusLabel(t.status)}</span></div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">执行者</label>
+                                <div>${t.assigneeId || '-'}</div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">关联技能</label>
+                                <div>${t.skillId || '-'}</div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">任务组</label>
+                                <div>${t.groupId || '-'}</div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">创建时间</label>
+                                <div>${formatTime(t.createdAt)}</div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">开始时间</label>
+                                <div>${t.startedAt ? formatTime(t.startedAt) : '-'}</div>
+                            </div>
+                            <div class="nx-form-group nx-col-span-2">
+                                <label class="nx-label">参数</label>
+                                <pre style="background: var(--nx-bg-secondary); padding: 8px; border-radius: 4px; overflow-x: auto;">${JSON.stringify(t.params || {}, null, 2)}</pre>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('detailModal').style.display = 'flex';
+                }
+            });
+        }
+        
+        function closeDetailModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+        
+        function viewResult(taskId) {
+            fetch('/api/task/result', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ taskId })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.code === 200) {
+                    const r = result.data;
+                    document.getElementById('resultContent').innerHTML = `
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-4 nx-mb-4">
+                            <div class="nx-form-group">
+                                <label class="nx-label">任务ID</label>
+                                <div><code>${r.taskId}</code></div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">状态</label>
+                                <div><span class="nx-badge task-status-${r.status}">${getStatusLabel(r.status)}</span></div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">执行时长</label>
+                                <div>${r.duration ? formatDuration(r.duration) : '-'}</div>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-label">完成时间</label>
+                                <div>${r.completedAt ? formatTime(r.completedAt) : '-'}</div>
+                            </div>
+                        </div>
+                        <div class="nx-form-group">
+                            <label class="nx-label">输出结果</label>
+                            <pre style="background: var(--nx-bg-secondary); padding: 12px; border-radius: 4px; max-height: 300px; overflow: auto;">${JSON.stringify(r.output || {}, null, 2)}</pre>
+                        </div>
+                        ${r.error ? `
+                            <div class="nx-form-group">
+                                <label class="nx-label nx-text-danger">错误信息</label>
+                                <div class="nx-text-danger">${r.error}</div>
+                            </div>
+                        ` : ''}
+                    `;
+                    document.getElementById('resultModal').style.display = 'flex';
+                }
+            });
+        }
+        
+        function closeResultModal() {
+            document.getElementById('resultModal').style.display = 'none';
+        }
+        
+        function viewGroupResults(groupId) {
+            fetch('/api/task/results/' + groupId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.code === 200) {
+                    const results = result.data || [];
+                    let html = '<table class="nx-table nx-table--striped"><thead><tr><th>任务ID</th><th>状态</th><th>执行时长</th></tr></thead><tbody>';
+                    results.forEach(r => {
+                        html += `<tr>
+                            <td><code>${r.taskId}</code></td>
+                            <td><span class="nx-badge task-status-${r.status}">${getStatusLabel(r.status)}</span></td>
+                            <td>${r.duration ? formatDuration(r.duration) : '-'}</td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                    document.getElementById('resultContent').innerHTML = html;
+                    document.getElementById('resultModal').style.display = 'flex';
+                }
+            });
+        }
+        
+        function cancelTask(taskId) {
+            if (!confirm('确定要取消该任务吗？')) return;
+            alert('任务已取消');
+            loadTasks();
+        }
+        
+        function getPriorityLabel(priority) {
+            const labels = { high: '高', medium: '中', low: '低' };
+            return labels[priority] || '中';
+        }
+        
+        function getStatusLabel(status) {
+            const labels = {
+                pending: '待分配',
+                assigned: '已分配',
+                running: '执行中',
+                completed: '已完成',
+                failed: '失败',
+                cancelled: '已取消'
+            };
+            return labels[status] || status;
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+        
+        function formatDuration(ms) {
+            if (!ms) return '-';
+            if (ms < 1000) return ms + 'ms';
+            if (ms < 60000) return (ms / 1000).toFixed(1) + 's';
+            return (ms / 60000).toFixed(1) + 'm';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景管理 - SkillCenter</title>
+    <link rel="stylesheet" href="/skillcenter/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/theme.css">
+    <link rel="stylesheet" href="/skillcenter/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-bolt-line"></i> SkillCenter
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">场景管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                            <h3 class="nx-card__title">场景列表</h3>
+                            <div class="nx-flex nx-gap-3">
+                                <button class="nx-btn nx-btn--success" onclick="openCreateModal()">
+                                    <i class="ri-add-line"></i> 创建场景
+                                </button>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <table class="nx-table nx-table--striped">
+                                <thead>
+                                    <tr>
+                                        <th>场景ID</th>
+                                        <th>名称</th>
+                                        <th>类型</th>
+                                        <th>版本</th>
+                                        <th>状态</th>
+                                        <th>能力数</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sceneTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="createModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>创建场景</h3>
+                <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">场景名称</label>
+                    <input type="text" id="createName" class="nx-input" placeholder="请输入场景名称">
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">场景描述</label>
+                    <textarea id="createDescription" class="nx-input" rows="3" placeholder="请输入场景描述"></textarea>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">场景类型</label>
+                    <select id="createType" class="nx-input">
+                        <option value="primary">主场景</option>
+                        <option value="collaborative">协作场景</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-label">场景前缀</label>
+                    <input type="text" id="createPrefix" class="nx-input" placeholder="如: data, api, sync">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeCreateModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="submitCreate()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="detailModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 700px;">
+            <div class="modal-header">
+                <h3>场景详情</h3>
+                <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="nx-mb-4">
+                    <h4 class="nx-text-sm nx-font-semibold nx-mb-2">基本信息</h4>
+                    <div id="sceneBasicInfo" class="nx-grid nx-grid--cols-2 nx-gap-4"></div>
+                </div>
+                <div class="nx-mb-4">
+                    <div class="nx-flex nx-justify-between nx-items-center nx-mb-2">
+                        <h4 class="nx-text-sm nx-font-semibold">能力列表</h4>
+                        <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="openAddCapabilityModal()">
+                            <i class="ri-add-line"></i> 添加能力
+                        </button>
+                    </div>
+                    <table class="nx-table nx-table--striped">
+                        <thead>
+                            <tr>
+                                <th>能力ID</th>
+                                <th>名称</th>
+                                <th>类型</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="capabilityTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="nx-mb-4">
+                    <div class="nx-flex nx-justify-between nx-items-center nx-mb-2">
+                        <h4 class="nx-text-sm nx-font-semibold">角色配置</h4>
+                        <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="openRolesModal(currentSceneId)">
+                            <i class="ri-user-settings-line"></i> 配置角色
+                        </button>
+                    </div>
+                    <div id="rolesSummary" class="nx-text-secondary nx-text-sm">点击"配置角色"查看和编辑</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/skillcenter/console/js/theme-manager.js"></script>
+    <script src="/skillcenter/console/js/nexus-menu.js"></script>
+    <script src="/skillcenter/console/js/utils.js"></script>
+    <script src="/skillcenter/console/js/scene-management.js"></script>
+    <script src="/skillcenter/console/js/page-init.js" data-auto-init></script>
+</body>
+</html>

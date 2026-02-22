@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>命令执行 - OpenWrt - Nexus</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/common/api-client.js"></script>
+    <script src="/console/common/button-manager.js"></script>
+    <script src="/console/common/utils.js"></script>
+    <style>
+        .terminal-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            padding: 15px;
+            border-radius: 4px;
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .terminal-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .terminal-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid var(--ns-border);
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            background: var(--ns-input-bg);
+            color: var(--ns-dark);
+        }
+        .command-history {
+            margin-top: 20px;
+        }
+        .command-history-item {
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .command-history-item:hover {
+            background: var(--ns-bg-hover);
+        }
+        .command-history-item i {
+            color: var(--nx-primary);
+        }
+        .output-success {
+            color: #52c41a;
+        }
+        .output-error {
+            color: #ff4d4f;
+        }
+        .output-info {
+            color: #1890ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">命令执行</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <!-- 命令执行区域 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="ri-terminal-box-line"></i> 终端</h2>
+                            <span id="connectionStatus" class="badge badge-secondary">未连接</span>
+                        </div>
+                        <div class="card-body">
+                            <div id="terminalOutput" class="terminal-output">欢迎使用 OpenWrt 命令执行终端
+请输入命令并点击执行按钮...
+</div>
+                            <div class="terminal-input-group">
+                                <input type="text" id="commandInput" class="terminal-input" placeholder="输入命令，例如：ifconfig" onkeypress="handleKeyPress(event)">
+                                <button class="btn btn-primary" onclick="executeCommand()">
+                                    <i class="ri-send-plane-line"></i> 执行
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 常用命令 -->
+                    <div class="card" style="margin-top: 20px;">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="ri-history-line"></i> 常用命令</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="command-history" id="commandHistory">
+                                <div class="command-history-item" onclick="setCommand('ifconfig')">
+                                    <i class="ri-terminal-line"></i>
+                                    <span>ifconfig - 查看网络接口</span>
+                                </div>
+                                <div class="command-history-item" onclick="setCommand('cat /proc/cpuinfo')">
+                                    <i class="ri-terminal-line"></i>
+                                    <span>cat /proc/cpuinfo - 查看 CPU 信息</span>
+                                </div>
+                                <div class="command-history-item" onclick="setCommand('cat /proc/meminfo')">
+                                    <i class="ri-terminal-line"></i>
+                                    <span>cat /proc/meminfo - 查看内存信息</span>
+                                </div>
+                                <div class="command-history-item" onclick="setCommand('df -h')">
+                                    <i class="ri-terminal-line"></i>
+                                    <span>df -h - 查看磁盘空间</span>
+                                </div>
+                                <div class="command-history-item" onclick="setCommand('ps')">
+                                    <i class="ri-terminal-line"></i>
+                                    <span>ps - 查看进程</span>
+                                </div>
+                                <div class="command-history-item" onclick="setCommand('uptime')">
+                                    <i class="ri-terminal-line"></i>
+                                    <span>uptime - 查看运行时间</span>
+                                </div>
+                                <div class="command-history-item" onclick="setCommand('logread')">
+                                    <i class="ri-terminal-line"></i>
+                                    <span>logread - 查看系统日志</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+</body>
+</html>

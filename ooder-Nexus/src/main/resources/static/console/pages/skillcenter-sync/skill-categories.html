@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能发现 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .radar-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+        .radar-circle {
+            position: absolute;
+            border: 2px solid var(--nx-primary);
+            border-radius: 50%;
+            opacity: 0.3;
+        }
+        .radar-circle:nth-child(1) { width: 50px; height: 50px; top: 75px; left: 75px; }
+        .radar-circle:nth-child(2) { width: 100px; height: 100px; top: 50px; left: 50px; }
+        .radar-circle:nth-child(3) { width: 150px; height: 150px; top: 25px; left: 25px; }
+        .radar-circle:nth-child(4) { width: 200px; height: 200px; top: 0; left: 0; }
+        
+        .radar-sweep {
+            position: absolute;
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--nx-primary), transparent);
+            top: 99px;
+            left: 100px;
+            transform-origin: left center;
+            animation: radar-sweep 3s linear infinite;
+        }
+        
+        @keyframes radar-sweep {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .radar-dot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--nx-success);
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+        }
+        
+        .source-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .source-card:hover {
+            border-color: var(--nx-primary);
+        }
+        .source-card.active {
+            border-color: var(--nx-success);
+            background: var(--nx-bg-elevated);
+        }
+        .source-card.scanning {
+            animation: scan-pulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes scan-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+        }
+        
+        .discovery-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 16px;
+            background: var(--nx-bg-elevated);
+            border-radius: var(--nx-radius-lg);
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--nx-primary);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--nx-text-secondary);
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">技能雷达发现</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--primary" onclick="startRadarScan()">
+                        <i class="ri-radar-line"></i> 开始扫描
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="discovery-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="statTotal">0</div>
+                            <div class="stat-label">发现技能总数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statSources">0/5</div>
+                            <div class="stat-label">活跃发现源</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statInstalled">0</div>
+                            <div class="stat-label">已安装技能</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statLastScan">-</div>
+                            <div class="stat-label">上次扫描</div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">技能雷达</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-6">
+                                <div style="text-align: center;">
+                                    <div class="radar-container" id="radarContainer">
+                                        <div class="radar-circle"></div>
+                                        <div class="radar-circle"></div>
+                                        <div class="radar-circle"></div>
+                                        <div class="radar-circle"></div>
+                                        <div class="radar-sweep" id="radarSweep"></div>
+                                    </div>
+                                    <p style="margin-top: 16px; color: var(--nx-text-secondary);">
+                                        <span id="scanStatus">点击"开始扫描"启动技能雷达</span>
+                                    </p>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="nx-text-sm nx-font-semibold nx-mb-3">发现源</h4>
+                                    <div class="nx-grid nx-grid-cols-1 nx-gap-3">
+                                        <div class="source-card nx-card" id="source-github" onclick="toggleSource('github')">
+                                            <div class="nx-card__body nx-flex nx-items-center nx-gap-3">
+                                                <i class="ri-github-fill" style="font-size: 24px; color: #333;"></i>
+                                                <div>
+                                                    <div class="nx-font-semibold">GitHub</div>
+                                                    <div class="nx-text-sm" style="color: var(--nx-text-secondary);">GitHub仓库技能发现</div>
+                                                </div>
+                                                <div class="nx-ml-auto">
+                                                    <span class="nx-badge nx-badge--success" id="badge-github">就绪</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="source-card nx-card" id="source-gitee" onclick="toggleSource('gitee')">
+                                            <div class="nx-card__body nx-flex nx-items-center nx-gap-3">
+                                                <i class="ri-git-repository-line" style="font-size: 24px; color: #c71d23;"></i>
+                                                <div>
+                                                    <div class="nx-font-semibold">Gitee</div>
+                                                    <div class="nx-text-sm" style="color: var(--nx-text-secondary);">Gitee仓库技能发现</div>
+                                                </div>
+                                                <div class="nx-ml-auto">
+                                                    <span class="nx-badge nx-badge--success" id="badge-gitee">就绪</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="source-card nx-card" id="source-skill-center" onclick="toggleSource('skill_center')">
+                                            <div class="nx-card__body nx-flex nx-items-center nx-gap-3">
+                                                <i class="ri-store-2-line" style="font-size: 24px; color: var(--nx-primary);"></i>
+                                                <div>
+                                                    <div class="nx-font-semibold">技能中心</div>
+                                                    <div class="nx-text-sm" style="color: var(--nx-text-secondary);">SkillCenter API发现</div>
+                                                </div>
+                                                <div class="nx-ml-auto">
+                                                    <span class="nx-badge" id="badge-skill-center">就绪</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="source-card nx-card" id="source-local-fs" onclick="toggleSource('local_fs')">
+                                            <div class="nx-card__body nx-flex nx-items-center nx-gap-3">
+                                                <i class="ri-folder-line" style="font-size: 24px; color: var(--nx-success);"></i>
+                                                <div>
+                                                    <div class="nx-font-semibold">本地文件系统</div>
+                                                    <div class="nx-text-sm" style="color: var(--nx-text-secondary);">本地技能扫描</div>
+                                                </div>
+                                                <div class="nx-ml-auto">
+                                                    <span class="nx-badge" id="badge-local-fs">就绪</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="source-card nx-card" id="source-udp-broadcast" onclick="toggleSource('udp_broadcast')">
+                                            <div class="nx-card__body nx-flex nx-items-center nx-gap-3">
+                                                <i class="ri-broadcast-line" style="font-size: 24px; color: var(--nx-warning);"></i>
+                                                <div>
+                                                    <div class="nx-font-semibold">UDP广播</div>
+                                                    <div class="nx-text-sm" style="color: var(--nx-text-secondary);">局域网广播发现</div>
+                                                </div>
+                                                <div class="nx-ml-auto">
+                                                    <span class="nx-badge" id="badge-udp-broadcast">就绪</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                            <h3 class="nx-card__title">发现结果</h3>
+                            <div class="nx-flex nx-gap-3">
+                                <select id="filterSource" class="nx-select" style="width: 150px;">
+                                    <option value="">全部来源</option>
+                                    <option value="github">GitHub</option>
+                                    <option value="gitee">Gitee</option>
+                                    <option value="skill_center">技能中心</option>
+                                    <option value="local_fs">本地文件</option>
+                                    <option value="udp_broadcast">UDP广播</option>
+                                </select>
+                                <input type="text" id="searchKeyword" class="nx-input" placeholder="搜索技能..." style="width: 200px;">
+                                <button class="nx-btn nx-btn--primary" onclick="filterResults()">
+                                    <i class="ri-filter-line"></i> 筛选
+                                </button>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <table class="nx-table">
+                                <thead>
+                                    <tr>
+                                        <th>技能ID</th>
+                                        <th>名称</th>
+                                        <th>来源</th>
+                                        <th>版本</th>
+                                        <th>能力标签</th>
+                                        <th>发现时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="discoveryResultsBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let activeSources = new Set(['github', 'gitee', 'skill_center', 'local_fs']);
+        let discoveredSkills = [];
+        let isScanning = false;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDiscoveryStats();
+            loadDiscoveredSkills();
+        });
+        
+        function toggleSource(source) {
+            const card = document.getElementById('source-' + source);
+            const badge = document.getElementById('badge-' + source);
+            
+            if (activeSources.has(source)) {
+                activeSources.delete(source);
+                card.classList.remove('active');
+                badge.className = 'nx-badge';
+                badge.textContent = '已禁用';
+            } else {
+                activeSources.add(source);
+                card.classList.add('active');
+                badge.className = 'nx-badge nx-badge--success';
+                badge.textContent = '就绪';
+            }
+            updateSourceCount();
+        }
+        
+        function updateSourceCount() {
+            document.getElementById('statSources').textContent = activeSources.size + '/5';
+        }
+        
+        async function startRadarScan() {
+            if (isScanning) return;
+            isScanning = true;
+            
+            const scanBtn = document.querySelector('button[onclick="startRadarScan()"]');
+            scanBtn.disabled = true;
+            scanBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> 扫描中...';
+            
+            document.getElementById('scanStatus').textContent = '正在扫描技能...';
+            
+            activeSources.forEach(source => {
+                const card = document.getElementById('source-' + source);
+                if (card) card.classList.add('scanning');
+            });
+            
+            try {
+                const response = await fetch('/api/skillcenter/discovery/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        sources: Array.from(activeSources)
+                    })
+                });
+                const result = await response.json();
+                
+                if (result.code === 200 && result.data) {
+                    const discoveryData = result.data;
+                    const skills = discoveryData.skills || [];
+                    const statistics = discoveryData.statistics || {};
+                    
+                    if (skills.length > 0) {
+                        discoveredSkills = skills.map(skill => ({
+                            skillId: skill.skillId,
+                            name: skill.name,
+                            source: skill.source,
+                            version: skill.version,
+                            capabilities: skill.capabilities || [],
+                            discoveredAt: new Date().toISOString(),
+                            downloadUrl: skill.downloadUrl
+                        }));
+                        renderDiscoveredSkills();
+                        updateStats(statistics);
+                        document.getElementById('scanStatus').textContent = '扫描完成，发现 ' + discoveredSkills.length + ' 个技能';
+                    } else {
+                        discoveredSkills = [];
+                        renderDiscoveredSkills();
+                        const hasGithubError = statistics['github_error'];
+                        const hasGiteeError = statistics['gitee_error'];
+                        if (hasGithubError || hasGiteeError) {
+                            document.getElementById('scanStatus').textContent = 'GitHub/Gitee 未配置，未发现技能';
+                        } else {
+                            document.getElementById('scanStatus').textContent = '未发现技能';
+                        }
+                    }
+                } else {
+                    discoveredSkills = [];
+                    renderDiscoveredSkills();
+                    document.getElementById('scanStatus').textContent = '扫描失败: ' + (result.message || '未知错误');
+                }
+            } catch (error) {
+                console.error('扫描失败:', error);
+                discoveredSkills = [];
+                renderDiscoveredSkills();
+                document.getElementById('scanStatus').textContent = '扫描失败: ' + error.message;
+            } finally {
+                isScanning = false;
+                scanBtn.disabled = false;
+                scanBtn.innerHTML = '<i class="ri-radar-line"></i> 开始扫描';
+                
+                activeSources.forEach(source => {
+                    const card = document.getElementById('source-' + source);
+                    if (card) card.classList.remove('scanning');
+                });
+                
+                document.getElementById('statLastScan').textContent = new Date().toLocaleTimeString();
+            }
+        }
+        
+        function mapPeerTypeToSource(peerType) {
+            const mapping = {
+                'MCP': 'skill_center',
+                'ROUTE': 'local_fs',
+                'END': 'local_fs',
+                'NEXUS': 'skill_center'
+            };
+            return mapping[peerType] || 'local_fs';
+        }
+        
+        function renderDiscoveredSkills() {
+            const tbody = document.getElementById('discoveryResultsBody');
+            const filterSource = document.getElementById('filterSource').value;
+            const keyword = document.getElementById('searchKeyword').value.toLowerCase();
+            
+            let filtered = discoveredSkills;
+            if (filterSource) {
+                filtered = filtered.filter(s => s.source === filterSource);
+            }
+            if (keyword) {
+                filtered = filtered.filter(s => 
+                    s.skillId.toLowerCase().includes(keyword) || 
+                    s.name.toLowerCase().includes(keyword)
+                );
+            }
+            
+            tbody.innerHTML = filtered.map(skill => `
+                <tr>
+                    <td><code>${skill.skillId}</code></td>
+                    <td>${skill.name}</td>
+                    <td><span class="nx-badge nx-badge--${getSourceBadgeType(skill.source)}">${getSourceName(skill.source)}</span></td>
+                    <td>v${skill.version}</td>
+                    <td>${(skill.capabilities || []).map(c => `<span class="nx-badge">${c}</span>`).join(' ')}</td>
+                    <td>${formatTime(skill.discoveredAt)}</td>
+                    <td>
+                        <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="installSkill('${skill.skillId}', '${skill.source}')">
+                            <i class="ri-download-line"></i> 安装
+                        </button>
+                        <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="viewSkillDetail('${skill.skillId}')">
+                            <i class="ri-eye-line"></i> 详情
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function getSourceName(source) {
+            const names = {
+                'github': 'GitHub',
+                'gitee': 'Gitee',
+                'skill_center': '技能中心',
+                'local_fs': '本地',
+                'udp_broadcast': 'UDP'
+            };
+            return names[source] || source;
+        }
+        
+        function getSourceBadgeType(source) {
+            const types = {
+                'github': 'info',
+                'gitee': 'danger',
+                'skill_center': 'primary',
+                'local_fs': 'success',
+                'udp_broadcast': 'warning'
+            };
+            return types[source] || 'secondary';
+        }
+        
+        function formatTime(isoString) {
+            if (!isoString) return '-';
+            return new Date(isoString).toLocaleString();
+        }
+        
+        function updateStats(stats) {
+            document.getElementById('statTotal').textContent = stats?.total || discoveredSkills.length;
+            document.getElementById('statInstalled').textContent = stats?.installed || 0;
+        }
+        
+        async function loadDiscoveryStats() {
+            try {
+                const response = await fetch('/api/skillcenter/discovery/statistics', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+                if (result.code === 200) {
+                    updateStats(result.data);
+                }
+            } catch (error) {
+                console.error('加载统计失败:', error);
+            }
+        }
+        
+        async function loadDiscoveredSkills() {
+            try {
+                const response = await fetch('/api/skillcenter/discovery/list', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+                if (result.code === 200) {
+                    discoveredSkills = result.data || [];
+                    renderDiscoveredSkills();
+                }
+            } catch (error) {
+                console.error('加载发现列表失败:', error);
+            }
+        }
+        
+        function filterResults() {
+            renderDiscoveredSkills();
+        }
+        
+        async function installSkill(skillId, source) {
+            const skill = discoveredSkills.find(s => s.skillId === skillId);
+            if (!skill) {
+                alert('未找到技能信息');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/skillcenter/installed/install', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        skillId: skill.skillId,
+                        skillName: skill.name,
+                        version: skill.version,
+                        downloadUrl: skill.downloadUrl,
+                        source: skill.source
+                    })
+                });
+                const result = await response.json();
+                if (result.code === 200) {
+                    alert('技能安装成功！');
+                    loadDiscoveryStats();
+                } else {
+                    alert('安装失败: ' + result.message);
+                }
+            } catch (error) {
+                console.error('安装技能失败:', error);
+                alert('安装失败，请稍后重试');
+            }
+        }
+        
+        function viewSkillDetail(skillId) {
+            window.location.href = `/console/pages/skillcenter/installed-skills.html?skillId=${skillId}`;
+        }
+        
+        updateSourceCount();
+    </script>
+</body>
+</html>

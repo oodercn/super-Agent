@@ -1,0 +1,187 @@
+apiVersion: ooder.io/v1
+kind: SceneGroup
+metadata:
+  groupId: "SYS-GROUP-001"
+  groupName: "系统服务场景组-主集群"
+  sceneId: "SYS"
+  description: "ENexus 北向服务集群主场景组"
+  version: "1.0.0"
+  createdAt: "2026-02-18T00:00:00Z"
+  owner: "SYSTEM"
+
+spec:
+  sceneRef: "SYS"
+  
+  clusterConfig:
+    clusterId: "enexus-main-cluster"
+    clusterName: "ENexus主集群"
+    clusterType: "PRIMARY"
+    region: "default"
+  
+  members:
+    - nodeId: "jds-server-001"
+      skillId: "skill-jds-server"
+      skillName: "JDSServer 核心服务管理中心"
+      role: "PRIMARY"
+      endpoint: "http://jds-server:8080"
+      status: "ACTIVE"
+      priority: 1
+      config:
+        port: 8080
+        maxConnections: 1000
+        threadPoolSize: 16
+    
+    - nodeId: "auth-service-001"
+      skillId: "skill-auth-service"
+      skillName: "域认证中心"
+      role: "PRIMARY"
+      endpoint: "http://auth-service:8081"
+      status: "ACTIVE"
+      priority: 2
+      config:
+        port: 8081
+        tokenExpireHours: 24
+        keyRotationDays: 30
+    
+    - nodeId: "agent-service-001"
+      skillId: "skill-agent-service"
+      skillName: "Agent联网服务"
+      role: "PRIMARY"
+      endpoint: "http://agent-service:8082"
+      udpEndpoint: "udp://agent-service:8087"
+      status: "ACTIVE"
+      priority: 3
+      config:
+        port: 8082
+        udpPort: 8087
+        heartbeatInterval: 30
+        heartbeatTimeout: 90
+    
+    - nodeId: "cmd-service-001"
+      skillId: "skill-cmd-service"
+      skillName: "命令服务"
+      role: "PRIMARY"
+      endpoint: "http://cmd-service:8083"
+      status: "ACTIVE"
+      priority: 4
+      config:
+        port: 8083
+        maxQueueSize: 10000
+        commandTimeout: 30000
+    
+    - nodeId: "data-service-001"
+      skillId: "skill-data-service"
+      skillName: "数据中心"
+      role: "PRIMARY"
+      endpoint: "http://data-service:8084"
+      status: "ACTIVE"
+      priority: 5
+      config:
+        port: 8084
+        storagePath: "/data/vfs"
+        maxFileSize: 104857600
+    
+    - nodeId: "res-service-001"
+      skillId: "skill-res-service"
+      skillName: "资源服务"
+      role: "PRIMARY"
+      endpoint: "http://res-service:8085"
+      status: "ACTIVE"
+      priority: 6
+      config:
+        port: 8085
+        cacheEnabled: true
+        cacheExpireMinutes: 30
+    
+    - nodeId: "msg-service-001"
+      skillId: "skill-msg-service"
+      skillName: "消息服务"
+      role: "PRIMARY"
+      endpoint: "http://msg-service:8086"
+      mqttEndpoint: "mqtt://msg-service:1883"
+      status: "ACTIVE"
+      priority: 7
+      config:
+        port: 8086
+        mqttPort: 1883
+        maxConnections: 5000
+
+  keyConfig:
+    groupKeyAlgorithm: "RSA-2048"
+    keyRotationDays: 30
+    keyStorage: "INTERNAL"
+    groupKey: "${ENCRYPTED_GROUP_KEY}"
+    memberKeys:
+      - nodeId: "jds-server-001"
+        encryptedKey: "${ENCRYPTED_KEY_JDS}"
+      
+      - nodeId: "auth-service-001"
+        encryptedKey: "${ENCRYPTED_KEY_AUTH}"
+      
+      - nodeId: "agent-service-001"
+        encryptedKey: "${ENCRYPTED_KEY_AGENT}"
+      
+      - nodeId: "cmd-service-001"
+        encryptedKey: "${ENCRYPTED_KEY_CMD}"
+      
+      - nodeId: "data-service-001"
+        encryptedKey: "${ENCRYPTED_KEY_DATA}"
+      
+      - nodeId: "res-service-001"
+        encryptedKey: "${ENCRYPTED_KEY_RES}"
+      
+      - nodeId: "msg-service-001"
+        encryptedKey: "${ENCRYPTED_KEY_MSG}"
+
+  communicationConfig:
+    mode: "INTERNAL"
+    protocol: "HTTP"
+    encryption: "TLS"
+    tlsConfig:
+      enabled: true
+      certPath: "/certs/server.crt"
+      keyPath: "/certs/server.key"
+      caPath: "/certs/ca.crt"
+
+  healthCheckConfig:
+    enabled: true
+    interval: 30000
+    timeout: 5000
+    failureThreshold: 3
+    successThreshold: 1
+    endpoints:
+      - nodeId: "jds-server-001"
+        endpoint: "/api/jds/health"
+      
+      - nodeId: "auth-service-001"
+        endpoint: "/api/auth/health"
+      
+      - nodeId: "agent-service-001"
+        endpoint: "/api/north/mcp/health"
+      
+      - nodeId: "cmd-service-001"
+        endpoint: "/api/north/command/health"
+      
+      - nodeId: "data-service-001"
+        endpoint: "/api/vfs/health"
+      
+      - nodeId: "res-service-001"
+        endpoint: "/api/org/health"
+      
+      - nodeId: "msg-service-001"
+        endpoint: "/api/msg/health"
+
+  loadBalanceConfig:
+    enabled: true
+    algorithm: "ROUND_ROBIN"
+    healthCheckAware: true
+    sessionSticky: false
+
+  auditConfig:
+    enabled: true
+    logLevel: "INFO"
+    retentionDays: 90
+    auditEndpoints:
+      - "/api/jds/*"
+      - "/api/auth/*"
+      - "/api/north/*"
