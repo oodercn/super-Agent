@@ -190,7 +190,7 @@ packageManager.install(request).join();
 
 ```
 super-Agent/
-├── agent-skillcenter/            # 技能中心 (v2.1)
+├── agent-skillcenter/            # 技能中心 (v2.2)
 │   ├── src/main/java/net/ooder/
 │   │   ├── nexus/skillcenter/    # 控制器和 DTO 层
 │   │   └── skillcenter/          # 核心服务层

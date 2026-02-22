@@ -1,8 +1,8 @@
 # Nexus 模块实现状态总览
 
-**文档版本**: 1.1  
-**更新日期**: 2026-02-17  
-**SDK 版本**: 0.7.1
+**文档版本**: 1.2  
+**更新日期**: 2026-02-22  
+**SDK 版本**: 0.7.3
 
 ---
 
@@ -119,7 +119,6 @@
 
 | 文档 | 路径 | 说明 |
 |------|------|------|
-| **功能总表** | [FEATURE_SUMMARY.md](FEATURE_SUMMARY.md) | **Nexus 功能总表** |
 | AI 服务分册 | [MOD-001_AI_SERVICE.md](MOD-001_AI_SERVICE.md) | LlmService 模块详情 |
 | 技能中心分册 | [MOD-002_SKILL_CENTER.md](MOD-002_SKILL_CENTER.md) | SkillPackageManager 模块详情 |
 | 网络服务分册 | [MOD-003_NETWORK_SERVICE.md](MOD-003_NETWORK_SERVICE.md) | NetworkService 模块详情 |
@@ -135,6 +134,4 @@
 |------|------|------|---------|
 | 1.0 | 2026-02-17 | ooder Team | 初始版本 |
 | 1.1 | 2026-02-17 | ooder Team | 新增托管部署模块，更新 AI 服务完成度 |
-| 1.2 | 2026-02-17 | ooder Team | 完成托管部署模块前后端对齐 |
-| 1.3 | 2026-02-17 | ooder Team | 完成网络服务和安全中心前端开发 |
-| 1.4 | 2026-02-17 | ooder Team | 新增功能总表文档 |
+| 1.2 | 2026-02-22 | ooder Team | SDK 版本升级至 0.7.3，同步协议文档更新 |

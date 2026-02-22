@@ -11,10 +11,20 @@
 - 计划添加更多OpenWrt设备支持
 - 计划添加Docker部署支持
 - 计划添加WebDAV文件共享功能
+- **Ooder Agent SDK 0.7.3 协议支持**
+  - DiscoveryProtocol: 多路节点发现协议（UDP/DHT/SkillCenter/mDNS）
+  - LoginProtocol: 本地认证协议，支持离线认证
+  - CollaborationProtocol: 场景组协作协议，支持任务分配
+  - OfflineService: 离线服务，支持网络断开时继续运行
+  - EventBus: 事件总线，统一事件管理
+  - CloudHostingProtocol: 云托管协议，支持 Kubernetes 集群部署
+  - DriverProxyPackage: 驱动代理包支持
+  - ValidationToolchain: 验证工具链
 
 ### Changed
 - 优化P2P网络发现性能
 - 改进Web控制台用户体验
+- SDK 版本从 0.6.6 升级到 0.7.3
 
 ---
 

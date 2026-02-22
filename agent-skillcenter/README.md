@@ -1,12 +1,15 @@
 # Agent SkillCenter
 
-基于 Spring Boot 的技能中心管理系统，支持技能的创建、管理、市场分发和 P2P 网络共享。
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java 8](https://img.shields.io/badge/Java-8-blue.svg)]()
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-2.7.0-green.svg)]()
+[![Version](https://img.shields.io/badge/version-2.2-blue.svg)]()
+
+基于 Spring Boot 的技能中心管理系统，支持技能的创建、管理、市场分发和 P2P 网络共享。
 
 ## 功能特性
+
+### 核心功能
 
 - **技能管理**: 创建、编辑、删除、执行技能
 - **技能市场**: 浏览、搜索、下载、评分技能
@@ -17,6 +20,15 @@
 - **存储管理**: 技能存储、备份与恢复
 - **系统管理**: 系统配置、健康检查、日志管理
 
+### v2.2 新特性
+
+- **SDK 适配层**: 完整的 SDK 适配器模式
+- **云托管支持**: Kubernetes 集群部署
+- **多语言运行时**: Java/Node/Python 执行器
+- **DTO 分层架构**: 完整的请求/响应/查询 DTO
+- **资源管理**: ResourceAllocator 资源分配
+- **编排服务**: OrchestrationService 编排能力
+
 ## 环境要求
 
 - Java 8 或更高版本
@@ -26,14 +38,14 @@
 
 ```bash
 # 克隆项目
-git clone https://gitee.com/ooderCN/agent-skillcenter.git
-cd agent-skillcenter
+git clone https://github.com/oodercn/super-Agent.git
+cd super-Agent/agent-skillcenter
 
 # 构建项目
 mvn clean package -DskipTests
 
 # 运行项目
-java -jar target/agent-skillcenter-2.0.jar
+java -jar target/agent-skillcenter-2.2.jar
 ```
 
 ### 访问应用
@@ -45,20 +57,24 @@ java -jar target/agent-skillcenter-2.0.jar
 
 ```
 agent-skillcenter/
-├── src/main/java/net/ooder/skillcenter/    # Java 源代码
-│   ├── controller/                         # REST API 控制器
-│   ├── service/                            # 业务逻辑层
-│   ├── model/                              # 数据模型
-│   ├── market/                             # 技能市场
-│   ├── p2p/                                # P2P 网络通信
-│   ├── storage/                            # 存储管理
-│   └── sdk/                                # SDK 包装器
-├── src/main/resources/                     # 配置文件
-│   ├── static/console/                     # 前端控制台
-│   └── application.yml                     # 应用配置
-├── docs/                                   # 文档
-├── LICENSE                                 # MIT 许可证
-└── README.md                               # 本文件
+├── src/main/java/net/ooder/
+│   ├── nexus/skillcenter/           # 控制器和 DTO 层
+│   │   ├── controller/              # REST API 控制器
+│   │   ├── dto/                     # 数据传输对象
+│   │   └── config/                  # 配置类
+│   └── skillcenter/                 # 核心服务层
+│       ├── sdk/                     # SDK 适配器
+│       ├── service/                 # 业务逻辑层
+│       ├── market/                  # 技能市场
+│       ├── p2p/                     # P2P 网络通信
+│       ├── storage/                 # 存储管理
+│       ├── southbound/              # 南向服务
+│       └── execution/               # 执行引擎
+├── src/main/resources/
+│   ├── static/console/              # 前端控制台
+│   └── application.yml              # 应用配置
+├── pom.xml
+└── README.md
 ```
 
 ## 配置说明
@@ -81,11 +97,14 @@ skillcenter:
 ### 数据存储
 
 技能数据存储在项目目录下的 `skillcenter/storage/` 文件夹中：
-- `skill_listings.json` - 技能列表
-- `skill_ratings.json` - 技能评分
-- `skill_reviews.json` - 技能评价
-- `groups.json` - 群组信息
-- `executions.json` - 执行记录
+
+| 文件 | 说明 |
+|------|------|
+| skill_listings.json | 技能列表 |
+| skill_ratings.json | 技能评分 |
+| skill_reviews.json | 技能评价 |
+| groups.json | 群组信息 |
+| executions.json | 执行记录 |
 
 ## API 文档
 
@@ -104,27 +123,25 @@ API 基础路径: `/skillcenter/api`
 | 市场技能 | GET /api/market/skills | 获取市场技能 |
 | 搜索技能 | GET /api/market/skills/search | 搜索技能 |
 
-完整 API 文档请参考 [API规范文档.md](API规范文档.md)
+## 版本历史
+
+| 版本 | 说明 |
+|------|------|
+| 2.2 | SDK 适配层、云托管支持、多语言运行时 |
+| 2.1 | DTO 分层架构、资源管理、编排服务 |
+| 2.0 | 核心功能重构 |
+| 1.0 | 初始版本 |
+
+## 相关项目
+
+| 项目 | 说明 | 地址 |
+|------|------|------|
+| super-Agent | 核心框架 | [GitHub](https://github.com/oodercn/super-Agent) / [Gitee](https://gitee.com/ooderCN/super-Agent) |
+| ooder-sdk | SDK 核心 | [GitHub](https://github.com/oodercn/ooder-sdk) / [Gitee](https://gitee.com/ooderCN/ooder-sdk) |
 
 ## 许可证
 
 本项目采用 [MIT 许可证](LICENSE) 开源。
-
-```
-MIT License
-
-Copyright (c) 2024 Ooder Team
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-```
 
 ## 贡献指南
 
@@ -132,9 +149,9 @@ copies or substantial portions of the Software.
 
 ## 联系方式
 
-- 项目主页: https://gitee.com/ooderCN/agent-skillcenter
-- 问题反馈: https://gitee.com/ooderCN/agent-skillcenter/issues
+- GitHub: https://github.com/oodercn/super-Agent
+- Gitee: https://gitee.com/ooderCN/super-Agent
 
 ---
 
-**注意**: 这是一个示例版本，主要用于演示和学习目的。
+**Made with ❤️ by Ooder Team**

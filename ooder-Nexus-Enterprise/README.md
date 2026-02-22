@@ -143,7 +143,7 @@ ooderNexus 2.0.0-openwrt-preview 包含以下核心功能模块：
 ┌─────────────────────────────────────────────────────────────┐
 │                        基础平台层                            │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │              Ooder Agent SDK 0.6.6                  │   │
+│  │              Ooder Agent SDK 0.7.3                  │   │
 │  │  (P2P 通信、服务发现、命令处理、协议适配)            │   │
 │  └─────────────────────────────────────────────────────┘   │
 │  ┌─────────────────────────────────────────────────────┐   │
@@ -158,7 +158,7 @@ ooderNexus 2.0.0-openwrt-preview 包含以下核心功能模块：
 |------|------|------|
 | **前端** | HTML5, CSS3, JavaScript | Web 控制台界面 |
 | **后端** | Spring Boot 2.7.0, Java 8 | 业务逻辑处理 |
-| **P2P 网络** | Ooder Agent SDK 0.6.6 | 底层网络通信 |
+| **P2P 网络** | Ooder Agent SDK 0.7.3 | 底层网络通信 |
 | **存储** | 本地文件系统 + VFS | 数据和文件存储 |
 | **配置** | UCI (OpenWrt) | 路由器配置管理 |
 
@@ -350,9 +350,9 @@ storage/                          # 主存储目录
     └── list-extract-tasks.json
 ```
 
-#### 4.5.2 Ooder SDK 0.6.6 存储架构
+#### 4.5.2 Ooder SDK 0.7.3 存储架构
 
-ooderNexus 基于 **Ooder Agent SDK 0.6.6** 构建，SDK 采用 **VFS（Virtual File System，虚拟文件系统）+ JSON 存储** 的混合架构。
+ooderNexus 基于 **Ooder Agent SDK 0.7.3** 构建，SDK 采用 **VFS（Virtual File System，虚拟文件系统）+ JSON 存储** 的混合架构。
 
 ##### VFS 存储策略
 
@@ -481,7 +481,7 @@ Agent SDK 使用 **JSON 文件存储** 管理结构化数据，与 VFS 文件存
 
 **数据同步策略**：
 
-Agent SDK 0.6.6 内置 **P2P 数据同步机制**：
+Agent SDK 0.7.3 内置 **P2P 数据同步机制**：
 
 1. **自动同步范围**
    - ✅ `sdk/` 目录下的所有 JSON 数据
@@ -1140,7 +1140,7 @@ tar -czpf backup.tar.gz ./storage/ ./config/
 - VFS 大文件（`storage/data/`）默认**不会自动同步**，需要手动分享
 - 恢复数据后重新加入网络，可能会与网络中的数据进行合并
 
-详见 [数据存储说明](#44-数据存储说明) 章节。
+详见 [数据存储说明](#45-数据存储说明) 章节。
 
 ### Q4: 支持哪些 AI 技能？
 
@@ -1240,14 +1240,13 @@ tar -czpf backup.tar.gz ./storage/ ./config/
 
 > **注意**：Gitee 镜像可能会有同步延迟，最新版本请以 GitHub 为准。安装包等大文件需要手动上传到 Gitee Releases。
 
-### 12.2 开发文档
+### 12.3 开发文档
 
-- 🛠️ **开发指南**：`docs/development/DEVELOPMENT_GUIDE.md`（开发中）
-- 📦 **SDK文档**：`docs/sdk/SKILL_SDK.md`（开发中）
-- 🔧 **调试工具**：`docs/tools/DEBUGGING_TOOLS.md`（开发中）
-- 📈 **优化路线图**：`docs/optimization/ROADMAP.md`
+- 🛠️ **开发指南**：[docs/development/DEVELOPMENT_GUIDE.md](docs/development/DEVELOPMENT_GUIDE.md)
+- 📦 **模块文档**：[docs/modules/](docs/modules/)
+- 📋 **更新日志**：[CHANGELOG.md](CHANGELOG.md)
 
-### 12.2 贡献代码
+### 12.4 贡献代码
 
 1. Fork 本仓库
 2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
@@ -1255,7 +1254,7 @@ tar -czpf backup.tar.gz ./storage/ ./config/
 4. 推送分支 (`git push origin feature/AmazingFeature`)
 5. 创建 Pull Request
 
-### 12.3 许可证
+### 12.5 许可证
 
 本项目采用 MIT 开源许可证 - 详见 [LICENSE](LICENSE) 文件
 
