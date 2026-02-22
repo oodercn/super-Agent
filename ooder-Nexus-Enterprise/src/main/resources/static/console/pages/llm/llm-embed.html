@@ -3,111 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>向量嵌入 - AI 服务 - Nexus</title>
-    <link rel="stylesheet" href="../../css/remixicon.css">
-    <link rel="stylesheet" href="../../css/nexus-ui.css">
-    <link rel="stylesheet" href="../../css/pages/llm-embed.css">
+    <title>向量嵌入 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/llm-embed.css">
 </head>
 <body>
-    <div class="embed-container">
-        <div class="embed-header">
-            <div class="embed-title">
-                <i class="ri-database-2-line"></i>
-                <span>向量嵌入</span>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
             </div>
-            <div class="embed-controls">
-                <button class="nx-btn nx-btn--primary" id="embed-btn">
-                    <i class="ri-cpu-line"></i>
-                    <span>生成嵌入</span>
-                </button>
-                <button class="nx-btn nx-btn--secondary" id="batch-btn">
-                    <i class="ri-stack-line"></i>
-                    <span>批量处理</span>
-                </button>
-            </div>
-        </div>
-
-        <div class="embed-content">
-            <div class="input-section">
-                <div class="section-header">
-                    <h3>输入文本</h3>
-                    <span class="char-count"><span id="input-char-count">0</span> 字符</span>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">向量嵌入</h2>
                 </div>
-                <textarea id="input-text" placeholder="输入需要生成向量嵌入的文本..."></textarea>
-                
-                <div class="batch-input" id="batch-input" style="display: none;">
-                    <h4>批量输入 (每行一个文本)</h4>
-                    <textarea id="batch-text" placeholder="文本1&#10;文本2&#10;文本3&#10;..."></textarea>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
                 </div>
-            </div>
-
-            <div class="output-section">
-                <div class="section-header">
-                    <h3>嵌入结果</h3>
-                    <div class="result-actions">
-                        <span class="dimension-info">维度: <span id="dimension-count">-</span></span>
-                        <button class="nx-btn nx-btn--ghost nx-btn--sm" id="copy-btn" disabled>
-                            <i class="ri-clipboard-line"></i>
-                            <span>复制</span>
-                        </button>
-                        <button class="nx-btn nx-btn--ghost nx-btn--sm" id="download-btn" disabled>
-                            <i class="ri-download-line"></i>
-                            <span>下载</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="result-container">
-                    <div class="result-placeholder" id="result-placeholder">
-                        <i class="ri-database-2-line"></i>
-                        <p>输入文本后点击"生成嵌入"按钮</p>
-                    </div>
-                    <div class="result-content" id="result-content" style="display: none;">
-                        <div class="vector-preview">
-                            <div class="vector-header">
-                                <span>向量预览 (前20维)</span>
-                                <span class="vector-range">[<span id="vector-start">0</span>...<span id="vector-end">19</span>]</span>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="embed-container">
+                        <div class="embed-header">
+                            <div class="embed-title">
+                                <i class="ri-database-2-line"></i>
+                                <span>向量嵌入</span>
                             </div>
-                            <div class="vector-values" id="vector-preview"></div>
-                        </div>
-                        <div class="vector-stats">
-                            <div class="stat-item">
-                                <span class="stat-label">总维度</span>
-                                <span class="stat-value" id="total-dimensions">-</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">最小值</span>
-                                <span class="stat-value" id="min-value">-</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">最大值</span>
-                                <span class="stat-value" id="max-value">-</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">平均值</span>
-                                <span class="stat-value" id="avg-value">-</span>
+                            <div class="embed-controls">
+                                <button class="nx-btn nx-btn--primary" id="embed-btn">
+                                    <i class="ri-cpu-line"></i>
+                                    <span>生成嵌入</span>
+                                </button>
+                                <button class="nx-btn nx-btn--secondary" id="batch-btn">
+                                    <i class="ri-stack-line"></i>
+                                    <span>批量处理</span>
+                                </button>
                             </div>
                         </div>
+
+                        <div class="embed-content">
+                            <div class="input-section">
+                                <div class="section-header">
+                                    <h3>输入文本</h3>
+                                    <span class="char-count"><span id="input-char-count">0</span> 字符</span>
+                                </div>
+                                <textarea id="input-text" placeholder="输入需要生成向量嵌入的文本..."></textarea>
+                                
+                                <div class="batch-input" id="batch-input" style="display: none;">
+                                    <h4>批量输入 (每行一个文本)</h4>
+                                    <textarea id="batch-text" placeholder="文本1&#10;文本2&#10;文本3&#10;..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="output-section">
+                                <div class="section-header">
+                                    <h3>嵌入结果</h3>
+                                    <div class="result-actions">
+                                        <span class="dimension-info">维度: <span id="dimension-count">-</span></span>
+                                        <button class="nx-btn nx-btn--ghost nx-btn--sm" id="copy-btn" disabled>
+                                            <i class="ri-clipboard-line"></i>
+                                            <span>复制</span>
+                                        </button>
+                                        <button class="nx-btn nx-btn--ghost nx-btn--sm" id="download-btn" disabled>
+                                            <i class="ri-download-line"></i>
+                                            <span>下载</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="result-container">
+                                    <div class="result-placeholder" id="result-placeholder">
+                                        <i class="ri-database-2-line"></i>
+                                        <p>输入文本后点击"生成嵌入"按钮</p>
+                                    </div>
+                                    <div class="result-content" id="result-content" style="display: none;">
+                                        <div class="vector-preview">
+                                            <div class="vector-header">
+                                                <span>向量预览 (前20维)</span>
+                                                <span class="vector-range">[<span id="vector-start">0</span>...<span id="vector-end">19</span>]</span>
+                                            </div>
+                                            <div class="vector-values" id="vector-preview"></div>
+                                        </div>
+                                        <div class="vector-stats">
+                                            <div class="stat-item">
+                                                <span class="stat-label">总维度</span>
+                                                <span class="stat-value" id="total-dimensions">-</span>
+                                            </div>
+                                            <div class="stat-item">
+                                                <span class="stat-label">最小值</span>
+                                                <span class="stat-value" id="min-value">-</span>
+                                            </div>
+                                            <div class="stat-item">
+                                                <span class="stat-label">最大值</span>
+                                                <span class="stat-value" id="max-value">-</span>
+                                            </div>
+                                            <div class="stat-item">
+                                                <span class="stat-label">平均值</span>
+                                                <span class="stat-value" id="avg-value">-</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="embed-history">
+                            <div class="section-header">
+                                <h3>历史记录</h3>
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm" id="clear-history-btn">
+                                    <i class="ri-delete-bin-line"></i>
+                                    <span>清空</span>
+                                </button>
+                            </div>
+                            <div class="history-list" id="history-list">
+                                <div class="history-empty">暂无历史记录</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div class="embed-history">
-            <div class="section-header">
-                <h3>历史记录</h3>
-                <button class="nx-btn nx-btn--ghost nx-btn--sm" id="clear-history-btn">
-                    <i class="ri-delete-bin-line"></i>
-                    <span>清空</span>
-                </button>
-            </div>
-            <div class="history-list" id="history-list">
-                <div class="history-empty">暂无历史记录</div>
-            </div>
-        </div>
+        </main>
     </div>
-
-    <script src="../../js/nexus-ui.js"></script>
-    <script src="../../js/pages/llm-embed.js"></script>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/llm-embed.js"></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('向量嵌入页面初始化完成');
+        };
+    </script>
 </body>
 </html>

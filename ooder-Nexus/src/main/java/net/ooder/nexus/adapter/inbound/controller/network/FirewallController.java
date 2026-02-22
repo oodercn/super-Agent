@@ -1,7 +1,6 @@
 package net.ooder.nexus.adapter.inbound.controller.network;
 
-import net.ooder.config.ResultModel;
-import net.ooder.config.ListResultModel;
+import net.ooder.nexus.common.ResultModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -62,33 +61,21 @@ public class FirewallController {
     @GetMapping("/rules")
     public ResultModel<List<Map<String, Object>>> getRules() {
         log.info("Get firewall rules requested");
-        ResultModel<List<Map<String, Object>>> result = new ResultModel<List<Map<String, Object>>>();
-        
         try {
             List<Map<String, Object>> ruleList = new ArrayList<Map<String, Object>>();
             for (FirewallRule rule : rules.values()) {
                 ruleList.add(rule.toMap());
             }
-            
-            result.setData(ruleList);
-            result.setRequestStatus(200);
-            result.setMessage("获取成功");
-            result.setSuccess(true);
+            return ResultModel.success("获取成功", ruleList);
         } catch (Exception e) {
             log.error("Error getting firewall rules", e);
-            result.setRequestStatus(500);
-            result.setMessage("获取规则列表失败: " + e.getMessage());
-            result.setSuccess(false);
+            return ResultModel.error("获取规则列表失败: " + e.getMessage());
         }
-        
-        return result;
     }
 
     @GetMapping("/status")
     public ResultModel<Map<String, Object>> getStatus() {
         log.info("Get firewall status requested");
-        ResultModel<Map<String, Object>> result = new ResultModel<Map<String, Object>>();
-        
         try {
             Map<String, Object> status = new HashMap<String, Object>();
             status.put("running", firewallRunning);
@@ -96,26 +83,16 @@ public class FirewallController {
             status.put("blocked", blockedCount.get());
             status.put("allowed", allowedCount.get());
             status.put("lastUpdated", System.currentTimeMillis());
-            
-            result.setData(status);
-            result.setRequestStatus(200);
-            result.setMessage("获取成功");
-            result.setSuccess(true);
+            return ResultModel.success("获取成功", status);
         } catch (Exception e) {
             log.error("Error getting firewall status", e);
-            result.setRequestStatus(500);
-            result.setMessage("获取状态失败: " + e.getMessage());
-            result.setSuccess(false);
+            return ResultModel.error("获取状态失败: " + e.getMessage());
         }
-        
-        return result;
     }
 
     @PostMapping("/rules")
     public ResultModel<Map<String, Object>> addRule(@RequestBody Map<String, Object> request) {
         log.info("Add firewall rule requested: {}", request.get("type"));
-        ResultModel<Map<String, Object>> result = new ResultModel<Map<String, Object>>();
-        
         try {
             String ruleId = "rule-" + System.currentTimeMillis();
             
@@ -139,34 +116,20 @@ public class FirewallController {
             );
             
             rules.put(ruleId, rule);
-            
-            result.setData(rule.toMap());
-            result.setRequestStatus(200);
-            result.setMessage("添加成功");
-            result.setSuccess(true);
+            return ResultModel.success("添加成功", rule.toMap());
         } catch (Exception e) {
             log.error("Error adding firewall rule", e);
-            result.setRequestStatus(500);
-            result.setMessage("添加规则失败: " + e.getMessage());
-            result.setSuccess(false);
+            return ResultModel.error("添加规则失败: " + e.getMessage());
         }
-        
-        return result;
     }
 
     @PutMapping("/rules/{ruleId}")
     public ResultModel<Boolean> updateRule(@PathVariable String ruleId, @RequestBody Map<String, Object> request) {
         log.info("Update firewall rule requested: {}", ruleId);
-        ResultModel<Boolean> result = new ResultModel<Boolean>();
-        
         try {
             FirewallRule existingRule = rules.get(ruleId);
             if (existingRule == null) {
-                result.setData(false);
-                result.setRequestStatus(404);
-                result.setMessage("规则不存在");
-                result.setSuccess(false);
-                return result;
+                return ResultModel.error("规则不存在", 404);
             }
             
             Boolean enabled = (Boolean) request.get("enabled");
@@ -186,94 +149,52 @@ public class FirewallController {
                 rules.put(ruleId, updatedRule);
             }
             
-            result.setData(true);
-            result.setRequestStatus(200);
-            result.setMessage("更新成功");
-            result.setSuccess(true);
+            return ResultModel.success("更新成功", true);
         } catch (Exception e) {
             log.error("Error updating firewall rule", e);
-            result.setData(false);
-            result.setRequestStatus(500);
-            result.setMessage("更新规则失败: " + e.getMessage());
-            result.setSuccess(false);
+            return ResultModel.error("更新规则失败: " + e.getMessage());
         }
-        
-        return result;
     }
 
     @DeleteMapping("/rules/{ruleId}")
     public ResultModel<Boolean> deleteRule(@PathVariable String ruleId) {
         log.info("Delete firewall rule requested: {}", ruleId);
-        ResultModel<Boolean> result = new ResultModel<Boolean>();
-        
         try {
             FirewallRule removed = rules.remove(ruleId);
             if (removed == null) {
-                result.setData(false);
-                result.setRequestStatus(404);
-                result.setMessage("规则不存在");
-                result.setSuccess(false);
-                return result;
+                return ResultModel.error("规则不存在", 404);
             }
-            
-            result.setData(true);
-            result.setRequestStatus(200);
-            result.setMessage("删除成功");
-            result.setSuccess(true);
+            return ResultModel.success("删除成功", true);
         } catch (Exception e) {
             log.error("Error deleting firewall rule", e);
-            result.setData(false);
-            result.setRequestStatus(500);
-            result.setMessage("删除规则失败: " + e.getMessage());
-            result.setSuccess(false);
+            return ResultModel.error("删除规则失败: " + e.getMessage());
         }
-        
-        return result;
     }
 
     @PostMapping("/toggle")
     public ResultModel<Boolean> toggleFirewall() {
         log.info("Toggle firewall requested");
-        ResultModel<Boolean> result = new ResultModel<Boolean>();
-        
         try {
             firewallRunning = !firewallRunning;
-            result.setData(firewallRunning);
-            result.setRequestStatus(200);
-            result.setMessage(firewallRunning ? "防火墙已启动" : "防火墙已停止");
-            result.setSuccess(true);
+            String message = firewallRunning ? "防火墙已启动" : "防火墙已停止";
+            return ResultModel.success(message, firewallRunning);
         } catch (Exception e) {
             log.error("Error toggling firewall", e);
-            result.setData(false);
-            result.setRequestStatus(500);
-            result.setMessage("切换防火墙状态失败: " + e.getMessage());
-            result.setSuccess(false);
+            return ResultModel.error("切换防火墙状态失败: " + e.getMessage());
         }
-        
-        return result;
     }
 
     @PostMapping("/reset-stats")
     public ResultModel<Boolean> resetStats() {
         log.info("Reset firewall stats requested");
-        ResultModel<Boolean> result = new ResultModel<Boolean>();
-        
         try {
             blockedCount.set(0);
             allowedCount.set(0);
-            result.setData(true);
-            result.setRequestStatus(200);
-            result.setMessage("统计数据已重置");
-            result.setSuccess(true);
+            return ResultModel.success("统计数据已重置", true);
         } catch (Exception e) {
             log.error("Error resetting firewall stats", e);
-            result.setData(false);
-            result.setRequestStatus(500);
-            result.setMessage("重置统计数据失败: " + e.getMessage());
-            result.setSuccess(false);
+            return ResultModel.error("重置统计数据失败: " + e.getMessage());
         }
-        
-        return result;
     }
 
     private static class FirewallRule {

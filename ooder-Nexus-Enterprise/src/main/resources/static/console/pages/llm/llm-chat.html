@@ -3,124 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 智能对话 - Nexus</title>
-    <link rel="stylesheet" href="../../css/remixicon.css">
-    <link rel="stylesheet" href="../../css/nexus-ui.css">
-    <link rel="stylesheet" href="../../css/pages/llm-chat.css">
+    <title>AI 智能对话 - Nexus Console</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/llm-chat.css">
 </head>
 <body>
-    <div class="llm-chat-container">
-        <div class="chat-header">
-            <div class="chat-title">
-                <i class="ri-robot-line"></i>
-                <span>AI 智能对话</span>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Nexus Console
+                </h1>
             </div>
-            <div class="chat-controls">
-                <div class="model-selector">
-                    <label>模型:</label>
-                    <select id="model-select">
-                        <option value="">加载中...</option>
-                    </select>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">AI 智能对话</h2>
                 </div>
-                <div class="token-stats">
-                    <span class="token-label">Token:</span>
-                    <span id="token-count">0</span>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
                 </div>
-                <button class="nx-btn nx-btn--ghost nx-btn--sm" id="clear-btn" title="清空对话">
-                    <i class="ri-delete-bin-line"></i>
-                </button>
-                <button class="nx-btn nx-btn--ghost nx-btn--sm" id="settings-btn" title="设置">
-                    <i class="ri-settings-3-line"></i>
-                </button>
-            </div>
-        </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="llm-chat-container">
+                        <div class="chat-header">
+                            <div class="chat-title">
+                                <i class="ri-robot-line"></i>
+                                <span>AI 智能对话</span>
+                            </div>
+                            <div class="chat-controls">
+                                <div class="model-selector">
+                                    <label>模型:</label>
+                                    <select id="model-select">
+                                        <option value="">加载中...</option>
+                                    </select>
+                                </div>
+                                <div class="token-stats">
+                                    <span class="token-label">Token:</span>
+                                    <span id="token-count">0</span>
+                                </div>
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm" id="clear-btn" title="清空对话">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm" id="settings-btn" title="设置">
+                                    <i class="ri-settings-3-line"></i>
+                                </button>
+                            </div>
+                        </div>
 
-        <div class="chat-messages" id="chat-messages">
-            <div class="welcome-message">
-                <div class="welcome-icon">
-                    <i class="ri-robot-smile-line"></i>
-                </div>
-                <h2>欢迎使用 AI 智能对话</h2>
-                <p>选择模型后开始对话，支持流式输出和多种 AI 能力</p>
-                <div class="quick-actions">
-                    <button class="quick-action-btn" data-prompt="帮我写一段代码">
-                        <i class="ri-code-line"></i>
-                        <span>写代码</span>
-                    </button>
-                    <button class="quick-action-btn" data-prompt="帮我分析这个问题">
-                        <i class="ri-lightbulb-line"></i>
-                        <span>分析问题</span>
-                    </button>
-                    <button class="quick-action-btn" data-prompt="帮我翻译这段文字">
-                        <i class="ri-translate-2"></i>
-                        <span>翻译</span>
-                    </button>
-                    <button class="quick-action-btn" data-prompt="帮我总结这段内容">
-                        <i class="ri-file-list-3-line"></i>
-                        <span>总结</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="welcome-message">
+                                <div class="welcome-icon">
+                                    <i class="ri-robot-smile-line"></i>
+                                </div>
+                                <h2>欢迎使用 AI 智能对话</h2>
+                                <p>选择模型后开始对话，支持流式输出和多种 AI 能力</p>
+                                <div class="quick-actions">
+                                    <button class="quick-action-btn" data-prompt="帮我写一段代码">
+                                        <i class="ri-code-line"></i>
+                                        <span>写代码</span>
+                                    </button>
+                                    <button class="quick-action-btn" data-prompt="帮我分析这个问题">
+                                        <i class="ri-lightbulb-line"></i>
+                                        <span>分析问题</span>
+                                    </button>
+                                    <button class="quick-action-btn" data-prompt="帮我翻译这段文字">
+                                        <i class="ri-translate-2"></i>
+                                        <span>翻译</span>
+                                    </button>
+                                    <button class="quick-action-btn" data-prompt="帮我总结这段内容">
+                                        <i class="ri-file-list-3-line"></i>
+                                        <span>总结</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
-        <div class="chat-input-area">
-            <div class="input-container">
-                <textarea 
-                    id="chat-input" 
-                    placeholder="输入消息，按 Enter 发送，Shift+Enter 换行..."
-                    rows="1"
-                ></textarea>
-                <div class="input-actions">
-                    <button class="nx-btn nx-btn--primary" id="send-btn" disabled>
-                        <i class="ri-send-plane-fill"></i>
-                        <span>发送</span>
-                    </button>
+                        <div class="chat-input-area">
+                            <div class="input-container">
+                                <textarea 
+                                    id="chat-input" 
+                                    placeholder="输入消息，按 Enter 发送，Shift+Enter 换行..."
+                                    rows="1"
+                                ></textarea>
+                                <div class="input-actions">
+                                    <button class="nx-btn nx-btn--primary" id="send-btn" disabled>
+                                        <i class="ri-send-plane-fill"></i>
+                                        <span>发送</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="input-hint">
+                                <span id="char-count">0</span> 字符 | 
+                                <span id="stream-status">就绪</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-modal" id="settings-modal" style="display: none;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>对话设置</h3>
+                                <button class="modal-close" id="close-settings">
+                                    <i class="ri-close-line"></i>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label>系统提示词</label>
+                                    <textarea id="system-prompt" rows="4" placeholder="设置 AI 的角色和行为..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>温度 (Temperature)</label>
+                                    <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7">
+                                    <span id="temperature-value">0.7</span>
+                                </div>
+                                <div class="form-group">
+                                    <label>最大 Token 数</label>
+                                    <input type="number" id="max-tokens" value="2048" min="100" max="8192">
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="stream-enabled" checked>
+                                        启用流式输出
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="nx-btn nx-btn--secondary" id="reset-settings">重置</button>
+                                <button class="nx-btn nx-btn--primary" id="save-settings">保存</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="input-hint">
-                <span id="char-count">0</span> 字符 | 
-                <span id="stream-status">就绪</span>
-            </div>
-        </div>
+        </main>
     </div>
-
-    <div class="settings-modal" id="settings-modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>对话设置</h3>
-                <button class="modal-close" id="close-settings">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>系统提示词</label>
-                    <textarea id="system-prompt" rows="4" placeholder="设置 AI 的角色和行为..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>温度 (Temperature)</label>
-                    <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7">
-                    <span id="temperature-value">0.7</span>
-                </div>
-                <div class="form-group">
-                    <label>最大 Token 数</label>
-                    <input type="number" id="max-tokens" value="2048" min="100" max="8192">
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="stream-enabled" checked>
-                        启用流式输出
-                    </label>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="nx-btn nx-btn--secondary" id="reset-settings">重置</button>
-                <button class="nx-btn nx-btn--primary" id="save-settings">保存</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="../../js/nexus-ui.js"></script>
-    <script src="../../js/pages/llm-chat.js"></script>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/nexus-menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/llm-chat.js"></script>
+    <script>
+        window.onPageInit = function() {
+            console.log('AI 智能对话页面初始化完成');
+        };
+    </script>
 </body>
 </html>
