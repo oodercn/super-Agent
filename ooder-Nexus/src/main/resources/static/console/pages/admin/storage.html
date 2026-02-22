@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexus Admin Storage - 存储管理">
+    <meta name="theme-color" content="#000000">
+    <title>存储管理 - Nexus Console</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/components/tables.css">
+    <script src="../../js/theme-manager.js?v=2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="ri-admin-line"></i> 管理后台</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"><i class="ri-dashboard-line"></i> 仪表盘</a>
+                <a href="skills.html" class="nav-item"><i class="ri-lightbulb-line"></i> 技能审核</a>
+                <a href="users.html" class="nav-item"><i class="ri-user-line"></i> 用户管理</a>
+                <a href="storage.html" class="nav-item active"><i class="ri-hard-drive-2-line"></i> 存储管理</a>
+                <a href="remote.html" class="nav-item"><i class="ri-remote-control-line"></i> 远程管理</a>
+            </nav>
+        </div>
+        
+        <div class="main-content">
+            <div class="page-header">
+                <h1><i class="ri-hard-drive-2-line"></i> 存储管理</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="refreshStorage()"><i class="ri-refresh-line"></i> 刷新</button>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon primary"><i class="ri-database-2-line"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalStorage">-</div>
+                        <div class="stat-label">总存储空间</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success"><i class="ri-check-line"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="usedStorage">-</div>
+                        <div class="stat-label">已使用</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning"><i class="ri-percent-line"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="usagePercent">-</div>
+                        <div class="stat-label">使用率</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon info"><i class="ri-file-line"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="fileCount">-</div>
+                        <div class="stat-label">文件数量</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-pie-chart-line"></i> 存储分布</h3>
+                </div>
+                <div class="card-body">
+                    <div class="storage-distribution" id="storageDistribution">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-folder-line"></i> 存储桶管理</h3>
+                    <button class="btn btn-primary btn-sm" onclick="showCreateBucketModal()"><i class="ri-add-line"></i> 创建存储桶</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>存储桶名称</th>
+                                    <th>类型</th>
+                                    <th>文件数</th>
+                                    <th>大小</th>
+                                    <th>创建时间</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bucketsTableBody">
+                                <tr><td colspan="7" class="loading">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-file-list-line"></i> 最近文件</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>文件名</th>
+                                    <th>存储桶</th>
+                                    <th>大小</th>
+                                    <th>上传者</th>
+                                    <th>上传时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="filesTableBody">
+                                <tr><td colspan="6" class="loading">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="createBucketModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-add-line"></i> 创建存储桶</h3>
+                <button class="modal-close" onclick="hideCreateBucketModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createBucketForm">
+                    <div class="form-group">
+                        <label class="form-label">存储桶名称</label>
+                        <input type="text" class="form-control" id="bucketName" required placeholder="小写字母、数字和连字符">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">存储类型</label>
+                        <select class="form-control" id="bucketType">
+                            <option value="standard">标准存储</option>
+                            <option value="archive">归档存储</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">访问权限</label>
+                        <select class="form-control" id="bucketAccess">
+                            <option value="private">私有</option>
+                            <option value="public">公开</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideCreateBucketModal()">取消</button>
+                <button class="btn btn-primary" onclick="createBucket()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStorageStats();
+            loadBuckets();
+            loadRecentFiles();
+        });
+        
+        function loadStorageStats() {
+            fetch('/api/admin/storage/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('totalStorage').textContent = formatBytes(data.data.total);
+                        document.getElementById('usedStorage').textContent = formatBytes(data.data.used);
+                        document.getElementById('usagePercent').textContent = Math.round((data.data.used / data.data.total) * 100) + '%';
+                        document.getElementById('fileCount').textContent = data.data.fileCount || 0;
+                        
+                        const dist = document.getElementById('storageDistribution');
+                        if (data.data.distribution) {
+                            dist.innerHTML = data.data.distribution.map(item => `
+                                <div class="distribution-item">
+                                    <div class="distribution-label">${item.name}</div>
+                                    <div class="distribution-bar">
+                                        <div class="distribution-fill" style="width: ${item.percent}%"></div>
+                                    </div>
+                                    <div class="distribution-value">${formatBytes(item.size)} (${item.percent}%)</div>
+                                </div>
+                            `).join('');
+                        } else {
+                            dist.innerHTML = '<div class="empty-state">暂无数据</div>';
+                        }
+                    }
+                })
+                .catch(error => console.error('Failed to load stats:', error));
+        }
+        
+        function loadBuckets() {
+            fetch('/api/admin/storage/buckets')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('bucketsTableBody');
+                    if (data.success && data.data && data.data.length > 0) {
+                        tbody.innerHTML = data.data.map(bucket => `
+                            <tr>
+                                <td><i class="ri-folder-line" style="color: var(--nx-primary)"></i> ${bucket.name}</td>
+                                <td><span class="badge badge-secondary">${bucket.type || '标准'}</span></td>
+                                <td>${bucket.fileCount || 0}</td>
+                                <td>${formatBytes(bucket.size || 0)}</td>
+                                <td>${formatDate(bucket.createdAt)}</td>
+                                <td><span class="badge badge-success">正常</span></td>
+                                <td class="actions">
+                                    <button class="btn btn-sm btn-secondary" onclick="viewBucket('${bucket.name}')">查看</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteBucket('${bucket.name}')">删除</button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无存储桶</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load buckets:', error);
+                    document.getElementById('bucketsTableBody').innerHTML = '<tr><td colspan="7" class="empty-state">加载失败</td></tr>';
+                });
+        }
+        
+        function loadRecentFiles() {
+            fetch('/api/admin/storage/files/recent')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('filesTableBody');
+                    if (data.success && data.data && data.data.length > 0) {
+                        tbody.innerHTML = data.data.map(file => `
+                            <tr>
+                                <td><i class="ri-file-line"></i> ${file.name}</td>
+                                <td>${file.bucket}</td>
+                                <td>${formatBytes(file.size)}</td>
+                                <td>${file.uploader || '-'}</td>
+                                <td>${formatDate(file.uploadedAt)}</td>
+                                <td class="actions">
+                                    <button class="btn btn-sm btn-secondary" onclick="downloadFile('${file.bucket}', '${file.name}')">下载</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteFile('${file.bucket}', '${file.name}')">删除</button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无文件</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load files:', error);
+                    document.getElementById('filesTableBody').innerHTML = '<tr><td colspan="6" class="empty-state">加载失败</td></tr>';
+                });
+        }
+        
+        function showCreateBucketModal() {
+            document.getElementById('createBucketModal').classList.add('show');
+        }
+        
+        function hideCreateBucketModal() {
+            document.getElementById('createBucketModal').classList.remove('show');
+            document.getElementById('createBucketForm').reset();
+        }
+        
+        function createBucket() {
+            const bucket = {
+                name: document.getElementById('bucketName').value,
+                type: document.getElementById('bucketType').value,
+                access: document.getElementById('bucketAccess').value
+            };
+            
+            fetch('/api/admin/storage/buckets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bucket)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideCreateBucketModal();
+                    loadBuckets();
+                    alert('存储桶创建成功');
+                } else {
+                    alert('创建失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to create bucket:', error);
+                alert('创建失败');
+            });
+        }
+        
+        function deleteBucket(name) {
+            if (confirm('确定要删除存储桶 "' + name + '" 吗？此操作不可恢复！')) {
+                fetch(`/api/admin/storage/buckets/${name}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadBuckets();
+                            alert('存储桶已删除');
+                        } else {
+                            alert('删除失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to delete bucket:', error);
+                        alert('删除失败');
+                    });
+            }
+        }
+        
+        function viewBucket(name) {
+            window.location.href = `/console/pages/admin/storage-browser.html?bucket=${name}`;
+        }
+        
+        function downloadFile(bucket, name) {
+            window.location.href = `/api/admin/storage/files/${bucket}/${name}/download`;
+        }
+        
+        function deleteFile(bucket, name) {
+            if (confirm('确定要删除文件 "' + name + '" 吗？')) {
+                fetch(`/api/admin/storage/files/${bucket}/${name}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadRecentFiles();
+                            alert('文件已删除');
+                        } else {
+                            alert('删除失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to delete file:', error);
+                        alert('删除失败');
+                    });
+            }
+        }
+        
+        function refreshStorage() {
+            loadStorageStats();
+            loadBuckets();
+            loadRecentFiles();
+        }
+        
+        function formatBytes(bytes) {
+            if (!bytes) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            return new Date(dateStr).toLocaleString('zh-CN');
+        }
+    </script>
+    
+    <style>
+        .storage-distribution {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .distribution-item {
+            display: grid;
+            grid-template-columns: 120px 1fr 120px;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .distribution-label {
+            font-weight: 500;
+        }
+        
+        .distribution-bar {
+            height: 8px;
+            background: var(--ns-bg-hover);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .distribution-fill {
+            height: 100%;
+            background: var(--nx-primary);
+            border-radius: 4px;
+        }
+        
+        .distribution-value {
+            font-size: 13px;
+            color: var(--ns-secondary);
+            text-align: right;
+        }
+    </style>
+</body>
+</html>

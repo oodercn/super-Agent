@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexus Login Protocol - 登录协议">
+    <meta name="theme-color" content="#000000">
+    <title>登录协议 - Nexus Console</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <script src="../../js/theme-manager.js?v=2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="page-header">
+                <h1><i class="ri-login-box-line"></i> 登录协议</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="refreshStatus()"><i class="ri-refresh-line"></i> 刷新</button>
+                </div>
+            </div>
+            
+            <div class="protocol-status-bar">
+                <div class="status-item">
+                    <span class="status-label">协议状态</span>
+                    <span class="status-value" id="protocolStatus"><span class="badge badge-success">运行中</span></span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">在线会话</span>
+                    <span class="status-value" id="activeSessions">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">今日登录</span>
+                    <span class="status-value" id="todayLogins">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">认证方式</span>
+                    <span class="status-value" id="authMethods">-</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-shield-check-line"></i> 认证配置</h3>
+                </div>
+                <div class="card-body">
+                    <form id="authConfigForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">认证模式</label>
+                                <select class="form-control" id="authMode">
+                                    <option value="local">本地认证</option>
+                                    <option value="ldap">LDAP</option>
+                                    <option value="oauth">OAuth 2.0</option>
+                                    <option value="mixed">混合模式</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">会话超时(分钟)</label>
+                                <input type="number" class="form-control" id="sessionTimeout" value="30">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">最大会话数</label>
+                                <input type="number" class="form-control" id="maxSessions" value="5">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-switch">
+                                    <input type="checkbox" id="enableMfa" checked>
+                                    <span class="form-switch-label">启用多因素认证</span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-switch">
+                                    <input type="checkbox" id="enableCaptcha">
+                                    <span class="form-switch-label">启用验证码</span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-switch">
+                                    <input type="checkbox" id="enableRemember" checked>
+                                    <span class="form-switch-label">记住登录状态</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-primary" onclick="saveConfig()">保存配置</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-user-line"></i> 在线会话</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>用户</th>
+                                    <th>登录时间</th>
+                                    <th>IP地址</th>
+                                    <th>设备</th>
+                                    <th>会话ID</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sessionsTableBody">
+                                <tr><td colspan="6" class="loading">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-history-line"></i> 登录日志</h3>
+                </div>
+                <div class="card-body">
+                    <div class="log-container" id="loginLogs">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStatus();
+            loadSessions();
+            loadLogs();
+        });
+        
+        function loadStatus() {
+            fetch('/api/protocol/login/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const status = data.data;
+                        document.getElementById('protocolStatus').innerHTML = 
+                            status.running ? '<span class="badge badge-success">运行中</span>' : '<span class="badge badge-danger">已停止</span>';
+                        document.getElementById('activeSessions').textContent = status.activeSessions || 0;
+                        document.getElementById('todayLogins').textContent = status.todayLogins || 0;
+                        document.getElementById('authMethods').textContent = (status.authMethods || ['local']).join(', ');
+                    }
+                })
+                .catch(error => console.error('Failed to load status:', error));
+        }
+        
+        function loadSessions() {
+            fetch('/api/protocol/login/sessions')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('sessionsTableBody');
+                    if (data.success && data.data && data.data.length > 0) {
+                        tbody.innerHTML = data.data.map(session => `
+                            <tr>
+                                <td>${session.username}</td>
+                                <td>${formatDate(session.loginTime)}</td>
+                                <td><code>${session.ip}</code></td>
+                                <td>${session.device || '-'}</td>
+                                <td><code>${session.id.substring(0, 8)}...</code></td>
+                                <td class="actions">
+                                    <button class="btn btn-sm btn-danger" onclick="terminateSession('${session.id}')">终止</button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无在线会话</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load sessions:', error);
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">加载失败</td></tr>';
+                });
+        }
+        
+        function loadLogs() {
+            fetch('/api/protocol/login/logs?limit=50')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('loginLogs');
+                    if (data.success && data.data && data.data.length > 0) {
+                        container.innerHTML = data.data.map(log => `
+                            <div class="log-entry log-${log.success ? 'info' : 'error'}">
+                                <span class="log-time">${formatDate(log.timestamp)}</span>
+                                <span class="log-status">${log.success ? '✓' : '✗'}</span>
+                                <span class="log-user">${log.username}</span>
+                                <span class="log-ip">${log.ip}</span>
+                                <span class="log-message">${log.message}</span>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div class="empty-state">暂无登录日志</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load logs:', error);
+                    container.innerHTML = '<div class="empty-state">加载失败</div>';
+                });
+        }
+        
+        function saveConfig() {
+            const config = {
+                authMode: document.getElementById('authMode').value,
+                sessionTimeout: parseInt(document.getElementById('sessionTimeout').value),
+                maxSessions: parseInt(document.getElementById('maxSessions').value),
+                enableMfa: document.getElementById('enableMfa').checked,
+                enableCaptcha: document.getElementById('enableCaptcha').checked,
+                enableRemember: document.getElementById('enableRemember').checked
+            };
+            
+            fetch('/api/protocol/login/config', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('配置已保存');
+                } else {
+                    alert('保存失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to save config:', error);
+                alert('保存失败');
+            });
+        }
+        
+        function terminateSession(sessionId) {
+            if (confirm('确定要终止此会话吗？')) {
+                fetch(`/api/protocol/login/sessions/${sessionId}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadSessions();
+                            alert('会话已终止');
+                        } else {
+                            alert('操作失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to terminate session:', error);
+                        alert('操作失败');
+                    });
+            }
+        }
+        
+        function refreshStatus() {
+            loadStatus();
+            loadSessions();
+            loadLogs();
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            return new Date(dateStr).toLocaleString('zh-CN');
+        }
+    </script>
+    
+    <style>
+        .protocol-status-bar {
+            display: flex;
+            gap: 32px;
+            padding: 16px 24px;
+            background: var(--ns-card-bg);
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row { grid-template-columns: 1fr; }
+            .protocol-status-bar { flex-wrap: wrap; gap: 16px; }
+        }
+        
+        .log-container {
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        
+        .log-entry {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .log-time { color: var(--ns-secondary); min-width: 160px; }
+        .log-status { min-width: 20px; font-weight: bold; }
+        .log-user { min-width: 100px; }
+        .log-ip { min-width: 120px; color: var(--ns-secondary); }
+        .log-info .log-status { color: var(--ns-success); }
+        .log-error .log-status { color: var(--ns-danger); }
+    </style>
+</body>
+</html>

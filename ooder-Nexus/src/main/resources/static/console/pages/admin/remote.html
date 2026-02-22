@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexus Admin Remote Management - 远程管理">
+    <meta name="theme-color" content="#000000">
+    <title>远程管理 - Nexus Console</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/components/tables.css">
+    <script src="../../js/theme-manager.js?v=2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="ri-admin-line"></i> 管理后台</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item"><i class="ri-dashboard-line"></i> 仪表盘</a>
+                <a href="skills.html" class="nav-item"><i class="ri-lightbulb-line"></i> 技能审核</a>
+                <a href="users.html" class="nav-item"><i class="ri-user-line"></i> 用户管理</a>
+                <a href="storage.html" class="nav-item"><i class="ri-hard-drive-2-line"></i> 存储管理</a>
+                <a href="remote.html" class="nav-item active"><i class="ri-remote-control-line"></i> 远程管理</a>
+            </nav>
+        </div>
+        
+        <div class="main-content">
+            <div class="page-header">
+                <h1><i class="ri-remote-control-line"></i> 远程管理</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showAddConnectionModal()"><i class="ri-add-line"></i> 添加连接</button>
+                    <button class="btn btn-secondary" onclick="refreshConnections()"><i class="ri-refresh-line"></i> 刷新</button>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon primary"><i class="ri-link-line"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalConnections">-</div>
+                        <div class="stat-label">总连接数</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success"><i class="ri-wifi-line"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="onlineConnections">-</div>
+                        <div class="stat-label">在线连接</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning"><i class="ri-time-line"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="avgLatency">-</div>
+                        <div class="stat-label">平均延迟</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon danger"><i class="ri-alert-line"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="errorCount">-</div>
+                        <div class="stat-label">错误数</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-list-check"></i> 远程连接列表</h3>
+                    <div class="card-header-actions">
+                        <select id="typeFilter" class="form-control" onchange="filterConnections()">
+                            <option value="all">全部类型</option>
+                            <option value="ssh">SSH</option>
+                            <option value="rdp">RDP</option>
+                            <option value="vnc">VNC</option>
+                            <option value="agent">Agent</option>
+                        </select>
+                        <select id="statusFilter" class="form-control" onchange="filterConnections()">
+                            <option value="all">全部状态</option>
+                            <option value="online">在线</option>
+                            <option value="offline">离线</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>名称</th>
+                                    <th>类型</th>
+                                    <th>地址</th>
+                                    <th>端口</th>
+                                    <th>状态</th>
+                                    <th>最后连接</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="connectionsTableBody">
+                                <tr><td colspan="7" class="loading">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-terminal-line"></i> 快速终端</h3>
+                </div>
+                <div class="card-body">
+                    <div class="terminal-container">
+                        <div class="terminal-output" id="terminalOutput">
+                            <div class="terminal-welcome">Nexus Remote Terminal v2.2</div>
+                            <div class="terminal-info">选择一个远程连接开始会话</div>
+                        </div>
+                        <div class="terminal-input">
+                            <span class="terminal-prompt">$</span>
+                            <input type="text" id="terminalInput" placeholder="输入命令..." onkeyup="handleTerminalInput(event)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="addConnectionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-add-line"></i> 添加远程连接</h3>
+                <button class="modal-close" onclick="hideAddConnectionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addConnectionForm">
+                    <div class="form-group">
+                        <label class="form-label">连接名称</label>
+                        <input type="text" class="form-control" id="connectionName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">连接类型</label>
+                        <select class="form-control" id="connectionType" required>
+                            <option value="ssh">SSH</option>
+                            <option value="rdp">RDP</option>
+                            <option value="vnc">VNC</option>
+                            <option value="agent">Agent</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">主机地址</label>
+                        <input type="text" class="form-control" id="connectionHost" placeholder="IP或域名" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">端口</label>
+                        <input type="number" class="form-control" id="connectionPort" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="connectionUsername">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">密码/密钥</label>
+                        <textarea class="form-control" id="connectionCredential" rows="3" placeholder="密码或私钥"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideAddConnectionModal()">取消</button>
+                <button class="btn btn-primary" onclick="addConnection()">添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        let currentConnection = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConnectionStats();
+            loadConnections();
+        });
+        
+        function loadConnectionStats() {
+            fetch('/api/admin/remote/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('totalConnections').textContent = data.data.total || 0;
+                        document.getElementById('onlineConnections').textContent = data.data.online || 0;
+                        document.getElementById('avgLatency').textContent = (data.data.avgLatency || 0) + 'ms';
+                        document.getElementById('errorCount').textContent = data.data.errors || 0;
+                    }
+                })
+                .catch(error => console.error('Failed to load stats:', error));
+        }
+        
+        function loadConnections() {
+            const type = document.getElementById('typeFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            
+            fetch(`/api/admin/remote/connections?type=${type}&status=${status}`)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('connectionsTableBody');
+                    if (data.success && data.data && data.data.length > 0) {
+                        tbody.innerHTML = data.data.map(conn => `
+                            <tr>
+                                <td>${conn.name}</td>
+                                <td><span class="badge badge-${getTypeBadge(conn.type)}">${conn.type.toUpperCase()}</span></td>
+                                <td><code>${conn.host}</code></td>
+                                <td>${conn.port}</td>
+                                <td><span class="badge badge-${conn.online ? 'success' : 'secondary'}">${conn.online ? '在线' : '离线'}</span></td>
+                                <td>${formatDate(conn.lastConnect)}</td>
+                                <td class="actions">
+                                    <button class="btn btn-sm btn-primary" onclick="connectTo('${conn.id}')" ${!conn.online ? 'disabled' : ''}>连接</button>
+                                    <button class="btn btn-sm btn-secondary" onclick="editConnection('${conn.id}')">编辑</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteConnection('${conn.id}')">删除</button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无远程连接</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load connections:', error);
+                    document.getElementById('connectionsTableBody').innerHTML = '<tr><td colspan="7" class="empty-state">加载失败</td></tr>';
+                });
+        }
+        
+        function showAddConnectionModal() {
+            document.getElementById('addConnectionModal').classList.add('show');
+        }
+        
+        function hideAddConnectionModal() {
+            document.getElementById('addConnectionModal').classList.remove('show');
+            document.getElementById('addConnectionForm').reset();
+        }
+        
+        function addConnection() {
+            const connection = {
+                name: document.getElementById('connectionName').value,
+                type: document.getElementById('connectionType').value,
+                host: document.getElementById('connectionHost').value,
+                port: parseInt(document.getElementById('connectionPort').value),
+                username: document.getElementById('connectionUsername').value,
+                credential: document.getElementById('connectionCredential').value
+            };
+            
+            fetch('/api/admin/remote/connections', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(connection)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideAddConnectionModal();
+                    loadConnections();
+                    loadConnectionStats();
+                    alert('连接添加成功');
+                } else {
+                    alert('添加失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to add connection:', error);
+                alert('添加失败');
+            });
+        }
+        
+        function connectTo(connectionId) {
+            currentConnection = connectionId;
+            document.getElementById('terminalOutput').innerHTML = `
+                <div class="terminal-welcome">连接到远程主机...</div>
+                <div class="terminal-success">连接成功！</div>
+            `;
+        }
+        
+        function handleTerminalInput(event) {
+            if (event.key === 'Enter') {
+                const input = document.getElementById('terminalInput');
+                const command = input.value;
+                input.value = '';
+                
+                if (!currentConnection) {
+                    document.getElementById('terminalOutput').innerHTML += `<div class="terminal-error">请先选择一个远程连接</div>`;
+                    return;
+                }
+                
+                fetch(`/api/admin/remote/connections/${currentConnection}/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: command })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const output = document.getElementById('terminalOutput');
+                    output.innerHTML += `<div class="terminal-command">$ ${command}</div>`;
+                    if (data.success) {
+                        output.innerHTML += `<div class="terminal-result">${data.data.output || ''}</div>`;
+                    } else {
+                        output.innerHTML += `<div class="terminal-error">${data.message}</div>`;
+                    }
+                    output.scrollTop = output.scrollHeight;
+                })
+                .catch(error => {
+                    console.error('Failed to execute command:', error);
+                });
+            }
+        }
+        
+        function deleteConnection(connectionId) {
+            if (confirm('确定要删除此连接吗？')) {
+                fetch(`/api/admin/remote/connections/${connectionId}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadConnections();
+                            loadConnectionStats();
+                            alert('连接已删除');
+                        } else {
+                            alert('删除失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to delete connection:', error);
+                        alert('删除失败');
+                    });
+            }
+        }
+        
+        function refreshConnections() {
+            loadConnectionStats();
+            loadConnections();
+        }
+        
+        function filterConnections() {
+            loadConnections();
+        }
+        
+        function getTypeBadge(type) {
+            const badges = { 'ssh': 'primary', 'rdp': 'success', 'vnc': 'warning', 'agent': 'info' };
+            return badges[type] || 'secondary';
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            return new Date(dateStr).toLocaleString('zh-CN');
+        }
+    </script>
+    
+    <style>
+        .terminal-container {
+            background: #0a0a0a;
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 300px;
+        }
+        
+        .terminal-output {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        
+        .terminal-welcome { color: #22c55e; margin-bottom: 8px; }
+        .terminal-info { color: #94a3b8; margin-bottom: 8px; }
+        .terminal-command { color: #3b82f6; }
+        .terminal-result { color: #e2e8f0; white-space: pre-wrap; }
+        .terminal-success { color: #22c55e; }
+        .terminal-error { color: #ef4444; }
+        
+        .terminal-input {
+            display: flex;
+            align-items: center;
+            margin-top: 16px;
+            border-top: 1px solid #2a2a2a;
+            padding-top: 12px;
+        }
+        
+        .terminal-prompt {
+            color: #22c55e;
+            margin-right: 8px;
+            font-family: monospace;
+        }
+        
+        .terminal-input input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #e2e8f0;
+            font-family: monospace;
+            font-size: 13px;
+            outline: none;
+        }
+    </style>
+</body>
+</html>

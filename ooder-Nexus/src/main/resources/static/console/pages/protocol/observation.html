@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexus Observation Protocol - 观察协议">
+    <meta name="theme-color" content="#000000">
+    <title>观察协议 - Nexus Console</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+    <script src="../../js/theme-manager.js?v=2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="page-header">
+                <h1><i class="ri-eye-line"></i> 观察协议</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary btn-sm" onclick="startObservation()"><i class="ri-play-line"></i> 开始</button>
+                    <button class="btn btn-secondary btn-sm" onclick="stopObservation()"><i class="ri-stop-line"></i> 停止</button>
+                    <button class="btn btn-secondary btn-sm" onclick="refreshStatus()"><i class="ri-refresh-line"></i> 刷新</button>
+                </div>
+            </div>
+            
+            <div class="protocol-status-bar">
+                <div class="status-item">
+                    <div class="status-label">状态</div>
+                    <div class="status-value" id="protocolStatus">
+                        <span class="badge badge-success">运行中</span>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">观察目标</div>
+                    <div class="status-value" id="observedTargets">-</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">事件队列</div>
+                    <div class="status-value" id="eventQueue">-</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">最后更新</div>
+                    <div class="status-value" id="lastUpdate">-</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-radar-line"></i> 观察目标</h3>
+                    <div class="card-header-actions">
+                        <button class="btn btn-primary btn-sm" onclick="showAddTargetModal()"><i class="ri-add-line"></i> 添加目标</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="targets-grid" id="targetsGrid">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                <h3><i class="ri-list-ordered"></i> 事件流</h3>
+                <div class="card-header-actions">
+                    <select id="eventTypeFilter" class="form-control" onchange="filterEvents()">
+                        <option value="all">全部类型</option>
+                        <option value="state">状态变更</option>
+                        <option value="data">数据变更</option>
+                        <option value="error">错误事件</option>
+                    </select>
+                </div>
+                </div>
+                <div class="card-body">
+                    <div class="event-stream" id="eventStream">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-settings-3-line"></i> 观察配置</h3>
+                </div>
+                <div class="card-body">
+                    <form id="observationConfigForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">观察模式</label>
+                                <select class="form-control" id="observeMode">
+                                    <option value="active">主动观察</option>
+                                    <option value="passive">被动接收</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">采样间隔(ms)</label>
+                                <input type="number" class="form-control" id="sampleInterval" value="1000">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">缓冲区大小</label>
+                                <input type="number" class="form-control" id="bufferSize" value="1000">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-primary" onclick="saveConfig()">保存配置</button>
+                            <button type="button" class="btn btn-secondary" onclick="resetConfig()">重置</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="addTargetModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-add-line"></i> 添加观察目标</h3>
+                <button class="modal-close" onclick="hideAddTargetModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addTargetForm">
+                    <div class="form-group">
+                        <label class="form-label">目标ID</label>
+                        <input type="text" class="form-control" id="targetId" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">目标类型</label>
+                        <select class="form-control" id="targetType">
+                            <option value="agent">Agent</option>
+                            <option value="service">服务</option>
+                            <option value="device">设备</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">观察属性</label>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="observeState" checked> 状态</label>
+                            <label><input type="checkbox" id="observeData" checked> 数据</label>
+                            <label><input type="checkbox" id="observeEvents" checked> 事件</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideAddTargetModal()">取消</button>
+                <button class="btn btn-primary" onclick="addTarget()">添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStatus();
+            loadTargets();
+            loadEvents();
+        });
+        
+        function loadStatus() {
+            fetch('/api/protocol/observation/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const status = data.data;
+                        document.getElementById('protocolStatus').innerHTML = 
+                            status.running ? '<span class="badge badge-success">运行中</span>' : '<span class="badge badge-danger">已停止</span>';
+                        document.getElementById('observedTargets').textContent = status.targetCount || 0;
+                        document.getElementById('eventQueue').textContent = status.eventQueue || 0;
+                        document.getElementById('lastUpdate').textContent = formatDate(status.lastUpdate);
+                    }
+                })
+                .catch(error => console.error('Failed to load status:', error));
+        }
+        
+        function loadTargets() {
+                fetch('/api/protocol/observation/targets')
+                    .then(response => response.json())
+                    .then(data => {
+                        const container = document.getElementById('targetsGrid');
+                        if (data.success && data.data && data.data.length > 0) {
+                            container.innerHTML = data.data.map(target => `
+                                <div class="target-card">
+                                    <div class="target-icon">
+                                        <i class="${getTargetIcon(target.type)}"></i>
+                                    </div>
+                                    <div class="target-info">
+                                        <div class="target-id">${target.id}</div>
+                                        <div class="target-meta">${target.type} · ${target.status}</div>
+                                    </div>
+                                    <div class="target-actions">
+                                        <button class="btn btn-sm btn-secondary" onclick="editTarget('${target.id}')">编辑</button>
+                                        <button class="btn btn-sm btn-danger" onclick="removeTarget('${target.id}')">移除</button>
+                                    </div>
+                                </div>
+                            `).join('');
+                        } else {
+                            container.innerHTML = '<div class="empty-state">暂无观察目标</div>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to load targets:', error);
+                        document.getElementById('targetsGrid').innerHTML = '<div class="empty-state">加载失败</div>';
+                    });
+        }
+        
+        function loadEvents() {
+                const type = document.getElementById('eventTypeFilter').value;
+                fetch(`/api/protocol/observation/events?type=${type}&limit=50`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const container = document.getElementById('eventStream');
+                        if (data.success && data.data && data.data.length > 0) {
+                            container.innerHTML = data.data.map(event => `
+                                <div class="event-item event-${event.type}">
+                                    <div class="event-time">${formatDate(event.timestamp)}</div>
+                                    <div class="event-source">${event.source}</div>
+                                    <div class="event-type">${event.type}</div>
+                                    <div class="event-message">${event.message}</div>
+                                </div>
+                            `).join('');
+                        } else {
+                            container.innerHTML = '<div class="empty-state">暂无事件记录</div>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to load events:', error);
+                        document.getElementById('eventStream').innerHTML = '<div class="empty-state">加载失败</div>';
+                    });
+        }
+        
+        function startObservation() {
+                fetch('/api/protocol/observation/start', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('观察已开始');
+                            loadStatus();
+                        } else {
+                            alert('启动失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to start observation:', error);
+                        alert('启动失败');
+                    });
+        }
+        
+        function stopObservation() {
+                if (confirm('确定要停止观察吗？')) {
+                    fetch('/api/protocol/observation/stop', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                        if (data.success) {
+                            alert('观察已停止');
+                            loadStatus();
+                        } else {
+                            alert('停止失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to stop observation:', error);
+                        alert('停止失败');
+                    });
+                }
+            }
+        }
+        
+        function showAddTargetModal() {
+                document.getElementById('addTargetModal').classList.add('show');
+            }
+        
+        function hideAddTargetModal() {
+                document.getElementById('addTargetModal').classList.remove('show');
+                document.getElementById('addTargetForm').reset();
+            }
+        
+        function addTarget() {
+                const target = {
+                    id: document.getElementById('targetId').value,
+                    type: document.getElementById('targetType').value,
+                    observeState: document.getElementById('observeState').checked,
+                    observeData: document.getElementById('observeData').checked,
+                    observeEvents: document.getElementById('observeEvents').checked
+                };
+                
+                fetch('/api/protocol/observation/targets', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(target)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        hideAddTargetModal();
+                        loadTargets();
+                        alert('目标添加成功');
+                    } else {
+                        alert('添加失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to add target:', error);
+                    alert('添加失败');
+                });
+        }
+        
+        function removeTarget(targetId) {
+                if (confirm('确定要移除此观察目标吗？')) {
+                fetch(`/api/protocol/observation/targets/${targetId}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadTargets();
+                            alert('目标已移除');
+                        } else {
+                            alert('移除失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to remove target:', error);
+                        alert('移除失败');
+                    });
+                }
+            }
+        }
+        
+        function saveConfig() {
+                const config = {
+                    observeMode: document.getElementById('observeMode').value,
+                    sampleInterval: parseInt(document.getElementById('sampleInterval').value),
+                    bufferSize: parseInt(document.getElementById('bufferSize').value)
+                };
+                
+                fetch('/api/protocol/observation/config', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('配置已保存');
+                    } else {
+                        alert('保存失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to save config:', error);
+                    alert('保存失败');
+                });
+        }
+        
+        function resetConfig() {
+                document.getElementById('observeMode').value = 'active';
+                document.getElementById('sampleInterval').value = 1000;
+                document.getElementById('bufferSize').value = 1000;
+            }
+        
+        function refreshStatus() {
+                loadStatus();
+                loadTargets();
+                loadEvents();
+            }
+        
+        function filterEvents() {
+                loadEvents();
+        }
+        
+        function getTargetIcon(type) {
+                const icons = {
+                    'agent': 'ri-robot-line',
+                    'service': 'ri-service-line',
+                    'device': 'ri-device-line'
+                };
+                return icons[type] || 'ri-checkbox-blank-line';
+            }
+        
+        function formatDate(dateStr) {
+                if (!dateStr) return '-';
+                return new Date(dateStr).toLocaleString('zh-CN');
+            }
+        }
+    </script>
+    
+    <style>
+        .protocol-status-bar {
+            display: flex;
+            gap: 32px;
+            padding: 16px 24px;
+            background: var(--ns-card-bg);
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .targets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr);
+            gap: 16px;
+        }
+        
+        .target-card {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 16px;
+                background: var(--ns-bg-hover);
+                border-radius: 8px;
+            }
+        
+        .target-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 8px;
+                background: var(--ns-card-bg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                color: var(--nx-primary);
+            }
+        
+        .target-info {
+                flex: 1;
+            }
+        
+        .target-id {
+                font-weight: 500;
+            }
+        
+        .target-meta {
+                font-size: 12px;
+                color: var(--ns-secondary);
+            }
+        
+        .event-stream {
+                max-height: 400px;
+                overflow-y: auto;
+                font-family: monospace;
+                font-size: 13px;
+            }
+        
+        .event-item {
+                display: grid;
+                grid-template-columns: 160px 120px 80px 1fr;
+                padding: 8px 12px;
+                border-bottom: 1px solid var(--ns-border);
+            }
+        
+        .event-time { color: var(--ns-secondary); }
+        .event-source { color: var(--nx-primary); }
+        .event-type { font-weight: 500; }
+        .event-message { color: var(--ns-dark); }
+        
+        .event-state { color: var(--ns-success); }
+        .event-data { color: var(--nx-primary); }
+        .event-error { color: var(--ns-danger); }
+        
+        .checkbox-group label {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-right: 16px;
+                cursor: pointer;
+            }
+        
+        .form-row {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 16px;
+            }
+        
+        .form-actions {
+                margin-top: 16px;
+            }
+    </style>
+</body>
+</html>

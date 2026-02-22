@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexus Discovery Protocol - 发现协议">
+    <meta name="theme-color" content="#000000">
+    <title>发现协议 - Nexus Console</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <script src="../../js/theme-manager.js?v=2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="page-header">
+                <h1><i class="ri-radar-line"></i> 发现协议</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="startDiscovery()"><i class="ri-search-line"></i> 开始发现</button>
+                    <button class="btn btn-secondary" onclick="refreshStatus()"><i class="ri-refresh-line"></i> 刷新</button>
+                </div>
+            </div>
+            
+            <div class="protocol-status-bar">
+                <div class="status-item">
+                    <span class="status-label">协议状态</span>
+                    <span class="status-value" id="protocolStatus"><span class="badge badge-success">运行中</span></span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">已发现节点</span>
+                    <span class="status-value" id="discoveredNodes">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">扫描间隔</span>
+                    <span class="status-value" id="scanInterval">30s</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">最后扫描</span>
+                    <span class="status-value" id="lastScan">-</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-node-tree"></i> 已发现节点</h3>
+                    <div class="card-header-actions">
+                        <select id="nodeTypeFilter" class="form-control" onchange="filterNodes()">
+                            <option value="all">全部类型</option>
+                            <option value="agent">Agent</option>
+                            <option value="service">服务</option>
+                            <option value="device">设备</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="nodes-grid" id="nodesGrid">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-settings-3-line"></i> 发现配置</h3>
+                </div>
+                <div class="card-body">
+                    <form id="discoveryConfigForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">扫描模式</label>
+                                <select class="form-control" id="scanMode">
+                                    <option value="active">主动扫描</option>
+                                    <option value="passive">被动监听</option>
+                                    <option value="hybrid">混合模式</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">扫描间隔(秒)</label>
+                                <input type="number" class="form-control" id="scanIntervalInput" value="30">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">超时时间(秒)</label>
+                                <input type="number" class="form-control" id="timeout" value="10">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">广播地址</label>
+                                <input type="text" class="form-control" id="broadcastAddr" value="255.255.255.255">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">端口范围</label>
+                                <input type="text" class="form-control" id="portRange" placeholder="如: 8080-8090">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-primary" onclick="saveConfig()">保存配置</button>
+                            <button type="button" class="btn btn-secondary" onclick="resetConfig()">重置</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-history-line"></i> 发现日志</h3>
+                </div>
+                <div class="card-body">
+                    <div class="log-container" id="discoveryLogs">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStatus();
+            loadNodes();
+            loadLogs();
+        });
+        
+        function loadStatus() {
+            fetch('/api/protocol/discovery/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const status = data.data;
+                        document.getElementById('protocolStatus').innerHTML = 
+                            status.running ? '<span class="badge badge-success">运行中</span>' : '<span class="badge badge-danger">已停止</span>';
+                        document.getElementById('discoveredNodes').textContent = status.nodeCount || 0;
+                        document.getElementById('scanInterval').textContent = (status.scanInterval || 30) + 's';
+                        document.getElementById('lastScan').textContent = formatDate(status.lastScan);
+                    }
+                })
+                .catch(error => console.error('Failed to load status:', error));
+        }
+        
+        function loadNodes() {
+            const type = document.getElementById('nodeTypeFilter').value;
+            fetch(`/api/protocol/discovery/nodes?type=${type}`)
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('nodesGrid');
+                    if (data.success && data.data && data.data.length > 0) {
+                        container.innerHTML = data.data.map(node => `
+                            <div class="node-card ${node.online ? 'online' : 'offline'}">
+                                <div class="node-icon">
+                                    <i class="${getNodeIcon(node.type)}"></i>
+                                </div>
+                                <div class="node-info">
+                                    <div class="node-name">${node.name}</div>
+                                    <div class="node-meta">${node.ip}:${node.port}</div>
+                                    <div class="node-type">${node.type}</div>
+                                </div>
+                                <div class="node-status">
+                                    <span class="badge badge-${node.online ? 'success' : 'secondary'}">${node.online ? '在线' : '离线'}</span>
+                                </div>
+                                <div class="node-actions">
+                                    <button class="btn btn-sm btn-secondary" onclick="connectNode('${node.id}')">连接</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div class="empty-state">暂无发现节点</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load nodes:', error);
+                    container.innerHTML = '<div class="empty-state">加载失败</div>';
+                });
+        }
+        
+        function loadLogs() {
+            fetch('/api/protocol/discovery/logs?limit=50')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('discoveryLogs');
+                    if (data.success && data.data && data.data.length > 0) {
+                        container.innerHTML = data.data.map(log => `
+                            <div class="log-entry log-${log.level.toLowerCase()}">
+                                <span class="log-time">${formatDate(log.timestamp)}</span>
+                                <span class="log-level">[${log.level}]</span>
+                                <span class="log-message">${log.message}</span>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div class="empty-state">暂无日志</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load logs:', error);
+                    container.innerHTML = '<div class="empty-state">加载失败</div>';
+                });
+        }
+        
+        function startDiscovery() {
+            fetch('/api/protocol/discovery/start', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('发现任务已启动');
+                        loadStatus();
+                        loadNodes();
+                    } else {
+                        alert('启动失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to start discovery:', error);
+                    alert('启动失败');
+                });
+        }
+        
+        function saveConfig() {
+            const config = {
+                scanMode: document.getElementById('scanMode').value,
+                scanInterval: parseInt(document.getElementById('scanIntervalInput').value),
+                timeout: parseInt(document.getElementById('timeout').value),
+                broadcastAddr: document.getElementById('broadcastAddr').value,
+                portRange: document.getElementById('portRange').value
+            };
+            
+            fetch('/api/protocol/discovery/config', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('配置已保存');
+                    loadStatus();
+                } else {
+                    alert('保存失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to save config:', error);
+                alert('保存失败');
+            });
+        }
+        
+        function resetConfig() {
+            document.getElementById('scanMode').value = 'active';
+            document.getElementById('scanIntervalInput').value = 30;
+            document.getElementById('timeout').value = 10;
+            document.getElementById('broadcastAddr').value = '255.255.255.255';
+            document.getElementById('portRange').value = '';
+        }
+        
+        function refreshStatus() {
+            loadStatus();
+            loadNodes();
+            loadLogs();
+        }
+        
+        function filterNodes() {
+            loadNodes();
+        }
+        
+        function connectNode(nodeId) {
+            alert('连接节点: ' + nodeId);
+        }
+        
+        function getNodeIcon(type) {
+            const icons = { 'agent': 'ri-robot-line', 'service': 'ri-server-line', 'device': 'ri-device-line' };
+            return icons[type] || 'ri-node-line';
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            return new Date(dateStr).toLocaleString('zh-CN');
+        }
+    </script>
+    
+    <style>
+        .protocol-status-bar {
+            display: flex;
+            gap: 32px;
+            padding: 16px 24px;
+            background: var(--ns-card-bg);
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row { grid-template-columns: 1fr; }
+            .protocol-status-bar { flex-wrap: wrap; gap: 16px; }
+        }
+        
+        .nodes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        
+        .node-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--ns-bg-hover);
+            border-radius: 8px;
+            border: 1px solid var(--ns-border);
+        }
+        
+        .node-card.online { border-left: 3px solid var(--ns-success); }
+        .node-card.offline { border-left: 3px solid var(--ns-secondary); }
+        
+        .node-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--ns-card-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--nx-primary);
+        }
+        
+        .node-info { flex: 1; }
+        .node-name { font-weight: 500; }
+        .node-meta { font-size: 12px; color: var(--ns-secondary); }
+        .node-type { font-size: 11px; color: var(--ns-secondary); margin-top: 4px; }
+        
+        .log-container {
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        
+        .log-entry {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .log-time { color: var(--ns-secondary); min-width: 160px; }
+        .log-level { min-width: 60px; }
+        .log-debug { color: #6b7280; }
+        .log-info { color: #3b82f6; }
+        .log-warn { color: #f59e0b; }
+        .log-error { color: #ef4444; }
+    </style>
+</body>
+</html>
