@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexus Execution History - 执行记录">
+    <meta name="theme-color" content="#000000">
+    <title>执行记录 - Nexus Console</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/components/tables.css">
+    <script src="../../js/theme-manager.js?v=2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="page-header">
+                <h1><i class="ri-history-line"></i> 执行记录</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="exportHistory()">
+                        <i class="ri-download-line"></i> 导出记录
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshHistory()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon primary">
+                        <i class="ri-play-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalExecutions">-</div>
+                        <div class="stat-label">总执行次数</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <i class="ri-check-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="successCount">-</div>
+                        <div class="stat-label">成功</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon danger">
+                        <i class="ri-close-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="failedCount">-</div>
+                        <div class="stat-label">失败</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <i class="ri-time-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="avgDuration">-</div>
+                        <div class="stat-label">平均耗时</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-list-check"></i> 执行历史</h3>
+                    <div class="card-header-actions">
+                        <select id="typeFilter" class="form-control" onchange="filterHistory()">
+                            <option value="all">全部类型</option>
+                            <option value="skill">技能执行</option>
+                            <option value="scene">场景执行</option>
+                            <option value="task">任务执行</option>
+                        </select>
+                        <select id="statusFilter" class="form-control" onchange="filterHistory()">
+                            <option value="all">全部状态</option>
+                            <option value="success">成功</option>
+                            <option value="failed">失败</option>
+                            <option value="running">运行中</option>
+                        </select>
+                        <input type="date" id="dateFilter" class="form-control" onchange="filterHistory()">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>执行ID</th>
+                                    <th>类型</th>
+                                    <th>名称</th>
+                                    <th>开始时间</th>
+                                    <th>耗时</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <tr>
+                                    <td colspan="7" class="loading">加载中...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-pagination">
+                        <span class="pagination-info" id="paginationInfo">共 0 条</span>
+                        <div class="pagination-controls">
+                            <button class="pagination-btn" onclick="prevPage()">上一页</button>
+                            <span id="currentPage">1</span>
+                            <button class="pagination-btn" onclick="nextPage()">下一页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="detailModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3><i class="ri-file-list-line"></i> 执行详情</h3>
+                <button class="modal-close" onclick="hideDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="execution-detail" id="executionDetail">
+                    <div class="loading">加载中...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideDetailModal()">关闭</button>
+                <button class="btn btn-primary" onclick="rerunExecution()">重新执行</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        let currentPage = 1;
+        let pageSize = 10;
+        let currentExecutionId = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadHistory();
+        });
+        
+        function loadStats() {
+            fetch('/api/personal/execution/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('totalExecutions').textContent = data.data.total || 0;
+                        document.getElementById('successCount').textContent = data.data.success || 0;
+                        document.getElementById('failedCount').textContent = data.data.failed || 0;
+                        document.getElementById('avgDuration').textContent = formatDuration(data.data.avgDuration);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load stats:', error);
+                });
+        }
+        
+        function loadHistory() {
+            const type = document.getElementById('typeFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            const date = document.getElementById('dateFilter').value;
+            
+            let url = `/api/personal/execution?page=${currentPage}&size=${pageSize}`;
+            if (type !== 'all') url += `&type=${type}`;
+            if (status !== 'all') url += `&status=${status}`;
+            if (date) url += `&date=${date}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('historyTableBody');
+                    if (data.success && data.data && data.data.items && data.data.items.length > 0) {
+                        tbody.innerHTML = data.data.items.map(item => `
+                            <tr>
+                                <td><code>${item.id.substring(0, 8)}...</code></td>
+                                <td><span class="badge badge-${getTypeBadge(item.type)}">${getTypeName(item.type)}</span></td>
+                                <td>${item.name}</td>
+                                <td>${formatDate(item.startTime)}</td>
+                                <td>${formatDuration(item.duration)}</td>
+                                <td><span class="badge badge-${getStatusBadge(item.status)}">${getStatusName(item.status)}</span></td>
+                                <td class="actions">
+                                    <button class="btn btn-sm btn-secondary" onclick="viewDetail('${item.id}')">
+                                        <i class="ri-eye-line"></i> 详情
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('');
+                        
+                        document.getElementById('paginationInfo').textContent = `共 ${data.data.total} 条`;
+                        document.getElementById('currentPage').textContent = currentPage;
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无执行记录</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load history:', error);
+                    document.getElementById('historyTableBody').innerHTML = '<tr><td colspan="7" class="empty-state">加载失败</td></tr>';
+                });
+        }
+        
+        function viewDetail(executionId) {
+            currentExecutionId = executionId;
+            fetch(`/api/personal/execution/${executionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const detail = data.data;
+                        document.getElementById('executionDetail').innerHTML = `
+                            <div class="detail-section">
+                                <h4>基本信息</h4>
+                                <div class="detail-grid">
+                                    <div class="detail-item">
+                                        <label>执行ID</label>
+                                        <span><code>${detail.id}</code></span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>类型</label>
+                                        <span>${getTypeName(detail.type)}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>名称</label>
+                                        <span>${detail.name}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>状态</label>
+                                        <span class="badge badge-${getStatusBadge(detail.status)}">${getStatusName(detail.status)}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>开始时间</label>
+                                        <span>${formatDate(detail.startTime)}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>结束时间</label>
+                                        <span>${detail.endTime ? formatDate(detail.endTime) : '-'}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <label>耗时</label>
+                                        <span>${formatDuration(detail.duration)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <h4>输入参数</h4>
+                                <pre class="code-block">${JSON.stringify(detail.input || {}, null, 2)}</pre>
+                            </div>
+                            <div class="detail-section">
+                                <h4>输出结果</h4>
+                                <pre class="code-block">${JSON.stringify(detail.output || {}, null, 2)}</pre>
+                            </div>
+                            ${detail.error ? `
+                            <div class="detail-section error-section">
+                                <h4>错误信息</h4>
+                                <pre class="code-block error">${detail.error}</pre>
+                            </div>
+                            ` : ''}
+                        `;
+                        document.getElementById('detailModal').classList.add('show');
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load detail:', error);
+                    alert('加载详情失败');
+                });
+        }
+        
+        function hideDetailModal() {
+            document.getElementById('detailModal').classList.remove('show');
+            currentExecutionId = null;
+        }
+        
+        function rerunExecution() {
+            if (currentExecutionId && confirm('确定要重新执行此任务吗？')) {
+                fetch(`/api/personal/execution/${currentExecutionId}/rerun`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('任务已重新执行');
+                            hideDetailModal();
+                            loadHistory();
+                        } else {
+                            alert('操作失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to rerun:', error);
+                        alert('操作失败');
+                    });
+            }
+        }
+        
+        function exportHistory() {
+            window.location.href = '/api/personal/execution/export';
+        }
+        
+        function refreshHistory() {
+            loadStats();
+            loadHistory();
+        }
+        
+        function filterHistory() {
+            currentPage = 1;
+            loadHistory();
+        }
+        
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadHistory();
+            }
+        }
+        
+        function nextPage() {
+            currentPage++;
+            loadHistory();
+        }
+        
+        function getTypeBadge(type) {
+            const badges = { 'skill': 'primary', 'scene': 'success', 'task': 'warning' };
+            return badges[type] || 'secondary';
+        }
+        
+        function getTypeName(type) {
+            const names = { 'skill': '技能', 'scene': '场景', 'task': '任务' };
+            return names[type] || type;
+        }
+        
+        function getStatusBadge(status) {
+            const badges = { 'success': 'success', 'failed': 'danger', 'running': 'warning' };
+            return badges[status] || 'secondary';
+        }
+        
+        function getStatusName(status) {
+            const names = { 'success': '成功', 'failed': '失败', 'running': '运行中' };
+            return names[status] || status;
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN');
+        }
+        
+        function formatDuration(ms) {
+            if (!ms) return '-';
+            if (ms < 1000) return ms + 'ms';
+            if (ms < 60000) return (ms / 1000).toFixed(1) + 's';
+            return (ms / 60000).toFixed(1) + 'm';
+        }
+    </script>
+    
+    <style>
+        .detail-section {
+            margin-bottom: 24px;
+        }
+        
+        .detail-section h4 {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--ns-border);
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .detail-item label {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .code-block {
+            background: var(--ns-bg-hover);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        
+        .code-block.error {
+            color: var(--ns-danger);
+            border: 1px solid var(--ns-danger);
+        }
+        
+        .error-section {
+            background: rgba(239, 68, 68, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+        }
+        
+        .modal-lg {
+            max-width: 700px;
+        }
+    </style>
+</body>
+</html>

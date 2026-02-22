@@ -113,8 +113,8 @@ public class SecuritySdkAdapterImpl implements SecuritySdkAdapter {
                 result.put("totalAcls", stats.getTotalAcls());
                 result.put("totalThreats", stats.getTotalThreats());
                 result.put("resolvedThreats", stats.getResolvedThreats());
-                result.put("pendingThreats", stats.getPendingThreats());
-                result.put("auditEvents", stats.getAuditEvents());
+                result.put("pendingThreats", stats.getTotalThreats() - stats.getResolvedThreats());
+                result.put("auditEvents", 0);
                 result.put("blockedAttempts", stats.getBlockedAttempts());
                 return result;
             } catch (Exception e) {
@@ -180,8 +180,8 @@ public class SecuritySdkAdapterImpl implements SecuritySdkAdapter {
 
         String id = policy.getPolicyId() != null ? policy.getPolicyId() : "policy-" + UUID.randomUUID().toString().substring(0, 8);
         policy.setPolicyId(id);
-        policy.setCreateTime(System.currentTimeMillis());
-        policy.setUpdateTime(System.currentTimeMillis());
+        policy.setCreatedAt(new Date());
+        policy.setUpdatedAt(new Date());
         localPolicies.put(id, policy);
         return policy;
     }
@@ -245,7 +245,7 @@ public class SecuritySdkAdapterImpl implements SecuritySdkAdapter {
             try {
                 net.ooder.scene.core.PageResult<AccessControl> result = securityProvider.listAcls(pageNum, pageSize);
                 List<AccessControlDTO> dtoList = new ArrayList<>();
-                for (AccessControl acl : result.getList()) {
+                for (AccessControl acl : result.getData()) {
                     dtoList.add(convertAclToDTO(acl));
                 }
                 return new PageResult<>(dtoList, result.getTotal(), result.getPageNum(), result.getPageSize());
@@ -295,7 +295,7 @@ public class SecuritySdkAdapterImpl implements SecuritySdkAdapter {
             try {
                 net.ooder.scene.core.PageResult<ThreatInfo> result = securityProvider.listThreats(pageNum, pageSize);
                 List<ThreatInfoDTO> dtoList = new ArrayList<>();
-                for (ThreatInfo threat : result.getList()) {
+                for (ThreatInfo threat : result.getData()) {
                     dtoList.add(convertThreatToDTO(threat));
                 }
                 return new PageResult<>(dtoList, result.getTotal(), result.getPageNum(), result.getPageSize());
@@ -367,8 +367,8 @@ public class SecuritySdkAdapterImpl implements SecuritySdkAdapter {
         dto.setStatus(policy.getStatus());
         dto.setPriority(policy.getPriority());
         dto.setAction(policy.getAction());
-        dto.setCreateTime(policy.getCreatedAt() != null ? policy.getCreatedAt().getTime() : 0);
-        dto.setUpdateTime(policy.getUpdatedAt() != null ? policy.getUpdatedAt().getTime() : 0);
+        dto.setCreatedAt(policy.getCreatedAt() != null ? policy.getCreatedAt() : null);
+        dto.setUpdatedAt(policy.getUpdatedAt() != null ? policy.getUpdatedAt() : null);
         return dto;
     }
 

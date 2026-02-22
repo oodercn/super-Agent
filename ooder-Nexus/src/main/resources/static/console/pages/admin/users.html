@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexus Admin Users - 用户管理">
+    <meta name="theme-color" content="#000000">
+    <title>用户管理 - Nexus Console</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/components/tables.css">
+    <script src="../../js/theme-manager.js?v=2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="ri-admin-line"></i> 管理后台</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="ri-dashboard-line"></i> 仪表盘
+                </a>
+                <a href="skills.html" class="nav-item">
+                    <i class="ri-lightbulb-line"></i> 技能审核
+                </a>
+                <a href="users.html" class="nav-item active">
+                    <i class="ri-user-line"></i> 用户管理
+                </a>
+                <a href="storage.html" class="nav-item">
+                    <i class="ri-hard-drive-2-line"></i> 存储管理
+                </a>
+                <a href="remote.html" class="nav-item">
+                    <i class="ri-remote-control-line"></i> 远程管理
+                </a>
+            </nav>
+        </div>
+        
+        <div class="main-content">
+            <div class="page-header">
+                <h1><i class="ri-user-line"></i> 用户管理</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showAddUserModal()">
+                        <i class="ri-add-line"></i> 添加用户
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshUsers()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon primary">
+                        <i class="ri-user-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalUsers">-</div>
+                        <div class="stat-label">总用户数</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <i class="ri-user-follow-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="activeUsers">-</div>
+                        <div class="stat-label">活跃用户</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <i class="ri-user-unfollow-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="inactiveUsers">-</div>
+                        <div class="stat-label">非活跃用户</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon danger">
+                        <i class="ri-user-unfollow-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="blockedUsers">-</div>
+                        <div class="stat-label">已封禁</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-list-check"></i> 用户列表</h3>
+                    <div class="card-header-actions">
+                        <select id="roleFilter" class="form-control" onchange="filterUsers()">
+                            <option value="all">全部角色</option>
+                            <option value="admin">管理员</option>
+                            <option value="user">普通用户</option>
+                            <option value="guest">访客</option>
+                        </select>
+                        <select id="statusFilter" class="form-control" onchange="filterUsers()">
+                            <option value="all">全部状态</option>
+                            <option value="active">活跃</option>
+                            <option value="inactive">非活跃</option>
+                            <option value="blocked">已封禁</option>
+                        </select>
+                        <input type="text" id="searchInput" class="form-control" placeholder="搜索用户..." onkeyup="searchUsers()">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>用户名</th>
+                                    <th>邮箱</th>
+                                    <th>角色</th>
+                                    <th>注册时间</th>
+                                    <th>最后登录</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr>
+                                    <td colspan="7" class="loading">加载中...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="addUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-add-line"></i> 添加用户</h3>
+                <button class="modal-close" onclick="hideAddUserModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="form-group">
+                        <label class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">邮箱</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">密码</label>
+                        <input type="password" class="form-control" id="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">角色</label>
+                        <select class="form-control" id="role" required>
+                            <option value="user">普通用户</option>
+                            <option value="admin">管理员</option>
+                            <option value="guest">访客</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideAddUserModal()">取消</button>
+                <button class="btn btn-primary" onclick="addUser()">添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="editUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-edit-line"></i> 编辑用户</h3>
+                <button class="modal-close" onclick="hideEditUserModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId">
+                    <div class="form-group">
+                        <label class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="editUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">邮箱</label>
+                        <input type="email" class="form-control" id="editEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">角色</label>
+                        <select class="form-control" id="editRole" required>
+                            <option value="user">普通用户</option>
+                            <option value="admin">管理员</option>
+                            <option value="guest">访客</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">状态</label>
+                        <select class="form-control" id="editStatus" required>
+                            <option value="active">活跃</option>
+                            <option value="inactive">非活跃</option>
+                            <option value="blocked">已封禁</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideEditUserModal()">取消</button>
+                <button class="btn btn-primary" onclick="updateUser()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserStats();
+            loadUsers();
+        });
+        
+        function loadUserStats() {
+            fetch('/api/admin/users/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('totalUsers').textContent = data.data.total || 0;
+                        document.getElementById('activeUsers').textContent = data.data.active || 0;
+                        document.getElementById('inactiveUsers').textContent = data.data.inactive || 0;
+                        document.getElementById('blockedUsers').textContent = data.data.blocked || 0;
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load stats:', error);
+                });
+        }
+        
+        function loadUsers() {
+            const role = document.getElementById('roleFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            const search = document.getElementById('searchInput').value;
+            
+            fetch(`/api/admin/users?role=${role}&status=${status}&search=${encodeURIComponent(search)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('usersTableBody');
+                    if (data.success && data.data && data.data.length > 0) {
+                        tbody.innerHTML = data.data.map(user => `
+                            <tr>
+                                <td>
+                                    <div class="user-name">
+                                        <div class="user-avatar">${user.username.charAt(0).toUpperCase()}</div>
+                                        <span>${user.username}</span>
+                                    </div>
+                                </td>
+                                <td>${user.email}</td>
+                                <td><span class="badge badge-${getRoleBadge(user.role)}">${getRoleName(user.role)}</span></td>
+                                <td>${formatDate(user.createdAt)}</td>
+                                <td>${formatDate(user.lastLogin)}</td>
+                                <td><span class="badge badge-${getStatusBadge(user.status)}">${getStatusName(user.status)}</span></td>
+                                <td class="actions">
+                                    <button class="btn btn-sm btn-secondary" onclick="editUser('${user.id}')">
+                                        <i class="ri-edit-line"></i> 编辑
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteUser('${user.id}')">
+                                        <i class="ri-delete-bin-line"></i> 删除
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无用户数据</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load users:', error);
+                    document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="7" class="empty-state">加载失败</td></tr>';
+                });
+        }
+        
+        function showAddUserModal() {
+            document.getElementById('addUserModal').classList.add('show');
+        }
+        
+        function hideAddUserModal() {
+            document.getElementById('addUserModal').classList.remove('show');
+            document.getElementById('addUserForm').reset();
+        }
+        
+        function addUser() {
+            const user = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                role: document.getElementById('role').value
+            };
+            
+            fetch('/api/admin/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(user)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideAddUserModal();
+                    loadUsers();
+                    loadUserStats();
+                    alert('用户添加成功');
+                } else {
+                    alert('添加失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to add user:', error);
+                alert('添加失败');
+            });
+        }
+        
+        function editUser(userId) {
+            fetch(`/api/admin/users/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const user = data.data;
+                        document.getElementById('editUserId').value = user.id;
+                        document.getElementById('editUsername').value = user.username;
+                        document.getElementById('editEmail').value = user.email;
+                        document.getElementById('editRole').value = user.role;
+                        document.getElementById('editStatus').value = user.status;
+                        document.getElementById('editUserModal').classList.add('show');
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load user:', error);
+                    alert('加载用户信息失败');
+                });
+        }
+        
+        function hideEditUserModal() {
+            document.getElementById('editUserModal').classList.remove('show');
+        }
+        
+        function updateUser() {
+            const userId = document.getElementById('editUserId').value;
+            const user = {
+                username: document.getElementById('editUsername').value,
+                email: document.getElementById('editEmail').value,
+                role: document.getElementById('editRole').value,
+                status: document.getElementById('editStatus').value
+            };
+            
+            fetch(`/api/admin/users/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(user)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideEditUserModal();
+                    loadUsers();
+                    loadUserStats();
+                    alert('用户更新成功');
+                } else {
+                    alert('更新失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to update user:', error);
+                alert('更新失败');
+            });
+        }
+        
+        function deleteUser(userId) {
+            if (confirm('确定要删除此用户吗？')) {
+                fetch(`/api/admin/users/${userId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadUsers();
+                        loadUserStats();
+                        alert('用户已删除');
+                    } else {
+                        alert('删除失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to delete user:', error);
+                    alert('删除失败');
+                });
+            }
+        }
+        
+        function refreshUsers() {
+            loadUserStats();
+            loadUsers();
+        }
+        
+        function filterUsers() {
+            loadUsers();
+        }
+        
+        function searchUsers() {
+            loadUsers();
+        }
+        
+        function getRoleBadge(role) {
+            const badges = { 'admin': 'danger', 'user': 'primary', 'guest': 'secondary' };
+            return badges[role] || 'secondary';
+        }
+        
+        function getRoleName(role) {
+            const names = { 'admin': '管理员', 'user': '普通用户', 'guest': '访客' };
+            return names[role] || role;
+        }
+        
+        function getStatusBadge(status) {
+            const badges = { 'active': 'success', 'inactive': 'warning', 'blocked': 'danger' };
+            return badges[status] || 'secondary';
+        }
+        
+        function getStatusName(status) {
+            const names = { 'active': '活跃', 'inactive': '非活跃', 'blocked': '已封禁' };
+            return names[status] || status;
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN');
+        }
+    </script>
+    
+    <style>
+        .user-name {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--nx-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+    </style>
+</body>
+</html>

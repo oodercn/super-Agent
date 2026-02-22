@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexus Protocol Management - 协议管理">
+    <meta name="theme-color" content="#000000">
+    <title>协议管理 - Nexus Console</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+    <script src="../../js/theme-manager.js?v=2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="page-header">
+                <h1><i class="ri-exchange-line"></i> 协议管理</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="refreshAll()">
+                        <i class="ri-refresh-line"></i> 刷新全部
+                    </button>
+                </div>
+            </div>
+            
+            <div class="protocol-tabs">
+                <button class="tab-btn active" onclick="showProtocol('collaboration')">
+                    <i class="ri-team-line"></i> 协作协议
+                </button>
+                <button class="tab-btn" onclick="showProtocol('discovery')">
+                    <i class="ri-radar-line"></i> 发现协议
+                </button>
+                <button class="tab-btn" onclick="showProtocol('login')">
+                    <i class="ri-login-box-line"></i> 登录协议
+                </button>
+                <button class="tab-btn" onclick="showProtocol('observation')">
+                    <i class="ri-eye-line"></i> 观察协议
+                </button>
+                <button class="tab-btn" onclick="showProtocol('domain')">
+                    <i class="ri-domain-line"></i> 域管理协议
+                </button>
+            </div>
+            
+            <div class="protocol-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 id="protocolTitle"><i class="ri-team-line"></i> 协作协议</h3>
+                        <div class="card-header-actions">
+                            <button class="btn btn-primary btn-sm" onclick="enableProtocol()">
+                                <i class="ri-play-line"></i> 启用
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="disableProtocol()">
+                                <i class="ri-pause-line"></i> 禁用
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="configureProtocol()">
+                                <i class="ri-settings-3-line"></i> 配置
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="protocol-status">
+                            <div class="status-item">
+                                <span class="status-label">状态</span>
+                                <span class="status-value" id="protocolStatus">
+                                    <span class="badge badge-success">运行中</span>
+                                </span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">版本</span>
+                                <span class="status-value" id="protocolVersion">-</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">连接数</span>
+                                <span class="status-value" id="connectionCount">-</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">最后更新</span>
+                                <span class="status-value" id="lastUpdate">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="ri-list-check"></i> 协议配置</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="protocolConfigForm">
+                            <div class="form-group">
+                                <label class="form-label">超时时间 (秒)</label>
+                                <input type="number" class="form-control" id="timeout" value="30">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">重试次数</label>
+                                <input type="number" class="form-control" id="retryCount" value="3">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">心跳间隔 (秒)</label>
+                                <input type="number" class="form-control" id="heartbeatInterval" value="10">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">日志级别</label>
+                                <select class="form-control" id="logLevel">
+                                    <option value="DEBUG">DEBUG</option>
+                                    <option value="INFO" selected>INFO</option>
+                                    <option value="WARN">WARN</option>
+                                    <option value="ERROR">ERROR</option>
+                                </select>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-primary" onclick="saveConfig()">保存配置</button>
+                                <button type="button" class="btn btn-secondary" onclick="resetConfig()">重置</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="ri-history-line"></i> 协议日志</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="log-container" id="protocolLogs">
+                            <div class="loading">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        let currentProtocol = 'collaboration';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProtocolStatus(currentProtocol);
+            loadProtocolLogs(currentProtocol);
+        });
+        
+        function showProtocol(protocol) {
+            currentProtocol = protocol;
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const titles = {
+                'collaboration': '<i class="ri-team-line"></i> 协作协议',
+                'discovery': '<i class="ri-radar-line"></i> 发现协议',
+                'login': '<i class="ri-login-box-line"></i> 登录协议',
+                'observation': '<i class="ri-eye-line"></i> 观察协议',
+                'domain': '<i class="ri-domain-line"></i> 域管理协议'
+            };
+            document.getElementById('protocolTitle').innerHTML = titles[protocol];
+            
+            loadProtocolStatus(protocol);
+            loadProtocolLogs(protocol);
+        }
+        
+        function loadProtocolStatus(protocol) {
+            fetch('/api/protocol/' + protocol + '/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const status = data.data;
+                        document.getElementById('protocolStatus').innerHTML = 
+                            status.running ? '<span class="badge badge-success">运行中</span>' : '<span class="badge badge-danger">已停止</span>';
+                        document.getElementById('protocolVersion').textContent = status.version || '-';
+                        document.getElementById('connectionCount').textContent = status.connections || 0;
+                        document.getElementById('lastUpdate').textContent = status.lastUpdate ? formatDate(status.lastUpdate) : '-';
+                        
+                        if (status.config) {
+                            document.getElementById('timeout').value = status.config.timeout || 30;
+                            document.getElementById('retryCount').value = status.config.retryCount || 3;
+                            document.getElementById('heartbeatInterval').value = status.config.heartbeatInterval || 10;
+                            document.getElementById('logLevel').value = status.config.logLevel || 'INFO';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load protocol status:', error);
+                });
+        }
+        
+        function loadProtocolLogs(protocol) {
+            fetch('/api/protocol/' + protocol + '/logs?limit=50')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('protocolLogs');
+                    if (data.success && data.data && data.data.length > 0) {
+                        container.innerHTML = data.data.map(log => `
+                            <div class="log-entry log-${log.level.toLowerCase()}">
+                                <span class="log-time">${formatDate(log.timestamp)}</span>
+                                <span class="log-level">[${log.level}]</span>
+                                <span class="log-message">${log.message}</span>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div class="empty-state">暂无日志记录</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load protocol logs:', error);
+                    document.getElementById('protocolLogs').innerHTML = '<div class="empty-state">加载失败</div>';
+                });
+        }
+        
+        function enableProtocol() {
+            fetch('/api/protocol/' + currentProtocol + '/enable', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('协议已启用');
+                        loadProtocolStatus(currentProtocol);
+                    } else {
+                        alert('启用失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to enable protocol:', error);
+                    alert('启用失败');
+                });
+        }
+        
+        function disableProtocol() {
+            if (confirm('确定要禁用此协议吗？')) {
+                fetch('/api/protocol/' + currentProtocol + '/disable', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('协议已禁用');
+                            loadProtocolStatus(currentProtocol);
+                        } else {
+                            alert('禁用失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to disable protocol:', error);
+                        alert('禁用失败');
+                    });
+            }
+        }
+        
+        function configureProtocol() {
+            document.querySelector('.card:nth-child(2)').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function saveConfig() {
+            const config = {
+                timeout: parseInt(document.getElementById('timeout').value),
+                retryCount: parseInt(document.getElementById('retryCount').value),
+                heartbeatInterval: parseInt(document.getElementById('heartbeatInterval').value),
+                logLevel: document.getElementById('logLevel').value
+            };
+            
+            fetch('/api/protocol/' + currentProtocol + '/config', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('配置已保存');
+                    loadProtocolStatus(currentProtocol);
+                } else {
+                    alert('保存失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to save config:', error);
+                alert('保存失败');
+            });
+        }
+        
+        function resetConfig() {
+            document.getElementById('timeout').value = 30;
+            document.getElementById('retryCount').value = 3;
+            document.getElementById('heartbeatInterval').value = 10;
+            document.getElementById('logLevel').value = 'INFO';
+        }
+        
+        function refreshAll() {
+            loadProtocolStatus(currentProtocol);
+            loadProtocolLogs(currentProtocol);
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN');
+        }
+    </script>
+    
+    <style>
+        .protocol-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            padding: 12px 20px;
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            color: var(--ns-dark);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tab-btn:hover {
+            background: var(--ns-bg-hover);
+            border-color: var(--nx-primary);
+        }
+        
+        .tab-btn.active {
+            background: var(--nx-primary);
+            color: white;
+            border-color: var(--nx-primary);
+        }
+        
+        .protocol-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .status-label {
+            font-size: 12px;
+            color: var(--ns-secondary);
+        }
+        
+        .status-value {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .log-container {
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        
+        .log-entry {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--ns-border);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .log-entry:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .log-time {
+            color: var(--ns-secondary);
+            min-width: 160px;
+        }
+        
+        .log-level {
+            min-width: 60px;
+        }
+        
+        .log-debug { color: #6b7280; }
+        .log-info { color: #3b82f6; }
+        .log-warn { color: #f59e0b; }
+        .log-error { color: #ef4444; }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+    </style>
+</body>
+</html>

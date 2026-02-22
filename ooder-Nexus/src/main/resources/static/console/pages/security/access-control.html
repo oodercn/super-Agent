@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexus Access Control - 访问控制">
+    <meta name="theme-color" content="#000000">
+    <title>访问控制 - Nexus Console</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/components/tables.css">
+    <script src="../../js/theme-manager.js?v=2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="page-header">
+                <h1><i class="ri-lock-line"></i> 访问控制</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showAddRuleModal()">
+                        <i class="ri-add-line"></i> 添加规则
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshRules()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('ip')">
+                    <i class="ri-ip-line"></i> IP访问控制
+                </button>
+                <button class="tab-btn" onclick="showTab('api')">
+                    <i class="ri-code-line"></i> API访问控制
+                </button>
+                <button class="tab-btn" onclick="showTab('role')">
+                    <i class="ri-user-settings-line"></i> 角色权限
+                </button>
+            </div>
+            
+            <div class="tab-content" id="ipTab">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="ri-ip-line"></i> IP白名单</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>IP地址</th>
+                                        <th>描述</th>
+                                        <th>添加时间</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="whitelistBody">
+                                    <tr><td colspan="5" class="loading">加载中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="ri-forbid-line"></i> IP黑名单</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>IP地址</th>
+                                        <th>封禁原因</th>
+                                        <th>封禁时间</th>
+                                        <th>解封时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="blacklistBody">
+                                    <tr><td colspan="5" class="loading">加载中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="apiTab" style="display:none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="ri-code-line"></i> API访问规则</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>API路径</th>
+                                        <th>允许角色</th>
+                                        <th>速率限制</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="apiRulesBody">
+                                    <tr><td colspan="5" class="loading">加载中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="roleTab" style="display:none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="ri-user-settings-line"></i> 角色权限配置</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="role-list" id="roleList">
+                            <div class="loading">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="addRuleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-add-line"></i> 添加访问规则</h3>
+                <button class="modal-close" onclick="hideAddRuleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addRuleForm">
+                    <div class="form-group">
+                        <label class="form-label">规则类型</label>
+                        <select class="form-control" id="ruleType" required>
+                            <option value="whitelist">白名单</option>
+                            <option value="blacklist">黑名单</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">IP地址/网段</label>
+                        <input type="text" class="form-control" id="ipAddress" placeholder="例如: 192.168.1.1 或 192.168.1.0/24" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">描述/原因</label>
+                        <textarea class="form-control" id="description" rows="2"></textarea>
+                    </div>
+                    <div class="form-group" id="expiryGroup">
+                        <label class="form-label">有效期</label>
+                        <select class="form-control" id="expiry">
+                            <option value="permanent">永久</option>
+                            <option value="1h">1小时</option>
+                            <option value="24h">24小时</option>
+                            <option value="7d">7天</option>
+                            <option value="30d">30天</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideAddRuleModal()">取消</button>
+                <button class="btn btn-primary" onclick="addRule()">添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWhitelist();
+            loadBlacklist();
+            loadApiRules();
+            loadRoles();
+        });
+        
+        function showTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Tab').style.display = 'block';
+        }
+        
+        function loadWhitelist() {
+            fetch('/api/security/access/whitelist')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('whitelistBody');
+                    if (data.success && data.data && data.data.length > 0) {
+                        tbody.innerHTML = data.data.map(item => `
+                            <tr>
+                                <td><code>${item.ip}</code></td>
+                                <td>${item.description || '-'}</td>
+                                <td>${formatDate(item.createdAt)}</td>
+                                <td><span class="badge badge-success">有效</span></td>
+                                <td class="actions">
+                                    <button class="btn btn-sm btn-danger" onclick="removeWhitelist('${item.id}')">移除</button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">暂无白名单</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load whitelist:', error);
+                    document.getElementById('whitelistBody').innerHTML = '<tr><td colspan="5" class="empty-state">加载失败</td></tr>';
+                });
+        }
+        
+        function loadBlacklist() {
+            fetch('/api/security/access/blacklist')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('blacklistBody');
+                    if (data.success && data.data && data.data.length > 0) {
+                        tbody.innerHTML = data.data.map(item => `
+                            <tr>
+                                <td><code>${item.ip}</code></td>
+                                <td>${item.reason || '-'}</td>
+                                <td>${formatDate(item.bannedAt)}</td>
+                                <td>${item.expiresAt ? formatDate(item.expiresAt) : '永久'}</td>
+                                <td class="actions">
+                                    <button class="btn btn-sm btn-primary" onclick="unbanIp('${item.id}')">解封</button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">暂无黑名单</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load blacklist:', error);
+                    document.getElementById('blacklistBody').innerHTML = '<tr><td colspan="5" class="empty-state">加载失败</td></tr>';
+                });
+        }
+        
+        function loadApiRules() {
+            fetch('/api/security/access/api-rules')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('apiRulesBody');
+                    if (data.success && data.data && data.data.length > 0) {
+                        tbody.innerHTML = data.data.map(rule => `
+                            <tr>
+                                <td><code>${rule.path}</code></td>
+                                <td>${rule.roles.map(r => `<span class="badge badge-primary">${r}</span>`).join(' ')}</td>
+                                <td>${rule.rateLimit || '无限制'}</td>
+                                <td><span class="badge badge-${rule.enabled ? 'success' : 'secondary'}">${rule.enabled ? '启用' : '禁用'}</span></td>
+                                <td class="actions">
+                                    <button class="btn btn-sm btn-secondary" onclick="editApiRule('${rule.id}')">编辑</button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">暂无API规则</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load API rules:', error);
+                    document.getElementById('apiRulesBody').innerHTML = '<tr><td colspan="5" class="empty-state">加载失败</td></tr>';
+                });
+        }
+        
+        function loadRoles() {
+            fetch('/api/security/access/roles')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('roleList');
+                    if (data.success && data.data && data.data.length > 0) {
+                        container.innerHTML = data.data.map(role => `
+                            <div class="role-card">
+                                <div class="role-header">
+                                    <h4>${role.name}</h4>
+                                    <span class="badge badge-${role.type === 'system' ? 'danger' : 'primary'}">${role.type === 'system' ? '系统' : '自定义'}</span>
+                                </div>
+                                <div class="role-permissions">
+                                    ${role.permissions.map(p => `<span class="permission-tag">${p}</span>`).join('')}
+                                </div>
+                                <div class="role-actions">
+                                    <button class="btn btn-sm btn-secondary" onclick="editRole('${role.id}')">编辑权限</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div class="empty-state">暂无角色数据</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load roles:', error);
+                    document.getElementById('roleList').innerHTML = '<div class="empty-state">加载失败</div>';
+                });
+        }
+        
+        function showAddRuleModal() {
+            document.getElementById('addRuleModal').classList.add('show');
+        }
+        
+        function hideAddRuleModal() {
+            document.getElementById('addRuleModal').classList.remove('show');
+            document.getElementById('addRuleForm').reset();
+        }
+        
+        function addRule() {
+            const rule = {
+                type: document.getElementById('ruleType').value,
+                ip: document.getElementById('ipAddress').value,
+                description: document.getElementById('description').value,
+                expiry: document.getElementById('expiry').value
+            };
+            
+            fetch('/api/security/access/rules', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rule)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideAddRuleModal();
+                    loadWhitelist();
+                    loadBlacklist();
+                    alert('规则添加成功');
+                } else {
+                    alert('添加失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to add rule:', error);
+                alert('添加失败');
+            });
+        }
+        
+        function removeWhitelist(id) {
+            if (confirm('确定要移除此白名单吗？')) {
+                fetch(`/api/security/access/whitelist/${id}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadWhitelist();
+                            alert('已移除');
+                        } else {
+                            alert('操作失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to remove:', error);
+                        alert('操作失败');
+                    });
+            }
+        }
+        
+        function unbanIp(id) {
+            if (confirm('确定要解封此IP吗？')) {
+                fetch(`/api/security/access/blacklist/${id}/unban`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadBlacklist();
+                            alert('已解封');
+                        } else {
+                            alert('操作失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to unban:', error);
+                        alert('操作失败');
+                    });
+            }
+        }
+        
+        function refreshRules() {
+            loadWhitelist();
+            loadBlacklist();
+            loadApiRules();
+            loadRoles();
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN');
+        }
+    </script>
+    
+    <style>
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            color: var(--ns-dark);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tab-btn:hover {
+            background: var(--ns-bg-hover);
+        }
+        
+        .tab-btn.active {
+            background: var(--nx-primary);
+            color: white;
+            border-color: var(--nx-primary);
+        }
+        
+        .role-card {
+            background: var(--ns-card-bg);
+            border: 1px solid var(--ns-border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .role-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .role-header h4 {
+            margin: 0;
+        }
+        
+        .role-permissions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .permission-tag {
+            padding: 4px 8px;
+            background: var(--ns-bg-hover);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        code {
+            background: var(--ns-bg-hover);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</body>
+</html>

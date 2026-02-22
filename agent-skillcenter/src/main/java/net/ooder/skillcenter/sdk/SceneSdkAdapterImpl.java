@@ -164,7 +164,7 @@ public class SceneSdkAdapterImpl implements SceneSdkAdapter {
         dto.setName(info.getName());
         dto.setDescription(info.getDescription());
         if (info.getStatus() != null) {
-            dto.setStatus(info.getStatus());
+            dto.setType(info.getStatus());
         }
         if (info.getCreatedAt() != null) {
             dto.setCreateTime(info.getCreatedAt());

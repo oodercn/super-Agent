@@ -563,12 +563,8 @@ public class SceneEngineAdapterImpl implements SceneEngineAdapter {
         dto.setSkillId(skill.getSkillId());
         dto.setName(skill.getName());
         dto.setVersion(skill.getVersion());
-        dto.setDescription(skill.getDescription());
-        dto.setAuthor(skill.getAuthor());
-        dto.setCategory(skill.getCategory());
         dto.setStatus(skill.getStatus());
         dto.setInstalledAt(skill.getInstalledAt());
-        dto.setUpdatedAt(skill.getUpdatedAt());
         return dto;
     }
 

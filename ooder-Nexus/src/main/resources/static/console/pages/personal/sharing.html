@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexus Personal Sharing - 我的分享">
+    <meta name="theme-color" content="#000000">
+    <title>我的分享 - Nexus Console</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+    <script src="../../js/theme-manager.js?v=2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="page-header">
+                <h1><i class="ri-share-line"></i> 我的分享</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showShareModal()">
+                        <i class="ri-add-line"></i> 新建分享
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-folder-shared-line"></i> 我分享的文件</h3>
+                    <div class="card-header-actions">
+                        <select id="shareTypeFilter" class="form-control" onchange="filterShares()">
+                            <option value="all">全部类型</option>
+                            <option value="file">文件</option>
+                            <option value="skill">技能</option>
+                            <option value="scene">场景</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>名称</th>
+                                    <th>类型</th>
+                                    <th>分享对象</th>
+                                    <th>创建时间</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sharesTableBody">
+                                <tr>
+                                    <td colspan="6" class="loading">加载中...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-user-line"></i> 分享给我的</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>名称</th>
+                                    <th>来源</th>
+                                    <th>分享者</th>
+                                    <th>接收时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sharedWithMeBody">
+                                <tr>
+                                    <td colspan="5" class="loading">加载中...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="shareModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-add-line"></i> 新建分享</h3>
+                <button class="modal-close" onclick="hideShareModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="shareForm">
+                    <div class="form-group">
+                        <label class="form-label">分享类型</label>
+                        <select class="form-control" id="shareType" required>
+                            <option value="file">文件</option>
+                            <option value="skill">技能</option>
+                            <option value="scene">场景</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">选择项目</label>
+                        <select class="form-control" id="shareItem" required>
+                            <option value="">请先选择类型</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">分享对象</label>
+                        <select class="form-control" id="shareTarget" required>
+                            <option value="public">公开分享</option>
+                            <option value="group">群组分享</option>
+                            <option value="user">指定用户</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="targetUsersGroup" style="display:none;">
+                        <label class="form-label">目标用户</label>
+                        <input type="text" class="form-control" id="targetUsers" placeholder="输入用户ID，多个用逗号分隔">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">权限设置</label>
+                        <select class="form-control" id="sharePermission">
+                            <option value="read">只读</option>
+                            <option value="write">读写</option>
+                            <option value="admin">管理</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">有效期</label>
+                        <select class="form-control" id="shareExpiry">
+                            <option value="permanent">永久</option>
+                            <option value="7d">7天</option>
+                            <option value="30d">30天</option>
+                            <option value="90d">90天</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideShareModal()">取消</button>
+                <button class="btn btn-primary" onclick="createShare()">创建分享</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMyShares();
+            loadSharedWithMe();
+        });
+        
+        function loadMyShares() {
+            fetch('/api/personal/sharing')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('sharesTableBody');
+                    if (data.success && data.data && data.data.length > 0) {
+                        tbody.innerHTML = data.data.map(share => `
+                            <tr>
+                                <td>${share.name}</td>
+                                <td><span class="badge badge-${getTypeBadge(share.type)}">${getTypeName(share.type)}</span></td>
+                                <td>${share.target || '公开'}</td>
+                                <td>${formatDate(share.createdAt)}</td>
+                                <td><span class="badge badge-${share.status === 'active' ? 'success' : 'secondary'}">${share.status === 'active' ? '有效' : '已过期'}</span></td>
+                                <td class="actions">
+                                    <button class="btn btn-sm btn-secondary" onclick="editShare('${share.id}')"><i class="ri-edit-line"></i></button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteShare('${share.id}')"><i class="ri-delete-bin-line"></i></button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无分享记录</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load shares:', error);
+                    document.getElementById('sharesTableBody').innerHTML = '<tr><td colspan="6" class="empty-state">加载失败</td></tr>';
+                });
+        }
+        
+        function loadSharedWithMe() {
+            fetch('/api/personal/sharing/received')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('sharedWithMeBody');
+                    if (data.success && data.data && data.data.length > 0) {
+                        tbody.innerHTML = data.data.map(share => `
+                            <tr>
+                                <td>${share.name}</td>
+                                <td>${share.source || '-'}</td>
+                                <td>${share.sharer || '未知'}</td>
+                                <td>${formatDate(share.receivedAt)}</td>
+                                <td class="actions">
+                                    <button class="btn btn-sm btn-primary" onclick="acceptShare('${share.id}')">接受</button>
+                                    <button class="btn btn-sm btn-secondary" onclick="rejectShare('${share.id}')">拒绝</button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">暂无分享给我的内容</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load shared with me:', error);
+                    document.getElementById('sharedWithMeBody').innerHTML = '<tr><td colspan="5" class="empty-state">加载失败</td></tr>';
+                });
+        }
+        
+        function showShareModal() {
+            document.getElementById('shareModal').classList.add('show');
+        }
+        
+        function hideShareModal() {
+            document.getElementById('shareModal').classList.remove('show');
+            document.getElementById('shareForm').reset();
+        }
+        
+        function createShare() {
+            const share = {
+                type: document.getElementById('shareType').value,
+                itemId: document.getElementById('shareItem').value,
+                target: document.getElementById('shareTarget').value,
+                targetUsers: document.getElementById('targetUsers').value,
+                permission: document.getElementById('sharePermission').value,
+                expiry: document.getElementById('shareExpiry').value
+            };
+            
+            fetch('/api/personal/sharing', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(share)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideShareModal();
+                    loadMyShares();
+                    alert('分享创建成功');
+                } else {
+                    alert('创建失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to create share:', error);
+                alert('创建失败');
+            });
+        }
+        
+        function editShare(shareId) {
+            window.location.href = '/console/pages/personal/sharing-edit.html?id=' + shareId;
+        }
+        
+        function deleteShare(shareId) {
+            if (confirm('确定要删除此分享吗？')) {
+                fetch('/api/personal/sharing/' + shareId, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadMyShares();
+                        alert('删除成功');
+                    } else {
+                        alert('删除失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to delete share:', error);
+                    alert('删除失败');
+                });
+            }
+        }
+        
+        function acceptShare(shareId) {
+            fetch('/api/personal/sharing/' + shareId + '/accept', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadSharedWithMe();
+                    alert('已接受分享');
+                } else {
+                    alert('操作失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to accept share:', error);
+                alert('操作失败');
+            });
+        }
+        
+        function rejectShare(shareId) {
+            if (confirm('确定要拒绝此分享吗？')) {
+                fetch('/api/personal/sharing/' + shareId + '/reject', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadSharedWithMe();
+                        alert('已拒绝分享');
+                    } else {
+                        alert('操作失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to reject share:', error);
+                    alert('操作失败');
+                });
+            }
+        }
+        
+        function filterShares() {
+            loadMyShares();
+        }
+        
+        function getTypeBadge(type) {
+            const badges = { 'file': 'primary', 'skill': 'success', 'scene': 'warning' };
+            return badges[type] || 'secondary';
+        }
+        
+        function getTypeName(type) {
+            const names = { 'file': '文件', 'skill': '技能', 'scene': '场景' };
+            return names[type] || type;
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN');
+        }
+        
+        document.getElementById('shareTarget').addEventListener('change', function() {
+            const targetUsersGroup = document.getElementById('targetUsersGroup');
+            if (this.value === 'user') {
+                targetUsersGroup.style.display = 'block';
+            } else {
+                targetUsersGroup.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

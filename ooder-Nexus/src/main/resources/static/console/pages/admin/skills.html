@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexus Admin Skills Review - 技能审核">
+    <meta name="theme-color" content="#000000">
+    <title>技能审核 - Nexus Console</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/components/tables.css">
+    <script src="../../js/theme-manager.js?v=2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="ri-admin-line"></i> 管理后台</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="ri-dashboard-line"></i> 仪表盘
+                </a>
+                <a href="skills.html" class="nav-item active">
+                    <i class="ri-lightbulb-line"></i> 技能审核
+                </a>
+                <a href="users.html" class="nav-item">
+                    <i class="ri-user-line"></i> 用户管理
+                </a>
+                <a href="storage.html" class="nav-item">
+                    <i class="ri-hard-drive-2-line"></i> 存储管理
+                </a>
+                <a href="remote.html" class="nav-item">
+                    <i class="ri-remote-control-line"></i> 远程管理
+                </a>
+            </nav>
+        </div>
+        
+        <div class="main-content">
+            <div class="page-header">
+                <h1><i class="ri-lightbulb-line"></i> 技能审核</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="refreshSkills()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <i class="ri-time-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="pendingCount">-</div>
+                        <div class="stat-label">待审核</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <i class="ri-check-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="approvedCount">-</div>
+                        <div class="stat-label">已通过</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon danger">
+                        <i class="ri-close-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="rejectedCount">-</div>
+                        <div class="stat-label">已拒绝</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon primary">
+                        <i class="ri-lightbulb-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalCount">-</div>
+                        <div class="stat-label">总技能数</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-list-check"></i> 技能列表</h3>
+                    <div class="card-header-actions">
+                        <select id="statusFilter" class="form-control" onchange="filterSkills()">
+                            <option value="all">全部状态</option>
+                            <option value="pending">待审核</option>
+                            <option value="approved">已通过</option>
+                            <option value="rejected">已拒绝</option>
+                        </select>
+                        <input type="text" id="searchInput" class="form-control" placeholder="搜索技能..." onkeyup="searchSkills()">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>技能名称</th>
+                                    <th>版本</th>
+                                    <th>作者</th>
+                                    <th>分类</th>
+                                    <th>提交时间</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="skillsTableBody">
+                                <tr>
+                                    <td colspan="7" class="loading">加载中...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-pagination">
+                        <span class="pagination-info" id="paginationInfo">共 0 条</span>
+                        <div class="pagination-controls">
+                            <button class="pagination-btn" onclick="prevPage()">上一页</button>
+                            <span id="currentPage">1</span>
+                            <button class="pagination-btn" onclick="nextPage()">下一页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="skillDetailModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3><i class="ri-lightbulb-line"></i> 技能详情</h3>
+                <button class="modal-close" onclick="hideSkillDetail()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="skill-detail" id="skillDetail">
+                    <div class="loading">加载中...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideSkillDetail()">关闭</button>
+                <button class="btn btn-danger" onclick="rejectSkillFromModal()">拒绝</button>
+                <button class="btn btn-success" onclick="approveSkillFromModal()">通过</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        let currentPage = 1;
+        let pageSize = 10;
+        let currentSkillId = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSkillStats();
+            loadSkills();
+        });
+        
+        function loadSkillStats() {
+            fetch('/api/admin/skills/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('pendingCount').textContent = data.data.pending || 0;
+                        document.getElementById('approvedCount').textContent = data.data.approved || 0;
+                        document.getElementById('rejectedCount').textContent = data.data.rejected || 0;
+                        document.getElementById('totalCount').textContent = data.data.total || 0;
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load stats:', error);
+                });
+        }
+        
+        function loadSkills() {
+            const status = document.getElementById('statusFilter').value;
+            const search = document.getElementById('searchInput').value;
+            
+            fetch(`/api/admin/skills?page=${currentPage}&size=${pageSize}&status=${status}&search=${encodeURIComponent(search)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('skillsTableBody');
+                    if (data.success && data.data && data.data.items && data.data.items.length > 0) {
+                        tbody.innerHTML = data.data.items.map(skill => `
+                            <tr>
+                                <td>
+                                    <div class="skill-name">
+                                        <i class="ri-lightbulb-line"></i>
+                                        <span>${skill.name}</span>
+                                    </div>
+                                </td>
+                                <td>v${skill.version}</td>
+                                <td>${skill.author}</td>
+                                <td><span class="badge badge-secondary">${skill.category || '未分类'}</span></td>
+                                <td>${formatDate(skill.createdAt)}</td>
+                                <td><span class="badge badge-${getStatusBadge(skill.status)}">${getStatusName(skill.status)}</span></td>
+                                <td class="actions">
+                                    <button class="btn btn-sm btn-secondary" onclick="viewSkillDetail('${skill.id}')">
+                                        <i class="ri-eye-line"></i> 查看
+                                    </button>
+                                    ${skill.status === 'pending' ? `
+                                        <button class="btn btn-sm btn-success" onclick="approveSkill('${skill.id}')">
+                                            <i class="ri-check-line"></i> 通过
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="rejectSkill('${skill.id}')">
+                                            <i class="ri-close-line"></i> 拒绝
+                                        </button>
+                                    ` : ''}
+                                </td>
+                            </tr>
+                        `).join('');
+                        
+                        document.getElementById('paginationInfo').textContent = `共 ${data.data.total} 条`;
+                        document.getElementById('currentPage').textContent = currentPage;
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无技能数据</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load skills:', error);
+                    document.getElementById('skillsTableBody').innerHTML = '<tr><td colspan="7" class="empty-state">加载失败</td></tr>';
+                });
+        }
+        
+        function viewSkillDetail(skillId) {
+            currentSkillId = skillId;
+            fetch(`/api/admin/skills/${skillId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const skill = data.data;
+                        document.getElementById('skillDetail').innerHTML = `
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <label>技能名称</label>
+                                    <span>${skill.name}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>版本</label>
+                                    <span>v${skill.version}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>作者</label>
+                                    <span>${skill.author}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>分类</label>
+                                    <span>${skill.category || '未分类'}</span>
+                                </div>
+                                <div class="detail-item full-width">
+                                    <label>描述</label>
+                                    <span>${skill.description || '无描述'}</span>
+                                </div>
+                                <div class="detail-item full-width">
+                                    <label>能力列表</label>
+                                    <div class="capability-list">
+                                        ${skill.capabilities && skill.capabilities.length > 0 
+                                            ? skill.capabilities.map(cap => `<span class="badge badge-primary">${cap}</span>`).join('') 
+                                            : '<span class="text-muted">无能力定义</span>'}
+                                    </div>
+                                </div>
+                                <div class="detail-item full-width">
+                                    <label>依赖项</label>
+                                    <div class="dependency-list">
+                                        ${skill.dependencies && skill.dependencies.length > 0 
+                                            ? skill.dependencies.map(dep => `<span class="badge badge-secondary">${dep}</span>`).join('') 
+                                            : '<span class="text-muted">无依赖</span>'}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.getElementById('skillDetailModal').classList.add('show');
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load skill detail:', error);
+                    alert('加载技能详情失败');
+                });
+        }
+        
+        function hideSkillDetail() {
+            document.getElementById('skillDetailModal').classList.remove('show');
+            currentSkillId = null;
+        }
+        
+        function approveSkill(skillId) {
+            if (confirm('确定要通过此技能吗？')) {
+                fetch(`/api/admin/skills/${skillId}/approve`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('技能已通过');
+                            loadSkills();
+                            loadSkillStats();
+                        } else {
+                            alert('操作失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to approve skill:', error);
+                        alert('操作失败');
+                    });
+            }
+        }
+        
+        function rejectSkill(skillId) {
+            const reason = prompt('请输入拒绝原因：');
+            if (reason !== null) {
+                fetch(`/api/admin/skills/${skillId}/reject`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: reason })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('技能已拒绝');
+                        loadSkills();
+                        loadSkillStats();
+                    } else {
+                        alert('操作失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to reject skill:', error);
+                    alert('操作失败');
+                });
+            }
+        }
+        
+        function approveSkillFromModal() {
+            if (currentSkillId) {
+                approveSkill(currentSkillId);
+                hideSkillDetail();
+            }
+        }
+        
+        function rejectSkillFromModal() {
+            if (currentSkillId) {
+                rejectSkill(currentSkillId);
+                hideSkillDetail();
+            }
+        }
+        
+        function refreshSkills() {
+            loadSkillStats();
+            loadSkills();
+        }
+        
+        function filterSkills() {
+            currentPage = 1;
+            loadSkills();
+        }
+        
+        function searchSkills() {
+            currentPage = 1;
+            loadSkills();
+        }
+        
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadSkills();
+            }
+        }
+        
+        function nextPage() {
+            currentPage++;
+            loadSkills();
+        }
+        
+        function getStatusBadge(status) {
+            const badges = {
+                'pending': 'warning',
+                'approved': 'success',
+                'rejected': 'danger'
+            };
+            return badges[status] || 'secondary';
+        }
+        
+        function getStatusName(status) {
+            const names = {
+                'pending': '待审核',
+                'approved': '已通过',
+                'rejected': '已拒绝'
+            };
+            return names[status] || status;
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN');
+        }
+    </script>
+    
+    <style>
+        .skill-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .skill-name i {
+            color: var(--nx-primary);
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .detail-item.full-width {
+            grid-column: span 2;
+        }
+        
+        .detail-item label {
+            font-size: 12px;
+            color: var(--ns-secondary);
+            font-weight: 500;
+        }
+        
+        .capability-list, .dependency-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .modal-lg {
+            max-width: 700px;
+        }
+    </style>
+</body>
+</html>

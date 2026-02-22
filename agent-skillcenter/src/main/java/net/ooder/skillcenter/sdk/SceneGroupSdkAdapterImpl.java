@@ -101,9 +101,8 @@ public class SceneGroupSdkAdapterImpl implements SceneGroupSdkAdapter {
     public FailoverStatusDTO getFailoverStatus(String sceneGroupId) {
         FailoverStatusDTO dto = new FailoverStatusDTO();
         dto.setSceneGroupId(sceneGroupId);
-        dto.setStatus("stable");
-        dto.setLastFailoverTime(0L);
-        dto.setFailoverCount(0);
+        dto.setInProgress(false);
+        dto.setPhase("stable");
         return dto;
     }
 
@@ -112,7 +111,7 @@ public class SceneGroupSdkAdapterImpl implements SceneGroupSdkAdapter {
         SceneGroupKeyDTO dto = new SceneGroupKeyDTO();
         dto.setKeyId("key-" + UUID.randomUUID().toString().substring(0, 8));
         dto.setSceneGroupId(sceneGroupId);
-        dto.setCreatedAt(System.currentTimeMillis());
+        dto.setCreateTime(System.currentTimeMillis());
         return dto;
     }
 
@@ -121,7 +120,7 @@ public class SceneGroupSdkAdapterImpl implements SceneGroupSdkAdapter {
         SceneGroupKeyDTO dto = new SceneGroupKeyDTO();
         dto.setKeyId("key-reconstructed");
         dto.setSceneGroupId(sceneGroupId);
-        dto.setCreatedAt(System.currentTimeMillis());
+        dto.setCreateTime(System.currentTimeMillis());
         return dto;
     }
 

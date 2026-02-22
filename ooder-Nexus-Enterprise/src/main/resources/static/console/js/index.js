@@ -59,12 +59,6 @@ function loadRecentAccess() {
 
 // 选择页面类型
 function selectPageType(pageType) {
-    // 企业网页面暂不可用
-    if (pageType === 'enterprise') {
-        alert('企业网页面暂不可用');
-        return;
-    }
-    
     // 保存页面类型到本地存储
     localStorage.setItem('mcp_agent_page_type', pageType);
     
@@ -74,6 +68,9 @@ function selectPageType(pageType) {
         case 'home':
         case 'lan':
             role = 'home';
+            break;
+        case 'enterprise':
+            role = 'enterprise';
             break;
     }
     localStorage.setItem('currentRole', role);
@@ -125,8 +122,7 @@ function navigateToPage(pageType) {
             window.location.href = '/console/pages/lan/lan-dashboard.html';
             break;
         case 'enterprise':
-            // 企业网页面暂不可用
-            alert('企业网页面暂不可用');
+            window.location.href = '/console/pages/admin/dashboard.html';
             break;
     }
 }

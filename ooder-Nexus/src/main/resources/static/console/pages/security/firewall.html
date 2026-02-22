@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexus Firewall Management - 防火墙管理">
+    <meta name="theme-color" content="#000000">
+    <title>防火墙管理 - Nexus Console</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/components/tables.css">
+    <script src="../../js/theme-manager.js?v=2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="page-header">
+                <h1><i class="ri-shield-line"></i> 防火墙管理</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showAddRuleModal()">
+                        <i class="ri-add-line"></i> 添加规则
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshRules()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-list-check"></i> 防火墙规则</h3>
+                    <div class="card-header-actions">
+                        <select id="ruleTypeFilter" class="form-control" onchange="filterRules()">
+                            <option value="all">全部类型</option>
+                            <option value="input">入站规则</option>
+                            <option value="output">出站规则</option>
+                            <option value="forward">转发规则</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th>类型</th>
+                                    <th>协议</th>
+                                    <th>源地址</th>
+                                    <th>目标地址</th>
+                                    <th>端口</th>
+                                    <th>动作</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rulesTableBody">
+                                <tr>
+                                    <td colspan="9" class="loading">加载中...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="ri-bar-chart-line"></i> 防火墙状态</h3>
+                </div>
+                <div class="card-body">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <div class="status-label">防火墙状态</div>
+                            <div class="status-value" id="firewallStatus">
+                                <span class="badge badge-success">运行中</span>
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">总规则数</div>
+                            <div class="status-value" id="totalRules">-</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">已拦截</div>
+                            <div class="status-value" id="blockedCount">-</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">已放行</div>
+                            <div class="status-value" id="allowedCount">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="addRuleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-add-line"></i> 添加防火墙规则</h3>
+                <button class="modal-close" onclick="hideAddRuleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addRuleForm">
+                    <div class="form-group">
+                        <label class="form-label">规则类型</label>
+                        <select class="form-control" id="ruleType" required>
+                            <option value="input">入站规则</option>
+                            <option value="output">出站规则</option>
+                            <option value="forward">转发规则</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">协议</label>
+                        <select class="form-control" id="ruleProtocol" required>
+                            <option value="tcp">TCP</option>
+                            <option value="udp">UDP</option>
+                            <option value="icmp">ICMP</option>
+                            <option value="all">全部</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">源地址</label>
+                        <input type="text" class="form-control" id="ruleSource" placeholder="例如: 192.168.1.0/24 或 0.0.0.0/0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">目标地址</label>
+                        <input type="text" class="form-control" id="ruleDestination" placeholder="例如: 192.168.1.100 或 0.0.0.0/0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">端口</label>
+                        <input type="text" class="form-control" id="rulePort" placeholder="例如: 80, 443, 8080-8090">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">动作</label>
+                        <select class="form-control" id="ruleAction" required>
+                            <option value="accept">放行</option>
+                            <option value="drop">丢弃</option>
+                            <option value="reject">拒绝</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-control" id="ruleDescription" rows="2" placeholder="规则描述"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideAddRuleModal()">取消</button>
+                <button class="btn btn-primary" onclick="addRule()">添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFirewallRules();
+            loadFirewallStatus();
+        });
+        
+        function loadFirewallRules() {
+            fetch('/api/firewall/rules')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('rulesTableBody');
+                    if (data.success && data.data && data.data.length > 0) {
+                        tbody.innerHTML = data.data.map((rule, index) => `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td><span class="badge badge-${getTypeBadge(rule.type)}">${getTypeName(rule.type)}</span></td>
+                                <td>${rule.protocol.toUpperCase()}</td>
+                                <td>${rule.source || '任意'}</td>
+                                <td>${rule.destination || '任意'}</td>
+                                <td>${rule.port || '全部'}</td>
+                                <td><span class="badge badge-${getActionBadge(rule.action)}">${getActionName(rule.action)}</span></td>
+                                <td><span class="badge badge-${rule.enabled ? 'success' : 'secondary'}">${rule.enabled ? '启用' : '禁用'}</span></td>
+                                <td class="actions">
+                                    <button class="btn btn-sm btn-secondary" onclick="toggleRule('${rule.id}', ${!rule.enabled})">
+                                        <i class="ri-${rule.enabled ? 'pause' : 'play'}-line"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteRule('${rule.id}')">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('');
+                        document.getElementById('totalRules').textContent = data.data.length;
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="9" class="empty-state">暂无防火墙规则</td></tr>';
+                        document.getElementById('totalRules').textContent = '0';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load firewall rules:', error);
+                    document.getElementById('rulesTableBody').innerHTML = '<tr><td colspan="9" class="empty-state">加载失败</td></tr>';
+                });
+        }
+        
+        function loadFirewallStatus() {
+            fetch('/api/firewall/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const statusBadge = document.getElementById('firewallStatus');
+                        if (data.data.running) {
+                            statusBadge.innerHTML = '<span class="badge badge-success">运行中</span>';
+                        } else {
+                            statusBadge.innerHTML = '<span class="badge badge-danger">已停止</span>';
+                        }
+                        document.getElementById('blockedCount').textContent = data.data.blocked || 0;
+                        document.getElementById('allowedCount').textContent = data.data.allowed || 0;
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load firewall status:', error);
+                });
+        }
+        
+        function showAddRuleModal() {
+            document.getElementById('addRuleModal').classList.add('show');
+        }
+        
+        function hideAddRuleModal() {
+            document.getElementById('addRuleModal').classList.remove('show');
+            document.getElementById('addRuleForm').reset();
+        }
+        
+        function addRule() {
+            const rule = {
+                type: document.getElementById('ruleType').value,
+                protocol: document.getElementById('ruleProtocol').value,
+                source: document.getElementById('ruleSource').value,
+                destination: document.getElementById('ruleDestination').value,
+                port: document.getElementById('rulePort').value,
+                action: document.getElementById('ruleAction').value,
+                description: document.getElementById('ruleDescription').value
+            };
+            
+            fetch('/api/firewall/rules', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rule)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideAddRuleModal();
+                    loadFirewallRules();
+                    alert('规则添加成功');
+                } else {
+                    alert('添加失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to add rule:', error);
+                alert('添加失败');
+            });
+        }
+        
+        function toggleRule(ruleId, enabled) {
+            fetch(`/api/firewall/rules/${ruleId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: enabled })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadFirewallRules();
+                } else {
+                    alert('操作失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to toggle rule:', error);
+                alert('操作失败');
+            });
+        }
+        
+        function deleteRule(ruleId) {
+            if (confirm('确定要删除此规则吗？')) {
+                fetch(`/api/firewall/rules/${ruleId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadFirewallRules();
+                    } else {
+                        alert('删除失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to delete rule:', error);
+                    alert('删除失败');
+                });
+            }
+        }
+        
+        function refreshRules() {
+            loadFirewallRules();
+            loadFirewallStatus();
+        }
+        
+        function filterRules() {
+            const type = document.getElementById('ruleTypeFilter').value;
+            loadFirewallRules();
+        }
+        
+        function getTypeBadge(type) {
+            const badges = {
+                'input': 'primary',
+                'output': 'success',
+                'forward': 'warning'
+            };
+            return badges[type] || 'secondary';
+        }
+        
+        function getTypeName(type) {
+            const names = {
+                'input': '入站',
+                'output': '出站',
+                'forward': '转发'
+            };
+            return names[type] || type;
+        }
+        
+        function getActionBadge(action) {
+            const badges = {
+                'accept': 'success',
+                'drop': 'danger',
+                'reject': 'warning'
+            };
+            return badges[action] || 'secondary';
+        }
+        
+        function getActionName(action) {
+            const names = {
+                'accept': '放行',
+                'drop': '丢弃',
+                'reject': '拒绝'
+            };
+            return names[action] || action;
+        }
+    </script>
+</body>
+</html>

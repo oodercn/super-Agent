@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexus Admin Dashboard - 管理后台仪表盘">
+    <meta name="theme-color" content="#000000">
+    <title>管理后台 - Nexus Console</title>
+    <link rel="stylesheet" href="../../css/theme.css">
+    <link rel="stylesheet" href="../../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+    <script src="../../js/theme-manager.js?v=2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="ri-admin-line"></i> 管理后台</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item active">
+                    <i class="ri-dashboard-line"></i> 仪表盘
+                </a>
+                <a href="skills.html" class="nav-item">
+                    <i class="ri-lightbulb-line"></i> 技能审核
+                </a>
+                <a href="users.html" class="nav-item">
+                    <i class="ri-user-line"></i> 用户管理
+                </a>
+                <a href="storage.html" class="nav-item">
+                    <i class="ri-hard-drive-2-line"></i> 存储管理
+                </a>
+                <a href="remote.html" class="nav-item">
+                    <i class="ri-remote-control-line"></i> 远程管理
+                </a>
+                <a href="categories.html" class="nav-item">
+                    <i class="ri-folder-line"></i> 分类管理
+                </a>
+                <a href="certification.html" class="nav-item">
+                    <i class="ri-shield-check-line"></i> 认证管理
+                </a>
+            </nav>
+        </div>
+        
+        <div class="main-content">
+            <div class="page-header">
+                <h1><i class="ri-dashboard-line"></i> 管理仪表盘</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="refreshDashboard()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon primary">
+                        <i class="ri-user-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalUsers">-</div>
+                        <div class="stat-label">总用户数</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <i class="ri-lightbulb-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalSkills">-</div>
+                        <div class="stat-label">技能总数</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <i class="ri-download-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalDownloads">-</div>
+                        <div class="stat-label">总下载量</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon danger">
+                        <i class="ri-alert-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="pendingReviews">-</div>
+                        <div class="stat-label">待审核</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="ri-time-line"></i> 最近活动</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="activity-list" id="recentActivity">
+                            <div class="loading">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="ri-lightbulb-line"></i> 待审核技能</h3>
+                        <a href="skills.html" class="btn btn-sm btn-secondary">查看全部</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="pending-list" id="pendingSkills">
+                            <div class="loading">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="ri-pie-chart-line"></i> 存储使用情况</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="storage-info" id="storageInfo">
+                            <div class="loading">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="ri-bar-chart-line"></i> 系统状态</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="system-status" id="systemStatus">
+                            <div class="loading">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../../js/common.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+        });
+        
+        function loadDashboardData() {
+            loadStats();
+            loadRecentActivity();
+            loadPendingSkills();
+            loadStorageInfo();
+            loadSystemStatus();
+        }
+        
+        function loadStats() {
+            fetch('/api/admin/dashboard/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('totalUsers').textContent = data.data.totalUsers || 0;
+                        document.getElementById('totalSkills').textContent = data.data.totalSkills || 0;
+                        document.getElementById('totalDownloads').textContent = data.data.totalDownloads || 0;
+                        document.getElementById('pendingReviews').textContent = data.data.pendingReviews || 0;
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load stats:', error);
+                    document.getElementById('totalUsers').textContent = '0';
+                    document.getElementById('totalSkills').textContent = '0';
+                    document.getElementById('totalDownloads').textContent = '0';
+                    document.getElementById('pendingReviews').textContent = '0';
+                });
+        }
+        
+        function loadRecentActivity() {
+            fetch('/api/admin/dashboard/activity')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('recentActivity');
+                    if (data.success && data.data && data.data.length > 0) {
+                        container.innerHTML = data.data.map(activity => `
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="${activity.icon || 'ri-notification-line'}"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">${activity.title}</div>
+                                    <div class="activity-time">${activity.time}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div class="empty-state">暂无活动记录</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load activity:', error);
+                    document.getElementById('recentActivity').innerHTML = '<div class="empty-state">暂无活动记录</div>';
+                });
+        }
+        
+        function loadPendingSkills() {
+            fetch('/api/admin/skills?status=pending')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('pendingSkills');
+                    if (data.success && data.data && data.data.length > 0) {
+                        container.innerHTML = data.data.slice(0, 5).map(skill => `
+                            <div class="pending-item">
+                                <div class="pending-info">
+                                    <div class="pending-name">${skill.name}</div>
+                                    <div class="pending-meta">v${skill.version} · ${skill.author}</div>
+                                </div>
+                                <div class="pending-actions">
+                                    <button class="btn btn-sm btn-primary" onclick="approveSkill('${skill.id}')">通过</button>
+                                    <button class="btn btn-sm btn-secondary" onclick="rejectSkill('${skill.id}')">拒绝</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div class="empty-state">暂无待审核技能</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load pending skills:', error);
+                    document.getElementById('pendingSkills').innerHTML = '<div class="empty-state">暂无待审核技能</div>';
+                });
+        }
+        
+        function loadStorageInfo() {
+            fetch('/api/admin/storage/stats')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('storageInfo');
+                    if (data.success) {
+                        const used = data.data.used || 0;
+                        const total = data.data.total || 100;
+                        const percentage = Math.round((used / total) * 100);
+                        container.innerHTML = `
+                            <div class="storage-bar">
+                                <div class="storage-used" style="width: ${percentage}%"></div>
+                            </div>
+                            <div class="storage-details">
+                                <span>已使用: ${formatBytes(used)}</span>
+                                <span>总计: ${formatBytes(total)}</span>
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = '<div class="empty-state">暂无存储信息</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load storage info:', error);
+                    document.getElementById('storageInfo').innerHTML = '<div class="empty-state">暂无存储信息</div>';
+                });
+        }
+        
+        function loadSystemStatus() {
+            fetch('/api/system/status')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('systemStatus');
+                    if (data.success) {
+                        container.innerHTML = `
+                            <div class="status-item">
+                                <span class="status-label">CPU使用率</span>
+                                <span class="status-value">${data.data.cpuUsage || 0}%</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">内存使用率</span>
+                                <span class="status-value">${data.data.memoryUsage || 0}%</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">磁盘使用率</span>
+                                <span class="status-value">${data.data.diskUsage || 0}%</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">运行时间</span>
+                                <span class="status-value">${data.data.uptime || '-'}</span>
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = '<div class="empty-state">暂无系统状态</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load system status:', error);
+                    document.getElementById('systemStatus').innerHTML = '<div class="empty-state">暂无系统状态</div>';
+                });
+        }
+        
+        function refreshDashboard() {
+            loadDashboardData();
+        }
+        
+        function approveSkill(skillId) {
+            if (confirm('确定要批准此技能吗？')) {
+                fetch(`/api/admin/skills/${skillId}/approve`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('技能已批准');
+                            loadPendingSkills();
+                        } else {
+                            alert('批准失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to approve skill:', error);
+                        alert('批准失败');
+                    });
+            }
+        }
+        
+        function rejectSkill(skillId) {
+            if (confirm('确定要拒绝此技能吗？')) {
+                fetch(`/api/admin/skills/${skillId}/reject`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('技能已拒绝');
+                            loadPendingSkills();
+                        } else {
+                            alert('拒绝失败: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to reject skill:', error);
+                        alert('拒绝失败');
+                    });
+            }
+        }
+        
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>
