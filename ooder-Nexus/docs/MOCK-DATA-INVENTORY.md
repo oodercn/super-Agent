@@ -6,7 +6,7 @@
 |------|------|
 | 创建日期 | 2026-02-22 |
 | 更新日期 | 2026-02-22 |
-| 版本 | v2.0 |
+| 版本 | v2.1 |
 | 状态 | 已更新 |
 
 ---
@@ -49,81 +49,9 @@
 
 ---
 
-## 2. 待完善的服务
+## 2. Skills 库完整匹配结果
 
-### 2.1 需要新增 SDK 实现的服务
-
-| 功能模块 | 需要的 Skill | 优先级 | 说明 | Skills库匹配 |
-|----------|--------------|--------|------|--------------|
-| 远程管理 | RemoteService | 中 | 远程终端管理 | ❌ 无匹配 |
-| 防火墙SDK | FirewallServiceSdk | 中 | 防火墙规则SDK | ❌ 无匹配 |
-| 访问控制SDK | AccessControlServiceSdk | 高 | 权限访问控制SDK | ❌ 无匹配 |
-| 审计日志SDK | AuditServiceSdk | 高 | 操作审计SDK | ❌ 无匹配 |
-
-### 2.2 Controller 依赖注入待完善
-
-| Controller | 依赖服务 | 当前状态 | 建议 |
-|------------|----------|----------|------|
-| PersonalDashboardController | PersonalDashboardService | 需要实现 | 使用 PersonalService |
-| CollaborationController | CollaborationService | 需要实现 | 已有 CollaborationProtocol |
-| SceneManagementController | SceneManagementService | 需要实现 | 使用 SceneService |
-| InstalledSkillController | InstalledSkillService | 需要实现 | 使用 SkillService |
-| SkillDiscoveryController | SkillDiscoveryService | 需要实现 | 使用 MarketService |
-| ConfigController | ConfigService | 需要实现 | 使用 SystemService |
-| StorageController | StorageService | 需要实现 | ✅ 已有 SDK |
-| NetworkDeviceController | NetworkDeviceService | 需要实现 | 使用 NetworkService |
-| NetworkMonitorController | NetworkMonitorService | 需要实现 | 使用 NetworkService |
-| DeviceController | DeviceService | 需要实现 | 新增实现 |
-| OrganizationController | OrganizationService | 需要实现 | 使用 GroupService |
-| EndAgentController | EndAgentService | 需要实现 | 新增实现 |
-| McpAgentController | McpAgentService | 需要实现 | 新增实现 |
-| RouteController | RouteService | 需要实现 | 新增实现 |
-| SchedulerController | SchedulerService | 需要实现 | 新增实现 |
-| MsgController | MsgService | 需要实现 | 新增实现 |
-
----
-
-## 3. 前端页面数据状态
-
-### 3.1 已有真实数据支持 ✅
-
-| 页面 | API 路径 | 数据来源 |
-|------|----------|----------|
-| 审计日志 | `/api/audit/*` | AuditLogServiceImpl |
-| 访问控制 | `/api/security/access/*` | AccessControlServiceImpl |
-| 防火墙 | `/api/firewall/*` | FirewallController |
-| 登录协议 | `/api/protocol/login/*` | LoginProtocolAdapterImpl |
-| 发现协议 | `/api/protocol/discovery/*` | DiscoveryProtocolAdapterImpl |
-| 协作协议 | `/api/protocol/collaboration/*` | CollaborationProtocolAdapterImpl |
-| 观察协议 | `/api/protocol/observation/*` | ObservationProtocol |
-| 域管理协议 | `/api/protocol/domain/*` | DomainManagementProtocol |
-| 管理仪表盘 | `/api/admin/dashboard/*` | AdminDashboardServiceImpl |
-
-### 3.2 使用 Mock 数据或空数据的页面
-
-| 页面 | API 路径 | 当前状态 | 建议 Skill |
-|------|----------|----------|------------|
-| 协作关系 | `/api/collaboration/*` | 空数据 | CollaborationService |
-| 场景列表 | `/api/scene/*` | 空数据 | SceneService |
-| 场景组 | `/api/scene/group/*` | 空数据 | SceneGroupService |
-| 能力约束 | `/api/scene/capability/*` | 空数据 | CapabilityService |
-| 消息中心 | `/api/im/*` | Mock 数据 | IMService |
-| 联系人 | `/api/im/contacts/*` | Mock 数据 | ContactsService |
-| 群组管理 | `/api/im/groups/*` | Mock 数据 | GroupService |
-| 文件管理 | `/api/im/files/*` | Mock 数据 | FileService |
-| 身份管理 | `/api/personal/identity/*` | Mock 数据 | IdentityService |
-| 我的分享 | `/api/personal/sharing/*` | Mock 数据 | ShareService |
-| 执行记录 | `/api/personal/execution/*` | Mock 数据 | ExecutionService |
-| 技能审核 | `/api/admin/skills/*` | Mock 数据 | SkillService |
-| 用户管理 | `/api/admin/users/*` | Mock 数据 | UserService |
-| 存储管理 | `/api/admin/storage/*` | Mock 数据 | StorageService |
-| 远程管理 | `/api/admin/remote/*` | Mock 数据 | RemoteService |
-
----
-
-## 4. Skills 库 API 检索结果
-
-### 4.1 已匹配的 Skills
+### 2.1 核心 SDK 服务 ✅
 
 | Nexus 服务 | Skills 库 API | 匹配状态 |
 |------------|---------------|----------|
@@ -143,18 +71,110 @@
 | 认证管理 | AuthenticationService | ✅ 已有 SDK |
 | 管理后台 | AdminService | ✅ 已有 SDK |
 
-### 4.2 无匹配的 Skills（需要开发）
+### 2.2 扩展 Skills 匹配 ✅
+
+| Nexus 功能 | Skills 库 Skill | 匹配状态 |
+|------------|-----------------|----------|
+| 消息服务 | skill-msg, skill-mqtt | ✅ 已覆盖 |
+| 命令服务 | skill-msg (命令模块) | ✅ 已覆盖 |
+| 资源服务 | skill-org-* (4个) | ✅ 已覆盖 |
+| 钉钉集成 | skill-org-dingding | ✅ 已覆盖 |
+| 飞书集成 | skill-org-feishu | ✅ 已覆盖 |
+| 用户认证 | skill-user-auth | ✅ 已覆盖 |
+| Agent 服务 | skill-agent | ✅ 已覆盖 |
+| 网络拓扑 | skill-network | ✅ 已覆盖 |
+| 数据源管理 | skill-vfs-* (5个) | ✅ 已覆盖 |
+| 系统监控 | skill-monitor | ✅ 已实现 |
+
+### 2.3 需要扩展的功能 ⚠️
+
+| 功能 | 当前状态 | 建议 |
+|------|----------|------|
+| 缓存管理 | 无对应技能 | 可扩展 skill-data-service |
+
+### 2.4 无匹配的 Skills（需要开发）❌
 
 | 功能 | 建议 Skill 名称 | 优先级 | 说明 |
 |------|-----------------|--------|------|
 | 远程终端 | remote-terminal-skill | 高 | SSH 远程连接管理 |
-| 防火墙SDK | firewall-skill | 中 | 防火墙规则 SDK 封装 |
 | 访问控制SDK | access-control-skill | 高 | 权限控制 SDK 封装 |
 | 审计日志SDK | audit-skill | 高 | 审计日志 SDK 封装 |
-| 即时通讯 | im-skill | 中 | 消息、联系人、群组管理 |
+| 防火墙SDK | firewall-skill | 中 | 防火墙规则 SDK 封装 |
 | 设备管理 | device-skill | 低 | 设备资产管理 |
 | 调度任务 | scheduler-skill | 低 | 定时任务管理 |
 | 路由管理 | route-skill | 低 | 路由配置管理 |
+
+---
+
+## 3. 待完善的服务
+
+### 3.1 需要新增 SDK 实现的服务
+
+| 功能模块 | 需要的 Skill | 优先级 | 说明 | Skills库匹配 |
+|----------|--------------|--------|------|--------------|
+| 远程管理 | RemoteService | 中 | 远程终端管理 | ❌ 无匹配 |
+| 防火墙SDK | FirewallServiceSdk | 中 | 防火墙规则SDK | ❌ 无匹配 |
+| 访问控制SDK | AccessControlServiceSdk | 高 | 权限访问控制SDK | ❌ 无匹配 |
+| 审计日志SDK | AuditServiceSdk | 高 | 操作审计SDK | ❌ 无匹配 |
+
+### 3.2 Controller 依赖注入待完善
+
+| Controller | 依赖服务 | 当前状态 | 建议 |
+|------------|----------|----------|------|
+| PersonalDashboardController | PersonalDashboardService | 需要实现 | 使用 PersonalService |
+| CollaborationController | CollaborationService | 需要实现 | 已有 CollaborationProtocol |
+| SceneManagementController | SceneManagementService | 需要实现 | 使用 SceneService |
+| InstalledSkillController | InstalledSkillService | 需要实现 | 使用 SkillService |
+| SkillDiscoveryController | SkillDiscoveryService | 需要实现 | 使用 MarketService |
+| ConfigController | ConfigService | 需要实现 | 使用 SystemService |
+| StorageController | StorageService | 需要实现 | ✅ 已有 SDK |
+| NetworkDeviceController | NetworkDeviceService | 需要实现 | 使用 NetworkService |
+| NetworkMonitorController | NetworkMonitorService | 需要实现 | 使用 NetworkService |
+| DeviceController | DeviceService | 需要实现 | 新增实现 |
+| OrganizationController | OrganizationService | 需要实现 | 使用 GroupService |
+| EndAgentController | EndAgentService | 需要实现 | 新增实现 |
+| McpAgentController | McpAgentService | 需要实现 | 新增实现 |
+| RouteController | RouteService | 需要实现 | 新增实现 |
+| SchedulerController | SchedulerService | 需要实现 | 新增实现 |
+| MsgController | MsgService | 需要实现 | 使用 skill-msg |
+
+---
+
+## 4. 前端页面数据状态
+
+### 4.1 已有真实数据支持 ✅
+
+| 页面 | API 路径 | 数据来源 |
+|------|----------|----------|
+| 审计日志 | `/api/audit/*` | AuditLogServiceImpl |
+| 访问控制 | `/api/security/access/*` | AccessControlServiceImpl |
+| 防火墙 | `/api/firewall/*` | FirewallController |
+| 登录协议 | `/api/protocol/login/*` | LoginProtocolAdapterImpl |
+| 发现协议 | `/api/protocol/discovery/*` | DiscoveryProtocolAdapterImpl |
+| 协作协议 | `/api/protocol/collaboration/*` | CollaborationProtocolAdapterImpl |
+| 观察协议 | `/api/protocol/observation/*` | ObservationProtocol |
+| 域管理协议 | `/api/protocol/domain/*` | DomainManagementProtocol |
+| 管理仪表盘 | `/api/admin/dashboard/*` | AdminDashboardServiceImpl |
+
+### 4.2 使用 Mock 数据或空数据的页面
+
+| 页面 | API 路径 | 当前状态 | 建议 Skill |
+|------|----------|----------|------------|
+| 协作关系 | `/api/collaboration/*` | 空数据 | CollaborationService |
+| 场景列表 | `/api/scene/*` | 空数据 | SceneService |
+| 场景组 | `/api/scene/group/*` | 空数据 | SceneGroupService |
+| 能力约束 | `/api/scene/capability/*` | 空数据 | CapabilityService |
+| 消息中心 | `/api/im/*` | Mock 数据 | skill-msg |
+| 联系人 | `/api/im/contacts/*` | Mock 数据 | skill-msg |
+| 群组管理 | `/api/im/groups/*` | Mock 数据 | GroupService |
+| 文件管理 | `/api/im/files/*` | Mock 数据 | FileService |
+| 身份管理 | `/api/personal/identity/*` | Mock 数据 | IdentityService |
+| 我的分享 | `/api/personal/sharing/*` | Mock 数据 | ShareService |
+| 执行记录 | `/api/personal/execution/*` | Mock 数据 | ExecutionService |
+| 技能审核 | `/api/admin/skills/*` | Mock 数据 | SkillService |
+| 用户管理 | `/api/admin/users/*` | Mock 数据 | UserService |
+| 存储管理 | `/api/admin/storage/*` | Mock 数据 | StorageService |
+| 远程管理 | `/api/admin/remote/*` | Mock 数据 | RemoteService |
 
 ---
 
@@ -188,11 +208,6 @@
    - 依赖：iptables/nftables
    - API：规则管理、状态查询
 
-5. **im-skill**
-   - 功能：即时通讯
-   - 依赖：消息队列
-   - API：消息收发、联系人、群组
-
 ### 5.2 协作文档
 
 已创建协作文档，请 Skills 库团队确认：
@@ -212,11 +227,13 @@
 - [x] 完善防火墙控制器
 - [x] 验证协议模块实现
 - [x] 验证管理仪表盘实现
+- [x] 整理 Skills 库匹配结果
 
 ### 6.2 进行中
 
 - [ ] 完善 Controller 与 SDK 服务的对接
 - [ ] 移除前端 Mock 数据提示
+- [ ] 对接 skill-msg 消息服务
 
 ### 6.3 待开始
 
@@ -224,7 +241,7 @@
 - [ ] 开发 access-control-skill
 - [ ] 开发 audit-skill
 - [ ] 开发 firewall-skill
-- [ ] 开发 im-skill
+- [ ] 扩展 skill-data-service（缓存管理）
 
 ---
 
