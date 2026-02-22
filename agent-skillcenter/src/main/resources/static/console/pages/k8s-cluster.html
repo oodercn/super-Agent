@@ -74,26 +74,30 @@
                         <button class="nx-tabs__tab" onclick="location.href='k8s-skill-deploy.html'">技能部署</button>
                     </div>
                     
-                    <div class="nx-grid nx-grid-cols-4 nx-gap-4 nx-mb-6">
-                        <div class="stat-card">
-                            <div class="stat-value" id="cluster-status">
-                                <i class="ri-checkbox-blank-circle-fill status-healthy"></i>
+                    <div class="nx-alert nx-alert--warning nx-mb-4" id="mock-data-alert" style="display: none;">
+                            <i class="ri-alert-triangle-line"></i>
+                            <span>当前数据为测试模拟数据，请到skills 库选择安装对相应的 skills 切换为真实数据。</span>
+                        </div>
+                        <div class="nx-grid nx-grid-cols-4 nx-gap-4 nx-mb-6">
+                            <div class="stat-card">
+                                <div class="stat-value" id="cluster-status">
+                                    <i class="ri-checkbox-blank-circle-fill status-healthy"></i>
+                                </div>
+                                <div class="stat-label">集群状态</div>
                             </div>
-                            <div class="stat-label">集群状态</div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="node-count">-</div>
+                                <div class="stat-label">节点数量</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="pod-count">-</div>
+                                <div class="stat-label">Pod总数</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="service-count">-</div>
+                                <div class="stat-label">服务数量</div>
+                            </div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="node-count">-</div>
-                            <div class="stat-label">节点数量</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="pod-count">-</div>
-                            <div class="stat-label">Pod总数</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="service-count">-</div>
-                            <div class="stat-label">服务数量</div>
-                        </div>
-                    </div>
                     
                     <div class="nx-card nx-mb-6">
                         <div class="nx-card__header">
@@ -175,26 +179,31 @@
             try {
                 const result = await ApiClient.post('/api/k8s/clusters/info', { cluster: 'default' });
                 if (result && result.data) {
-                    const info = result.data;
-                    
-                    document.getElementById('cluster-version').textContent = info.version || '-';
-                    document.getElementById('cluster-endpoint').textContent = info.endpoint || '-';
-                    document.getElementById('node-count').textContent = info.nodeCount || 0;
-                    document.getElementById('pod-count').textContent = info.podCount || 0;
-                    document.getElementById('service-count').textContent = info.serviceCount || 0;
-                    
-                    const statusEl = document.getElementById('cluster-status');
-                    if (info.status === 'healthy') {
-                        statusEl.innerHTML = '<i class="ri-checkbox-blank-circle-fill status-healthy"></i> 健康';
-                    } else if (info.status === 'mock') {
-                        statusEl.innerHTML = '<i class="ri-checkbox-blank-circle-fill status-warning"></i> Mock';
-                    } else {
-                        statusEl.innerHTML = '<i class="ri-checkbox-blank-circle-fill status-error"></i> 异常';
+                        const info = result.data;
+                        
+                        document.getElementById('cluster-version').textContent = info.version || '-';
+                        document.getElementById('cluster-endpoint').textContent = info.endpoint || '-';
+                        document.getElementById('node-count').textContent = info.nodeCount || 0;
+                        document.getElementById('pod-count').textContent = info.podCount || 0;
+                        document.getElementById('service-count').textContent = info.serviceCount || 0;
+                        
+                        const statusEl = document.getElementById('cluster-status');
+                        const mockAlert = document.getElementById('mock-data-alert');
+                        
+                        if (info.status === 'healthy') {
+                            statusEl.innerHTML = '<i class="ri-checkbox-blank-circle-fill status-healthy"></i> 健康';
+                            mockAlert.style.display = 'none';
+                        } else if (info.status === 'mock') {
+                            statusEl.innerHTML = '<i class="ri-checkbox-blank-circle-fill status-warning"></i> Mock';
+                            mockAlert.style.display = 'flex';
+                        } else {
+                            statusEl.innerHTML = '<i class="ri-checkbox-blank-circle-fill status-error"></i> 异常';
+                            mockAlert.style.display = 'none';
+                        }
+                        
+                        document.getElementById('namespace-count').textContent = 
+                            info.namespaces ? info.namespaces.length : 0;
                     }
-                    
-                    document.getElementById('namespace-count').textContent = 
-                        info.namespaces ? info.namespaces.length : 0;
-                }
             } catch (error) {
                 console.error('加载集群信息失败:', error);
             }

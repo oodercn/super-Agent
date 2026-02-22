@@ -280,3 +280,111 @@ window.addEventListener('themeChanged', function(e) {
         }
     });
 });
+
+// ========== Mock 数据提示功能 ==========
+(function() {
+    'use strict';
+
+    const MOCK_DATA_CONFIG = {
+        enabled: true,
+        storageKey: 'nexus_mock_banner_dismissed',
+        dismissDuration: 24 * 60 * 60 * 1000,
+        skillCenterUrl: '/console/pages/skillcenter-sync/skill-categories.html'
+    };
+
+    function isMockDataPage() {
+        const mockPages = [
+            '/console/pages/protocol/',
+            '/console/pages/admin/',
+            '/console/pages/security/',
+            '/console/pages/personal/identity.html',
+            '/console/pages/personal/sharing.html',
+            '/console/pages/personal/execution.html',
+            '/console/pages/im/',
+            '/console/pages/scene/',
+            '/console/pages/collaboration/',
+            '/console/pages/audit/',
+            '/console/pages/skillcenter-sync/',
+            '/console/pages/config/',
+            '/console/pages/skill/',
+            '/console/pages/system/',
+            '/console/pages/monitor/',
+            '/console/pages/mine/',
+            '/console/pages/group/',
+            '/console/pages/llm/'
+        ];
+        
+        const currentPath = window.location.pathname;
+        return mockPages.some(page => currentPath.includes(page));
+    }
+
+    function shouldShowBanner() {
+        if (!MOCK_DATA_CONFIG.enabled) return false;
+        if (!isMockDataPage()) return false;
+        
+        const dismissed = localStorage.getItem(MOCK_DATA_CONFIG.storageKey);
+        if (dismissed) {
+            const dismissTime = parseInt(dismissed, 10);
+            if (Date.now() - dismissTime < MOCK_DATA_CONFIG.dismissDuration) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function createMockBanner() {
+        const banner = document.createElement('div');
+        banner.className = 'mock-data-banner';
+        banner.id = 'mockDataBanner';
+        banner.innerHTML = `
+            <i class="ri-information-line"></i>
+            <div class="banner-content">
+                <div class="banner-title">当前数据为测试模拟数据</div>
+                <div class="banner-desc">请到能力中心选择安装相应的 Skills 切换为真实数据</div>
+            </div>
+            <a href="${MOCK_DATA_CONFIG.skillCenterUrl}" class="banner-action">
+                <i class="ri-apps-line"></i> 前往能力中心
+            </a>
+            <button class="banner-close" onclick="dismissMockBanner()" title="关闭提示">
+                <i class="ri-close-line"></i>
+            </button>
+        `;
+        return banner;
+    }
+
+    function showMockBanner() {
+        if (!shouldShowBanner()) return;
+        
+        const mainContent = document.querySelector('.main-content');
+        if (!mainContent) return;
+        
+        const existingBanner = document.getElementById('mockDataBanner');
+        if (existingBanner) return;
+        
+        const banner = createMockBanner();
+        const pageHeader = mainContent.querySelector('.page-header, .header, .content-header');
+        
+        if (pageHeader) {
+            pageHeader.parentNode.insertBefore(banner, pageHeader.nextSibling);
+        } else {
+            mainContent.insertBefore(banner, mainContent.firstChild);
+        }
+    }
+
+    window.dismissMockBanner = function() {
+        const banner = document.getElementById('mockDataBanner');
+        if (banner) {
+            banner.style.animation = 'slideOut 0.3s ease-out forwards';
+            setTimeout(() => banner.remove(), 300);
+        }
+        localStorage.setItem(MOCK_DATA_CONFIG.storageKey, Date.now().toString());
+    };
+
+    window.showMockDataBanner = showMockBanner;
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', showMockBanner);
+    } else {
+        setTimeout(showMockBanner, 100);
+    }
+})();

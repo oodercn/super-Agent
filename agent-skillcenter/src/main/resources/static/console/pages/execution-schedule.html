@@ -106,6 +106,10 @@
             </div>
         </main>
     </div>
+    <div class="nx-alert nx-alert--warning nx-mb-4" id="mock-data-alert" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 1000;">
+        <i class="ri-alert-triangle-line"></i>
+        <span>当前数据为测试模拟数据，请到skills 库选择安装对相应的 skills 切换为真实数据。</span>
+    </div>
     
     <div id="create-modal" class="modal" style="display: none;">
         <div class="modal-backdrop" onclick="hideCreateModal()"></div>
@@ -385,6 +389,10 @@
         
         function renderMockHistory() {
             const container = document.getElementById('history-list');
+            const mockAlert = document.getElementById('mock-data-alert');
+            
+            // 显示mock数据提示
+            mockAlert.style.display = 'flex';
             
             const mockHistory = [];
             for (let i = 0; i < 10; i++) {
@@ -413,6 +421,8 @@
         
         function hideHistoryModal() {
             document.getElementById('history-modal').style.display = 'none';
+            // 隐藏mock数据提示
+            document.getElementById('mock-data-alert').style.display = 'none';
         }
         
         function formatTime(timestamp) {
