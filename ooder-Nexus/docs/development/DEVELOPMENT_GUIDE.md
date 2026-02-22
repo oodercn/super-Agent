@@ -94,12 +94,12 @@ mvn -version
 
 ```bash
 # GitHub
-git clone https://github.com/oodercn/ooder-Nexus.git
+git clone https://github.com/oodercn/super-Agent.git
 
 # Gitee 镜像（国内）
-git clone https://gitee.com/ooderCN/ooder-nexus.git
+git clone https://gitee.com/ooderCN/ooder-agent.git
 
-cd ooder-Nexus
+cd super-Agent/nexus
 ```
 
 ---
@@ -577,7 +577,7 @@ taskkill /PID <PID> /F
 
 ## 11. 参考资源
 
-- [项目 Wiki](https://github.com/oodercn/ooder-Nexus/wiki)
+- [项目 Wiki](https://github.com/oodercn/super-Agent/wiki)
 - [API 文档](http://localhost:8081/swagger-ui.html)（本地启动后）
 - [CHANGELOG](../CHANGELOG.md)
 - [优化路线图](../optimization/ROADMAP.md)
@@ -586,8 +586,8 @@ taskkill /PID <PID> /F
 
 ## 12. 联系方式
 
-- **GitHub Issues**: https://github.com/oodercn/ooder-Nexus/issues
-- **Gitee Issues**: https://gitee.com/ooderCN/ooder-nexus/issues
+- **GitHub Issues**: https://github.com/oodercn/super-Agent/issues
+- **Gitee Issues**: https://gitee.com/ooderCN/ooder-agent/issues
 - **邮箱**: ooder@ooder.cn
 
 ---

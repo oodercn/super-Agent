@@ -331,7 +331,7 @@ ooderNexus 通过场景定义文件配置协作边界：
 
 ```bash
 # 1. 下载 Windows 安装包
-# GitHub: https://github.com/oodercn/ooder-agent/releases
+# GitHub: https://github.com/oodercn/super-Agent/releases
 # Gitee（国内镜像）: https://gitee.com/ooderCN/ooder-agent/releases
 
 # 2. 解压到任意目录
@@ -345,7 +345,7 @@ ooderNexus 通过场景定义文件配置协作边界：
 
 ```bash
 # 1. 下载安装包
-wget https://github.com/oodercn/ooder-agent/releases/download/v2.2.0/ooder-nexus-2.2.0.tar.gz
+wget https://github.com/oodercn/super-Agent/releases/download/v2.2.0/ooder-nexus-2.2.0.tar.gz
 
 # 2. 解压
 tar -xzf ooder-nexus-2.2.0.tar.gz
@@ -361,7 +361,7 @@ cd ooder-nexus-2.2.0
 
 ```bash
 # 在路由器上执行
-wget -O /tmp/install.sh https://github.com/oodercn/ooder-agent/releases/download/v2.2.0/install-openwrt.sh
+wget -O /tmp/install.sh https://github.com/oodercn/super-Agent/releases/download/v2.2.0/install-openwrt.sh
 chmod +x /tmp/install.sh
 /tmp/install.sh
 ```
@@ -383,8 +383,8 @@ docker run -d \
 
 ```bash
 # 克隆仓库
-git clone https://github.com/oodercn/ooder-agent.git
-cd ooder-agent/nexus
+git clone https://github.com/oodercn/super-Agent.git
+cd super-Agent/nexus
 
 # 构建
 mvn clean package -DskipTests
@@ -695,9 +695,9 @@ tar -xzpf ooder-nexus-backup-20260222.tar.gz
 
 ### 获取帮助
 
-- 📖 **文档**：https://github.com/oodercn/ooder-agent/wiki
-- 🐛 **Issue**：https://github.com/oodercn/ooder-agent/issues
-- 💬 **讨论**：https://github.com/oodercn/ooder-agent/discussions
+- 📖 **文档**：https://github.com/oodercn/super-Agent/wiki
+- 🐛 **Issue**：https://github.com/oodercn/super-Agent/issues
+- 💬 **讨论**：https://github.com/oodercn/super-Agent/discussions
 
 ### 国内镜像
 
@@ -712,7 +712,7 @@ tar -xzpf ooder-nexus-backup-20260222.tar.gz
 
 ## 12. 致谢
 
-- [Ooder Agent SDK](https://github.com/oodercn/ooder-agent) - 底层 P2P 网络通信框架
+- [Ooder Agent SDK](https://github.com/oodercn/super-Agent) - 底层 P2P 网络通信框架
 - [Spring Boot](https://spring.io/projects/spring-boot) - 后端开发框架
 - [OpenWrt](https://openwrt.org/) - 开源路由器操作系统
 

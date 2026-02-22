@@ -1,31 +1,26 @@
-# ooderNexus 技能开发 SDK 文档
+# ooderNexus 技能开�?SDK 文档
 
 ## 1. 概述
 
 ### 1.1 什么是技能？
 
-在 ooderNexus 中，**技能（Skill）**是一种可共享、可执行的 AI 能力单元。它可以是：
+�?ooderNexus 中，**技能（Skill�?*是一种可共享、可执行�?AI 能力单元。它可以是：
 
 - 🤖 AI 模型推理服务
-- 📊 数据处理和分析
-- 🔧 系统管理工具
-- 🌐 第三方 API 调用
+- 📊 数据处理和分�?- 🔧 系统管理工具
+- 🌐 第三�?API 调用
 - 📁 文件处理操作
 
-### 1.2 技能特点
-
-- **去中心化**: 技能分布在网络各节点，无需中心服务器
-- **即插即用**: 安装即可使用，无需复杂配置
+### 1.2 技能特�?
+- **去中心化**: 技能分布在网络各节点，无需中心服务�?- **即插即用**: 安装即可使用，无需复杂配置
 - **版本管理**: 支持技能版本控制和自动更新
 - **权限控制**: 细粒度的执行权限管理
-- **跨平台**: 支持 Windows/Linux/macOS/OpenWrt
+- **跨平�?*: 支持 Windows/Linux/macOS/OpenWrt
 
 ---
 
-## 2. 快速入门
-
-### 2.1 创建第一个技能
-
+## 2. 快速入�?
+### 2.1 创建第一个技�?
 **步骤 1: 定义技能元数据**
 
 ```json
@@ -33,7 +28,7 @@
   "id": "example.hello",
   "name": "Hello World",
   "version": "1.0.0",
-  "description": "简单的问候技能",
+  "description": "简单的问候技�?,
   "author": "Your Name",
   "type": "java",
   "entry": "HelloSkillHandler",
@@ -50,7 +45,7 @@
     {
       "name": "message",
       "type": "string",
-      "description": "问候消息"
+      "description": "问候消�?
     }
   ]
 }
@@ -72,11 +67,8 @@ import net.ooder.nexus.core.skill.model.SkillResponse;
 public class HelloSkillHandler {
 
     /**
-     * 执行技能
-     *
-     * @param request 技能请求参数
-     * @return 技能执行结果
-     */
+     * 执行技�?     *
+     * @param request 技能请求参�?     * @return 技能执行结�?     */
     public SkillResponse execute(SkillRequest request) {
         // 获取参数
         String name = request.getParam("name", "World");
@@ -92,40 +84,38 @@ public class HelloSkillHandler {
 }
 ```
 
-**步骤 3: 打包并发布**
+**步骤 3: 打包并发�?*
 
 ```bash
-# 打包为 JAR
+# 打包�?JAR
 mvn clean package
 
-# 发布到技能市场
-# 通过 Web 控制台或 API 发布
+# 发布到技能市�?# 通过 Web 控制台或 API 发布
 ```
 
 ---
 
-## 3. 技能开发详解
-
+## 3. 技能开发详�?
 ### 3.1 技能元数据
 
 **完整字段说明:**
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `id` | string | ✅ | 技能唯一标识，格式: `作者.技能名` |
-| `name` | string | ✅ | 技能显示名称 |
-| `version` | string | ✅ | 语义化版本号 |
-| `description` | string | ✅ | 技能描述 |
-| `author` | string | ✅ | 作者信息 |
-| `type` | string | ✅ | 技能类型: `java`/`python`/`shell` |
-| `entry` | string | ✅ | 入口类/文件 |
-| `icon` | string | ❌ | 技能图标 URL |
-| `category` | string | ❌ | 分类标签 |
-| `tags` | array | ❌ | 标签列表 |
-| `params` | array | ❌ | 输入参数定义 |
-| `outputs` | array | ❌ | 输出结果定义 |
-| `dependencies` | array | ❌ | 依赖的其他技能 |
-| `permissions` | array | ❌ | 所需权限 |
+| `id` | string | �?| 技能唯一标识，格�? `作�?技能名` |
+| `name` | string | �?| 技能显示名�?|
+| `version` | string | �?| 语义化版本号 |
+| `description` | string | �?| 技能描�?|
+| `author` | string | �?| 作者信�?|
+| `type` | string | �?| 技能类�? `java`/`python`/`shell` |
+| `entry` | string | �?| 入口�?文件 |
+| `icon` | string | �?| 技能图�?URL |
+| `category` | string | �?| 分类标签 |
+| `tags` | array | �?| 标签列表 |
+| `params` | array | �?| 输入参数定义 |
+| `outputs` | array | �?| 输出结果定义 |
+| `dependencies` | array | �?| 依赖的其他技�?|
+| `permissions` | array | �?| 所需权限 |
 
 ### 3.2 参数定义
 
@@ -166,17 +156,17 @@ mvn clean package
 }
 ```
 
-**支持的参数类型:**
+**支持的参数类�?**
 
 | 类型 | 说明 | 示例 |
 |------|------|------|
-| `string` | 字符串 | `"hello"` |
+| `string` | 字符�?| `"hello"` |
 | `integer` | 整数 | `42` |
-| `number` | 浮点数 | `3.14` |
-| `boolean` | 布尔值 | `true`/`false` |
+| `number` | 浮点�?| `3.14` |
+| `boolean` | 布尔�?| `true`/`false` |
 | `array` | 数组 | `[1, 2, 3]` |
 | `object` | 对象 | `{"key": "value"}` |
-| `file` | 文件 | 文件路径或 URL |
+| `file` | 文件 | 文件路径�?URL |
 
 ### 3.3 技能处理器
 
@@ -187,7 +177,7 @@ mvn clean package
 public class AdvancedSkillHandler {
 
     /**
-     * 初始化 - 技能加载时调用
+     * 初始�?- 技能加载时调用
      */
     @PostConstruct
     public void init() {
@@ -195,8 +185,7 @@ public class AdvancedSkillHandler {
     }
 
     /**
-     * 执行技能
-     */
+     * 执行技�?     */
     public SkillResponse execute(SkillRequest request) {
         try {
             // 1. 验证参数
@@ -219,12 +208,11 @@ public class AdvancedSkillHandler {
     }
 
     /**
-     * 销毁 - 技能卸载时调用
+     * 销�?- 技能卸载时调用
      */
     @PreDestroy
     public void destroy() {
-        // 释放资源、清理缓存
-    }
+        // 释放资源、清理缓�?    }
 
     private void validateParams(SkillRequest request) {
         // 参数验证逻辑
@@ -239,8 +227,7 @@ public class AdvancedSkillHandler {
 
 ---
 
-## 4. API 参考
-
+## 4. API 参�?
 ### 4.1 SkillRequest
 
 ```java
@@ -257,8 +244,7 @@ public class SkillRequest {
     public <T> T getRequiredParam(String name) throws ValidationException;
     
     /**
-     * 获取所有参数
-     */
+     * 获取所有参�?     */
     public Map<String, Object> getParams();
     
     /**
@@ -267,8 +253,7 @@ public class SkillRequest {
     public File getFileParam(String name);
     
     /**
-     * 获取请求上下文
-     */
+     * 获取请求上下�?     */
     public SkillContext getContext();
 }
 ```
@@ -311,8 +296,7 @@ public class SkillResponse {
 public class SkillContext {
     
     /**
-     * 获取调用者信息
-     */
+     * 获取调用者信�?     */
     public AgentInfo getCaller();
     
     /**
@@ -321,8 +305,7 @@ public class SkillContext {
     public AgentInfo getExecutor();
     
     /**
-     * 获取技能实例
-     */
+     * 获取技能实�?     */
     public SkillInstance getSkillInstance();
     
     /**
@@ -339,10 +322,8 @@ public class SkillContext {
 
 ---
 
-## 5. 示例技能
-
-### 5.1 文件处理技能
-
+## 5. 示例技�?
+### 5.1 文件处理技�?
 ```java
 @SkillHandler("example.file-processor")
 public class FileProcessorSkill {
@@ -368,8 +349,7 @@ public class FileProcessorSkill {
 }
 ```
 
-### 5.2 API 调用技能
-
+### 5.2 API 调用技�?
 ```java
 @SkillHandler("example.api-caller")
 public class ApiCallerSkill {
@@ -389,8 +369,7 @@ public class ApiCallerSkill {
         
         HttpEntity<Object> entity = new HttpEntity<>(body, httpHeaders);
         
-        // 发送请求
-        ResponseEntity<String> response = restTemplate.exchange(
+        // 发送请�?        ResponseEntity<String> response = restTemplate.exchange(
             url, 
             HttpMethod.valueOf(method), 
             entity, 
@@ -406,8 +385,7 @@ public class ApiCallerSkill {
 }
 ```
 
-### 5.3 AI 模型推理技能
-
+### 5.3 AI 模型推理技�?
 ```java
 @SkillHandler("ai.text-generator")
 public class TextGeneratorSkill {
@@ -441,8 +419,7 @@ public class TextGeneratorSkill {
 
 ---
 
-## 6. 最佳实践
-
+## 6. 最佳实�?
 ### 6.1 错误处理
 
 ```java
@@ -451,14 +428,11 @@ public SkillResponse execute(SkillRequest request) {
         // 业务逻辑
         return SkillResponse.success().withData("result", result);
     } catch (ValidationException e) {
-        // 参数错误 - 客户端问题
-        return SkillResponse.error(ErrorCode.INVALID_PARAM, e.getMessage());
+        // 参数错误 - 客户端问�?        return SkillResponse.error(ErrorCode.INVALID_PARAM, e.getMessage());
     } catch (ResourceNotFoundException e) {
-        // 资源不存在
-        return SkillResponse.error(ErrorCode.RESOURCE_NOT_FOUND, e.getMessage());
+        // 资源不存�?        return SkillResponse.error(ErrorCode.RESOURCE_NOT_FOUND, e.getMessage());
     } catch (ExecutionException e) {
-        // 执行失败 - 服务端问题
-        return SkillResponse.error(ErrorCode.EXECUTION_FAILED, e.getMessage());
+        // 执行失败 - 服务端问�?        return SkillResponse.error(ErrorCode.EXECUTION_FAILED, e.getMessage());
     } catch (Exception e) {
         // 未知错误
         return SkillResponse.error(ErrorCode.UNKNOWN_ERROR, "执行失败: " + e.getMessage());
@@ -481,8 +455,7 @@ public class OptimizedSkill {
     public SkillResponse execute(SkillRequest request) {
         String cacheKey = buildCacheKey(request);
         
-        // 尝试从缓存获取
-        Object cached = cache.getIfPresent(cacheKey);
+        // 尝试从缓存获�?        Object cached = cache.getIfPresent(cacheKey);
         if (cached != null) {
             return SkillResponse.success()
                 .withData("result", cached)
@@ -502,19 +475,16 @@ public class OptimizedSkill {
 }
 ```
 
-### 6.3 安全性
-
+### 6.3 安全�?
 ```java
 public SkillResponse execute(SkillRequest request) {
     SkillContext context = request.getContext();
     
-    // 1. 验证调用者权限
-    if (!hasPermission(context.getCaller(), "skill:execute")) {
-        return SkillResponse.error(ErrorCode.PERMISSION_DENIED, "无权执行此技能");
+    // 1. 验证调用者权�?    if (!hasPermission(context.getCaller(), "skill:execute")) {
+        return SkillResponse.error(ErrorCode.PERMISSION_DENIED, "无权执行此技�?);
     }
     
-    // 2. 验证参数安全性
-    String userInput = request.getParam("input");
+    // 2. 验证参数安全�?    String userInput = request.getParam("input");
     if (!isSafeInput(userInput)) {
         return SkillResponse.error(ErrorCode.INVALID_PARAM, "输入包含非法字符");
     }
@@ -526,23 +496,20 @@ public SkillResponse execute(SkillRequest request) {
 
 ---
 
-## 7. 调试与测试
-
+## 7. 调试与测�?
 ### 7.1 本地测试
 
 ```java
 @Test
 public void testSkill() {
-    // 创建技能实例
-    HelloSkillHandler skill = new HelloSkillHandler();
+    // 创建技能实�?    HelloSkillHandler skill = new HelloSkillHandler();
     
     // 构建请求
     SkillRequest request = SkillRequest.builder()
         .param("name", "Test")
         .build();
     
-    // 执行技能
-    SkillResponse response = skill.execute(request);
+    // 执行技�?    SkillResponse response = skill.execute(request);
     
     // 验证结果
     assertTrue(response.isSuccess());
@@ -554,17 +521,11 @@ public void testSkill() {
 
 1. 启动 ooderNexus
 2. 访问 http://localhost:8081/console/index.html
-3. 进入「技能中心」→「调试工具」
-4. 选择要调试的技能
-5. 输入参数并执行
-6. 查看执行结果和日志
-
+3. 进入「技能中心」→「调试工具�?4. 选择要调试的技�?5. 输入参数并执�?6. 查看执行结果和日�?
 ---
 
-## 8. 发布技能
-
-### 8.1 打包技能
-
+## 8. 发布技�?
+### 8.1 打包技�?
 ```bash
 # 1. 编译
 mvn clean compile
@@ -576,14 +537,10 @@ mvn package -DskipTests
 # 包含: skill.json + JAR/classes
 ```
 
-### 8.2 发布到技能市场
-
-**方式 1: Web 控制台**
-1. 登录 ooderNexus 控制台
-2. 进入「技能中心」→「发布技能」
-3. 上传技能包
-4. 填写技能信息
-5. 点击发布
+### 8.2 发布到技能市�?
+**方式 1: Web 控制�?*
+1. 登录 ooderNexus 控制�?2. 进入「技能中心」→「发布技能�?3. 上传技能包
+4. 填写技能信�?5. 点击发布
 
 **方式 2: API 调用**
 
@@ -609,8 +566,7 @@ curl -X POST http://localhost:8081/api/skills \
 
 **解决:**
 ```java
-// 通过 NetworkService 调用远程技能
-NetworkService network = context.getNetwork();
+// 通过 NetworkService 调用远程技�?NetworkService network = context.getNetwork();
 SkillResponse response = network.callSkill(
     "target-agent-id",
     "skill.id",
@@ -618,8 +574,7 @@ SkillResponse response = network.callSkill(
 );
 ```
 
-### Q3: 技能如何持久化数据？
-
+### Q3: 技能如何持久化数据�?
 **解决:**
 ```java
 // 使用 StorageService
@@ -630,8 +585,7 @@ Object data = storage.load("key");
 
 ---
 
-## 10. 参考资源
-
+## 10. 参考资�?
 - [开发指南](../development/DEVELOPMENT_GUIDE.md)
 - [调试工具](../tools/DEBUGGING_TOOLS.md)
 - [API 文档](http://localhost:8081/swagger-ui.html)
@@ -639,4 +593,4 @@ Object data = storage.load("key");
 
 ---
 
-**开始开发你的第一个技能吧！ 🚀**
+**开始开发你的第一个技能吧�?🚀**

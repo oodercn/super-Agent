@@ -193,7 +193,7 @@ ooderNexus 基于 Ooder Agent SDK 构建，两者的关系如下：
 
 ```bash
 # 1. 下载安装包
-wget https://github.com/oodercn/ooder-Nexus/releases/download/v2.0-openwrt-preview/ooder-nexus-2.0-openwrt-preview.tar.gz
+wget https://github.com/oodercn/super-Agent/releases/download/v2.0-openwrt-preview/ooder-nexus-2.0-openwrt-preview.tar.gz
 
 # 2. 解压
 tar -xzf ooder-nexus-2.0-openwrt-preview.tar.gz
@@ -211,7 +211,7 @@ cd ooder-nexus-2.0-openwrt-preview
 
 ```bash
 # 1. 下载 Windows OpenWrt 预览版
-https://github.com/oodercn/ooder-Nexus/releases/download/v2.0-openwrt-preview/ooder-nexus-2.0-openwrt-preview-windows.zip
+https://github.com/oodercn/super-Agent/releases/download/v2.0-openwrt-preview/ooder-nexus-2.0-openwrt-preview-windows.zip
 
 # 2. 解压到任意目录
 
@@ -228,7 +228,7 @@ https://github.com/oodercn/ooder-Nexus/releases/download/v2.0-openwrt-preview/oo
 
 ```bash
 # 一键安装（推荐）
-wget -O /tmp/install.sh https://github.com/oodercn/ooder-Nexus/releases/download/v2.0-openwrt-preview/install-openwrt.sh
+wget -O /tmp/install.sh https://github.com/oodercn/super-Agent/releases/download/v2.0-openwrt-preview/install-openwrt.sh
 chmod +x /tmp/install.sh
 /tmp/install.sh
 ```
@@ -861,7 +861,7 @@ uci commit firewall
 #### 6.3.1 一键安装（推荐）
 
 ```bash
-wget -O /tmp/install.sh https://github.com/oodercn/ooder-Nexus/releases/download/v2.0.0-openwrt-preview/install-openwrt.sh
+wget -O /tmp/install.sh https://github.com/oodercn/super-Agent/releases/download/v2.0.0-openwrt-preview/install-openwrt.sh
 chmod +x /tmp/install.sh
 /tmp/install.sh
 ```
@@ -1225,18 +1225,18 @@ tar -czpf backup.tar.gz ./storage/ ./config/
 
 ### 12.1 获取帮助
 
-- 📖 **文档**：https://github.com/oodercn/ooder-Nexus/wiki
+- 📖 **文档**：https://github.com/oodercn/super-Agent/wiki
 - 📋 **更新日志**：[CHANGELOG.md](CHANGELOG.md)
-- 🚀 **CI/CD状态**：![CI/CD](https://github.com/oodercn/ooder-Nexus/workflows/CI/CD%20Pipeline/badge.svg)
-- 🐛 **Issue**：https://github.com/oodercn/ooder-Nexus/issues
-- 💬 **讨论**：https://github.com/oodercn/ooder-Nexus/discussions
+- 🚀 **CI/CD状态**：![CI/CD](https://github.com/oodercn/super-Agent/workflows/CI/CD%20Pipeline/badge.svg)
+- 🐛 **Issue**：https://github.com/oodercn/super-Agent/issues
+- 💬 **讨论**：https://github.com/oodercn/super-Agent/discussions
 
 ### 12.2 国内镜像
 
 由于网络原因，国内用户可以使用 Gitee 镜像：
 
-- 🪞 **Gitee 仓库**：https://gitee.com/ooderCN/ooder-nexus
-- 📥 **Gitee Releases**：https://gitee.com/ooderCN/ooder-nexus/releases
+- 🪞 **Gitee 仓库**：https://gitee.com/ooderCN/ooder-agent
+- 📥 **Gitee Releases**：https://gitee.com/ooderCN/ooder-agent/releases
 
 > **注意**：Gitee 镜像可能会有同步延迟，最新版本请以 GitHub 为准。安装包等大文件需要手动上传到 Gitee Releases。
 
@@ -1263,7 +1263,7 @@ tar -czpf backup.tar.gz ./storage/ ./config/
 
 ## 13. 致谢
 
-- [Ooder Agent](https://github.com/oodercn/ooder-agent) - 底层 P2P 网络通信框架
+- [Ooder Agent](https://github.com/oodercn/super-Agent) - 底层 P2P 网络通信框架
 - [Spring Boot](https://spring.io/projects/spring-boot) - 后端开发框架
 - [OpenWrt](https://openwrt.org/) - 开源路由器操作系统
 

@@ -80,7 +80,7 @@
 
 ### 🔗 下载地址
 
-- **GitHub Releases**: https://github.com/oodercn/ooder-Nexus/releases/tag/v2.0.0-openwrt-preview
+- **GitHub Releases**: https://github.com/oodercn/super-Agent/releases/tag/v2.0.0-openwrt-preview
 - **Gitee 镜像**: https://gitee.com/ooderCN/ooder-nexus/releases
 
 ---
