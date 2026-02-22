@@ -79,9 +79,11 @@ public class SceneSdkAdapterImpl implements SceneSdkAdapter {
     public SceneStateDTO getSceneState(String sceneId) {
         SceneStateDTO dto = new SceneStateDTO();
         dto.setSceneId(sceneId);
-        dto.setStatus("active");
-        dto.setActiveCapabilities(new ArrayList<>());
-        dto.setActiveMembers(new ArrayList<>());
+        dto.setActive(true);
+        dto.setMemberCount(0);
+        dto.setInstalledSkills(new ArrayList<>());
+        dto.setCreateTime(System.currentTimeMillis());
+        dto.setLastUpdateTime(System.currentTimeMillis());
         return dto;
     }
 
@@ -137,7 +139,7 @@ public class SceneSdkAdapterImpl implements SceneSdkAdapter {
         SceneSnapshotDTO dto = new SceneSnapshotDTO();
         dto.setSnapshotId("snapshot-" + UUID.randomUUID().toString().substring(0, 8));
         dto.setSceneId(sceneId);
-        dto.setCreatedAt(System.currentTimeMillis());
+        dto.setCreateTime(System.currentTimeMillis());
         return dto;
     }
 

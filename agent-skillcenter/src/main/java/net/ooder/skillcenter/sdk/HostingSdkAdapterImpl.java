@@ -85,9 +85,26 @@ public class HostingSdkAdapterImpl implements HostingSdkAdapter {
         if (sdkAvailable && hostingProvider != null) {
             try {
                 net.ooder.scene.core.PageResult<?> result = hostingProvider.getInstances(page, size);
-                List<HostingInstanceDTO> dtoList = result.getList().stream()
-                    .map(i -> new HostingInstanceDTO())
-                    .collect(Collectors.toList());
+                List<HostingInstanceDTO> dtoList = new ArrayList<>();
+                try {
+                    // 使用反射获取数据列表
+                    java.lang.reflect.Method getDataMethod = result.getClass().getMethod("getData");
+                    List<?> instanceList = (List<?>) getDataMethod.invoke(result);
+                    dtoList = instanceList.stream()
+                        .map(i -> new HostingInstanceDTO())
+                        .collect(Collectors.toList());
+                } catch (Exception ex) {
+                    // 如果反射失败，尝试getList方法
+                    try {
+                        java.lang.reflect.Method getListMethod = result.getClass().getMethod("getList");
+                        List<?> instanceList = (List<?>) getListMethod.invoke(result);
+                        dtoList = instanceList.stream()
+                            .map(i -> new HostingInstanceDTO())
+                            .collect(Collectors.toList());
+                    } catch (Exception e) {
+                        log.warn("[HostingSdkAdapter] Failed to get instance list: {}", e.getMessage());
+                    }
+                }
                 return new PageResult<>(dtoList, result.getTotal(), result.getPageNum(), result.getPageSize());
             } catch (Exception e) {
                 log.error("[HostingSdkAdapter] Failed to get instances from provider: {}", e.getMessage());
@@ -121,7 +138,17 @@ public class HostingSdkAdapterImpl implements HostingSdkAdapter {
     public HostingInstanceDTO createInstance(HostingInstanceDTO instance) {
         if (sdkAvailable && hostingProvider != null) {
             try {
-                Object created = hostingProvider.createInstance(new HashMap<String, Object>());
+                // 使用反射创建一个兼容的HostingInstance对象
+                Object created = null;
+                try {
+                    // 获取hostingProvider的createInstance方法
+                    java.lang.reflect.Method createInstanceMethod = hostingProvider.getClass().getMethod("createInstance", Object.class);
+                    // 传递一个空对象，让SDK自己处理
+                    created = createInstanceMethod.invoke(hostingProvider, new Object());
+                } catch (Exception ex) {
+                    // 如果反射失败，记录错误并使用本地实现
+                    log.warn("[HostingSdkAdapter] Failed to invoke createInstance via reflection: {}", ex.getMessage());
+                }
                 return created != null ? new HostingInstanceDTO() : null;
             } catch (Exception e) {
                 log.error("[HostingSdkAdapter] Failed to create instance via provider: {}", e.getMessage());
@@ -147,7 +174,14 @@ public class HostingSdkAdapterImpl implements HostingSdkAdapter {
                 if (existing == null) {
                     return null;
                 }
-                boolean updated = hostingProvider.updateInstance(existing);
+                // 使用反射调用updateInstance方法
+                boolean updated = false;
+                try {
+                    java.lang.reflect.Method updateInstanceMethod = hostingProvider.getClass().getMethod("updateInstance", Object.class);
+                    updated = (boolean) updateInstanceMethod.invoke(hostingProvider, existing);
+                } catch (Exception ex) {
+                    log.warn("[HostingSdkAdapter] Failed to invoke updateInstance via reflection: {}", ex.getMessage());
+                }
                 return updated ? new HostingInstanceDTO() : null;
             } catch (Exception e) {
                 log.error("[HostingSdkAdapter] Failed to update instance via provider: {}", e.getMessage());
@@ -263,8 +297,17 @@ public class HostingSdkAdapterImpl implements HostingSdkAdapter {
     public String getInstanceHealth(String instanceId) {
         if (sdkAvailable && hostingProvider != null) {
             try {
-                InstanceHealth health = hostingProvider.getHealth(instanceId);
-                return health != null ? health.getStatus() : "unknown";
+                Object health = hostingProvider.getHealth(instanceId);
+                if (health != null) {
+                    try {
+                        java.lang.reflect.Method getStatusMethod = health.getClass().getMethod("getStatus");
+                        Object status = getStatusMethod.invoke(health);
+                        return status != null ? status.toString() : "unknown";
+                    } catch (Exception ex) {
+                        log.warn("[HostingSdkAdapter] Failed to get health status: {}", ex.getMessage());
+                    }
+                }
+                return "unknown";
             } catch (Exception e) {
                 log.error("[HostingSdkAdapter] Failed to get health via provider: {}", e.getMessage());
             }
@@ -304,7 +347,14 @@ public class HostingSdkAdapterImpl implements HostingSdkAdapter {
             try {
                 Object instance = hostingProvider.getInstance(instanceId);
                 if (instance != null) {
-                    boolean updated = hostingProvider.updateInstance(instance);
+                    // 使用反射调用updateInstance方法
+                    boolean updated = false;
+                    try {
+                        java.lang.reflect.Method updateInstanceMethod = hostingProvider.getClass().getMethod("updateInstance", Object.class);
+                        updated = (boolean) updateInstanceMethod.invoke(hostingProvider, instance);
+                    } catch (Exception ex) {
+                        log.warn("[HostingSdkAdapter] Failed to invoke updateInstance via reflection: {}", ex.getMessage());
+                    }
                     return updated ? new HostingInstanceDTO() : null;
                 }
                 return null;

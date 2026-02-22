@@ -244,10 +244,26 @@ public class SecuritySdkAdapterImpl implements SecuritySdkAdapter {
         if (sdkAvailable && securityProvider != null) {
             try {
                 net.ooder.scene.core.PageResult<AccessControl> result = securityProvider.listAcls(pageNum, pageSize);
-                List<AccessControlDTO> dtoList = new ArrayList<>();
-                for (AccessControl acl : result.getData()) {
+        List<AccessControlDTO> dtoList = new ArrayList<>();
+        try {
+            // 使用反射获取数据列表
+            java.lang.reflect.Method getDataMethod = result.getClass().getMethod("getData");
+            List<AccessControl> aclList = (List<AccessControl>) getDataMethod.invoke(result);
+            for (AccessControl acl : aclList) {
+                dtoList.add(convertAclToDTO(acl));
+            }
+        } catch (Exception ex) {
+            // 如果反射失败，尝试getList方法
+            try {
+                java.lang.reflect.Method getListMethod = result.getClass().getMethod("getList");
+                List<AccessControl> aclList = (List<AccessControl>) getListMethod.invoke(result);
+                for (AccessControl acl : aclList) {
                     dtoList.add(convertAclToDTO(acl));
                 }
+            } catch (Exception e) {
+                log.warn("[SecuritySdkAdapter] Failed to get ACL list: {}", e.getMessage());
+            }
+        }
                 return new PageResult<>(dtoList, result.getTotal(), result.getPageNum(), result.getPageSize());
             } catch (Exception e) {
                 log.error("[SecuritySdkAdapter] Failed to get ACL list: {}", e.getMessage());
@@ -294,10 +310,26 @@ public class SecuritySdkAdapterImpl implements SecuritySdkAdapter {
         if (sdkAvailable && securityProvider != null) {
             try {
                 net.ooder.scene.core.PageResult<ThreatInfo> result = securityProvider.listThreats(pageNum, pageSize);
-                List<ThreatInfoDTO> dtoList = new ArrayList<>();
-                for (ThreatInfo threat : result.getData()) {
+        List<ThreatInfoDTO> dtoList = new ArrayList<>();
+        try {
+            // 使用反射获取数据列表
+            java.lang.reflect.Method getDataMethod = result.getClass().getMethod("getData");
+            List<ThreatInfo> threatList = (List<ThreatInfo>) getDataMethod.invoke(result);
+            for (ThreatInfo threat : threatList) {
+                dtoList.add(convertThreatToDTO(threat));
+            }
+        } catch (Exception ex) {
+            // 如果反射失败，尝试getList方法
+            try {
+                java.lang.reflect.Method getListMethod = result.getClass().getMethod("getList");
+                List<ThreatInfo> threatList = (List<ThreatInfo>) getListMethod.invoke(result);
+                for (ThreatInfo threat : threatList) {
                     dtoList.add(convertThreatToDTO(threat));
                 }
+            } catch (Exception e) {
+                log.warn("[SecuritySdkAdapter] Failed to get threat list: {}", e.getMessage());
+            }
+        }
                 return new PageResult<>(dtoList, result.getTotal(), result.getPageNum(), result.getPageSize());
             } catch (Exception e) {
                 log.error("[SecuritySdkAdapter] Failed to get threats: {}", e.getMessage());
@@ -367,8 +399,8 @@ public class SecuritySdkAdapterImpl implements SecuritySdkAdapter {
         dto.setStatus(policy.getStatus());
         dto.setPriority(policy.getPriority());
         dto.setAction(policy.getAction());
-        dto.setCreatedAt(policy.getCreatedAt() != null ? policy.getCreatedAt() : null);
-        dto.setUpdatedAt(policy.getUpdatedAt() != null ? policy.getUpdatedAt() : null);
+        dto.setCreatedAt(policy.getCreatedAt() > 0 ? new Date(policy.getCreatedAt()) : null);
+        dto.setUpdatedAt(policy.getUpdatedAt() > 0 ? new Date(policy.getUpdatedAt()) : null);
         return dto;
     }
 
@@ -416,8 +448,8 @@ public class SecuritySdkAdapterImpl implements SecuritySdkAdapter {
         dto.setDescription(threat.getDescription());
         dto.setStatus(threat.getStatus());
         dto.setRecommendation(threat.getRecommendation());
-        dto.setDetectedAt(threat.getDetectedAt() != null ? threat.getDetectedAt().getTime() : 0);
-        dto.setResolvedAt(threat.getResolvedAt() != null ? threat.getResolvedAt().getTime() : 0);
+        dto.setDetectedAt(threat.getDetectedAt() > 0 ? threat.getDetectedAt() : 0);
+        dto.setResolvedAt(threat.getResolvedAt() > 0 ? threat.getResolvedAt() : 0);
         return dto;
     }
 

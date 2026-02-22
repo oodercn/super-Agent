@@ -7,6 +7,8 @@ import net.ooder.nexus.skillcenter.dto.network.NetworkLinkDTO;
 import net.ooder.nexus.skillcenter.dto.network.NetworkRouteDTO;
 import net.ooder.nexus.skillcenter.dto.network.NetworkTopologyDTO;
 import net.ooder.nexus.skillcenter.dto.network.NetworkQualityDTO;
+import net.ooder.nexus.skillcenter.dto.network.TopologyNodeDTO;
+import net.ooder.nexus.skillcenter.dto.network.TopologyLinkDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +33,11 @@ public class NetworkSdkAdapterImpl implements NetworkSdkAdapter {
 
     private final Map<String, NetworkLinkDTO> localLinks = new ConcurrentHashMap<>();
     private final Map<String, NetworkRouteDTO> localRoutes = new ConcurrentHashMap<>();
+    
+    private Object invokeMethod(Object obj, String methodName) throws Exception {
+        java.lang.reflect.Method method = obj.getClass().getMethod(methodName);
+        return method.invoke(obj);
+    }
 
     @PostConstruct
     public void init() {
@@ -68,18 +75,22 @@ public class NetworkSdkAdapterImpl implements NetworkSdkAdapter {
     public Map<String, Object> getNetworkStatus() {
         if (networkProvider != null) {
             try {
-                NetworkStatus status = networkProvider.getStatus();
+                Object status = networkProvider.getStatus();
                 if (status != null) {
                     Map<String, Object> result = new HashMap<>();
-                    result.put("status", status.getStatus());
-                    result.put("nodeId", status.getNodeId());
-                    result.put("nodeType", status.getNodeType());
-                    result.put("online", status.isOnline());
-                    result.put("connectedPeers", status.getConnectedPeers());
-                    result.put("localAddress", status.getLocalAddress());
-                    result.put("localPort", status.getLocalPort());
-                    result.put("uptime", status.getUptime());
-                    return result;
+                    try {
+                        result.put("status", invokeMethod(status, "getStatus"));
+                        result.put("nodeId", invokeMethod(status, "getNodeId"));
+                        result.put("nodeType", invokeMethod(status, "getNodeType"));
+                        result.put("online", invokeMethod(status, "isOnline"));
+                        result.put("connectedPeers", invokeMethod(status, "getConnectedPeers"));
+                        result.put("localAddress", invokeMethod(status, "getLocalAddress"));
+                        result.put("localPort", invokeMethod(status, "getLocalPort"));
+                        result.put("uptime", invokeMethod(status, "getUptime"));
+                        return result;
+                    } catch (Exception ex) {
+                        log.warn("[NetworkSdkAdapter] Failed to get network status: {}", ex.getMessage());
+                    }
                 }
             } catch (Exception e) {
                 log.warn("[NetworkSdkAdapter] Failed to get status from provider: {}", e.getMessage());
@@ -101,18 +112,22 @@ public class NetworkSdkAdapterImpl implements NetworkSdkAdapter {
     public Map<String, Object> getNetworkStats() {
         if (networkProvider != null) {
             try {
-                NetworkStats stats = networkProvider.getStats();
+                Object stats = networkProvider.getStats();
                 if (stats != null) {
                     Map<String, Object> result = new HashMap<>();
-                    result.put("totalLinks", stats.getTotalLinks());
-                    result.put("activeLinks", stats.getActiveLinks());
-                    result.put("totalRoutes", stats.getTotalRoutes());
-                    result.put("bytesSent", stats.getTotalBytes());
-                    result.put("bytesReceived", 0L);
-                    result.put("messagesSent", stats.getTotalPackets());
-                    result.put("messagesReceived", 0L);
-                    result.put("averageLatency", stats.getAvgLatency());
-                    return result;
+                    try {
+                        result.put("totalLinks", invokeMethod(stats, "getTotalLinks"));
+                        result.put("activeLinks", invokeMethod(stats, "getActiveLinks"));
+                        result.put("totalRoutes", invokeMethod(stats, "getTotalRoutes"));
+                        result.put("bytesSent", invokeMethod(stats, "getTotalBytes"));
+                        result.put("bytesReceived", 0L);
+                        result.put("messagesSent", invokeMethod(stats, "getTotalPackets"));
+                        result.put("messagesReceived", 0L);
+                        result.put("averageLatency", invokeMethod(stats, "getAvgLatency"));
+                        return result;
+                    } catch (Exception ex) {
+                        log.warn("[NetworkSdkAdapter] Failed to get network stats: {}", ex.getMessage());
+                    }
                 }
             } catch (Exception e) {
                 log.warn("[NetworkSdkAdapter] Failed to get stats from provider: {}", e.getMessage());
@@ -138,8 +153,24 @@ public class NetworkSdkAdapterImpl implements NetworkSdkAdapter {
                 PageResult<?> providerResult = networkProvider.listLinks(pageNum, pageSize);
                 if (providerResult != null) {
                     List<NetworkLinkDTO> dtoList = new ArrayList<>();
-                    for (Object link : providerResult.getData()) {
-                        dtoList.add(convertLinkToDTO(link));
+                    try {
+                        // 使用反射获取数据列表
+                        java.lang.reflect.Method getDataMethod = providerResult.getClass().getMethod("getData");
+                        List<?> linkList = (List<?>) getDataMethod.invoke(providerResult);
+                        for (Object link : linkList) {
+                            dtoList.add(convertLinkToDTO(link));
+                        }
+                    } catch (Exception ex) {
+                        // 如果反射失败，尝试getList方法
+                        try {
+                            java.lang.reflect.Method getListMethod = providerResult.getClass().getMethod("getList");
+                            List<?> linkList = (List<?>) getListMethod.invoke(providerResult);
+                            for (Object link : linkList) {
+                                dtoList.add(convertLinkToDTO(link));
+                            }
+                        } catch (Exception e) {
+                            log.warn("[NetworkSdkAdapter] Failed to get link list: {}", e.getMessage());
+                        }
                     }
                     return new net.ooder.skillcenter.dto.PageResult<>(dtoList, providerResult.getTotal(), pageNum, pageSize);
                 }
@@ -207,8 +238,24 @@ public class NetworkSdkAdapterImpl implements NetworkSdkAdapter {
                 PageResult<?> providerResult = networkProvider.listRoutes(pageNum, pageSize);
                 if (providerResult != null) {
                     List<NetworkRouteDTO> dtoList = new ArrayList<>();
-                    for (Object route : providerResult.getData()) {
-                        dtoList.add(convertRouteToDTO(route));
+                    try {
+                        // 使用反射获取数据列表
+                        java.lang.reflect.Method getDataMethod = providerResult.getClass().getMethod("getData");
+                        List<?> routeList = (List<?>) getDataMethod.invoke(providerResult);
+                        for (Object route : routeList) {
+                            dtoList.add(convertRouteToDTO(route));
+                        }
+                    } catch (Exception ex) {
+                        // 如果反射失败，尝试getList方法
+                        try {
+                            java.lang.reflect.Method getListMethod = providerResult.getClass().getMethod("getList");
+                            List<?> routeList = (List<?>) getListMethod.invoke(providerResult);
+                            for (Object route : routeList) {
+                                dtoList.add(convertRouteToDTO(route));
+                            }
+                        } catch (Exception e) {
+                            log.warn("[NetworkSdkAdapter] Failed to get route list: {}", e.getMessage());
+                        }
                     }
                     return new net.ooder.skillcenter.dto.PageResult<>(dtoList, providerResult.getTotal(), pageNum, pageSize);
                 }
@@ -268,9 +315,22 @@ public class NetworkSdkAdapterImpl implements NetworkSdkAdapter {
             }
         }
         NetworkTopologyDTO dto = new NetworkTopologyDTO();
-        dto.setNodes(Arrays.asList("node-001", "node-002"));
-        dto.setEdges(Arrays.asList("link-001"));
-        dto.setUpdatedAt(System.currentTimeMillis());
+        List<TopologyNodeDTO> nodes = new ArrayList<>();
+        TopologyNodeDTO node1 = new TopologyNodeDTO();
+        node1.setNodeId("node-001");
+        nodes.add(node1);
+        TopologyNodeDTO node2 = new TopologyNodeDTO();
+        node2.setNodeId("node-002");
+        nodes.add(node2);
+        dto.setNodes(nodes);
+        List<TopologyLinkDTO> links = new ArrayList<>();
+        TopologyLinkDTO link = new TopologyLinkDTO();
+        link.setLinkId("link-001");
+        link.setSource("node-001");
+        link.setTarget("node-002");
+        links.add(link);
+        dto.setLinks(links);
+        dto.setTimestamp(System.currentTimeMillis());
         return dto;
     }
 
@@ -313,8 +373,21 @@ public class NetworkSdkAdapterImpl implements NetworkSdkAdapter {
 
     private NetworkTopologyDTO convertTopologyToDTO(Object topology) {
         NetworkTopologyDTO dto = new NetworkTopologyDTO();
-        dto.setNodes(Arrays.asList("node-001", "node-002"));
-        dto.setLinks(Arrays.asList("link-001"));
+        List<TopologyNodeDTO> nodes = new ArrayList<>();
+        TopologyNodeDTO node1 = new TopologyNodeDTO();
+        node1.setNodeId("node-001");
+        nodes.add(node1);
+        TopologyNodeDTO node2 = new TopologyNodeDTO();
+        node2.setNodeId("node-002");
+        nodes.add(node2);
+        dto.setNodes(nodes);
+        List<TopologyLinkDTO> links = new ArrayList<>();
+        TopologyLinkDTO link = new TopologyLinkDTO();
+        link.setLinkId("link-001");
+        link.setSource("node-001");
+        link.setTarget("node-002");
+        links.add(link);
+        dto.setLinks(links);
         dto.setTimestamp(System.currentTimeMillis());
         return dto;
     }

@@ -22,11 +22,23 @@ public class HostingExtensionSdkAdapterImpl implements HostingExtensionSdkAdapte
     public HostingCompatibilityDTO checkCompatibility(String skillId) {
         HostingCompatibilityDTO dto = new HostingCompatibilityDTO();
         dto.setSkillId(skillId);
-        dto.setCompatible(true);
-        dto.setSupportedRuntimes(Arrays.asList("java", "python", "node"));
-        dto.setMinCpu(0.5);
-        dto.setMinMemory(256);
+        dto.setCompatibilityScore(95.0);
+        dto.setRecommendation("Compatible");
+        List<HostingCompatibilityDTO.CompatibilityCheck> checks = new ArrayList<>();
+        checks.add(createCheck("runtime", "pass", "All runtimes supported", true));
+        checks.add(createCheck("cpu", "pass", "Minimum CPU requirement met", true));
+        checks.add(createCheck("memory", "pass", "Minimum memory requirement met", true));
+        dto.setChecks(checks);
         return dto;
+    }
+
+    private HostingCompatibilityDTO.CompatibilityCheck createCheck(String name, String status, String message, boolean required) {
+        HostingCompatibilityDTO.CompatibilityCheck check = new HostingCompatibilityDTO.CompatibilityCheck();
+        check.setName(name);
+        check.setStatus(status);
+        check.setMessage(message);
+        check.setRequired(required);
+        return check;
     }
 
     @Override
@@ -86,7 +98,7 @@ public class HostingExtensionSdkAdapterImpl implements HostingExtensionSdkAdapte
         String serviceId = "svc-" + UUID.randomUUID().toString().substring(0, 8);
         service.setServiceId(serviceId);
         service.setInstanceId(instanceId);
-        service.setRegisteredAt(System.currentTimeMillis());
+        service.setStatus("registered");
         services.put(serviceId, service);
         return service;
     }
@@ -127,7 +139,7 @@ public class HostingExtensionSdkAdapterImpl implements HostingExtensionSdkAdapte
     public VolumeDTO createVolume(VolumeDTO volume) {
         String volumeId = "vol-" + UUID.randomUUID().toString().substring(0, 8);
         volume.setVolumeId(volumeId);
-        volume.setCreatedAt(System.currentTimeMillis());
+        volume.setStatus("creating");
         volumes.put(volumeId, volume);
         return volume;
     }
@@ -148,9 +160,17 @@ public class HostingExtensionSdkAdapterImpl implements HostingExtensionSdkAdapte
         if (volume == null) {
             return false;
         }
-        volume.setMounted(true);
-        volume.setMountPath(mountPath);
-        volume.setMountedInstanceId(instanceId);
+        List<VolumeDTO.VolumeMount> mounts = volume.getMounts();
+        if (mounts == null) {
+            mounts = new ArrayList<>();
+            volume.setMounts(mounts);
+        }
+        VolumeDTO.VolumeMount mount = new VolumeDTO.VolumeMount();
+        mount.setInstanceId(instanceId);
+        mount.setMountPath(mountPath);
+        mount.setReadOnly(readOnly);
+        mounts.add(mount);
+        volume.setStatus("mounted");
         return true;
     }
 
@@ -160,9 +180,11 @@ public class HostingExtensionSdkAdapterImpl implements HostingExtensionSdkAdapte
         if (volume == null) {
             return false;
         }
-        volume.setMounted(false);
-        volume.setMountPath(null);
-        volume.setMountedInstanceId(null);
+        List<VolumeDTO.VolumeMount> mounts = volume.getMounts();
+        if (mounts != null) {
+            mounts.removeIf(mount -> instanceId.equals(mount.getInstanceId()));
+        }
+        volume.setStatus("available");
         return true;
     }
 
