@@ -1,5 +1,7 @@
 package net.ooder.nexus.adapter.inbound.controller.network;
 
+import net.ooder.nexus.dto.network.*;
+import net.ooder.nexus.model.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,155 +20,135 @@ public class NetworkLinkController {
     @Autowired
     private NexusManager nexusManager;
 
-    private final Map<String, NetworkLink> networkLinks = new ConcurrentHashMap<>();
+    private final Map<String, NetworkLinkEntity> networkLinks = new ConcurrentHashMap<>();
 
     public NetworkLinkController() {
         initializeDefaultLinks();
     }
 
     private void initializeDefaultLinks() {
-        networkLinks.put("link-001", new NetworkLink(
+        networkLinks.put("link-001", new NetworkLinkEntity(
                 "link-001", "mcp-agent-01", "route-agent-east", "direct", "active",
                 98.5, 1000, 10, "Stable",
                 System.currentTimeMillis() - 3600000, System.currentTimeMillis()));
 
-        networkLinks.put("link-002", new NetworkLink(
+        networkLinks.put("link-002", new NetworkLinkEntity(
                 "link-002", "mcp-agent-01", "route-agent-west", "direct", "active",
                 99.2, 1200, 8, "Stable",
                 System.currentTimeMillis() - 7200000, System.currentTimeMillis()));
 
-        networkLinks.put("link-003", new NetworkLink(
+        networkLinks.put("link-003", new NetworkLinkEntity(
                 "link-003", "mcp-agent-01", "route-agent-north", "direct", "active",
                 97.8, 950, 12, "Stable",
                 System.currentTimeMillis() - 10800000, System.currentTimeMillis()));
 
-        networkLinks.put("link-004", new NetworkLink(
+        networkLinks.put("link-004", new NetworkLinkEntity(
                 "link-004", "mcp-agent-01", "route-agent-south", "direct", "degraded",
                 75.3, 600, 35, "High packet loss",
                 System.currentTimeMillis() - 14400000, System.currentTimeMillis() - 300000));
 
-        networkLinks.put("link-005", new NetworkLink(
+        networkLinks.put("link-005", new NetworkLinkEntity(
                 "link-005", "route-agent-east", "end-agent-east-01", "indirect", "active",
                 96.7, 800, 15, "Stable",
                 System.currentTimeMillis() - 18000000, System.currentTimeMillis()));
 
-        networkLinks.put("link-006", new NetworkLink(
+        networkLinks.put("link-006", new NetworkLinkEntity(
                 "link-006", "route-agent-west", "end-agent-west-01", "indirect", "active",
                 98.1, 900, 12, "Stable",
                 System.currentTimeMillis() - 21600000, System.currentTimeMillis()));
     }
 
     @GetMapping("/list")
-    public Map<String, Object> getNetworkLinks(
+    public ApiResponse<NetworkLinkListDTO> getNetworkLinks(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String sourceAgentId,
             @RequestParam(required = false) String targetAgentId) {
+        return getNetworkLinksInternal(status, type, sourceAgentId, targetAgentId);
+    }
+
+    @GetMapping("")
+    public ApiResponse<NetworkLinkListDTO> getNetworkLinksAlias(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String sourceAgentId,
+            @RequestParam(required = false) String targetAgentId) {
+        return getNetworkLinksInternal(status, type, sourceAgentId, targetAgentId);
+    }
+
+    private ApiResponse<NetworkLinkListDTO> getNetworkLinksInternal(
+            String status, String type, String sourceAgentId, String targetAgentId) {
         log.info("Get network links requested: status={}, type={}, sourceAgentId={}, targetAgentId={}", status, type, sourceAgentId, targetAgentId);
-        Map<String, Object> response = new HashMap<>();
 
         try {
-            List<NetworkLink> filteredLinks = new ArrayList<>();
-            for (NetworkLink link : networkLinks.values()) {
+            List<NetworkLinkDTO> filteredLinks = new ArrayList<>();
+            for (NetworkLinkEntity link : networkLinks.values()) {
                 if ((status == null || link.getStatus().equals(status)) &&
                     (type == null || link.getType().equals(type)) &&
                     (sourceAgentId == null || link.getSourceAgentId().equals(sourceAgentId)) &&
                     (targetAgentId == null || link.getTargetAgentId().equals(targetAgentId))) {
-                    filteredLinks.add(link);
+                    filteredLinks.add(convertToDTO(link));
                 }
             }
 
-            filteredLinks.sort(Comparator.comparingLong(NetworkLink::getLastUpdated).reversed());
+            filteredLinks.sort(Comparator.comparingLong(NetworkLinkDTO::getLastUpdated).reversed());
 
-            Map<String, Object> data = new HashMap<>();
-            data.put("links", filteredLinks);
-            data.put("total", filteredLinks.size());
-            data.put("statusSummary", calculateStatusSummary());
+            NetworkLinkListDTO data = new NetworkLinkListDTO();
+            data.setLinks(filteredLinks);
+            data.setTotal(filteredLinks.size());
+            data.setStatusSummary(calculateStatusSummary());
 
-            response.put("status", "success");
-            response.put("message", "Network links retrieved successfully");
-            response.put("data", data);
-            response.put("code", 200);
-            response.put("timestamp", System.currentTimeMillis());
+            return ApiResponse.success(data);
         } catch (Exception e) {
             log.error("Error getting network links: {}", e.getMessage());
-            response.put("status", "error");
-            response.put("message", "Failed to get network links: " + e.getMessage());
-            response.put("code", 500);
-            response.put("timestamp", System.currentTimeMillis());
+            return ApiResponse.error("Failed to get network links: " + e.getMessage());
         }
-
-        return response;
     }
 
     @GetMapping("/detail/{linkId}")
-    public Map<String, Object> getNetworkLinkDetail(@PathVariable String linkId) {
+    public ApiResponse<NetworkLinkDetailDTO> getNetworkLinkDetail(@PathVariable String linkId) {
         log.info("Get network link detail requested: linkId={}", linkId);
-        Map<String, Object> response = new HashMap<>();
 
         try {
-            NetworkLink link = networkLinks.get(linkId);
+            NetworkLinkEntity link = networkLinks.get(linkId);
             if (link == null) {
-                response.put("status", "error");
-                response.put("message", "Network link not found: " + linkId);
-                response.put("code", 404);
-                response.put("timestamp", System.currentTimeMillis());
-                return response;
+                return ApiResponse.notFound("Network link not found: " + linkId);
             }
 
             link.setLastUpdated(System.currentTimeMillis());
-            List<Map<String, Object>> history = generateLinkHistory(linkId);
 
-            Map<String, Object> data = new HashMap<>();
-            data.put("link", link);
-            data.put("history", history);
-            data.put("healthScore", calculateLinkHealthScore(link));
+            NetworkLinkDetailDTO data = new NetworkLinkDetailDTO();
+            data.setLink(convertToDTO(link));
+            data.setHistory(generateLinkHistory(linkId));
+            data.setHealthScore(calculateLinkHealthScore(link));
 
-            response.put("status", "success");
-            response.put("message", "Network link detail retrieved successfully");
-            response.put("data", data);
-            response.put("code", 200);
-            response.put("timestamp", System.currentTimeMillis());
+            return ApiResponse.success(data);
         } catch (Exception e) {
             log.error("Error getting network link detail: {}", e.getMessage());
-            response.put("status", "error");
-            response.put("message", "Failed to get network link detail: " + e.getMessage());
-            response.put("code", 500);
-            response.put("timestamp", System.currentTimeMillis());
+            return ApiResponse.error("Failed to get network link detail: " + e.getMessage());
         }
-
-        return response;
     }
 
     @PostMapping("/add")
-    public Map<String, Object> addNetworkLink(@RequestBody Map<String, Object> linkData) {
-        log.info("Add network link requested: {}", linkData);
-        Map<String, Object> response = new HashMap<>();
+    public ApiResponse<NetworkLinkDTO> addNetworkLink(@RequestBody NetworkLinkCreateDTO request) {
+        log.info("Add network link requested: {}", request.getSourceAgentId());
 
         try {
-            if (!linkData.containsKey("sourceAgentId") || !linkData.containsKey("targetAgentId")) {
-                response.put("status", "error");
-                response.put("message", "Missing required fields: sourceAgentId and targetAgentId are required");
-                response.put("code", 400);
-                response.put("timestamp", System.currentTimeMillis());
-                return response;
+            if (request.getSourceAgentId() == null || request.getTargetAgentId() == null) {
+                return ApiResponse.badRequest("Missing required fields: sourceAgentId and targetAgentId are required");
             }
 
-            String linkId = linkData.containsKey("linkId") ? (String) linkData.get("linkId") : "link-" + System.currentTimeMillis();
+            String linkId = request.getLinkId() != null ? request.getLinkId() : "link-" + System.currentTimeMillis();
 
             if (networkLinks.containsKey(linkId)) {
-                response.put("status", "error");
-                response.put("message", "Network link already exists: " + linkId);
-                response.put("code", 409);
-                response.put("timestamp", System.currentTimeMillis());
-                return response;
+                return ApiResponse.error("Network link already exists: " + linkId);
             }
 
-            NetworkLink newLink = new NetworkLink(
+            NetworkLinkEntity newLink = new NetworkLinkEntity(
                     linkId,
-                    (String) linkData.get("sourceAgentId"),
-                    (String) linkData.get("targetAgentId"),
-                    linkData.containsKey("type") ? (String) linkData.get("type") : "direct",
+                    request.getSourceAgentId(),
+                    request.getTargetAgentId(),
+                    request.getType() != null ? request.getType() : "direct",
                     "pending", 0.0, 0, 0, "Link initializing",
                     System.currentTimeMillis(), System.currentTimeMillis());
 
@@ -176,12 +158,12 @@ public class NetworkLinkController {
                 try {
                     Map<String, Object> connectionInfo = new HashMap<>();
                     connectionInfo.put("linkId", linkId);
-                    connectionInfo.put("type", linkData.containsKey("type") ? linkData.get("type") : "direct");
+                    connectionInfo.put("type", request.getType() != null ? request.getType() : "direct");
                     connectionInfo.put("status", "pending");
                     connectionInfo.put("description", "Link initializing");
                     nexusManager.createNetworkConnection(
-                            (String) linkData.get("sourceAgentId"),
-                            (String) linkData.get("targetAgentId"),
+                            request.getSourceAgentId(),
+                            request.getTargetAgentId(),
                             connectionInfo);
                     log.info("Network link registered with SDK: {}", linkId);
                 } catch (Exception sdkEx) {
@@ -191,35 +173,21 @@ public class NetworkLinkController {
 
             activateLinkAsync(linkId);
 
-            response.put("status", "success");
-            response.put("message", "Network link added successfully");
-            response.put("data", newLink);
-            response.put("code", 200);
-            response.put("timestamp", System.currentTimeMillis());
+            return ApiResponse.success("Network link added successfully", convertToDTO(newLink));
         } catch (Exception e) {
             log.error("Error adding network link: {}", e.getMessage());
-            response.put("status", "error");
-            response.put("message", "Failed to add network link: " + e.getMessage());
-            response.put("code", 500);
-            response.put("timestamp", System.currentTimeMillis());
+            return ApiResponse.error("Failed to add network link: " + e.getMessage());
         }
-
-        return response;
     }
 
     @DeleteMapping("/delete/{linkId}")
-    public Map<String, Object> deleteNetworkLink(@PathVariable String linkId) {
+    public ApiResponse<String> deleteNetworkLink(@PathVariable String linkId) {
         log.info("Delete network link requested: linkId={}", linkId);
-        Map<String, Object> response = new HashMap<>();
 
         try {
-            NetworkLink link = networkLinks.get(linkId);
+            NetworkLinkEntity link = networkLinks.get(linkId);
             if (link == null) {
-                response.put("status", "error");
-                response.put("message", "Network link not found: " + linkId);
-                response.put("code", 404);
-                response.put("timestamp", System.currentTimeMillis());
-                return response;
+                return ApiResponse.notFound("Network link not found: " + linkId);
             }
 
             networkLinks.remove(linkId);
@@ -240,126 +208,74 @@ public class NetworkLinkController {
                 }
             }
 
-            response.put("status", "success");
-            response.put("message", "Network link deleted successfully");
-            Map<String, Object> data = new ConcurrentHashMap<>();
-            data.put("linkId", linkId);
-            response.put("data", data);
-            response.put("code", 200);
-            response.put("timestamp", System.currentTimeMillis());
+            return ApiResponse.success("Network link deleted successfully", linkId);
         } catch (Exception e) {
             log.error("Error deleting network link: {}", e.getMessage());
-            response.put("status", "error");
-            response.put("message", "Failed to delete network link: " + e.getMessage());
-            response.put("code", 500);
-            response.put("timestamp", System.currentTimeMillis());
+            return ApiResponse.error("Failed to delete network link: " + e.getMessage());
         }
-
-        return response;
     }
 
     @PutMapping("/update/{linkId}")
-    public Map<String, Object> updateNetworkLink(@PathVariable String linkId, @RequestBody Map<String, Object> updateData) {
-        log.info("Update network link requested: linkId={}, data={}", linkId, updateData);
-        Map<String, Object> response = new HashMap<>();
+    public ApiResponse<NetworkLinkDTO> updateNetworkLink(@PathVariable String linkId, @RequestBody NetworkLinkUpdateDTO request) {
+        log.info("Update network link requested: linkId={}", linkId);
 
         try {
-            NetworkLink link = networkLinks.get(linkId);
+            NetworkLinkEntity link = networkLinks.get(linkId);
             if (link == null) {
-                response.put("status", "error");
-                response.put("message", "Network link not found: " + linkId);
-                response.put("code", 404);
-                response.put("timestamp", System.currentTimeMillis());
-                return response;
+                return ApiResponse.notFound("Network link not found: " + linkId);
             }
 
-            if (updateData.containsKey("status")) link.setStatus((String) updateData.get("status"));
-            if (updateData.containsKey("type")) link.setType((String) updateData.get("type"));
-            if (updateData.containsKey("description")) link.setDescription((String) updateData.get("description"));
+            if (request.getStatus() != null) link.setStatus(request.getStatus());
+            if (request.getType() != null) link.setType(request.getType());
+            if (request.getDescription() != null) link.setDescription(request.getDescription());
 
             link.setLastUpdated(System.currentTimeMillis());
 
-            response.put("status", "success");
-            response.put("message", "Network link updated successfully");
-            response.put("data", link);
-            response.put("code", 200);
-            response.put("timestamp", System.currentTimeMillis());
+            return ApiResponse.success("Network link updated successfully", convertToDTO(link));
         } catch (Exception e) {
             log.error("Error updating network link: {}", e.getMessage());
-            response.put("status", "error");
-            response.put("message", "Failed to update network link: " + e.getMessage());
-            response.put("code", 500);
-            response.put("timestamp", System.currentTimeMillis());
+            return ApiResponse.error("Failed to update network link: " + e.getMessage());
         }
-
-        return response;
     }
 
     @PostMapping("/refresh/{linkId}")
-    public Map<String, Object> refreshNetworkLinkStatus(@PathVariable String linkId) {
+    public ApiResponse<String> refreshNetworkLinkStatus(@PathVariable String linkId) {
         log.info("Refresh network link status requested: linkId={}", linkId);
-        Map<String, Object> response = new HashMap<>();
 
         try {
-            NetworkLink link = networkLinks.get(linkId);
+            NetworkLinkEntity link = networkLinks.get(linkId);
             if (link == null) {
-                response.put("status", "error");
-                response.put("message", "Network link not found: " + linkId);
-                response.put("code", 404);
-                response.put("timestamp", System.currentTimeMillis());
-                return response;
+                return ApiResponse.notFound("Network link not found: " + linkId);
             }
 
             refreshLinkStatusAsync(linkId);
 
-            response.put("status", "success");
-            response.put("message", "Network link status refresh initiated successfully");
-            Map<String, Object> data = new ConcurrentHashMap<>();
-            data.put("linkId", linkId);
-            data.put("status", "refreshing");
-            response.put("data", data);
-            response.put("code", 200);
-            response.put("timestamp", System.currentTimeMillis());
+            return ApiResponse.success("Network link status refresh initiated successfully", linkId);
         } catch (Exception e) {
             log.error("Error refreshing network link status: {}", e.getMessage());
-            response.put("status", "error");
-            response.put("message", "Failed to refresh network link status: " + e.getMessage());
-            response.put("code", 500);
-            response.put("timestamp", System.currentTimeMillis());
+            return ApiResponse.error("Failed to refresh network link status: " + e.getMessage());
         }
-
-        return response;
     }
 
     @GetMapping("/stats")
-    public Map<String, Object> getNetworkLinkStats() {
+    public ApiResponse<NetworkLinkStatsDTO> getNetworkLinkStats() {
         log.info("Get network link stats requested");
-        Map<String, Object> response = new HashMap<>();
 
         try {
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("totalLinks", networkLinks.size());
-            stats.put("statusSummary", calculateStatusSummary());
-            stats.put("typeSummary", calculateTypeSummary());
-            stats.put("averageLatency", calculateAverageLatency());
-            stats.put("averageBandwidth", calculateAverageBandwidth());
-            stats.put("averageReliability", calculateAverageReliability());
-            stats.put("healthScore", calculateOverallHealthScore());
+            NetworkLinkStatsDTO stats = new NetworkLinkStatsDTO();
+            stats.setTotalLinks(networkLinks.size());
+            stats.setStatusSummary(calculateStatusSummary());
+            stats.setTypeSummary(calculateTypeSummary());
+            stats.setAverageLatency(calculateAverageLatency());
+            stats.setAverageBandwidth(calculateAverageBandwidth());
+            stats.setAverageReliability(calculateAverageReliability());
+            stats.setHealthScore(calculateOverallHealthScore());
 
-            response.put("status", "success");
-            response.put("message", "Network link stats retrieved successfully");
-            response.put("data", stats);
-            response.put("code", 200);
-            response.put("timestamp", System.currentTimeMillis());
+            return ApiResponse.success(stats);
         } catch (Exception e) {
             log.error("Error getting network link stats: {}", e.getMessage());
-            response.put("status", "error");
-            response.put("message", "Failed to get network link stats: " + e.getMessage());
-            response.put("code", 500);
-            response.put("timestamp", System.currentTimeMillis());
+            return ApiResponse.error("Failed to get network link stats: " + e.getMessage());
         }
-
-        return response;
     }
 
     private Map<String, Integer> calculateStatusSummary() {
@@ -370,7 +286,7 @@ public class NetworkLinkController {
         statusSummary.put("pending", 0);
         statusSummary.put("error", 0);
 
-        for (NetworkLink link : networkLinks.values()) {
+        for (NetworkLinkEntity link : networkLinks.values()) {
             String status = link.getStatus();
             statusSummary.put(status, statusSummary.getOrDefault(status, 0) + 1);
         }
@@ -383,7 +299,7 @@ public class NetworkLinkController {
         typeSummary.put("direct", 0);
         typeSummary.put("indirect", 0);
 
-        for (NetworkLink link : networkLinks.values()) {
+        for (NetworkLinkEntity link : networkLinks.values()) {
             String type = link.getType();
             typeSummary.put(type, typeSummary.getOrDefault(type, 0) + 1);
         }
@@ -393,20 +309,20 @@ public class NetworkLinkController {
 
     private double calculateAverageLatency() {
         if (networkLinks.isEmpty()) return 0;
-        return networkLinks.values().stream().mapToInt(NetworkLink::getLatency).average().orElse(0);
+        return networkLinks.values().stream().mapToInt(NetworkLinkEntity::getLatency).average().orElse(0);
     }
 
     private double calculateAverageBandwidth() {
         if (networkLinks.isEmpty()) return 0;
-        return networkLinks.values().stream().mapToInt(NetworkLink::getBandwidth).average().orElse(0);
+        return networkLinks.values().stream().mapToInt(NetworkLinkEntity::getBandwidth).average().orElse(0);
     }
 
     private double calculateAverageReliability() {
         if (networkLinks.isEmpty()) return 0;
-        return networkLinks.values().stream().mapToDouble(NetworkLink::getReliability).average().orElse(0);
+        return networkLinks.values().stream().mapToDouble(NetworkLinkEntity::getReliability).average().orElse(0);
     }
 
-    private double calculateLinkHealthScore(NetworkLink link) {
+    private double calculateLinkHealthScore(NetworkLinkEntity link) {
         double reliabilityScore = link.getReliability() * 0.5;
         double latencyScore = Math.max(0, 50 - (link.getLatency() / 100.0)) * 0.3;
         double bandwidthScore = Math.min(50, link.getBandwidth() / 20.0) * 0.2;
@@ -418,17 +334,17 @@ public class NetworkLinkController {
         return networkLinks.values().stream().mapToDouble(this::calculateLinkHealthScore).average().orElse(0);
     }
 
-    private List<Map<String, Object>> generateLinkHistory(String linkId) {
-        List<Map<String, Object>> history = new ArrayList<>();
+    private List<NetworkLinkDetailDTO.NetworkLinkHistoryDTO> generateLinkHistory(String linkId) {
+        List<NetworkLinkDetailDTO.NetworkLinkHistoryDTO> history = new ArrayList<>();
         long now = System.currentTimeMillis();
 
         for (int i = 0; i < 24; i++) {
             long timestamp = now - (i * 3600000);
-            Map<String, Object> dataPoint = new HashMap<>();
-            dataPoint.put("timestamp", timestamp);
-            dataPoint.put("reliability", 90 + Math.random() * 10);
-            dataPoint.put("latency", 5 + Math.random() * 15);
-            dataPoint.put("bandwidth", 800 + Math.random() * 400);
+            NetworkLinkDetailDTO.NetworkLinkHistoryDTO dataPoint = new NetworkLinkDetailDTO.NetworkLinkHistoryDTO();
+            dataPoint.setTimestamp(timestamp);
+            dataPoint.setReliability(90 + Math.random() * 10);
+            dataPoint.setLatency(5 + Math.random() * 15);
+            dataPoint.setBandwidth(800 + Math.random() * 400);
             history.add(dataPoint);
         }
 
@@ -439,7 +355,7 @@ public class NetworkLinkController {
         new Thread(() -> {
             try {
                 Thread.sleep(2000);
-                NetworkLink link = networkLinks.get(linkId);
+                NetworkLinkEntity link = networkLinks.get(linkId);
                 if (link != null) {
                     link.setStatus("active");
                     link.setReliability(95 + Math.random() * 5);
@@ -458,7 +374,7 @@ public class NetworkLinkController {
         new Thread(() -> {
             try {
                 Thread.sleep(1000);
-                NetworkLink link = networkLinks.get(linkId);
+                NetworkLinkEntity link = networkLinks.get(linkId);
                 if (link != null) {
                     link.setReliability(Math.max(70, Math.min(100, link.getReliability() + (Math.random() * 6 - 3))));
                     link.setBandwidth(Math.max(500, Math.min(1500, link.getBandwidth() + (int)(Math.random() * 200 - 100))));
@@ -483,7 +399,23 @@ public class NetworkLinkController {
         }).start();
     }
 
-    private static class NetworkLink {
+    private NetworkLinkDTO convertToDTO(NetworkLinkEntity entity) {
+        NetworkLinkDTO dto = new NetworkLinkDTO();
+        dto.setLinkId(entity.getLinkId());
+        dto.setSourceAgentId(entity.getSourceAgentId());
+        dto.setTargetAgentId(entity.getTargetAgentId());
+        dto.setType(entity.getType());
+        dto.setStatus(entity.getStatus());
+        dto.setReliability(entity.getReliability());
+        dto.setBandwidth(entity.getBandwidth());
+        dto.setLatency(entity.getLatency());
+        dto.setDescription(entity.getDescription());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setLastUpdated(entity.getLastUpdated());
+        return dto;
+    }
+
+    private static class NetworkLinkEntity {
         private final String linkId;
         private final String sourceAgentId;
         private final String targetAgentId;
@@ -496,7 +428,7 @@ public class NetworkLinkController {
         private final long createdAt;
         private long lastUpdated;
 
-        public NetworkLink(String linkId, String sourceAgentId, String targetAgentId, String type, String status, double reliability, int bandwidth, int latency, String description, long createdAt, long lastUpdated) {
+        public NetworkLinkEntity(String linkId, String sourceAgentId, String targetAgentId, String type, String status, double reliability, int bandwidth, int latency, String description, long createdAt, long lastUpdated) {
             this.linkId = linkId;
             this.sourceAgentId = sourceAgentId;
             this.targetAgentId = targetAgentId;

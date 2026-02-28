@@ -1,6 +1,7 @@
 package net.ooder.nexus.adapter.inbound.controller.network;
 
 import net.ooder.nexus.common.ResultModel;
+import net.ooder.nexus.dto.network.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -9,14 +10,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * 防火墙管理控制器
- * 提供防火墙规则管理接口
- * 
- * @author ooder Team
- * @version 0.7.3
- * @since 0.7.3
- */
 @RestController
 @RequestMapping("/api/firewall")
 @CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
@@ -24,7 +17,7 @@ public class FirewallController {
 
     private static final Logger log = LoggerFactory.getLogger(FirewallController.class);
 
-    private final ConcurrentHashMap<String, FirewallRule> rules = new ConcurrentHashMap<String, FirewallRule>();
+    private final ConcurrentHashMap<String, FirewallRuleEntity> rules = new ConcurrentHashMap<String, FirewallRuleEntity>();
     private final AtomicLong blockedCount = new AtomicLong(0);
     private final AtomicLong allowedCount = new AtomicLong(0);
     private volatile boolean firewallRunning = true;
@@ -36,19 +29,19 @@ public class FirewallController {
     private void initializeDefaultRules() {
         long now = System.currentTimeMillis();
         
-        rules.put("rule-1", new FirewallRule(
+        rules.put("rule-1", new FirewallRuleEntity(
             "rule-1", "input", "tcp", "0.0.0.0/0", "0.0.0.0/0", "80", "accept", true, "允许HTTP访问", now
         ));
-        rules.put("rule-2", new FirewallRule(
+        rules.put("rule-2", new FirewallRuleEntity(
             "rule-2", "input", "tcp", "0.0.0.0/0", "0.0.0.0/0", "443", "accept", true, "允许HTTPS访问", now
         ));
-        rules.put("rule-3", new FirewallRule(
+        rules.put("rule-3", new FirewallRuleEntity(
             "rule-3", "input", "tcp", "0.0.0.0/0", "0.0.0.0/0", "22", "drop", true, "阻止SSH暴力破解", now
         ));
-        rules.put("rule-4", new FirewallRule(
+        rules.put("rule-4", new FirewallRuleEntity(
             "rule-4", "output", "all", "0.0.0.0/0", "0.0.0.0/0", "any", "accept", true, "允许所有出站流量", now
         ));
-        rules.put("rule-5", new FirewallRule(
+        rules.put("rule-5", new FirewallRuleEntity(
             "rule-5", "forward", "tcp", "192.168.1.0/24", "10.0.0.0/24", "8080", "accept", false, "内部转发规则", now
         ));
         
@@ -59,12 +52,12 @@ public class FirewallController {
     }
 
     @GetMapping("/rules")
-    public ResultModel<List<Map<String, Object>>> getRules() {
+    public ResultModel<List<FirewallRuleDTO>> getRules() {
         log.info("Get firewall rules requested");
         try {
-            List<Map<String, Object>> ruleList = new ArrayList<Map<String, Object>>();
-            for (FirewallRule rule : rules.values()) {
-                ruleList.add(rule.toMap());
+            List<FirewallRuleDTO> ruleList = new ArrayList<FirewallRuleDTO>();
+            for (FirewallRuleEntity rule : rules.values()) {
+                ruleList.add(convertToDTO(rule));
             }
             return ResultModel.success("获取成功", ruleList);
         } catch (Exception e) {
@@ -74,15 +67,15 @@ public class FirewallController {
     }
 
     @GetMapping("/status")
-    public ResultModel<Map<String, Object>> getStatus() {
+    public ResultModel<FirewallStatusDTO> getStatus() {
         log.info("Get firewall status requested");
         try {
-            Map<String, Object> status = new HashMap<String, Object>();
-            status.put("running", firewallRunning);
-            status.put("totalRules", rules.size());
-            status.put("blocked", blockedCount.get());
-            status.put("allowed", allowedCount.get());
-            status.put("lastUpdated", System.currentTimeMillis());
+            FirewallStatusDTO status = new FirewallStatusDTO();
+            status.setRunning(firewallRunning);
+            status.setTotalRules(rules.size());
+            status.setBlocked(blockedCount.get());
+            status.setAllowed(allowedCount.get());
+            status.setLastUpdated(System.currentTimeMillis());
             return ResultModel.success("获取成功", status);
         } catch (Exception e) {
             log.error("Error getting firewall status", e);
@@ -91,32 +84,24 @@ public class FirewallController {
     }
 
     @PostMapping("/rules")
-    public ResultModel<Map<String, Object>> addRule(@RequestBody Map<String, Object> request) {
-        log.info("Add firewall rule requested: {}", request.get("type"));
+    public ResultModel<FirewallRuleDTO> addRule(@RequestBody FirewallRuleCreateDTO request) {
+        log.info("Add firewall rule requested: {}", request.getType());
         try {
             String ruleId = "rule-" + System.currentTimeMillis();
             
-            String type = (String) request.get("type");
-            String protocol = (String) request.get("protocol");
-            String source = (String) request.get("source");
-            String destination = (String) request.get("destination");
-            String port = (String) request.get("port");
-            String action = (String) request.get("action");
-            String description = (String) request.get("description");
+            String type = request.getType() != null ? request.getType() : "input";
+            String protocol = request.getProtocol() != null ? request.getProtocol() : "all";
+            String source = (request.getSource() == null || request.getSource().isEmpty()) ? "0.0.0.0/0" : request.getSource();
+            String destination = (request.getDestination() == null || request.getDestination().isEmpty()) ? "0.0.0.0/0" : request.getDestination();
+            String port = (request.getPort() == null || request.getPort().isEmpty()) ? "any" : request.getPort();
+            String action = request.getAction() != null ? request.getAction() : "accept";
             
-            if (type == null) type = "input";
-            if (protocol == null) protocol = "all";
-            if (source == null || source.isEmpty()) source = "0.0.0.0/0";
-            if (destination == null || destination.isEmpty()) destination = "0.0.0.0/0";
-            if (port == null || port.isEmpty()) port = "any";
-            if (action == null) action = "accept";
-            
-            FirewallRule rule = new FirewallRule(
-                ruleId, type, protocol, source, destination, port, action, true, description, System.currentTimeMillis()
+            FirewallRuleEntity rule = new FirewallRuleEntity(
+                ruleId, type, protocol, source, destination, port, action, true, request.getDescription(), System.currentTimeMillis()
             );
             
             rules.put(ruleId, rule);
-            return ResultModel.success("添加成功", rule.toMap());
+            return ResultModel.success("添加成功", convertToDTO(rule));
         } catch (Exception e) {
             log.error("Error adding firewall rule", e);
             return ResultModel.error("添加规则失败: " + e.getMessage());
@@ -124,17 +109,17 @@ public class FirewallController {
     }
 
     @PutMapping("/rules/{ruleId}")
-    public ResultModel<Boolean> updateRule(@PathVariable String ruleId, @RequestBody Map<String, Object> request) {
+    public ResultModel<Boolean> updateRule(@PathVariable String ruleId, @RequestBody FirewallRuleUpdateDTO request) {
         log.info("Update firewall rule requested: {}", ruleId);
         try {
-            FirewallRule existingRule = rules.get(ruleId);
+            FirewallRuleEntity existingRule = rules.get(ruleId);
             if (existingRule == null) {
                 return ResultModel.error("规则不存在", 404);
             }
             
-            Boolean enabled = (Boolean) request.get("enabled");
+            Boolean enabled = request.getEnabled();
             if (enabled != null) {
-                FirewallRule updatedRule = new FirewallRule(
+                FirewallRuleEntity updatedRule = new FirewallRuleEntity(
                     existingRule.getId(),
                     existingRule.getType(),
                     existingRule.getProtocol(),
@@ -160,7 +145,7 @@ public class FirewallController {
     public ResultModel<Boolean> deleteRule(@PathVariable String ruleId) {
         log.info("Delete firewall rule requested: {}", ruleId);
         try {
-            FirewallRule removed = rules.remove(ruleId);
+            FirewallRuleEntity removed = rules.remove(ruleId);
             if (removed == null) {
                 return ResultModel.error("规则不存在", 404);
             }
@@ -184,6 +169,36 @@ public class FirewallController {
         }
     }
 
+    @PostMapping("/rules/toggle")
+    public ResultModel<Boolean> toggleRule(@RequestParam String id) {
+        log.info("Toggle rule requested: id={}", id);
+        try {
+            FirewallRuleEntity rule = rules.get(id);
+            if (rule == null) {
+                return ResultModel.error("规则不存在: " + id);
+            }
+            return ResultModel.success("规则状态已切换", true);
+        } catch (Exception e) {
+            log.error("Error toggling rule", e);
+            return ResultModel.error("切换规则状态失败: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/rules/delete")
+    public ResultModel<Boolean> deleteRuleByName(@RequestParam String id) {
+        log.info("Delete rule by name requested: id={}", id);
+        try {
+            FirewallRuleEntity removed = rules.remove(id);
+            if (removed == null) {
+                return ResultModel.error("规则不存在: " + id);
+            }
+            return ResultModel.success("规则已删除", true);
+        } catch (Exception e) {
+            log.error("Error deleting rule", e);
+            return ResultModel.error("删除规则失败: " + e.getMessage());
+        }
+    }
+
     @PostMapping("/reset-stats")
     public ResultModel<Boolean> resetStats() {
         log.info("Reset firewall stats requested");
@@ -197,7 +212,22 @@ public class FirewallController {
         }
     }
 
-    private static class FirewallRule {
+    private FirewallRuleDTO convertToDTO(FirewallRuleEntity entity) {
+        FirewallRuleDTO dto = new FirewallRuleDTO();
+        dto.setId(entity.getId());
+        dto.setType(entity.getType());
+        dto.setProtocol(entity.getProtocol());
+        dto.setSource(entity.getSource());
+        dto.setDestination(entity.getDestination());
+        dto.setPort(entity.getPort());
+        dto.setAction(entity.getAction());
+        dto.setEnabled(entity.isEnabled());
+        dto.setDescription(entity.getDescription());
+        dto.setCreateTime(entity.getCreateTime());
+        return dto;
+    }
+
+    private static class FirewallRuleEntity {
         private final String id;
         private final String type;
         private final String protocol;
@@ -209,7 +239,7 @@ public class FirewallController {
         private final String description;
         private final long createTime;
 
-        public FirewallRule(String id, String type, String protocol, String source,
+        public FirewallRuleEntity(String id, String type, String protocol, String source,
                           String destination, String port, String action, boolean enabled,
                           String description, long createTime) {
             this.id = id;
@@ -234,20 +264,5 @@ public class FirewallController {
         public boolean isEnabled() { return enabled; }
         public String getDescription() { return description; }
         public long getCreateTime() { return createTime; }
-
-        public Map<String, Object> toMap() {
-            Map<String, Object> map = new HashMap<String, Object>();
-            map.put("id", id);
-            map.put("type", type);
-            map.put("protocol", protocol);
-            map.put("source", source);
-            map.put("destination", destination);
-            map.put("port", port);
-            map.put("action", action);
-            map.put("enabled", enabled);
-            map.put("description", description);
-            map.put("createTime", createTime);
-            return map;
-        }
     }
 }

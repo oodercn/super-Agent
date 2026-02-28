@@ -1,6 +1,8 @@
 package net.ooder.nexus.adapter.inbound.controller.personal;
 
 import net.ooder.nexus.domain.personal.model.*;
+import net.ooder.nexus.dto.personal.*;
+import net.ooder.nexus.model.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -84,32 +86,25 @@ public class PaymentController {
     }
 
     @GetMapping("/channels")
-    public Map<String, Object> getChannels() {
-        Map<String, Object> result = new HashMap<>();
+    public ApiResponse<PaymentChannelListDTO> getChannels() {
         try {
-            result.put("requestStatus", 200);
-            result.put("data", new HashMap<String, Object>() {{
-                put("channels", new ArrayList<>(channelStore.values()));
-            }});
+            PaymentChannelListDTO data = new PaymentChannelListDTO();
+            data.setChannels(new ArrayList<>(channelStore.values()));
+            return ApiResponse.success(data);
         } catch (Exception e) {
             log.error("Failed to get payment channels", e);
-            result.put("requestStatus", 500);
-            result.put("message", "获取支付渠道失败: " + e.getMessage());
+            return ApiResponse.error("获取支付渠道失败: " + e.getMessage());
         }
-        return result;
     }
 
     @PostMapping("/channels/{channelId}/config")
-    public Map<String, Object> configChannel(
+    public ApiResponse<PaymentChannelConfigResultDTO> configChannel(
             @PathVariable String channelId,
-            @RequestBody Map<String, Object> config) {
-        Map<String, Object> result = new HashMap<>();
+            @RequestBody PaymentChannelConfigDTO config) {
         try {
             PaymentChannel channel = channelStore.get(channelId);
             if (channel == null) {
-                result.put("requestStatus", 404);
-                result.put("message", "支付渠道不存在");
-                return result;
+                return ApiResponse.notFound("支付渠道不存在");
             }
 
             channel.setStatus("CONFIGURED");
@@ -117,37 +112,32 @@ public class PaymentController {
             channel.setLastChecked(new Date());
             
             for (ConfigFieldInfo field : channel.getConfigFields()) {
-                field.setConfigured(config.containsKey(field.getName()));
+                field.setConfigured(hasConfigValue(field.getName(), config));
             }
 
-            result.put("requestStatus", 200);
-            result.put("message", "配置保存成功");
+            PaymentChannelConfigResultDTO data = new PaymentChannelConfigResultDTO();
+            data.setChannelId(channelId);
+            data.setStatus(channel.getStatus());
             
-            Map<String, Object> data = new HashMap<>();
-            data.put("channelId", channelId);
-            data.put("status", channel.getStatus());
+            PaymentChannelConfigResultDTO.PaymentTestResultDTO testResult = 
+                new PaymentChannelConfigResultDTO.PaymentTestResultDTO();
+            testResult.setSuccess(true);
+            testResult.setMessage("连接测试成功");
+            data.setTestResult(testResult);
             
-            Map<String, Object> testResult = new HashMap<>();
-            testResult.put("success", true);
-            testResult.put("message", "连接测试成功");
-            data.put("testResult", testResult);
-            
-            result.put("data", data);
+            return ApiResponse.success("配置保存成功", data);
         } catch (Exception e) {
             log.error("Failed to config payment channel", e);
-            result.put("requestStatus", 500);
-            result.put("message", "配置失败: " + e.getMessage());
+            return ApiResponse.error("配置失败: " + e.getMessage());
         }
-        return result;
     }
 
     @GetMapping("/records")
-    public Map<String, Object> getRecords(
+    public ApiResponse<PaymentRecordsDTO> getRecords(
             @RequestParam(required = false) String channel,
             @RequestParam(required = false) String type,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Map<String, Object> result = new HashMap<>();
         try {
             List<PaymentRecord> filtered = new ArrayList<>();
             for (PaymentRecord record : recordStore) {
@@ -174,27 +164,35 @@ public class PaymentController {
                 }
             }
 
-            Map<String, Object> statistics = new HashMap<>();
-            statistics.put("totalIncome", totalIncome);
-            statistics.put("totalExpense", totalExpense);
+            PaymentRecordsDTO.PaymentStatisticsDTO statistics = new PaymentRecordsDTO.PaymentStatisticsDTO();
+            statistics.setTotalIncome(totalIncome);
+            statistics.setTotalExpense(totalExpense);
 
             int start = page * size;
             int end = Math.min(start + size, filtered.size());
             List<PaymentRecord> paged = start < filtered.size() ? 
-                filtered.subList(start, end) : new ArrayList<>();
+                filtered.subList(start, end) : new ArrayList<PaymentRecord>();
 
-            Map<String, Object> data = new HashMap<>();
-            data.put("total", filtered.size());
-            data.put("records", paged);
-            data.put("statistics", statistics);
+            PaymentRecordsDTO data = new PaymentRecordsDTO();
+            data.setTotal(filtered.size());
+            data.setRecords(paged);
+            data.setStatistics(statistics);
             
-            result.put("requestStatus", 200);
-            result.put("data", data);
+            return ApiResponse.success(data);
         } catch (Exception e) {
             log.error("Failed to get payment records", e);
-            result.put("requestStatus", 500);
-            result.put("message", "获取记录失败: " + e.getMessage());
+            return ApiResponse.error("获取记录失败: " + e.getMessage());
         }
-        return result;
+    }
+
+    private boolean hasConfigValue(String fieldName, PaymentChannelConfigDTO config) {
+        switch (fieldName) {
+            case "appId": return config.getAppId() != null && !config.getAppId().isEmpty();
+            case "mchId": return config.getMchId() != null && !config.getMchId().isEmpty();
+            case "apiKey": return config.getApiKey() != null && !config.getApiKey().isEmpty();
+            case "privateKey": return config.getPrivateKey() != null && !config.getPrivateKey().isEmpty();
+            case "alipayPublicKey": return config.getAlipayPublicKey() != null && !config.getAlipayPublicKey().isEmpty();
+            default: return config.getAdditionalConfig() != null && config.getAdditionalConfig().containsKey(fieldName);
+        }
     }
 }

@@ -1,10 +1,13 @@
 package net.ooder.nexus.adapter.inbound.controller.personal;
 
 import net.ooder.nexus.domain.personal.model.*;
+import net.ooder.nexus.dto.personal.*;
+import net.ooder.nexus.model.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @RestController
@@ -71,69 +74,54 @@ public class MediaController {
     }
 
     @GetMapping("/platforms")
-    public Map<String, Object> getPlatforms() {
-        Map<String, Object> result = new HashMap<>();
+    public ApiResponse<PlatformListDTO> getPlatforms() {
         try {
-            result.put("requestStatus", 200);
-            result.put("data", new HashMap<String, Object>() {{
-                put("platforms", new ArrayList<>(platformStore.values()));
-            }});
+            PlatformListDTO data = new PlatformListDTO();
+            data.setPlatforms(new ArrayList<>(platformStore.values()));
+            return ApiResponse.success(data);
         } catch (Exception e) {
             log.error("Failed to get media platforms", e);
-            result.put("requestStatus", 500);
-            result.put("message", "获取平台列表失败: " + e.getMessage());
+            return ApiResponse.error("获取平台列表失败: " + e.getMessage());
         }
-        return result;
     }
 
     @PostMapping("/platforms/{platformId}/config")
-    public Map<String, Object> configPlatform(
+    public ApiResponse<PlatformConfigResultDTO> configPlatform(
             @PathVariable String platformId,
-            @RequestBody Map<String, Object> config) {
-        Map<String, Object> result = new HashMap<>();
+            @RequestBody MediaPlatformConfigDTO config) {
         try {
             MediaPlatform platform = platformStore.get(platformId);
             if (platform == null) {
-                result.put("requestStatus", 404);
-                result.put("message", "平台不存在");
-                return result;
+                return ApiResponse.notFound("平台不存在");
             }
 
             platform.setStatus("AUTHORIZED");
             platform.setAccountName("我的账号");
             platform.setAuthExpireAt(new Date(System.currentTimeMillis() + 90L * 24 * 60 * 60 * 1000));
 
-            result.put("requestStatus", 200);
-            result.put("message", "配置成功");
+            PlatformConfigResultDTO data = new PlatformConfigResultDTO();
+            data.setPlatformId(platformId);
+            data.setStatus(platform.getStatus());
             
-            Map<String, Object> data = new HashMap<>();
-            data.put("platformId", platformId);
-            data.put("status", platform.getStatus());
+            PlatformConfigResultDTO.AccountInfoDTO accountInfo = new PlatformConfigResultDTO.AccountInfoDTO();
+            accountInfo.setName(platform.getAccountName());
+            accountInfo.setType("service");
+            accountInfo.setVerified(true);
+            data.setAccountInfo(accountInfo);
             
-            Map<String, Object> accountInfo = new HashMap<>();
-            accountInfo.put("name", platform.getAccountName());
-            accountInfo.put("type", "service");
-            accountInfo.put("verified", true);
-            data.put("accountInfo", accountInfo);
-            
-            result.put("data", data);
+            return ApiResponse.success("配置成功", data);
         } catch (Exception e) {
             log.error("Failed to config media platform", e);
-            result.put("requestStatus", 500);
-            result.put("message", "配置失败: " + e.getMessage());
+            return ApiResponse.error("配置失败: " + e.getMessage());
         }
-        return result;
     }
 
     @PostMapping("/publish")
-    public Map<String, Object> publish(@RequestBody Map<String, Object> request) {
-        Map<String, Object> result = new HashMap<>();
+    public ApiResponse<PublishResultDTO> publish(@RequestBody MediaPublishRequestDTO request) {
         try {
-            String title = (String) request.get("title");
-            String content = (String) request.get("content");
-            
-            @SuppressWarnings("unchecked")
-            List<String> platforms = (List<String>) request.get("platforms");
+            String title = request.getTitle();
+            String content = request.getContent();
+            List<String> platforms = request.getPlatforms();
 
             String taskId = "task-" + UUID.randomUUID().toString().substring(0, 8);
 
@@ -174,30 +162,24 @@ public class MediaController {
             task.setResults(results);
             taskStore.add(task);
 
-            result.put("requestStatus", 200);
-            result.put("message", "内容发布任务已创建");
+            PublishResultDTO data = new PublishResultDTO();
+            data.setTaskId(taskId);
+            data.setStatus("PUBLISHING");
+            data.setPlatforms(results);
             
-            Map<String, Object> data = new HashMap<>();
-            data.put("taskId", taskId);
-            data.put("status", "PUBLISHING");
-            data.put("platforms", results);
-            
-            result.put("data", data);
+            return ApiResponse.success("内容发布任务已创建", data);
         } catch (Exception e) {
             log.error("Failed to publish content", e);
-            result.put("requestStatus", 500);
-            result.put("message", "发布失败: " + e.getMessage());
+            return ApiResponse.error("发布失败: " + e.getMessage());
         }
-        return result;
     }
 
     @GetMapping("/records")
-    public Map<String, Object> getRecords(
+    public ApiResponse<PublishRecordsDTO> getRecords(
             @RequestParam(required = false) String platform,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Map<String, Object> result = new HashMap<>();
         try {
             List<MediaPublishTask> filtered = new ArrayList<>();
             for (MediaPublishTask task : taskStore) {
@@ -207,78 +189,73 @@ public class MediaController {
             int start = page * size;
             int end = Math.min(start + size, filtered.size());
             List<MediaPublishTask> paged = start < filtered.size() ? 
-                filtered.subList(start, end) : new ArrayList<>();
+                filtered.subList(start, end) : new ArrayList<MediaPublishTask>();
 
-            Map<String, Object> data = new HashMap<>();
-            data.put("total", filtered.size());
-            data.put("records", paged);
+            PublishRecordsDTO data = new PublishRecordsDTO();
+            data.setTotal(filtered.size());
+            data.setRecords(paged);
             
-            result.put("requestStatus", 200);
-            result.put("data", data);
+            return ApiResponse.success(data);
         } catch (Exception e) {
             log.error("Failed to get publish records", e);
-            result.put("requestStatus", 500);
-            result.put("message", "获取记录失败: " + e.getMessage());
+            return ApiResponse.error("获取记录失败: " + e.getMessage());
         }
-        return result;
     }
 
     @GetMapping("/stats")
-    public Map<String, Object> getStats(
+    public ApiResponse<MediaStatsDTO> getStats(
             @RequestParam(required = false) String platform,
             @RequestParam(defaultValue = "30d") String period) {
-        Map<String, Object> result = new HashMap<>();
         try {
-            Map<String, Object> overview = new HashMap<>();
-            overview.put("totalRead", 50000L);
-            overview.put("totalLike", 2000L);
-            overview.put("totalComment", 500L);
-            overview.put("totalShare", 300L);
+            MediaStatsDTO data = new MediaStatsDTO();
+            data.setPeriod(period);
 
-            List<Map<String, Object>> byPlatform = new ArrayList<>();
+            MediaStatsDTO.MediaStatsOverviewDTO overview = new MediaStatsDTO.MediaStatsOverviewDTO();
+            overview.setTotalRead(50000L);
+            overview.setTotalLike(2000L);
+            overview.setTotalComment(500L);
+            overview.setTotalShare(300L);
+            data.setOverview(overview);
+
+            List<MediaStatsDTO.PlatformStatsDTO> byPlatform = new ArrayList<>();
             
-            Map<String, Object> wechatStats = new HashMap<>();
-            wechatStats.put("platformId", "wechat_mp");
-            wechatStats.put("name", "微信公众号");
-            wechatStats.put("read", 30000L);
-            wechatStats.put("like", 1500L);
-            wechatStats.put("comment", 300L);
-            wechatStats.put("share", 200L);
+            MediaStatsDTO.PlatformStatsDTO wechatStats = new MediaStatsDTO.PlatformStatsDTO();
+            wechatStats.setPlatformId("wechat_mp");
+            wechatStats.setName("微信公众号");
+            wechatStats.setRead(30000L);
+            wechatStats.setLike(1500L);
+            wechatStats.setComment(300L);
+            wechatStats.setShare(200L);
             byPlatform.add(wechatStats);
 
-            Map<String, Object> weiboStats = new HashMap<>();
-            weiboStats.put("platformId", "weibo");
-            weiboStats.put("name", "微博");
-            weiboStats.put("read", 20000L);
-            weiboStats.put("like", 500L);
-            weiboStats.put("comment", 200L);
-            weiboStats.put("share", 100L);
+            MediaStatsDTO.PlatformStatsDTO weiboStats = new MediaStatsDTO.PlatformStatsDTO();
+            weiboStats.setPlatformId("weibo");
+            weiboStats.setName("微博");
+            weiboStats.setRead(20000L);
+            weiboStats.setLike(500L);
+            weiboStats.setComment(200L);
+            weiboStats.setShare(100L);
             byPlatform.add(weiboStats);
 
-            List<Map<String, Object>> trend = new ArrayList<>();
+            data.setByPlatform(byPlatform);
+
+            List<MediaStatsDTO.MediaTrendDTO> trend = new ArrayList<>();
             Random random = new Random();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             for (int i = 0; i < 7; i++) {
-                Map<String, Object> day = new HashMap<>();
-                day.put("date", new Date(System.currentTimeMillis() - i * 24 * 60 * 60 * 1000));
-                day.put("read", 1000 + random.nextInt(500));
-                day.put("like", 40 + random.nextInt(30));
-                day.put("comment", 10 + random.nextInt(10));
+                MediaStatsDTO.MediaTrendDTO day = new MediaStatsDTO.MediaTrendDTO();
+                day.setDate(sdf.format(new Date(System.currentTimeMillis() - i * 24 * 60 * 60 * 1000)));
+                day.setRead(1000 + random.nextInt(500));
+                day.setLike(40 + random.nextInt(30));
+                day.setComment(10 + random.nextInt(10));
                 trend.add(day);
             }
-
-            Map<String, Object> data = new HashMap<>();
-            data.put("period", period);
-            data.put("overview", overview);
-            data.put("byPlatform", byPlatform);
-            data.put("trend", trend);
+            data.setTrend(trend);
             
-            result.put("requestStatus", 200);
-            result.put("data", data);
+            return ApiResponse.success(data);
         } catch (Exception e) {
             log.error("Failed to get media stats", e);
-            result.put("requestStatus", 500);
-            result.put("message", "获取统计失败: " + e.getMessage());
+            return ApiResponse.error("获取统计失败: " + e.getMessage());
         }
-        return result;
     }
 }

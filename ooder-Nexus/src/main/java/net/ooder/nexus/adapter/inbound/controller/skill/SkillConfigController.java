@@ -1,15 +1,14 @@
 package net.ooder.nexus.adapter.inbound.controller.skill;
 
-import net.ooder.nexus.domain.skill.model.DatabaseConnection;
 import net.ooder.nexus.domain.skill.model.SkillConfig;
+import net.ooder.nexus.dto.skill.*;
+import net.ooder.nexus.model.ApiResponse;
 import net.ooder.nexus.service.skill.SkillConfigService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -22,138 +21,150 @@ public class SkillConfigController {
     private SkillConfigService skillConfigService;
 
     @GetMapping("/overview")
-    public Map<String, Object> getConfigOverview() {
-        Map<String, Object> result = new HashMap<>();
+    public ApiResponse<SkillConfigOverviewDTO> getConfigOverview() {
         try {
             Map<String, Object> overview = skillConfigService.getConfigOverview();
-            result.put("requestStatus", 200);
-            result.put("data", overview);
+            SkillConfigOverviewDTO dto = convertToOverviewDTO(overview);
+            return ApiResponse.success(dto);
         } catch (Exception e) {
             log.error("Failed to get skill config overview", e);
-            result.put("requestStatus", 500);
-            result.put("message", "获取概览失败: " + e.getMessage());
+            return ApiResponse.error("获取概览失败: " + e.getMessage());
         }
-        return result;
     }
 
     @GetMapping("/{skillId}")
-    public Map<String, Object> getSkillConfig(@PathVariable String skillId) {
-        Map<String, Object> result = new HashMap<>();
+    public ApiResponse<SkillConfig> getSkillConfig(@PathVariable String skillId) {
         try {
             SkillConfig config = skillConfigService.getSkillConfig(skillId);
             if (config != null) {
-                result.put("requestStatus", 200);
-                result.put("data", config);
+                return ApiResponse.success(config);
             } else {
-                result.put("requestStatus", 404);
-                result.put("message", "Skill不存在");
+                return ApiResponse.notFound("Skill不存在");
             }
         } catch (Exception e) {
             log.error("Failed to get skill config", e);
-            result.put("requestStatus", 500);
-            result.put("message", "获取配置失败: " + e.getMessage());
+            return ApiResponse.error("获取配置失败: " + e.getMessage());
         }
-        return result;
     }
 
     @PostMapping("/{skillId}/update")
-    public Map<String, Object> updateSkillConfig(
+    public ApiResponse<SkillConfigUpdateResultDTO> updateSkillConfig(
             @PathVariable String skillId,
-            @RequestBody Map<String, Object> request) {
-        Map<String, Object> result = new HashMap<>();
+            @RequestBody SkillConfigUpdateRequestDTO request) {
         try {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> config = (Map<String, Object>) request.get("config");
-            boolean testConnection = Boolean.TRUE.equals(request.get("testConnection"));
+            Map<String, Object> config = request.getConfig();
+            boolean testConnection = Boolean.TRUE.equals(request.getTestConnection());
 
             SkillConfig updated = skillConfigService.updateSkillConfig(skillId, config, testConnection);
             if (updated != null) {
-                result.put("requestStatus", 200);
-                result.put("message", "配置保存成功");
+                SkillConfigUpdateResultDTO result = new SkillConfigUpdateResultDTO();
+                result.setSkillId(skillId);
+                result.setStatus(updated.getStatus());
                 
-                Map<String, Object> data = new HashMap<>();
-                data.put("skillId", skillId);
-                data.put("status", updated.getStatus());
-                
-                if (updated.getConnectionInfo() != null) {
-                    Map<String, Object> testResult = new HashMap<>();
-                    testResult.put("success", updated.getConnectionInfo().isConnected());
-                    testResult.put("responseTime", updated.getConnectionInfo().getResponseTime());
-                    testResult.put("message", updated.getConnectionInfo().getError() != null ? 
+                if (updated.getConnectionInfo() != null && testConnection) {
+                    SkillConfigUpdateResultDTO.ConnectionTestResultDTO testResult = 
+                        new SkillConfigUpdateResultDTO.ConnectionTestResultDTO();
+                    testResult.setSuccess(updated.getConnectionInfo().isConnected());
+                    testResult.setResponseTime(updated.getConnectionInfo().getResponseTime());
+                    testResult.setMessage(updated.getConnectionInfo().getError() != null ? 
                         updated.getConnectionInfo().getError() : "连接成功");
-                    data.put("connectionTest", testResult);
+                    result.setConnectionTest(testResult);
                 }
                 
-                result.put("data", data);
+                return ApiResponse.success("配置保存成功", result);
             } else {
-                result.put("requestStatus", 404);
-                result.put("message", "Skill不存在");
+                return ApiResponse.notFound("Skill不存在");
             }
         } catch (Exception e) {
             log.error("Failed to update skill config", e);
-            result.put("requestStatus", 500);
-            result.put("message", "更新配置失败: " + e.getMessage());
+            return ApiResponse.error("更新配置失败: " + e.getMessage());
         }
-        return result;
     }
 
     @PostMapping("/{skillId}/test")
-    public Map<String, Object> testSkillConnection(
+    public ApiResponse<SkillConnectionTestResultDTO> testSkillConnection(
             @PathVariable String skillId,
-            @RequestBody Map<String, Object> request) {
-        Map<String, Object> result = new HashMap<>();
+            @RequestBody SkillConnectionTestRequestDTO request) {
         try {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> config = (Map<String, Object>) request.get("config");
+            Map<String, Object> config = request.getConfig();
 
             Map<String, Object> testResult = skillConfigService.testSkillConnection(skillId, config);
-            result.put("requestStatus", 200);
-            result.put("data", testResult);
+            SkillConnectionTestResultDTO dto = convertToTestResultDTO(testResult);
+            return ApiResponse.success(dto);
         } catch (Exception e) {
             log.error("Failed to test skill connection", e);
-            result.put("requestStatus", 500);
-            result.put("message", "连接测试失败: " + e.getMessage());
+            return ApiResponse.error("连接测试失败: " + e.getMessage());
         }
-        return result;
     }
 
     @PostMapping("/{skillId}/enable")
-    public Map<String, Object> enableSkill(@PathVariable String skillId) {
-        Map<String, Object> result = new HashMap<>();
+    public ApiResponse<Void> enableSkill(@PathVariable String skillId) {
         try {
             boolean enabled = skillConfigService.enableSkill(skillId);
             if (enabled) {
-                result.put("requestStatus", 200);
-                result.put("message", "Skill已启用");
+                return ApiResponse.success("Skill已启用");
             } else {
-                result.put("requestStatus", 400);
-                result.put("message", "启用失败，请先配置Skill");
+                return ApiResponse.badRequest("启用失败，请先配置Skill");
             }
         } catch (Exception e) {
             log.error("Failed to enable skill", e);
-            result.put("requestStatus", 500);
-            result.put("message", "启用失败: " + e.getMessage());
+            return ApiResponse.error("启用失败: " + e.getMessage());
         }
-        return result;
     }
 
     @PostMapping("/{skillId}/disable")
-    public Map<String, Object> disableSkill(@PathVariable String skillId) {
-        Map<String, Object> result = new HashMap<>();
+    public ApiResponse<Void> disableSkill(@PathVariable String skillId) {
         try {
             boolean disabled = skillConfigService.disableSkill(skillId);
             if (disabled) {
-                result.put("requestStatus", 200);
-                result.put("message", "Skill已停用");
+                return ApiResponse.success("Skill已停用");
             } else {
-                result.put("requestStatus", 404);
-                result.put("message", "Skill不存在");
+                return ApiResponse.notFound("Skill不存在");
             }
         } catch (Exception e) {
             log.error("Failed to disable skill", e);
-            result.put("requestStatus", 500);
-            result.put("message", "停用失败: " + e.getMessage());
+            return ApiResponse.error("停用失败: " + e.getMessage());
         }
-        return result;
+    }
+
+    private SkillConfigOverviewDTO convertToOverviewDTO(Map<String, Object> map) {
+        SkillConfigOverviewDTO dto = new SkillConfigOverviewDTO();
+        
+        Object totalSkills = map.get("totalSkills");
+        if (totalSkills instanceof Number) {
+            dto.setTotalSkills(((Number) totalSkills).intValue());
+        }
+        
+        Object configuredSkills = map.get("configuredSkills");
+        if (configuredSkills instanceof Number) {
+            dto.setConfiguredSkills(((Number) configuredSkills).intValue());
+        }
+        
+        Object activeSkills = map.get("activeSkills");
+        if (activeSkills instanceof Number) {
+            dto.setActiveSkills(((Number) activeSkills).intValue());
+        }
+        
+        return dto;
+    }
+
+    private SkillConnectionTestResultDTO convertToTestResultDTO(Map<String, Object> map) {
+        SkillConnectionTestResultDTO dto = new SkillConnectionTestResultDTO();
+        
+        Object success = map.get("success");
+        if (success instanceof Boolean) {
+            dto.setSuccess((Boolean) success);
+        }
+        
+        dto.setMessage((String) map.get("message"));
+        
+        Object responseTime = map.get("responseTime");
+        if (responseTime instanceof Number) {
+            dto.setResponseTime(((Number) responseTime).longValue());
+        }
+        
+        dto.setError((String) map.get("error"));
+        
+        return dto;
     }
 }

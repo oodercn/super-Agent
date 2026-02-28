@@ -1,22 +1,15 @@
 package net.ooder.nexus.adapter.inbound.controller.skill;
 
-import net.ooder.nexus.dto.skill.ConfigValidationResult;
-import net.ooder.nexus.dto.skill.SkillConfigDTO;
+import net.ooder.nexus.dto.skill.*;
 import net.ooder.nexus.service.SkillDiscoveryService;
 import net.ooder.nexus.service.SkillPackageService;
-import net.ooder.sdk.api.skill.InstallRequest;
-import net.ooder.sdk.api.skill.InstallResult;
-import net.ooder.sdk.api.skill.SkillPackage;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/skills/test")
@@ -29,97 +22,74 @@ public class SkillIntegrationTestController {
     private SkillPackageService skillPackageService;
 
     @PostMapping("/discover")
-    public ResponseEntity<Map<String, Object>> testDiscover(@RequestBody Map<String, String> request) {
-        Map<String, Object> result = new HashMap<String, Object>();
+    public ResponseEntity<SkillTestResultDTO> testDiscover(@RequestBody SkillTestRequestDTO request) {
+        SkillTestResultDTO result = new SkillTestResultDTO();
         try {
-            String skillId = request.get("skillId");
-            result.put("success", true);
-            result.put("skillId", skillId);
-            result.put("message", "Discovery test passed");
+            String skillId = request.getSkillId();
+            result.setSuccess(true);
+            result.setSkillId(skillId);
+            result.setMessage("Discovery test passed");
         } catch (Exception e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
+            result.setSuccess(false);
+            result.setError(e.getMessage());
         }
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/install")
-    public ResponseEntity<Map<String, Object>> testInstall(@RequestBody Map<String, Object> request) {
-        Map<String, Object> result = new HashMap<String, Object>();
+    public ResponseEntity<SkillTestResultDTO> testInstall(@RequestBody SkillInstallTestRequestDTO request) {
+        SkillTestResultDTO result = new SkillTestResultDTO();
         try {
-            String skillId = (String) request.get("skillId");
-            String version = (String) request.get("version");
+            String skillId = request.getSkillId();
+            String version = request.getVersion();
             
-            result.put("success", true);
-            result.put("skillId", skillId);
-            result.put("version", version);
-            result.put("message", "Install test passed");
+            result.setSuccess(true);
+            result.setSkillId(skillId);
+            result.setMessage("Install test passed - version: " + version);
         } catch (Exception e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
+            result.setSuccess(false);
+            result.setError(e.getMessage());
         }
         return ResponseEntity.ok(result);
     }
 
-    // @PostMapping("/config/validate")
-    // public ResponseEntity<ConfigValidationResult> validateConfig(@RequestBody SkillConfigDTO configDTO) {
-    //     ConfigValidationResult result = skillConfigService.validateConfig(configDTO);
-    //     return ResponseEntity.ok(result);
-    // }
-
-    // @PostMapping("/config/apply")
-    // public ResponseEntity<Map<String, Object>> applyConfig(@RequestBody SkillConfigDTO configDTO) {
-    //     Map<String, Object> result = new HashMap<String, Object>();
-    //     try {
-    //         skillConfigService.applyConfig(configDTO);
-    //         result.put("success", true);
-    //         result.put("message", "Config applied successfully");
-    //     } catch (Exception e) {
-    //         result.put("success", false);
-    //         result.put("error", e.getMessage());
-    //     }
-    //     return ResponseEntity.ok(result);
-    // }
-
     @PostMapping("/scene/join")
-    public ResponseEntity<Map<String, Object>> testJoinScene(@RequestBody Map<String, String> request) {
-        Map<String, Object> result = new HashMap<String, Object>();
+    public ResponseEntity<SkillTestResultDTO> testJoinScene(@RequestBody SkillSceneTestRequestDTO request) {
+        SkillTestResultDTO result = new SkillTestResultDTO();
         try {
-            String skillId = request.get("skillId");
-            String sceneId = request.get("sceneId");
+            String skillId = request.getSkillId();
+            String sceneId = request.getSceneId();
             
-            result.put("success", true);
-            result.put("skillId", skillId);
-            result.put("sceneId", sceneId);
-            result.put("message", "Scene join test passed");
+            result.setSuccess(true);
+            result.setSkillId(skillId);
+            result.setMessage("Scene join test passed - sceneId: " + sceneId);
         } catch (Exception e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
+            result.setSuccess(false);
+            result.setError(e.getMessage());
         }
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/scene/leave")
-    public ResponseEntity<Map<String, Object>> testLeaveScene(@RequestBody Map<String, String> request) {
-        Map<String, Object> result = new HashMap<String, Object>();
+    public ResponseEntity<SkillTestResultDTO> testLeaveScene(@RequestBody SkillSceneTestRequestDTO request) {
+        SkillTestResultDTO result = new SkillTestResultDTO();
         try {
-            String skillId = request.get("skillId");
-            String sceneId = request.get("sceneId");
+            String skillId = request.getSkillId();
+            String sceneId = request.getSceneId();
             
-            result.put("success", true);
-            result.put("skillId", skillId);
-            result.put("sceneId", sceneId);
-            result.put("message", "Scene leave test passed");
+            result.setSuccess(true);
+            result.setSkillId(skillId);
+            result.setMessage("Scene leave test passed - sceneId: " + sceneId);
         } catch (Exception e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
+            result.setSuccess(false);
+            result.setError(e.getMessage());
         }
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/integration/full")
-    public ResponseEntity<Map<String, Object>> fullIntegrationTest(@RequestBody Map<String, Object> request) {
-        Map<String, Object> result = new HashMap<String, Object>();
+    public ResponseEntity<SkillIntegrationTestResultDTO> fullIntegrationTest(@RequestBody SkillTestRequestDTO request) {
+        SkillIntegrationTestResultDTO result = new SkillIntegrationTestResultDTO();
         List<String> testResults = new ArrayList<String>();
         
         try {
@@ -129,13 +99,13 @@ public class SkillIntegrationTestController {
             testResults.add("Scene Join: PASSED");
             testResults.add("Execution: PASSED");
             
-            result.put("success", true);
-            result.put("testResults", testResults);
-            result.put("totalTests", testResults.size());
-            result.put("passedTests", testResults.size());
+            result.setSuccess(true);
+            result.setTestResults(testResults);
+            result.setTotalTests(testResults.size());
+            result.setPassedTests(testResults.size());
         } catch (Exception e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
+            result.setSuccess(false);
+            result.setError(e.getMessage());
         }
         
         return ResponseEntity.ok(result);

@@ -4,6 +4,7 @@ import net.ooder.config.ResultModel;
 import net.ooder.config.ListResultModel;
 import net.ooder.nexus.domain.end.model.Device;
 import net.ooder.nexus.domain.end.model.DeviceOperationLog;
+import net.ooder.nexus.dto.device.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/devices")
-@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.POST, RequestMethod.OPTIONS})
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS})
 public class DeviceController {
 
     private static final Logger log = LoggerFactory.getLogger(DeviceController.class);
@@ -24,6 +25,35 @@ public class DeviceController {
 
     public DeviceController() {
         initializeDefaultDevices();
+    }
+
+    @GetMapping("")
+    public ResultModel<List<Device>> getDevicesGet(
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String status) {
+        log.info("GET devices requested: type={}, status={}", type, status);
+        ResultModel<List<Device>> result = new ResultModel<>();
+        try {
+            List<Device> filteredDevices = devices.values().stream()
+                    .filter(device -> (status == null || device.getStatus().equals(status)))
+                    .filter(device -> (type == null || device.getType().equals(type)))
+                    .collect(Collectors.toList());
+            result.setData(filteredDevices);
+            result.setRequestStatus(200);
+            result.setMessage("获取成功");
+        } catch (Exception e) {
+            log.error("Error getting devices: {}", e.getMessage(), e);
+            result.setRequestStatus(500);
+            result.setMessage("获取设备列表失败: " + e.getMessage());
+        }
+        return result;
+    }
+
+    @GetMapping("/list")
+    public ResultModel<List<Device>> getDevicesListGet(
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String status) {
+        return getDevicesGet(type, status);
     }
 
     private void initializeDefaultDevices() {
@@ -70,14 +100,14 @@ public class DeviceController {
 
     @PostMapping("/list")
     @ResponseBody
-    public ResultModel<Map<String, Object>> getDevices(@RequestBody(required = false) Map<String, Object> request) {
-        String status = request != null ? (String) request.get("status") : null;
-        String type = request != null ? (String) request.get("type") : null;
-        String location = request != null ? (String) request.get("location") : null;
+    public ResultModel<DeviceListResultDTO> getDevices(@RequestBody(required = false) DeviceQueryDTO request) {
+        String status = request != null ? request.getStatus() : null;
+        String type = request != null ? request.getType() : null;
+        String location = request != null ? request.getLocation() : null;
 
         log.info("Get devices requested: status={}, type={}, location={}", status, type, location);
 
-        ResultModel<Map<String, Object>> result = new ResultModel<>();
+        ResultModel<DeviceListResultDTO> result = new ResultModel<>();
         try {
             List<Device> filteredDevices = devices.values().stream()
                     .filter(device -> (status == null || device.getStatus().equals(status)))
@@ -85,32 +115,15 @@ public class DeviceController {
                     .filter(device -> (location == null || device.getLocation().equals(location)))
                     .collect(Collectors.toList());
 
-            List<Map<String, Object>> deviceList = new ArrayList<>();
-            for (Device device : filteredDevices) {
-                Map<String, Object> summary = new HashMap<>();
-                summary.put("id", device.getId());
-                summary.put("name", device.getName());
-                summary.put("type", device.getType());
-                summary.put("status", device.getStatus());
-                summary.put("location", device.getLocation());
-                summary.put("poweredOn", device.isPoweredOn());
-                summary.put("lastUpdated", device.getLastUpdated());
-                if (device.getProperties() != null) {
-                    summary.put("ip", device.getProperties().get("ip"));
-                    summary.put("mac", device.getProperties().get("mac"));
-                }
-                deviceList.add(summary);
-            }
-
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("total", devices.size());
-            stats.put("online", devices.values().stream().filter(d -> "online".equals(d.getStatus())).count());
-            stats.put("offline", devices.values().stream().filter(d -> "offline".equals(d.getStatus())).count());
-            stats.put("types", devices.values().stream().map(Device::getType).distinct().count());
-
-            Map<String, Object> data = new HashMap<>();
-            data.put("devices", deviceList);
-            data.put("stats", stats);
+            DeviceListResultDTO data = new DeviceListResultDTO();
+            data.setDevices(filteredDevices);
+            
+            DeviceListResultDTO.DeviceStatsDTO stats = new DeviceListResultDTO.DeviceStatsDTO();
+            stats.setTotal(devices.size());
+            stats.setOnline(devices.values().stream().filter(d -> "online".equals(d.getStatus())).count());
+            stats.setOffline(devices.values().stream().filter(d -> "offline".equals(d.getStatus())).count());
+            stats.setTypes(devices.values().stream().map(Device::getType).distinct().count());
+            data.setStats(stats);
 
             result.setData(data);
             result.setRequestStatus(200);
@@ -125,11 +138,11 @@ public class DeviceController {
 
     @PostMapping("/detail")
     @ResponseBody
-    public ResultModel<Map<String, Object>> getDeviceDetail(@RequestBody Map<String, String> request) {
-        String deviceId = request.get("deviceId");
+    public ResultModel<Device> getDeviceDetail(@RequestBody DeviceIdDTO request) {
+        String deviceId = request.getDeviceId();
         log.info("Get device detail requested: {}", deviceId);
 
-        ResultModel<Map<String, Object>> result = new ResultModel<>();
+        ResultModel<Device> result = new ResultModel<>();
         try {
             Device device = devices.get(deviceId);
             if (device == null) {
@@ -138,21 +151,7 @@ public class DeviceController {
                 return result;
             }
 
-            Map<String, Object> detail = new HashMap<>();
-            detail.put("id", device.getId());
-            detail.put("name", device.getName());
-            detail.put("type", device.getType());
-            detail.put("status", device.getStatus());
-            detail.put("location", device.getLocation());
-            detail.put("powerConsumption", device.getPowerConsumption());
-            detail.put("poweredOn", device.isPoweredOn());
-            detail.put("properties", device.getProperties());
-            detail.put("installationDate", device.getInstallationDate());
-            detail.put("manufacturer", device.getManufacturer());
-            detail.put("firmwareVersion", device.getFirmwareVersion());
-            detail.put("lastUpdated", device.getLastUpdated());
-
-            result.setData(detail);
+            result.setData(device);
             result.setRequestStatus(200);
             result.setMessage("获取成功");
         } catch (Exception e) {
@@ -165,15 +164,14 @@ public class DeviceController {
 
     @PostMapping("/control")
     @ResponseBody
-    public ResultModel<Map<String, Object>> controlDevice(@RequestBody Map<String, Object> request) {
-        String deviceId = (String) request.get("deviceId");
-        String command = (String) request.get("command");
-        @SuppressWarnings("unchecked")
-        Map<String, Object> parameters = (Map<String, Object>) request.getOrDefault("parameters", new HashMap<>());
+    public ResultModel<DeviceControlResultDTO> controlDevice(@RequestBody DeviceControlDTO request) {
+        String deviceId = request.getDeviceId();
+        String command = request.getCommand();
+        Map<String, Object> parameters = request.getParameters() != null ? request.getParameters() : new HashMap<>();
 
         log.info("Control device requested: {}, command: {}", deviceId, command);
 
-        ResultModel<Map<String, Object>> result = new ResultModel<>();
+        ResultModel<DeviceControlResultDTO> result = new ResultModel<>();
         try {
             Device device = devices.get(deviceId);
             if (device == null) {
@@ -209,11 +207,11 @@ public class DeviceController {
 
             addOperationLog(deviceId, device.getName(), command, opResult, message);
 
-            Map<String, Object> data = new HashMap<>();
-            data.put("deviceId", deviceId);
-            data.put("deviceName", device.getName());
-            data.put("deviceStatus", device.getStatus());
-            data.put("devicePower", device.isPoweredOn());
+            DeviceControlResultDTO data = new DeviceControlResultDTO();
+            data.setDeviceId(deviceId);
+            data.setDeviceName(device.getName());
+            data.setDeviceStatus(device.getStatus());
+            data.setDevicePower(device.isPoweredOn());
 
             if ("error".equals(opResult)) {
                 result.setRequestStatus(400);
@@ -233,13 +231,13 @@ public class DeviceController {
 
     @PostMapping("/logs")
     @ResponseBody
-    public ListResultModel<List<Map<String, Object>>> getDeviceLogs(@RequestBody Map<String, Object> request) {
-        int limit = request.get("limit") != null ? (Integer) request.get("limit") : 50;
-        String deviceId = (String) request.get("deviceId");
+    public ListResultModel<List<DeviceOperationLog>> getDeviceLogs(@RequestBody DeviceLogQueryDTO request) {
+        int limit = request.getLimit() != null ? request.getLimit() : 50;
+        String deviceId = request.getDeviceId();
 
         log.info("Get device operation logs requested: limit={}, deviceId={}", limit, deviceId);
 
-        ListResultModel<List<Map<String, Object>>> result = new ListResultModel<>();
+        ListResultModel<List<DeviceOperationLog>> result = new ListResultModel<>();
         try {
             List<DeviceOperationLog> filteredLogs = new ArrayList<>();
             for (DeviceOperationLog logEntry : operationLogs) {
@@ -253,13 +251,8 @@ public class DeviceController {
                     .limit(limit)
                     .collect(Collectors.toList());
 
-            List<Map<String, Object>> logList = new ArrayList<>();
-            for (DeviceOperationLog logEntry : pagedLogs) {
-                logList.add(logEntry.toMap());
-            }
-
-            result.setData(logList);
-            result.setSize(logList.size());
+            result.setData(pagedLogs);
+            result.setSize(pagedLogs.size());
             result.setRequestStatus(200);
             result.setMessage("获取成功");
         } catch (Exception e) {
@@ -272,10 +265,10 @@ public class DeviceController {
 
     @PostMapping("/types")
     @ResponseBody
-    public ResultModel<Map<String, Object>> getDeviceTypes() {
+    public ResultModel<DeviceTypesDTO> getDeviceTypes() {
         log.info("Get device types requested");
 
-        ResultModel<Map<String, Object>> result = new ResultModel<>();
+        ResultModel<DeviceTypesDTO> result = new ResultModel<>();
         try {
             List<String> types = devices.values().stream()
                     .map(Device::getType)
@@ -287,9 +280,9 @@ public class DeviceController {
                 typeCounts.put(type, devices.values().stream().filter(d -> type.equals(d.getType())).count());
             }
 
-            Map<String, Object> data = new HashMap<>();
-            data.put("types", types);
-            data.put("typeCounts", typeCounts);
+            DeviceTypesDTO data = new DeviceTypesDTO();
+            data.setTypes(types);
+            data.setTypeCounts(typeCounts);
 
             result.setData(data);
             result.setRequestStatus(200);
@@ -304,16 +297,16 @@ public class DeviceController {
 
     @PostMapping("/add")
     @ResponseBody
-    public ResultModel<Map<String, Object>> addDevice(@RequestBody Map<String, Object> request) {
-        String name = (String) request.get("name");
-        String type = (String) request.get("type");
-        String ip = (String) request.get("ip");
-        String mac = (String) request.get("mac");
-        String location = (String) request.get("location");
+    public ResultModel<DeviceAddResultDTO> addDevice(@RequestBody DeviceAddDTO request) {
+        String name = request.getName();
+        String type = request.getType();
+        String ip = request.getIp();
+        String mac = request.getMac();
+        String location = request.getLocation();
 
         log.info("Add device requested: name={}, type={}", name, type);
 
-        ResultModel<Map<String, Object>> result = new ResultModel<>();
+        ResultModel<DeviceAddResultDTO> result = new ResultModel<>();
         try {
             String deviceId = "device-" + System.currentTimeMillis();
             
@@ -330,10 +323,10 @@ public class DeviceController {
             
             devices.put(deviceId, device);
             
-            Map<String, Object> data = new HashMap<>();
-            data.put("id", deviceId);
-            data.put("name", name);
-            data.put("status", "online");
+            DeviceAddResultDTO data = new DeviceAddResultDTO();
+            data.setId(deviceId);
+            data.setName(name);
+            data.setStatus("online");
             
             addOperationLog(deviceId, name, "add", "success", "设备添加成功");
             
@@ -350,13 +343,13 @@ public class DeviceController {
 
     @PostMapping("/update")
     @ResponseBody
-    public ResultModel<Boolean> updateDevice(@RequestBody Map<String, Object> request) {
-        String deviceId = (String) request.get("id");
-        String name = (String) request.get("name");
-        String type = (String) request.get("type");
-        String ip = (String) request.get("ip");
-        String mac = (String) request.get("mac");
-        String location = (String) request.get("location");
+    public ResultModel<Boolean> updateDevice(@RequestBody DeviceUpdateDTO request) {
+        String deviceId = request.getId();
+        String name = request.getName();
+        String type = request.getType();
+        String ip = request.getIp();
+        String mac = request.getMac();
+        String location = request.getLocation();
 
         log.info("Update device requested: id={}", deviceId);
 
@@ -406,8 +399,8 @@ public class DeviceController {
 
     @PostMapping("/delete")
     @ResponseBody
-    public ResultModel<Boolean> deleteDevice(@RequestBody Map<String, String> request) {
-        String deviceId = request.get("id");
+    public ResultModel<Boolean> deleteDevice(@RequestBody DeviceIdDTO request) {
+        String deviceId = request.getDeviceId();
 
         log.info("Delete device requested: id={}", deviceId);
 
