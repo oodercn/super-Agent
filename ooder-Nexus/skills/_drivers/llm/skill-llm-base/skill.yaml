@@ -1,0 +1,51 @@
+apiVersion: skill.ooder.net/v1
+kind: Skill
+
+metadata:
+  id: skill-llm-base
+  name: LLM基础服务
+  version: "1.0.0"
+  description: LLM基础服务，提供模型列表、配置管理等基础功能
+  author: Ooder Team
+  icon: ri-robot-line
+
+spec:
+  skillForm: DRIVER
+  
+  capabilities:
+    - id: model-list
+      name: 模型列表
+      description: 获取可用模型列表
+      category: llm
+      autoBind: true
+    - id: provider-list
+      name: 提供商列表
+      description: 获取LLM提供商列表
+      category: llm
+      autoBind: true
+    - id: config-management
+      name: 配置管理
+      description: LLM配置管理
+      category: llm
+      autoBind: true
+      
+  dependencies:
+    - skillId: skill-common
+      version: ">=2.3.1"
+      required: true
+      
+  configSchema:
+    type: object
+    properties:
+      defaultProvider:
+        type: string
+        default: "deepseek"
+        title: 默认提供商
+      defaultModel:
+        type: string
+        default: "deepseek-chat"
+        title: 默认模型
+        
+  estimatedResources:
+    cpu: "25m"
+    memory: "32Mi"

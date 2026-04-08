@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建能力 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/capability-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-add-circle-line" aria-hidden="true"></i> 创建能力</h1>
+                        <p>手动创建或使用AI生成新能力</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                <i class="ri-puzzle-line"></i> 我的能力
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="create-page" style="padding: 0; max-width: none; margin: 0;">
+                
+                <div class="create-tabs">
+                    <div class="create-tab active" data-mode="manual" onclick="switchMode('manual')">
+                        <div class="tab-icon"><i class="ri-edit-line"></i></div>
+                        <div class="tab-name">手动创建</div>
+                        <div class="tab-desc">填写表单创建能力</div>
+                    </div>
+                    <div class="create-tab" data-mode="llm" onclick="switchMode('llm')">
+                        <div class="tab-icon"><i class="ri-magic-line"></i></div>
+                        <div class="tab-name">AI生成</div>
+                        <div class="tab-desc">描述需求由AI生成</div>
+                    </div>
+                    <div class="create-tab" data-mode="import" onclick="switchMode('import')">
+                        <div class="tab-icon"><i class="ri-upload-line"></i></div>
+                        <div class="tab-name">导入</div>
+                        <div class="tab-desc">从文件导入能力</div>
+                    </div>
+                </div>
+                
+                <div class="create-form">
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="ri-information-line"></i>
+                            基本信息
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">能力ID <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="capabilityId" placeholder="如: report-analyze">
+                                <div class="form-hint">唯一标识符，只能包含字母、数字和连字符</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">能力名称 <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="capabilityName" placeholder="如: 日志分析">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">能力类型</label>
+                                <select class="form-select" id="capabilityType">
+                                    <option value="ATOMIC">原子能力 - 单一功能，不可分解</option>
+                                    <option value="COMPOSITE">组合能力 - 组合多个原子能力</option>
+                                    <option value="SCENE">场景能力 - 自驱型SuperAgent能力</option>
+                                    <option value="DRIVER">驱动能力 - 意图/时间/事件驱动</option>
+                                    <option value="COLLABORATIVE">协作能力 - 跨场景协作</option>
+                                    <option value="SERVICE">服务能力 - 业务服务、API服务</option>
+                                    <option value="AI">AI能力 - LLM、机器学习</option>
+                                    <option value="TOOL">工具能力 - 工具类功能</option>
+                                    <option value="CONNECTOR">连接器能力 - 连接协议类</option>
+                                    <option value="DATA">数据能力 - 数据存储、处理</option>
+                                    <option value="MANAGEMENT">管理能力 - 配置管理、监控管理</option>
+                                    <option value="COMMUNICATION">通信能力 - 消息、通知</option>
+                                    <option value="SECURITY">安全能力 - 认证、加密</option>
+                                    <option value="MONITORING">监控能力 - 日志、指标</option>
+                                    <option value="CUSTOM">自定义能力 - 用户自定义</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">业务分类 <span class="required">*</span></label>
+                                <select class="form-select" id="capabilityCategory">
+                                    <option value="">选择业务分类</option>
+                                    <option value="LLM">LLM服务 - 大语言模型、对话、上下文管理</option>
+                                    <option value="KNOWLEDGE">知识服务 - 知识库、RAG、向量存储</option>
+                                    <option value="BIZ">业务场景 - 业务场景能力、智能助手</option>
+                                    <option value="UTIL">工具服务 - 通用工具、辅助服务</option>
+                                    <option value="ORG">组织服务 - 企业组织架构、用户认证</option>
+                                    <option value="VFS">存储服务 - 文件存储、对象存储</option>
+                                    <option value="SYS">系统管理 - 系统监控、网络管理</option>
+                                    <option value="MSG">消息通讯 - 消息队列、通讯协议</option>
+                                    <option value="UI">UI生成 - 界面生成、设计转代码</option>
+                                    <option value="PAYMENT">支付服务 - 支付渠道、退款管理</option>
+                                    <option value="MEDIA">媒体发布 - 自媒体文章发布</option>
+                                    <option value="NEXUS_UI">Apex界面 - 管理界面、仪表盘</option>
+                                </select>
+                                <div class="form-hint">选择能力所属的业务领域分类</div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">技能形态</label>
+                                <select class="form-select" id="skillForm">
+                                    <option value="STANDALONE">独立技能 - 原子型技能，直接提供服务</option>
+                                    <option value="SCENE">场景技能 - 容器型技能，可包含子技能</option>
+                                    <option value="PROVIDER">能力服务 - 提供基础能力的技能</option>
+                                    <option value="DRIVER">驱动适配 - 驱动场景运行的技能</option>
+                                    <option value="INTERNAL">内部服务 - 系统内部使用的技能</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">版本号</label>
+                                <input type="text" class="form-input" id="version" value="1.0.0" placeholder="1.0.0">
+                            </div>
+                        </div>
+                        <div class="form-row single">
+                            <div class="form-group">
+                                <label class="form-label">描述</label>
+                                <textarea class="form-textarea" id="description" placeholder="描述能力的功能和用途"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="llm-section" id="llmSection">
+                        <div class="form-section">
+                            <div class="section-title">
+                                <i class="ri-magic-line"></i>
+                                AI生成
+                            </div>
+                            <div class="llm-prompt-box">
+                                <textarea id="llmPrompt" placeholder="描述你想要创建的能力，例如：&#10;&#10;创建一个日志分析能力，能够：&#10;1. 分析员工提交的日志内容&#10;2. 提取关键信息和指标&#10;3. 生成分析报告&#10;4. 支持自定义分析维度"></textarea>
+                            </div>
+                            <div class="llm-actions">
+                                <div class="llm-provider-select">
+                                    <span>模型:</span>
+                                    <select id="llmProvider">
+                                        <option value="openai">OpenAI</option>
+                                        <option value="qianwen">通义千问</option>
+                                        <option value="deepseek">DeepSeek</option>
+                                        <option value="ollama">Ollama</option>
+                                    </select>
+                                </div>
+                                <button class="nx-btn nx-btn--primary" onclick="generateWithLLM()">
+                                    <i class="ri-magic-line"></i> 生成能力
+                                </button>
+                            </div>
+                            <div class="generated-preview" id="generatedPreview">
+                                <div class="preview-header">
+                                    <span class="preview-title">生成预览</span>
+                                    <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="applyGenerated()">
+                                        <i class="ri-check-line"></i> 应用
+                                    </button>
+                                </div>
+                                <pre class="preview-code" id="previewCode"></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="ri-code-line"></i>
+                            参数定义
+                        </div>
+                        <div class="param-list" id="paramList">
+                            <div class="param-item">
+                                <input type="text" placeholder="参数名称">
+                                <input type="text" placeholder="描述">
+                                <select>
+                                    <option value="string">字符串</option>
+                                    <option value="number">数字</option>
+                                    <option value="boolean">布尔</option>
+                                    <option value="object">对象</option>
+                                    <option value="array">数组</option>
+                                </select>
+                                <button class="nx-btn nx-btn--ghost nx-btn--icon nx-btn--sm" onclick="removeParam(this)">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="add-param-btn" onclick="addParam()">
+                            <i class="ri-add-line"></i> 添加参数
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="ri-link"></i>
+                            依赖配置
+                        </div>
+                        <div class="form-row single">
+                            <div class="form-group">
+                                <label class="form-label">依赖能力</label>
+                                <input type="text" class="form-input" id="dependencies" placeholder="多个依赖用逗号分隔，如: notification-email, data-storage">
+                                <div class="form-hint">此能力运行所依赖的其他能力</div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">连接器类型</label>
+                                <select class="form-select" id="connectorType">
+                                    <option value="INTERNAL">内部调用</option>
+                                    <option value="HTTP">HTTP</option>
+                                    <option value="GRPC">gRPC</option>
+                                    <option value="MESSAGE_QUEUE">消息队列</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">端点地址</label>
+                                <input type="text" class="form-input" id="endpoint" placeholder="如: /api/capabilities/report-analyze">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="nx-btn nx-btn--secondary" onclick="resetForm()">重置</button>
+                        <button class="nx-btn nx-btn--primary" onclick="createCapability()">
+                            <i class="ri-check-line"></i> 创建能力
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/llm-assistant.js"></script>
+    <script src="/console/js/pages/capability-create.js"></script>
+</body>
+</html>

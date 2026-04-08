@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消息中心 - OODER Console</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/components/notification-center.css">
+    <style>
+        .notification-page {
+            padding: 24px;
+        }
+        .notification-page__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .notification-page__title {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+        .notification-page__actions {
+            display: flex;
+            gap: 12px;
+        }
+        .notification-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--nx-border);
+            padding-bottom: 12px;
+        }
+        .notification-tabs button {
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            font-size: 14px;
+            color: var(--nx-text-secondary);
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .notification-tabs button:hover {
+            background: var(--nx-bg-hover);
+        }
+        .notification-tabs button.active {
+            background: var(--nx-primary);
+            color: white;
+        }
+        .notification-list {
+            background: var(--nx-bg-card);
+            border-radius: 8px;
+            border: 1px solid var(--nx-border);
+        }
+        .notification-list__item {
+            display: flex;
+            gap: 16px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--nx-border);
+            transition: background 0.2s;
+        }
+        .notification-list__item:hover {
+            background: var(--nx-bg-hover);
+        }
+        .notification-list__item:last-child {
+            border-bottom: none;
+        }
+        .notification-list__item.unread {
+            background: rgba(102, 126, 234, 0.05);
+        }
+        .notification-list__icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .notification-list__icon i {
+            font-size: 22px;
+        }
+        .notification-list__content {
+            flex: 1;
+            min-width: 0;
+        }
+        .notification-list__title {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .notification-list__desc {
+            font-size: 14px;
+            color: var(--nx-text-secondary);
+            margin-bottom: 8px;
+        }
+        .notification-list__meta {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--nx-text-tertiary);
+        }
+        .notification-list__actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--nx-text-secondary);
+        }
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+        }
+        .empty-state__title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .empty-state__desc {
+            font-size: 14px;
+        }
+        
+        .nx-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        .nx-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .nx-modal {
+            background: var(--nx-bg-card);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 560px;
+            max-height: 90vh;
+            overflow: hidden;
+            transform: translateY(-20px);
+            transition: transform 0.3s;
+        }
+        .nx-modal-overlay.active .nx-modal {
+            transform: translateY(0);
+        }
+        .nx-modal__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--nx-border);
+        }
+        .nx-modal__header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+        .nx-modal__body {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(90vh - 140px);
+        }
+        .nx-modal__footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 20px;
+            border-top: 1px solid var(--nx-border);
+        }
+        
+        .nx-form-group {
+            margin-bottom: 16px;
+        }
+        .nx-form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        .nx-form-group input,
+        .nx-form-group textarea,
+        .nx-form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--nx-border);
+            border-radius: 6px;
+            font-size: 14px;
+            background: var(--nx-bg);
+            color: var(--nx-text);
+            transition: border-color 0.2s;
+        }
+        .nx-form-group input:focus,
+        .nx-form-group textarea:focus,
+        .nx-form-group select:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        .nx-form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .channel-selector {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .channel-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border: 2px solid var(--nx-border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .channel-option:hover {
+            border-color: var(--nx-primary-light);
+        }
+        .channel-option.selected {
+            border-color: var(--nx-primary);
+            background: rgba(102, 126, 234, 0.1);
+        }
+        .channel-option__icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .channel-option__icon.dingtalk { background: #0089FF; }
+        .channel-option__icon.feishu { background: #3370FF; }
+        .channel-option__icon.wecom { background: #07C160; }
+        
+        .receiver-type-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .receiver-type-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--nx-border);
+            border-radius: 4px;
+            background: none;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .receiver-type-btn.active {
+            background: var(--nx-primary);
+            color: white;
+            border-color: var(--nx-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div style="padding: 16px; margin-bottom: 16px;">
+                <h1 style="display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: bold; margin: 0;">
+                    <i class="ri-robot-2-line"></i> OODER Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <div class="nx-page__content">
+            <header class="nx-page__header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 style="font-size: 18px; font-weight: 600; margin: 0;">消息中心</h2>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div id="notificationCenter"></div>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <main class="notification-page">
+                <div class="notification-page__header">
+                    <h1 class="notification-page__title">消息中心</h1>
+                    <div class="notification-page__actions">
+                        <button class="nx-btn nx-btn--primary" onclick="openSendModal()">
+                            <i class="ri-send-plane-line"></i> 发送消息
+                        </button>
+                        <button class="nx-btn nx-btn--ghost" onclick="markAllAsRead()">
+                            <i class="ri-check-double-line"></i> 全部已读
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="notification-tabs" id="notificationTabs">
+                    <button class="active" data-tab="all" onclick="switchTab('all')">全部</button>
+                    <button data-tab="todo" onclick="switchTab('todo')">待办 <span id="todoCount"></span></button>
+                    <button data-tab="a2a" onclick="switchTab('a2a')">A2A <span id="a2aCount"></span></button>
+                    <button data-tab="system" onclick="switchTab('system')">系统</button>
+                    <button data-tab="sent" onclick="switchTab('sent')">已发送</button>
+                </div>
+                
+                <div class="notification-list" id="notificationList">
+                    <div class="empty-state">
+                        <i class="ri-notification-off-line"></i>
+                        <div class="empty-state__title">暂无消息</div>
+                        <div class="empty-state__desc">新消息会在这里显示</div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <div class="nx-modal-overlay" id="sendModal">
+        <div class="nx-modal">
+            <div class="nx-modal__header">
+                <h3><i class="ri-send-plane-line"></i> 发送消息</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeSendModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-form-group">
+                    <label>选择渠道</label>
+                    <div class="channel-selector" id="channelSelector">
+                        <div class="channel-option" data-channel="dingtalk" onclick="selectChannel('dingtalk')">
+                            <div class="channel-option__icon dingtalk">
+                                <i class="ri-message-2-line"></i>
+                            </div>
+                            <span>钉钉</span>
+                        </div>
+                        <div class="channel-option" data-channel="feishu" onclick="selectChannel('feishu')">
+                            <div class="channel-option__icon feishu">
+                                <i class="ri-message-3-line"></i>
+                            </div>
+                            <span>飞书</span>
+                        </div>
+                        <div class="channel-option" data-channel="wecom" onclick="selectChannel('wecom')">
+                            <div class="channel-option__icon wecom">
+                                <i class="ri-wechat-line"></i>
+                            </div>
+                            <span>企业微信</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="nx-form-group">
+                    <label>接收者类型</label>
+                    <div class="receiver-type-selector">
+                        <button class="receiver-type-btn active" data-type="user" onclick="selectReceiverType('user')">
+                            <i class="ri-user-line"></i> 用户
+                        </button>
+                        <button class="receiver-type-btn" data-type="group" onclick="selectReceiverType('group')">
+                            <i class="ri-group-line"></i> 群组
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="nx-form-group">
+                    <label id="receiverLabel">接收者ID</label>
+                    <input type="text" id="receiverId" placeholder="请输入用户ID或群组ID">
+                </div>
+                
+                <div class="nx-form-group">
+                    <label>消息标题</label>
+                    <input type="text" id="messageTitle" placeholder="请输入消息标题">
+                </div>
+                
+                <div class="nx-form-group">
+                    <label>消息内容</label>
+                    <textarea id="messageContent" placeholder="请输入消息内容"></textarea>
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeSendModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="sendMessage()" id="sendBtn">
+                    <i class="ri-send-plane-line"></i> 发送
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/components/notification-center.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script>
+        let notifications = [];
+        let currentTab = 'all';
+        let selectedChannel = 'dingtalk';
+        let receiverType = 'user';
+        let sentMessages = [];
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            await NexusMenu.init();
+            loadNotifications();
+            loadChannels();
+        });
+        
+        async function loadChannels() {
+            try {
+                const response = await ApiClient.get('/api/v1/notifications/channels');
+                if (response.status === 'success' && response.data) {
+                    const channels = response.data;
+                    document.querySelectorAll('.channel-option').forEach(el => {
+                        const ch = el.dataset.channel;
+                        if (!channels.includes(ch)) {
+                            el.style.opacity = '0.5';
+                            el.style.pointerEvents = 'none';
+                        }
+                    });
+                }
+            } catch (e) {
+                console.log('Channels not available yet');
+            }
+        }
+        
+        async function loadNotifications() {
+            try {
+                const response = await ApiClient.get('/api/v1/notifications');
+                if (response.status === 'success') {
+                    notifications = response.data.notifications || [];
+                    updateCounts(response.data.unreadCounts || {});
+                    renderNotifications();
+                }
+            } catch (error) {
+                console.error('Failed to load notifications:', error);
+            }
+        }
+        
+        function updateCounts(counts) {
+            const todoCount = document.getElementById('todoCount');
+            const a2aCount = document.getElementById('a2aCount');
+            
+            if (todoCount && counts.todo > 0) {
+                todoCount.textContent = `(${counts.todo})`;
+            }
+            if (a2aCount && counts.a2a > 0) {
+                a2aCount.textContent = `(${counts.a2a})`;
+            }
+        }
+        
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.notification-tabs button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tab);
+            });
+            renderNotifications();
+        }
+        
+        function renderNotifications() {
+            const container = document.getElementById('notificationList');
+            
+            let filtered = notifications;
+            if (currentTab === 'sent') {
+                if (sentMessages.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="ri-send-plane-line"></i>
+                            <div class="empty-state__title">暂无已发送消息</div>
+                            <div class="empty-state__desc">点击"发送消息"按钮发送新消息</div>
+                        </div>
+                    `;
+                    return;
+                }
+                container.innerHTML = sentMessages.map(n => renderSentItem(n)).join('');
+                return;
+            }
+            
+            if (currentTab !== 'all') {
+                filtered = notifications.filter(n => {
+                    if (currentTab === 'todo') return n.type && n.type.startsWith('TODO_');
+                    if (currentTab === 'a2a') return n.type && (n.type.startsWith('A2A') || n.type.startsWith('A2P'));
+                    if (currentTab === 'system') return n.type === 'SYSTEM_NOTICE';
+                    return true;
+                });
+            }
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="ri-notification-off-line"></i>
+                        <div class="empty-state__title">暂无${currentTab === 'all' ? '' : getTabLabel(currentTab)}消息</div>
+                        <div class="empty-state__desc">新消息会在这里显示</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filtered.map(n => renderNotificationItem(n)).join('');
+        }
+        
+        function renderNotificationItem(n) {
+            const iconClass = getIconClass(n.type);
+            const icon = getIcon(n.type);
+            const time = formatTime(n.time);
+            
+            return `
+                <div class="notification-list__item ${n.unread ? 'unread' : ''}" onclick="handleClick('${n.id}')">
+                    <div class="notification-list__icon ${iconClass}">
+                        <i class="${icon}"></i>
+                    </div>
+                    <div class="notification-list__content">
+                        <div class="notification-list__title">${escapeHtml(n.title)}</div>
+                        <div class="notification-list__desc">${escapeHtml(n.description)}</div>
+                        <div class="notification-list__meta">
+                            <span><i class="ri-time-line"></i> ${time}</span>
+                            ${n.sceneGroupName ? `<span><i class="ri-folder-line"></i> ${escapeHtml(n.sceneGroupName)}</span>` : ''}
+                        </div>
+                    </div>
+                    ${n.actions && n.actions.length > 0 ? `
+                        <div class="notification-list__actions">
+                            ${n.actions.map(a => `
+                                <button class="nx-btn nx-btn--${a.primary ? 'primary' : 'ghost'} nx-btn--sm"
+                                        onclick="event.stopPropagation(); handleAction('${n.id}', '${a.action}')">
+                                    ${escapeHtml(a.label)}
+                                </button>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        function renderSentItem(n) {
+            const channelIcon = n.channel === 'dingtalk' ? 'ri-message-2-line' : 
+                               n.channel === 'feishu' ? 'ri-message-3-line' : 'ri-wechat-line';
+            const channelName = n.channel === 'dingtalk' ? '钉钉' : 
+                               n.channel === 'feishu' ? '飞书' : '企业微信';
+            
+            return `
+                <div class="notification-list__item">
+                    <div class="notification-list__icon" style="background: var(--nx-success-light); color: var(--nx-success);">
+                        <i class="${channelIcon}"></i>
+                    </div>
+                    <div class="notification-list__content">
+                        <div class="notification-list__title">${escapeHtml(n.title)}</div>
+                        <div class="notification-list__desc">${escapeHtml(n.content)}</div>
+                        <div class="notification-list__meta">
+                            <span><i class="ri-send-plane-line"></i> ${channelName}</span>
+                            <span><i class="ri-user-line"></i> ${escapeHtml(n.receiverId)}</span>
+                            <span><i class="ri-time-line"></i> ${formatTime(n.time)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function getIconClass(type) {
+            if (!type) return 'notification-list__icon--system';
+            const t = type.toLowerCase();
+            if (t.includes('invitation')) return 'notification-list__icon--todo-invitation';
+            if (t.includes('delegation')) return 'notification-list__icon--todo-delegation';
+            if (t.includes('approval')) return 'notification-list__icon--todo-approval';
+            if (t.includes('a2a')) return 'notification-list__icon--a2a';
+            return 'notification-list__icon--system';
+        }
+        
+        function getIcon(type) {
+            const icons = {
+                'TODO_INVITATION': 'ri-user-add-line',
+                'TODO_DELEGATION': 'ri-user-star-line',
+                'TODO_REMINDER': 'ri-alarm-line',
+                'TODO_APPROVAL': 'ri-checkbox-circle-line',
+                'TODO_ACTIVATION': 'ri-key-2-line',
+                'A2A_MESSAGE': 'ri-robot-line',
+                'A2P_MESSAGE': 'ri-user-line',
+                'SYSTEM_NOTICE': 'ri-information-line'
+            };
+            return icons[type] || 'ri-notification-line';
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 1) return '刚刚';
+            if (minutes < 60) return `${minutes}分钟前`;
+            if (hours < 24) return `${hours}小时前`;
+            if (days < 7) return `${days}天前`;
+            return `${date.getMonth() + 1}月${date.getDate()}日`;
+        }
+        
+        function getTabLabel(tab) {
+            const labels = { todo: '待办', a2a: 'A2A', system: '系统' };
+            return labels[tab] || '';
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        async function handleClick(id) {
+            await ApiClient.post(`/api/v1/notifications/${id}/read`);
+            loadNotifications();
+        }
+        
+        async function handleAction(id, action) {
+            try {
+                const response = await ApiClient.post(`/api/v1/notifications/${id}/action`, { action });
+                if (response.status === 'success') {
+                    if (response.data && response.data.message) {
+                        Toast.show(response.data.message, 'success');
+                    }
+                    loadNotifications();
+                }
+            } catch (error) {
+                Toast.show('操作失败', 'error');
+            }
+        }
+        
+        async function markAllAsRead() {
+            try {
+                await ApiClient.post('/api/v1/notifications/read-all');
+                Toast.show('已全部标记为已读', 'success');
+                loadNotifications();
+            } catch (error) {
+                Toast.show('操作失败', 'error');
+            }
+        }
+        
+        function openSendModal() {
+            document.getElementById('sendModal').classList.add('active');
+        }
+        
+        function closeSendModal() {
+            document.getElementById('sendModal').classList.remove('active');
+            document.getElementById('receiverId').value = '';
+            document.getElementById('messageTitle').value = '';
+            document.getElementById('messageContent').value = '';
+        }
+        
+        function selectChannel(channel) {
+            selectedChannel = channel;
+            document.querySelectorAll('.channel-option').forEach(el => {
+                el.classList.toggle('selected', el.dataset.channel === channel);
+            });
+        }
+        
+        function selectReceiverType(type) {
+            receiverType = type;
+            document.querySelectorAll('.receiver-type-btn').forEach(el => {
+                el.classList.toggle('active', el.dataset.type === type);
+            });
+            document.getElementById('receiverLabel').textContent = type === 'user' ? '接收者ID' : '群组ID';
+        }
+        
+        async function sendMessage() {
+            const receiverId = document.getElementById('receiverId').value.trim();
+            const title = document.getElementById('messageTitle').value.trim();
+            const content = document.getElementById('messageContent').value.trim();
+            
+            if (!receiverId || !title || !content) {
+                Toast.show('请填写完整信息', 'error');
+                return;
+            }
+            
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> 发送中...';
+            
+            try {
+                const url = receiverType === 'user' 
+                    ? `/api/v1/notifications/send/user?channel=${selectedChannel}&userId=${receiverId}&title=${encodeURIComponent(title)}&content=${encodeURIComponent(content)}`
+                    : `/api/v1/notifications/send/group?channel=${selectedChannel}&groupId=${receiverId}&title=${encodeURIComponent(title)}&content=${encodeURIComponent(content)}`;
+                
+                const response = await ApiClient.post(url, {});
+                
+                if (response.status === 'success') {
+                    Toast.show('消息发送成功', 'success');
+                    sentMessages.unshift({
+                        channel: selectedChannel,
+                        receiverId: receiverId,
+                        title: title,
+                        content: content,
+                        time: Date.now()
+                    });
+                    closeSendModal();
+                } else {
+                    Toast.show(response.message || '发送失败', 'error');
+                }
+            } catch (error) {
+                Toast.show('发送失败: ' + error.message, 'error');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="ri-send-plane-line"></i> 发送';
+            }
+        }
+        
+        selectChannel('dingtalk');
+    </script>
+</body>
+</html>

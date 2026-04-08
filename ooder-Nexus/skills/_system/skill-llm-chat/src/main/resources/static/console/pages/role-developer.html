@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开发者工作台 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-code-line" aria-hidden="true"></i> 开发者工作台</h1>
+                        <p>能力开发、测试、发布</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">D</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                <i class="ri-puzzle-line"></i> 我的能力
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-4">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon"><i class="ri-puzzle-line"></i></div>
+                            <div class="nx-stat-card__content">
+                                <h4>我的能力</h4>
+                                <p class="nx-stat-card__value" id="my-capability-count">0</p>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon" style="background: var(--nx-success-light); color: var(--nx-success);"><i class="ri-checkbox-circle-line"></i></div>
+                            <div class="nx-stat-card__content">
+                                <h4>已发布</h4>
+                                <p class="nx-stat-card__value" id="published-count">0</p>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon" style="background: var(--nx-warning-light); color: var(--nx-warning);"><i class="ri-time-line"></i></div>
+                            <div class="nx-stat-card__content">
+                                <h4>开发中</h4>
+                                <p class="nx-stat-card__value" id="developing-count">0</p>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon" style="background: var(--nx-info-light); color: var(--nx-info);"><i class="ri-download-line"></i></div>
+                            <div class="nx-stat-card__content">
+                                <h4>总下载量</h4>
+                                <p class="nx-stat-card__value" id="download-count">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3>开发流程</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-flex nx-gap-4 nx-flex-wrap">
+                                <div class="nx-flex-1 nx-min-w-[200px] nx-p-6 nx-bg-elevated nx-rounded-xl nx-border nx-border-[var(--nx-border)]">
+                                    <div class="nx-flex nx-items-center nx-gap-4 nx-mb-4">
+                                        <div class="nx-w-11 nx-h-11 nx-bg-primary nx-rounded-lg nx-flex nx-items-center nx-justify-center nx-text-white nx-font-bold">1</div>
+                                        <h4 class="nx-font-semibold">创建能力</h4>
+                                    </div>
+                                    <p class="nx-text-sm nx-text-secondary nx-mb-4">定义能力元数据，编写能力描述和参数</p>
+                                    <a href="/console/pages/capability-create.html" class="nx-btn nx-btn--primary nx-btn--sm">
+                                        <i class="ri-add-line"></i> 创建
+                                    </a>
+                                </div>
+                                <div class="nx-flex-1 nx-min-w-[200px] nx-p-6 nx-bg-elevated nx-rounded-xl nx-border nx-border-[var(--nx-border)]">
+                                    <div class="nx-flex nx-items-center nx-gap-4 nx-mb-4">
+                                        <div class="nx-w-11 nx-h-11 nx-bg-primary nx-rounded-lg nx-flex nx-items-center nx-justify-center nx-text-white nx-font-bold">2</div>
+                                        <h4 class="nx-font-semibold">测试能力</h4>
+                                    </div>
+                                    <p class="nx-text-sm nx-text-secondary nx-mb-4">运行架构检查，测试能力功能</p>
+                                    <a href="/console/pages/arch-check.html" class="nx-btn nx-btn--primary nx-btn--sm">
+                                        <i class="ri-shield-check-line"></i> 检查
+                                    </a>
+                                </div>
+                                <div class="nx-flex-1 nx-min-w-[200px] nx-p-6 nx-bg-elevated nx-rounded-xl nx-border nx-border-[var(--nx-border)]">
+                                    <div class="nx-flex nx-items-center nx-gap-4 nx-mb-4">
+                                        <div class="nx-w-11 nx-h-11 nx-bg-primary nx-rounded-lg nx-flex nx-items-center nx-justify-center nx-text-white nx-font-bold">3</div>
+                                        <h4 class="nx-font-semibold">发布能力</h4>
+                                    </div>
+                                    <p class="nx-text-sm nx-text-secondary nx-mb-4">将能力发布到市场，供其他用户使用</p>
+                                    <a href="/console/pages/my-capabilities.html" class="nx-btn nx-btn--secondary nx-btn--sm">
+                                        <i class="ri-send-plane-line"></i> 发布
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-4">
+                        <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                            <h3>我的能力</h3>
+                            <a href="/console/pages/my-capabilities.html" class="nx-btn nx-btn--ghost nx-btn--sm">查看全部</a>
+                        </div>
+                        <div class="nx-card__body">
+                            <div id="capability-list">
+                                <div class="nx-flex nx-items-center nx-justify-center nx-p-8">
+                                    <i class="ri-loader-4-line ri-spin" style="font-size: 24px;"></i>
+                                    <span class="nx-ml-2">加载中...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-4">
+                        <div class="nx-card__header">
+                            <h3>开发统计</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div id="stats-chart" class="nx-h-[200px] nx-flex nx-items-center nx-justify-center">
+                                <p class="nx-text-secondary">统计图表开发中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script>
+        let currentUser = null;
+        
+        async function checkLogin() {
+            try {
+                const response = await fetch('/api/v1/auth/session');
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    currentUser = result.data;
+                    document.getElementById('user-name').textContent = currentUser.name;
+                    await loadStats();
+                    await loadMyCapabilities();
+                } else {
+                    window.location.href = '/console/pages/login.html';
+                }
+            } catch (e) {
+                console.error('Session check failed:', e);
+                window.location.href = '/console/pages/login.html';
+            }
+        }
+        
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/v1/capabilities/by-ownership?ownership=developer');
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    const caps = Array.isArray(result.data) ? result.data : [];
+                    document.getElementById('my-capability-count').textContent = caps.length;
+                    document.getElementById('published-count').textContent = caps.filter(c => c.visibility === 'public').length;
+                    document.getElementById('developing-count').textContent = caps.filter(c => c.visibility === 'internal' || !c.visibility).length;
+                    
+                    let totalDownloads = 0;
+                    caps.forEach(c => {
+                        totalDownloads += c.installCount || 0;
+                    });
+                    document.getElementById('download-count').textContent = totalDownloads;
+                }
+            } catch (e) {
+                console.error('Failed to load stats:', e);
+            }
+        }
+        
+        async function loadMyCapabilities() {
+            const container = document.getElementById('capability-list');
+            
+            try {
+                const response = await fetch('/api/v1/capabilities/by-ownership?ownership=developer');
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    const caps = Array.isArray(result.data) ? result.data : [];
+                    
+                    if (caps.length === 0) {
+                        container.innerHTML = '<p class="nx-text-secondary nx-text-center nx-p-4">暂无开发的能力，<a href="/console/pages/capability-create.html">立即创建</a></p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = caps.slice(0, 5).map(cap => `
+                        <div class="nx-flex nx-items-center nx-justify-between nx-p-4 nx-border-b nx-border-[var(--nx-border)]">
+                            <div>
+                                <h4 class="nx-font-medium">${cap.name}</h4>
+                                <p class="nx-text-sm nx-text-secondary">${cap.description || '暂无描述'}</p>
+                            </div>
+                            <div class="nx-flex nx-items-center nx-gap-2">
+                                <span class="nx-badge ${cap.visibility === 'public' ? 'nx-badge--success' : 'nx-badge--secondary'}">${cap.visibility === 'public' ? '已发布' : '开发中'}</span>
+                                <span class="nx-text-sm nx-text-secondary"><i class="ri-download-line"></i> ${cap.installCount || 0}</span>
+                                <a href="/console/pages/capability-detail.html?id=${cap.id}" class="nx-btn nx-btn--secondary nx-btn--sm">详情</a>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error('Failed to load capabilities:', e);
+                container.innerHTML = '<p class="nx-text-secondary nx-text-center nx-p-4">加载失败</p>';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', checkLogin);
+    </script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的能力 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/components/stat-cards.css">
+    <link rel="stylesheet" href="/console/css/pages/my-capabilities.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <div class="my-cap-page">
+                <header class="nx-page__header" style="border-bottom: none;">
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                            <i class="ri-menu-line"></i>
+                        </button>
+                        <div>
+                            <h2 class="page-title">
+                                <i class="ri-puzzle-line"></i>
+                                我的技能
+                            </h2>
+                            <p class="page-subtitle">查看和管理已注册的场景技能</p>
+                        </div>
+                    </div>
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                            <i class="ri-sun-line"></i>
+                        </button>
+                        <div class="nx-relative">
+                            <div class="nx-page__user-menu" id="user-menu">
+                                <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                                <span class="nx-page__user-name" id="user-name">加载中...</span>
+                                <i class="ri-arrow-down-s-line"></i>
+                            </div>
+                            <div class="nx-page__dropdown-menu" id="user-dropdown">
+                                <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                    <i class="ri-user-line"></i> 个人中心
+                                </div>
+                                <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                    <i class="ri-puzzle-line"></i> 我的技能
+                                </div>
+                                <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                    <i class="ri-logout-box-line"></i> 退出登录
+                                </div>
+                            </div>
+                        </div>
+                        <a href="/console/pages/capability-discovery.html" class="nx-btn nx-btn--secondary">
+                            <i class="ri-compass-discover-line"></i> 发现能力
+                        </a>
+                        <a href="/console/pages/capability-create.html" class="nx-btn nx-btn--primary">
+                            <i class="ri-add-line"></i> 新建能力
+                        </a>
+                    </div>
+                </header>
+                
+                <div class="stats-row">
+                    <div class="stat-card" data-category="all" onclick="filterByCategory('all')">
+                        <div class="stat-icon total"><i class="ri-puzzle-line"></i></div>
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-label">总技能数</div>
+                    </div>
+                    <div class="stat-card" onclick="filterByStatus('ACTIVATED')">
+                        <div class="stat-icon installed"><i class="ri-play-circle-line"></i></div>
+                        <div class="stat-value" id="statActivated">0</div>
+                        <div class="stat-label">已激活</div>
+                    </div>
+                    <div class="stat-card" onclick="filterByStatus('INSTALLED')">
+                        <div class="stat-icon installed"><i class="ri-install-line"></i></div>
+                        <div class="stat-value" id="statInstalled">0</div>
+                        <div class="stat-label">已安装</div>
+                    </div>
+                    <div class="stat-card" onclick="filterByStatus('DOWNLOADED')">
+                        <div class="stat-icon active"><i class="ri-download-line"></i></div>
+                        <div class="stat-value" id="statDownloaded">0</div>
+                        <div class="stat-label">已下载</div>
+                    </div>
+                </div>
+                
+                <div class="toolbar">
+                    <div class="toolbar-left">
+                        <div class="search-box">
+                            <i class="ri-search-line"></i>
+                            <input type="text" placeholder="搜索技能名称或ID..." id="searchInput" oninput="searchKeyword=this.value;filterCapabilities()">
+                        </div>
+                        <div class="filter-group">
+                            <div class="filter-group-row">
+                                <span class="filter-label">分类:</span>
+                            </div>
+                            <div class="filter-chips-row" id="categoryFilterChips">
+                                <span class="filter-chip active" data-category="all" onclick="filterByCategory('all')">全部</span>
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <span class="filter-label">状态:</span>
+                            <div class="filter-chips" id="statusFilterChips">
+                                <span class="filter-chip active" data-status="all" onclick="filterByStatus('all')">全部</span>
+                                <span class="filter-chip" data-status="ACTIVATED" onclick="filterByStatus('ACTIVATED')">已激活</span>
+                                <span class="filter-chip" data-status="INSTALLED" onclick="filterByStatus('INSTALLED')">已安装</span>
+                                <span class="filter-chip" data-status="DOWNLOADED" onclick="filterByStatus('DOWNLOADED')">已下载</span>
+                                <span class="filter-chip" data-status="DEV" onclick="filterByStatus('DEV')">开发中</span>
+                                <span class="filter-chip" data-status="DISABLED" onclick="filterByStatus('DISABLED')">已禁用</span>
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <span class="filter-label">类型:</span>
+                            <div class="filter-chips" id="typeFilterChips">
+                                <span class="filter-chip active" data-type="all" onclick="filterByType('all')">全部</span>
+                                <span class="filter-chip" data-type="SERVICE" onclick="filterByType('SERVICE')">服务</span>
+                                <span class="filter-chip" data-type="AI" onclick="filterByType('AI')">AI</span>
+                                <span class="filter-chip" data-type="DATA" onclick="filterByType('DATA')">数据</span>
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <span class="filter-label">来源:</span>
+                            <div class="filter-chips" id="sourceFilterChips">
+                                <span class="filter-chip active" data-source="all" onclick="filterBySource('all')">全部</span>
+                                <span class="filter-chip" data-source="download" onclick="filterBySource('download')">下载安装</span>
+                                <span class="filter-chip" data-source="share" onclick="filterBySource('share')">分享获取</span>
+                                <span class="filter-chip" data-source="delegate" onclick="filterBySource('delegate')">委派获取</span>
+                                <span class="filter-chip" data-source="push" onclick="filterBySource('push')">推送安装</span>
+                                <span class="filter-chip" data-source="dev" onclick="filterBySource('dev')">开发模式</span>
+                                <span class="filter-chip" data-source="install" onclick="filterBySource('install')">本地安装</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="toolbar-right">
+                        <label class="switch-container" style="display: flex; align-items: center; gap: 8px; margin-right: 12px; cursor: pointer;">
+                            <input type="checkbox" id="showInternalSkills" onchange="toggleInternalSkills(this.checked)" style="cursor: pointer;">
+                            <span style="font-size: 13px; color: #6b7280;">显示内部能力</span>
+                        </label>
+                        <button class="nx-btn nx-btn--secondary" onclick="refreshCapabilities()">
+                            <i class="ri-refresh-line"></i> 刷新
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="cap-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>技能</th>
+                                <th>归属类型</th>
+                                <th>分类</th>
+                                <th>状态</th>
+                                <th>来源</th>
+                                <th>版本</th>
+                                <th>包含能力</th>
+                                <th>更新时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="capabilityTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="pagination-container" class="nx-flex nx-items-center nx-justify-center nx-mt-4 nx-gap-4"></div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="overlay" id="overlay" onclick="closeDetailPanel()"></div>
+    
+    <div class="detail-panel" id="detailPanel">
+        <div class="detail-header">
+            <span class="detail-title" id="detailTitle">技能详情</span>
+            <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeDetailPanel()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="detail-body" id="detailBody">
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/common/category-service.js"></script>
+    <script src="/console/js/capability-config.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/llm-assistant.js"></script>
+    <script src="/console/js/capability-service.js"></script>
+    <script src="/console/js/pages/my-capabilities.js"></script>
+</body>
+</html>

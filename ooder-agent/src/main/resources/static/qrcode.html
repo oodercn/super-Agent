@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扫码登录 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qrcode-page {
+            width: 100%;
+            max-width: 480px;
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .qrcode-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .qrcode-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .qrcode-logo i {
+            font-size: 40px;
+            color: white;
+        }
+
+        .qrcode-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .qrcode-subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .platform-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .platform-tab {
+            flex: 1;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .platform-tab:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .platform-tab.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .platform-tab i {
+            font-size: 32px;
+        }
+
+        .platform-tab span {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .qrcode-container {
+            width: 280px;
+            height: 280px;
+            margin: 0 auto 24px;
+            border: 3px solid #e0e0e0;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fafafa;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .qrcode-placeholder {
+            text-align: center;
+            color: #999;
+        }
+
+        .qrcode-placeholder i {
+            font-size: 64px;
+            margin-bottom: 16px;
+            display: block;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .qrcode-placeholder p {
+            font-size: 16px;
+        }
+
+        .qrcode-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .qrcode-status {
+            text-align: center;
+            padding: 16px;
+            background: #f8f9ff;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .status-text {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .status-text .platform-name {
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        .qrcode-expired {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .qrcode-expired i {
+            font-size: 48px;
+            color: #ff9800;
+        }
+
+        .qrcode-expired p {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .refresh-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="qrcode-page">
+        <div class="qrcode-header">
+            <div class="qrcode-logo">
+                <i class="ri-server-line"></i>
+            </div>
+            <h1 class="qrcode-title">Apex OS</h1>
+            <p class="qrcode-subtitle">场景技能管理平台 - 扫码登录</p>
+        </div>
+
+        <div class="platform-tabs">
+            <div class="platform-tab active" data-platform="dingding" onclick="switchPlatform('dingding')">
+                <i class="ri-message-3-line"></i>
+                <span>钉钉</span>
+            </div>
+            <div class="platform-tab" data-platform="weixin" onclick="switchPlatform('weixin')">
+                <i class="ri-wechat-line"></i>
+                <span>微信</span>
+            </div>
+            <div class="platform-tab" data-platform="feishu" onclick="switchPlatform('feishu')">
+                <i class="ri-message-2-line"></i>
+                <span>飞书</span>
+            </div>
+        </div>
+
+        <div class="qrcode-container" id="qrcodeContainer">
+            <div class="qrcode-placeholder">
+                <div class="loading-spinner"></div>
+                <p style="margin-top: 20px;">正在加载二维码...</p>
+            </div>
+        </div>
+
+        <div class="qrcode-status">
+            <p class="status-text">请使用 <span class="platform-name" id="platformName">钉钉</span> 扫码登录</p>
+        </div>
+
+        <div class="back-link">
+            <a href="/console/pages/login.html"><i class="ri-arrow-left-line"></i> 返回账号密码登录</a>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            
+            var currentPlatform = 'dingding';
+            var qrcodeTimer = null;
+            var checkTimer = null;
+            
+            var platformNames = {
+                'dingding': '钉钉',
+                'weixin': '微信',
+                'feishu': '飞书'
+            };
+            
+            var rolePages = {
+                'installer': '/console/pages/role-installer.html',
+                'admin': '/console/pages/role-admin.html',
+                'leader': '/console/pages/role-leader.html',
+                'collaborator': '/console/pages/role-collaborator.html'
+            };
+            
+            function switchPlatform(platform) {
+                currentPlatform = platform;
+                
+                var tabs = document.querySelectorAll('.platform-tab');
+                tabs.forEach(function(tab) {
+                    tab.classList.remove('active');
+                });
+                document.querySelector('[data-platform="' + platform + '"]').classList.add('active');
+                
+                document.getElementById('platformName').textContent = platformNames[platform];
+                
+                loadQrcode();
+            }
+            
+            function loadQrcode() {
+                stopQrcodeCheck();
+                
+                var container = document.getElementById('qrcodeContainer');
+                container.innerHTML = '<div class="qrcode-placeholder"><div class="loading-spinner"></div><p style="margin-top: 20px;">正在加载二维码...</p></div>';
+                
+                fetch('/api/v1/auth/qrcode/' + currentPlatform)
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(result) {
+                        if (result.status === 'success' && result.data) {
+                            showQrcode(result.data);
+                            startQrcodeCheck(result.data.qrcodeId);
+                        } else {
+                            container.innerHTML = '<div class="qrcode-placeholder"><i class="ri-error-warning-line" style="color: #ff5252;"></i><p>' + (result.message || '获取二维码失败') + '</p></div>';
+                        }
+                    })
+                    .catch(function(e) {
+                        console.error('Load qrcode error:', e);
+                        container.innerHTML = '<div class="qrcode-placeholder"><i class="ri-error-warning-line" style="color: #ff5252;"></i><p>获取二维码失败，请稍后重试</p></div>';
+                    });
+            }
+            
+            function showQrcode(data) {
+                var container = document.getElementById('qrcodeContainer');
+                var html = '';
+                
+                if (data.qrcodeUrl) {
+                    html = '<img src="' + data.qrcodeUrl + '" class="qrcode-image" alt="登录二维码">';
+                } else if (data.qrcodeData) {
+                    html = '<div class="qrcode-placeholder"><i class="ri-qr-code-line"></i><p>' + data.qrcodeData + '</p></div>';
+                }
+                
+                container.innerHTML = html;
+                
+                if (data.expiresIn) {
+                    qrcodeTimer = setTimeout(function() {
+                        showExpired();
+                    }, data.expiresIn * 1000);
+                }
+            }
+            
+            function showExpired() {
+                stopQrcodeCheck();
+                
+                var container = document.getElementById('qrcodeContainer');
+                var expiredHtml = '<div class="qrcode-expired">' +
+                    '<i class="ri-refresh-line"></i>' +
+                    '<p>二维码已过期</p>' +
+                    '<button class="refresh-btn" onclick="window.location.reload()">刷新二维码</button>' +
+                    '</div>';
+                
+                container.innerHTML = expiredHtml;
+            }
+            
+            function startQrcodeCheck(qrcodeId) {
+                checkTimer = setInterval(function() {
+                    fetch('/api/v1/auth/qrcode/check/' + qrcodeId)
+                        .then(function(response) {
+                            return response.json();
+                        })
+                        .then(function(result) {
+                            if (result.status === 'success' && result.data) {
+                                if (result.data.status === 'scanned') {
+                                    document.querySelector('.status-text').innerHTML = '扫码成功，请在手机上确认登录';
+                                } else if (result.data.status === 'confirmed') {
+                                    stopQrcodeCheck();
+                                    localStorage.setItem('token', result.data.token);
+                                    localStorage.setItem('user', JSON.stringify(result.data.user));
+                                    
+                                    var role = result.data.role || 'admin';
+                                    var targetPage = rolePages[role] || '/console/pages/role-admin.html';
+                                    
+                                    document.querySelector('.status-text').innerHTML = '<span style="color: #4caf50;">✓ 登录成功，正在跳转...</span>';
+                                    
+                                    setTimeout(function() {
+                                        window.location.href = targetPage;
+                                    }, 1000);
+                                } else if (result.data.status === 'expired') {
+                                    showExpired();
+                                }
+                            }
+                        })
+                        .catch(function(e) {
+                            console.error('Check qrcode error:', e);
+                        });
+                }, 2000);
+            }
+            
+            function stopQrcodeCheck() {
+                if (qrcodeTimer) {
+                    clearTimeout(qrcodeTimer);
+                    qrcodeTimer = null;
+                }
+                if (checkTimer) {
+                    clearInterval(checkTimer);
+                    checkTimer = null;
+                }
+            }
+            
+            window.switchPlatform = switchPlatform;
+            
+            loadQrcode();
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>入网审批 - Skill Scene</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/key-management.css">
+    <link rel="stylesheet" href="/console/css/pages/network-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-apps-line"></i> Skill Scene
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-user-add-line" aria-hidden="true"></i> 入网审批</h1>
+                        <p>管理用户和设备的入网申请</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <h4>待审批</h4>
+                            <div class="value" id="pendingCount">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>今日已批准</h4>
+                            <div class="value" id="todayApproved">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>今日已拒绝</h4>
+                            <div class="value" id="todayRejected">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>总用户数</h4>
+                            <div class="value" id="totalUsers">0</div>
+                        </div>
+                    </div>
+
+                    <div class="filter-bar">
+                        <select id="statusFilter" onchange="loadRequests()">
+                            <option value="PENDING">待审批</option>
+                            <option value="APPROVED">已批准</option>
+                            <option value="REJECTED">已拒绝</option>
+                            <option value="">全部</option>
+                        </select>
+                        <select id="typeFilter" onchange="loadRequests()">
+                            <option value="">所有类型</option>
+                            <option value="USER_JOIN">用户入网</option>
+                            <option value="DEVICE_JOIN">设备入网</option>
+                            <option value="AGENT_JOIN">Agent入网</option>
+                        </select>
+                    </div>
+
+                    <div id="requestList"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="approvalModal" class="nx-modal">
+        <div class="nx-modal__content" style="width: 500px;">
+            <div class="nx-modal__header">
+                <h3>批准入网申请</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="hideApprovalModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <form id="approvalForm" onsubmit="submitApproval(event)">
+                <div class="nx-modal__body">
+                    <input type="hidden" id="approvalRequestId">
+                    
+                    <div class="form-group">
+                        <label>密钥规则</label>
+                        <select id="keyRule" required>
+                            <option value="">请选择密钥规则</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>有效期（天）</label>
+                            <input type="number" id="validityDays" value="30" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>最大使用次数</label>
+                            <input type="number" id="maxUseCount" value="1000" placeholder="-1表示无限制">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>授权场景</label>
+                        <select id="allowedScenes" multiple style="height: 100px;">
+                            <option value="daily-log-scene">日志汇报场景</option>
+                            <option value="report-scene">报告场景</option>
+                            <option value="notification-scene">通知场景</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>审批意见</label>
+                        <textarea id="reviewComment" rows="2" placeholder="可选填写审批意见"></textarea>
+                    </div>
+                </div>
+                <div class="nx-modal__footer">
+                    <button type="button" class="nx-btn nx-btn--secondary" onclick="hideApprovalModal()">取消</button>
+                    <button type="submit" class="nx-btn nx-btn--primary">确认批准</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script>
+        const API_BASE = '/api/v1/network-join';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadRequests();
+            loadKeyRules();
+        });
+        
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/pending-count`);
+                const result = await response.json();
+                if (result.status === 'success') {
+                    document.getElementById('pendingCount').textContent = result.data.pending || 0;
+                }
+            } catch (e) {
+                console.error('Failed to load stats:', e);
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                const result = await response.json();
+                if (result.status === 'success') {
+                    document.getElementById('todayApproved').textContent = result.data.todayApproved || 0;
+                    document.getElementById('todayRejected').textContent = result.data.todayRejected || 0;
+                    document.getElementById('totalUsers').textContent = result.data.totalUsers || 0;
+                }
+            } catch (e) {
+                console.error('Failed to load stats:', e);
+            }
+        }
+        
+        async function loadRequests() {
+            const status = document.getElementById('statusFilter').value;
+            const type = document.getElementById('typeFilter').value;
+            
+            let url = `${API_BASE}/requests?`;
+            if (status) url += `status=${status}&`;
+            if (type) url += `type=${type}`;
+            
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    renderRequests(result.data);
+                }
+            } catch (e) {
+                console.error('Failed to load requests:', e);
+                document.getElementById('requestList').innerHTML = '<p>加载失败</p>';
+            }
+        }
+        
+        function renderRequests(requests) {
+            const container = document.getElementById('requestList');
+            
+            if (!requests || requests.length === 0) {
+                container.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--nx-color-text-secondary);">暂无申请记录</p>';
+                return;
+            }
+            
+            container.innerHTML = requests.map(req => `
+                <div class="request-card">
+                    <div class="request-card__header">
+                        <div>
+                            <div class="request-card__title">
+                                ${getTypeIcon(req.type)} ${req.applicantName}
+                            </div>
+                            <div style="color: var(--nx-color-text-secondary); font-size: 0.875rem;">
+                                ${req.applicantEmail || req.department || ''}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span class="request-card__type request-card__type--${getTypeClass(req.type)}">
+                                ${getTypeLabel(req.type)}
+                            </span>
+                            <span class="status-badge status-badge--${req.status.toLowerCase()}">
+                                ${getStatusLabel(req.status)}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="request-card__meta">
+                        <span><i class="ri-time-line"></i> ${formatTime(req.createdAt)}</span>
+                        <span><i class="ri-building-line"></i> ${req.department || '-'}</span>
+                    </div>
+                    <div class="request-card__reason">
+                        <strong>申请理由：</strong>${req.reason}
+                    </div>
+                    ${req.status === 'PENDING' ? `
+                        <div class="request-card__actions">
+                            <button class="nx-btn nx-btn--secondary" onclick="rejectRequest('${req.requestId}')">
+                                <i class="ri-close-line"></i> 拒绝
+                            </button>
+                            <button class="nx-btn nx-btn--primary" onclick="showApprovalModal('${req.requestId}')">
+                                <i class="ri-check-line"></i> 批准
+                            </button>
+                        </div>
+                    ` : ''}
+                    ${req.status === 'APPROVED' && req.generatedKeyId ? `
+                        <div style="margin-top: 8px; padding: 8px; background: var(--nx-color-bg-muted); border-radius: 4px; font-size: 0.875rem;">
+                            <strong>已生成密钥：</strong><code>${req.generatedKeyId}</code>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+        
+        async function loadKeyRules() {
+            try {
+                const response = await fetch('/api/v1/key-rules');
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    const select = document.getElementById('keyRule');
+                    select.innerHTML = '<option value="">请选择密钥规则</option>' + 
+                        result.data.map(rule => `<option value="${rule.ruleId}">${rule.ruleName}</option>`).join('');
+                }
+            } catch (e) {
+                console.error('Failed to load key rules:', e);
+            }
+        }
+        
+        function showApprovalModal(requestId) {
+            document.getElementById('approvalRequestId').value = requestId;
+            document.getElementById('approvalModal').classList.add('nx-modal--open');
+        }
+        
+        function hideApprovalModal() {
+            document.getElementById('approvalModal').classList.remove('nx-modal--open');
+        }
+        
+        async function submitApproval(event) {
+            event.preventDefault();
+            
+            const requestId = document.getElementById('approvalRequestId').value;
+            const selectedScenes = Array.from(document.getElementById('allowedScenes').selectedOptions).map(o => o.value);
+            
+            const approval = {
+                keyRule: document.getElementById('keyRule').value,
+                validityDays: parseInt(document.getElementById('validityDays').value),
+                maxUseCount: parseInt(document.getElementById('maxUseCount').value) || -1,
+                allowedScenes: selectedScenes,
+                reviewComment: document.getElementById('reviewComment').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/requests/${requestId}/approve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(approval)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    hideApprovalModal();
+                    loadStats();
+                    loadRequests();
+                    alert('批准成功！已生成密钥: ' + result.data.generatedKeyId);
+                } else {
+                    alert('批准失败: ' + result.message);
+                }
+            } catch (e) {
+                console.error('Failed to approve:', e);
+                alert('批准失败');
+            }
+        }
+        
+        async function rejectRequest(requestId) {
+            if (!confirm('确定要拒绝此申请吗？')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/requests/${requestId}/reject`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reviewComment: '管理员拒绝' })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    loadStats();
+                    loadRequests();
+                } else {
+                    alert('拒绝失败: ' + result.message);
+                }
+            } catch (e) {
+                console.error('Failed to reject:', e);
+                alert('拒绝失败');
+            }
+        }
+        
+        function getTypeIcon(type) {
+            const icons = {
+                'USER_JOIN': '<i class="ri-user-line"></i>',
+                'DEVICE_JOIN': '<i class="ri-device-line"></i>',
+                'AGENT_JOIN': '<i class="ri-robot-line"></i>'
+            };
+            return icons[type] || '<i class="ri-question-line"></i>';
+        }
+        
+        function getTypeClass(type) {
+            const classes = {
+                'USER_JOIN': 'user',
+                'DEVICE_JOIN': 'device',
+                'AGENT_JOIN': 'agent'
+            };
+            return classes[type] || 'user';
+        }
+        
+        function getTypeLabel(type) {
+            const labels = {
+                'USER_JOIN': '用户入网',
+                'DEVICE_JOIN': '设备入网',
+                'AGENT_JOIN': 'Agent入网'
+            };
+            return labels[type] || type;
+        }
+        
+        function getStatusLabel(status) {
+            const labels = {
+                'PENDING': '待审批',
+                'APPROVED': '已批准',
+                'REJECTED': '已拒绝'
+            };
+            return labels[status] || status;
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+    </script>
+</body>
+</html>

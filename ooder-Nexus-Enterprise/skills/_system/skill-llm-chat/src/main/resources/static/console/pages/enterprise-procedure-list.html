@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业规范流程管理 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/enterprise-procedure-list.css">
+</head>
+<body class="enterprise-procedure-list">
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <div class="enterprise-procedure-list">
+                <header class="nx-page__header" style="border-bottom: none;">
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                            <i class="ri-menu-line"></i>
+                        </button>
+                        <div>
+                            <h2 class="page-title">
+                                <i class="ri-flow-chart"></i>
+                                企业规范流程管理
+                            </h2>
+                            <p class="page-subtitle">管理企业规范流程，支持LLM辅助创建</p>
+                        </div>
+                    </div>
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                            <i class="ri-sun-line"></i>
+                        </button>
+                        <div class="nx-relative">
+                            <div class="nx-page__user-menu" id="user-menu">
+                                <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                                <span class="nx-page__user-name" id="user-name">加载中...</span>
+                                <i class="ri-arrow-down-s-line"></i>
+                            </div>
+                            <div class="nx-page__dropdown-menu" id="user-dropdown">
+                                <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                    <i class="ri-user-line"></i> 个人中心
+                                </div>
+                                <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                    <i class="ri-logout-box-line"></i> 退出登录
+                                </div>
+                            </div>
+                        </div>
+                        <button class="nx-btn nx-btn--secondary" onclick="showLlmAssistModal()">
+                            <i class="ri-magic-line"></i> LLM辅助创建
+                        </button>
+                        <button class="nx-btn nx-btn--primary" onclick="showCreateModal()">
+                            <i class="ri-add-line"></i> 手动创建
+                        </button>
+                    </div>
+                </header>
+                
+                <div class="search-bar">
+                    <div class="search-item">
+                        <label>分类：</label>
+                        <select id="categoryFilter">
+                            <option value="">全部</option>
+                        </select>
+                    </div>
+                    <div class="search-item">
+                        <label>来源：</label>
+                        <select id="sourceFilter">
+                            <option value="">全部</option>
+                        </select>
+                    </div>
+                    <div class="search-item">
+                        <label>状态：</label>
+                        <select id="statusFilter">
+                            <option value="">全部</option>
+                            <option value="DRAFT">草稿</option>
+                            <option value="ACTIVE">激活</option>
+                            <option value="DEPRECATED">废弃</option>
+                        </select>
+                    </div>
+                    <div class="search-item">
+                        <label>完善度：</label>
+                        <select id="completenessFilter">
+                            <option value="0">全部</option>
+                            <option value="80">80%以上</option>
+                            <option value="60">60%以上</option>
+                            <option value="40">40%以上</option>
+                        </select>
+                    </div>
+                    <div class="search-item">
+                        <input type="text" id="keywordInput" placeholder="搜索关键词...">
+                    </div>
+                    <button class="nx-btn nx-btn--primary" onclick="search()">
+                        <i class="ri-search-line"></i> 搜索
+                    </button>
+                </div>
+
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="5%"><input type="checkbox" id="selectAll"></th>
+                                <th width="20%">流程名称</th>
+                                <th width="10%">分类</th>
+                                <th width="10%">来源</th>
+                                <th width="15%">完善度</th>
+                                <th width="15%">更新时间</th>
+                                <th width="10%">状态</th>
+                                <th width="15%">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="pagination">
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="llmAssistModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2><i class="ri-magic-line"></i> LLM辅助创建企业规范流程</h2>
+                <span class="close" onclick="closeModal('llmAssistModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="wizard-steps">
+                    <div class="step active" data-step="1">
+                        <span class="step-number">1</span>
+                        <span class="step-title">上传文档</span>
+                    </div>
+                    <div class="step" data-step="2">
+                        <span class="step-number">2</span>
+                        <span class="step-title">LLM解析</span>
+                    </div>
+                    <div class="step" data-step="3">
+                        <span class="step-number">3</span>
+                        <span class="step-title">确认保存</span>
+                    </div>
+                </div>
+
+                <div id="step1Content" class="step-content">
+                    <div class="upload-area" id="uploadArea">
+                        <i class="ri-upload-cloud-2-line"></i>
+                        <p>拖拽文件到此处或点击上传</p>
+                        <p class="upload-hint">支持 PDF、Word、TXT 格式</p>
+                        <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.txt" hidden>
+                    </div>
+                    <div id="fileList" class="file-list"></div>
+                </div>
+
+                <div id="step2Content" class="step-content" style="display:none;">
+                    <div class="llm-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="llmProgressFill"></div>
+                        </div>
+                        <p id="llmProgressText">正在解析文档...</p>
+                    </div>
+                </div>
+
+                <div id="step3Content" class="step-content" style="display:none;">
+                    <div class="preview-section">
+                        <h3>解析结果预览</h3>
+                        <div id="previewContent"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('llmAssistModal')">取消</button>
+                <button class="nx-btn nx-btn--primary" id="nextStepBtn" onclick="nextStep()">下一步</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/enterprise-procedure-list.js"></script>
+</body>
+</html>

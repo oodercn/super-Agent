@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主导者工作台 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-user-star-line" aria-hidden="true"></i> 主导者工作台</h1>
+                        <p>闭环三：接收场景 → 激活配置 → 指派协作者 → 启动执行</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                <i class="ri-puzzle-line"></i> 我的能力
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-3 nx-mb-4">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon"><i class="ri-inbox-line"></i></div>
+                            <div class="nx-stat-card__content">
+                                <h4>待激活场景</h4>
+                                <p class="nx-stat-card__value" id="pending-count">0</p>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon" style="background: var(--nx-success-light); color: var(--nx-success);"><i class="ri-play-circle-line"></i></div>
+                            <div class="nx-stat-card__content">
+                                <h4>运行中场景</h4>
+                                <p class="nx-stat-card__value" id="running-count">0</p>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon" style="background: var(--nx-warning-light); color: var(--nx-warning);"><i class="ri-key-line"></i></div>
+                            <div class="nx-stat-card__content">
+                                <h4>待配置密钥</h4>
+                                <p class="nx-stat-card__value" id="key-count">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3>闭环三流程</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-flex nx-gap-4 nx-flex-wrap">
+                                <div class="nx-flex-1 nx-min-w-[200px] nx-p-6 nx-bg-elevated nx-rounded-xl nx-border nx-border-[var(--nx-border)]">
+                                    <div class="nx-flex nx-items-center nx-gap-4 nx-mb-4">
+                                        <div class="nx-w-11 nx-h-11 nx-bg-primary nx-rounded-lg nx-flex nx-items-center nx-justify-center nx-text-white nx-font-bold">1</div>
+                                        <h4 class="nx-font-semibold">接收场景</h4>
+                                    </div>
+                                    <p class="nx-text-sm nx-text-secondary nx-mb-4">接收管理员分发的场景，查看场景详情</p>
+                                    <a href="/console/pages/my-scenes.html" class="nx-btn nx-btn--primary nx-btn--sm">
+                                        <i class="ri-inbox-line"></i> 查看场景
+                                    </a>
+                                </div>
+                                <div class="nx-flex-1 nx-min-w-[200px] nx-p-6 nx-bg-elevated nx-rounded-xl nx-border nx-border-[var(--nx-border)]">
+                                    <div class="nx-flex nx-items-center nx-gap-4 nx-mb-4">
+                                        <div class="nx-w-11 nx-h-11 nx-bg-primary nx-rounded-lg nx-flex nx-items-center nx-justify-center nx-text-white nx-font-bold">2</div>
+                                        <h4 class="nx-font-semibold">激活配置</h4>
+                                    </div>
+                                    <p class="nx-text-sm nx-text-secondary nx-mb-4">配置场景参数，设置驱动条件，激活场景</p>
+                                    <a href="/console/pages/key-management.html" class="nx-btn nx-btn--primary nx-btn--sm">
+                                        <i class="ri-settings-4-line"></i> 配置密钥
+                                    </a>
+                                </div>
+                                <div class="nx-flex-1 nx-min-w-[200px] nx-p-6 nx-bg-elevated nx-rounded-xl nx-border nx-border-[var(--nx-border)]">
+                                    <div class="nx-flex nx-items-center nx-gap-4 nx-mb-4">
+                                        <div class="nx-w-11 nx-h-11 nx-bg-primary nx-rounded-lg nx-flex nx-items-center nx-justify-center nx-text-white nx-font-bold">3</div>
+                                        <h4 class="nx-font-semibold">启动执行</h4>
+                                    </div>
+                                    <p class="nx-text-sm nx-text-secondary nx-mb-4">指派协作者，启动场景执行</p>
+                                    <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="startExecution()">
+                                        <i class="ri-play-line"></i> 启动
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-4">
+                        <div class="nx-card__header">
+                            <h3>待激活场景</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div id="pending-scenes">
+                                <div class="nx-flex nx-items-center nx-justify-center nx-p-8">
+                                    <i class="ri-loader-4-line ri-spin" style="font-size: 24px;"></i>
+                                    <span class="nx-ml-2">加载中...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-4">
+                        <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                            <h3>运行中场景</h3>
+                            <a href="/console/pages/my-scenes.html" class="nx-btn nx-btn--ghost nx-btn--sm">查看全部</a>
+                        </div>
+                        <div class="nx-card__body">
+                            <div id="running-scenes">
+                                <div class="nx-flex nx-items-center nx-justify-center nx-p-8">
+                                    <i class="ri-loader-4-line ri-spin" style="font-size: 24px;"></i>
+                                    <span class="nx-ml-2">加载中...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-4">
+                        <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                            <h3>密钥配置</h3>
+                            <a href="/console/pages/key-management.html" class="nx-btn nx-btn--ghost nx-btn--sm">管理密钥</a>
+                        </div>
+                        <div class="nx-card__body">
+                            <div id="key-list">
+                                <div class="nx-flex nx-items-center nx-justify-center nx-p-8">
+                                    <i class="ri-loader-4-line ri-spin" style="font-size: 24px;"></i>
+                                    <span class="nx-ml-2">加载中...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="nx-modal" id="start-modal">
+        <div class="nx-modal__overlay" onclick="closeStartModal()"></div>
+        <div class="nx-modal__content" style="max-width: 600px;">
+            <div class="nx-modal__header">
+                <h3>启动执行</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeStartModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-form-label">选择场景</label>
+                    <select class="nx-select" id="scene-select" onchange="onSceneSelect()">
+                        <option value="">请选择要启动的场景</option>
+                    </select>
+                </div>
+                <div id="scene-info" style="display: none;">
+                    <div class="nx-p-4 nx-bg-elevated nx-rounded-lg nx-mb-4">
+                        <h4 class="nx-font-medium nx-mb-2" id="selected-scene-name"></h4>
+                        <p class="nx-text-sm nx-text-secondary" id="selected-scene-desc"></p>
+                        <div class="nx-flex nx-gap-4 nx-mt-2">
+                            <span class="nx-text-sm"><i class="ri-user-line"></i> 成员: <span id="selected-scene-members">0</span></span>
+                            <span class="nx-text-sm"><i class="ri-puzzle-line"></i> 能力: <span id="selected-scene-caps">0</span></span>
+                        </div>
+                    </div>
+                    <div class="nx-form-group nx-mb-4">
+                        <label class="nx-form-label">指派协作者</label>
+                        <div id="collaborator-list" class="nx-border nx-border-[var(--nx-border)] nx-rounded-lg nx-max-h-48 nx-overflow-y-auto">
+                            <div class="nx-flex nx-items-center nx-justify-center nx-p-4">
+                                <i class="ri-loader-4-line ri-spin"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeStartModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="confirmStart()" id="confirm-start-btn" disabled>
+                    <i class="ri-play-line"></i> 启动执行
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nx-modal" id="assign-modal">
+        <div class="nx-modal__overlay" onclick="closeAssignModal()"></div>
+        <div class="nx-modal__content" style="max-width: 500px;">
+            <div class="nx-modal__header">
+                <h3>指派协作者</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeAssignModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <input type="hidden" id="assign-scene-id">
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-form-label">场景名称</label>
+                    <div class="nx-input nx-bg-elevated" id="assign-scene-name" style="pointer-events: none;"></div>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-form-label">选择协作者</label>
+                    <select class="nx-select" id="assign-collaborator">
+                        <option value="">请选择</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-4">
+                    <label class="nx-form-label">角色</label>
+                    <select class="nx-select" id="assign-role">
+                        <option value="collaborator">协作者</option>
+                        <option value="leader">主导者</option>
+                        <option value="member">成员</option>
+                    </select>
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeAssignModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="confirmAssign()">确认指派</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script>
+        let currentUser = null;
+        let availableScenes = [];
+        let selectedScene = null;
+        let selectedCollaborators = [];
+        
+        async function checkLogin() {
+            try {
+                const response = await fetch('/api/v1/auth/session');
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    currentUser = result.data;
+                    if (currentUser.roleType !== 'leader') {
+                        window.location.href = '/console/pages/login.html';
+                        return;
+                    }
+                    document.getElementById('user-name').textContent = currentUser.name;
+                    document.getElementById('user-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
+                    await loadStats();
+                    await loadPendingScenes();
+                    await loadKeys();
+                    await loadRunningScenes();
+                } else {
+                    window.location.href = '/console/pages/login.html';
+                }
+            } catch (e) {
+                console.error('Session check failed:', e);
+                window.location.href = '/console/pages/login.html';
+            }
+        }
+        
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/v1/scene-groups/my/created');
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    const scenes = Array.isArray(result.data) ? result.data : (result.data.list || []);
+                    const pending = scenes.filter(s => s.status === 'pending' || s.status === 'PENDING').length;
+                    const running = scenes.filter(s => s.status === 'active' || s.status === 'running' || s.status === 'ACTIVE' || s.status === 'RUNNING').length;
+                    
+                    document.getElementById('pending-count').textContent = pending;
+                    document.getElementById('running-count').textContent = running;
+                }
+            } catch (e) {
+                console.error('Failed to load stats:', e);
+            }
+        }
+        
+        async function loadPendingScenes() {
+            const container = document.getElementById('pending-scenes');
+            
+            try {
+                const response = await fetch('/api/v1/scene-groups/my/created');
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    const scenes = Array.isArray(result.data) ? result.data : (result.data.list || []);
+                    const pending = scenes.filter(s => s.status === 'pending' || s.status === 'PENDING');
+                    
+                    if (pending.length === 0) {
+                        container.innerHTML = '<p class="nx-text-secondary nx-text-center nx-p-4">暂无待激活场景</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = pending.map(scene => `
+                        <div class="nx-flex nx-items-center nx-justify-between nx-p-4 nx-border-b nx-border-[var(--nx-border)]">
+                            <div>
+                                <h4 class="nx-font-medium">${scene.name}</h4>
+                                <p class="nx-text-sm nx-text-secondary">${scene.description || '暂无描述'}</p>
+                            </div>
+                            <div class="nx-flex nx-items-center nx-gap-2">
+                                <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="activateScene('${scene.sceneGroupId || scene.id}')">激活</button>
+                                <a href="/console/pages/scene-group-detail.html?id=${scene.sceneGroupId || scene.id}" class="nx-btn nx-btn--secondary nx-btn--sm">详情</a>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error('Failed to load pending scenes:', e);
+                container.innerHTML = '<p class="nx-text-secondary nx-text-center nx-p-4">加载失败</p>';
+            }
+        }
+        
+        async function loadRunningScenes() {
+            const container = document.getElementById('running-scenes');
+            
+            try {
+                const response = await fetch('/api/v1/scene-groups/my/created');
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    const scenes = Array.isArray(result.data) ? result.data : (result.data.list || []);
+                    const running = scenes.filter(s => s.status === 'active' || s.status === 'running' || s.status === 'ACTIVE' || s.status === 'RUNNING');
+                    
+                    if (running.length === 0) {
+                        container.innerHTML = '<p class="nx-text-secondary nx-text-center nx-p-4">暂无运行中场景</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = running.map(scene => `
+                        <div class="nx-flex nx-items-center nx-justify-between nx-p-4 nx-border-b nx-border-[var(--nx-border)]">
+                            <div class="nx-flex nx-items-center nx-gap-3">
+                                <div class="nx-w-3 nx-h-3 nx-rounded-full nx-bg-success nx-animate-pulse"></div>
+                                <div>
+                                    <h4 class="nx-font-medium">${scene.name}</h4>
+                                    <p class="nx-text-sm nx-text-secondary">${scene.description || '暂无描述'}</p>
+                                </div>
+                            </div>
+                            <div class="nx-flex nx-items-center nx-gap-2">
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="showAssignModal('${scene.sceneGroupId || scene.id}', '${scene.name}')">
+                                    <i class="ri-user-add-line"></i> 指派
+                                </button>
+                                <button class="nx-btn nx-btn--danger nx-btn--sm" onclick="stopScene('${scene.sceneGroupId || scene.id}')">
+                                    <i class="ri-stop-line"></i> 停止
+                                </button>
+                                <a href="/console/pages/scene-group-detail.html?id=${scene.sceneGroupId || scene.id}" class="nx-btn nx-btn--secondary nx-btn--sm">详情</a>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error('Failed to load running scenes:', e);
+                container.innerHTML = '<p class="nx-text-secondary nx-text-center nx-p-4">加载失败</p>';
+            }
+        }
+        
+        async function loadKeys() {
+            const container = document.getElementById('key-list');
+            const userId = currentUser ? currentUser.name : 'U';
+            
+            try {
+                const response = await fetch('/api/v1/installs/pending-activations?userId=' + encodeURIComponent(userId));
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    const activations = Array.isArray(result.data) ? result.data : [];
+                    document.getElementById('key-count').textContent = activations.length;
+                    
+                    if (activations.length === 0) {
+                        container.innerHTML = '<p class="nx-text-secondary nx-text-center nx-p-4">暂无待配置密钥</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = activations.map(act => `
+                        <div class="nx-flex nx-items-center nx-justify-between nx-p-4 nx-border-b nx-border-[var(--nx-border)]">
+                            <div>
+                                <h4 class="nx-font-medium">${act.sceneName || act.installId}</h4>
+                                <p class="nx-text-sm nx-text-secondary">需要配置驱动条件密钥</p>
+                            </div>
+                            <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="configKey('${act.installId}')">配置</button>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error('Failed to load keys:', e);
+                container.innerHTML = '<p class="nx-text-secondary nx-text-center nx-p-4">加载失败</p>';
+            }
+        }
+        
+        async function activateScene(sceneId) {
+            try {
+                const response = await fetch(`/api/v1/scene-groups/${sceneId}/activate`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert('场景激活成功');
+                    loadStats();
+                    loadPendingScenes();
+                    loadRunningScenes();
+                } else {
+                    alert('激活失败: ' + (result.message || '未知错误'));
+                }
+            } catch (e) {
+                alert('激活失败: ' + e.message);
+            }
+        }
+        
+        async function stopScene(sceneId) {
+            if (!confirm('确定要停止该场景吗？')) return;
+            
+            try {
+                const response = await fetch(`/api/v1/scene-groups/${sceneId}/workflow/stop`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert('场景已停止');
+                    loadStats();
+                    loadPendingScenes();
+                    loadRunningScenes();
+                } else {
+                    alert('停止失败: ' + (result.message || '未知错误'));
+                }
+            } catch (e) {
+                alert('停止失败: ' + e.message);
+            }
+        }
+        
+        function configKey(installId) {
+            window.location.href = `/console/pages/key-management.html?installId=${installId}`;
+        }
+        
+        async function startExecution() {
+            const modal = document.getElementById('start-modal');
+            const select = document.getElementById('scene-select');
+            
+            select.innerHTML = '<option value="">加载中...</option>';
+            modal.classList.add('nx-modal--open');
+            
+            try {
+                const response = await fetch('/api/v1/scene-groups/my/created');
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    const scenes = Array.isArray(result.data) ? result.data : (result.data.list || []);
+                    availableScenes = scenes.filter(s => 
+                        s.status === 'pending' || s.status === 'PENDING' || 
+                        s.status === 'active' || s.status === 'ACTIVE'
+                    );
+                    
+                    if (availableScenes.length === 0) {
+                        select.innerHTML = '<option value="">暂无可启动的场景</option>';
+                        return;
+                    }
+                    
+                    select.innerHTML = '<option value="">请选择要启动的场景</option>' + 
+                        availableScenes.map(s => `<option value="${s.sceneGroupId || s.id}">${s.name}</option>`).join('');
+                }
+            } catch (e) {
+                console.error('Failed to load scenes:', e);
+                select.innerHTML = '<option value="">加载失败</option>';
+            }
+        }
+        
+        async function onSceneSelect() {
+            const sceneId = document.getElementById('scene-select').value;
+            const sceneInfo = document.getElementById('scene-info');
+            const confirmBtn = document.getElementById('confirm-start-btn');
+            
+            if (!sceneId) {
+                sceneInfo.style.display = 'none';
+                confirmBtn.disabled = true;
+                selectedScene = null;
+                return;
+            }
+            
+            selectedScene = availableScenes.find(s => (s.sceneGroupId || s.id) === sceneId);
+            
+            if (selectedScene) {
+                document.getElementById('selected-scene-name').textContent = selectedScene.name;
+                document.getElementById('selected-scene-desc').textContent = selectedScene.description || '暂无描述';
+                document.getElementById('selected-scene-members').textContent = selectedScene.memberCount || 0;
+                document.getElementById('selected-scene-caps').textContent = selectedScene.capabilityCount || 0;
+                sceneInfo.style.display = 'block';
+                confirmBtn.disabled = false;
+                
+                await loadCollaborators(sceneId);
+            }
+        }
+        
+        async function loadCollaborators(sceneId) {
+            const container = document.getElementById('collaborator-list');
+            container.innerHTML = '<div class="nx-flex nx-items-center nx-justify-center nx-p-4"><i class="ri-loader-4-line ri-spin"></i></div>';
+            
+            try {
+                const response = await fetch(`/api/v1/scene-groups/${sceneId}/participants`);
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    const participants = Array.isArray(result.data) ? result.data : (result.data.list || []);
+                    selectedCollaborators = participants;
+                    
+                    if (participants.length === 0) {
+                        container.innerHTML = '<p class="nx-text-secondary nx-text-center nx-p-4">暂无参与者，请先添加协作者</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = participants.map(p => `
+                        <div class="nx-flex nx-items-center nx-justify-between nx-p-3 nx-border-b nx-border-[var(--nx-border)]">
+                            <div class="nx-flex nx-items-center nx-gap-2">
+                                <div class="nx-w-8 nx-h-8 nx-rounded-full nx-bg-primary nx-flex nx-items-center nx-justify-center nx-text-white nx-text-sm">
+                                    ${(p.participantId || p.name || 'U').charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div class="nx-font-medium">${p.participantId || p.name}</div>
+                                    <div class="nx-text-xs nx-text-secondary">${p.role || 'member'}</div>
+                                </div>
+                            </div>
+                            <span class="nx-badge ${p.status === 'ACTIVE' || p.status === 'active' ? 'nx-badge--success' : 'nx-badge--secondary'}">${p.status || 'ACTIVE'}</span>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error('Failed to load collaborators:', e);
+                container.innerHTML = '<p class="nx-text-secondary nx-text-center nx-p-4">加载失败</p>';
+            }
+        }
+        
+        async function confirmStart() {
+            if (!selectedScene) return;
+            
+            const sceneId = selectedScene.sceneGroupId || selectedScene.id;
+            const confirmBtn = document.getElementById('confirm-start-btn');
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> 启动中...';
+            
+            try {
+                const response = await fetch(`/api/v1/scene-groups/${sceneId}/workflow/start`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert('场景启动成功');
+                    closeStartModal();
+                    loadStats();
+                    loadPendingScenes();
+                    loadRunningScenes();
+                } else {
+                    alert('启动失败: ' + (result.message || '未知错误'));
+                }
+            } catch (e) {
+                alert('启动失败: ' + e.message);
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="ri-play-line"></i> 启动执行';
+            }
+        }
+        
+        function closeStartModal() {
+            document.getElementById('start-modal').classList.remove('nx-modal--open');
+            document.getElementById('scene-info').style.display = 'none';
+            document.getElementById('confirm-start-btn').disabled = true;
+            selectedScene = null;
+        }
+        
+        async function showAssignModal(sceneId, sceneName) {
+            document.getElementById('assign-scene-id').value = sceneId;
+            document.getElementById('assign-scene-name').textContent = sceneName;
+            document.getElementById('assign-modal').classList.add('nx-modal--open');
+            
+            await loadAvailableCollaborators(sceneId);
+        }
+        
+        async function loadAvailableCollaborators(sceneId) {
+            const select = document.getElementById('assign-collaborator');
+            select.innerHTML = '<option value="">加载中...</option>';
+            
+            try {
+                const response = await fetch('/api/v1/users?role=collaborator');
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    const users = Array.isArray(result.data) ? result.data : (result.data.list || []);
+                    
+                    if (users.length === 0) {
+                        select.innerHTML = '<option value="">暂无可用协作者</option>';
+                        return;
+                    }
+                    
+                    select.innerHTML = '<option value="">请选择协作者</option>' + 
+                        users.map(u => `<option value="${u.id || u.userId}">${u.name || u.userId}</option>`).join('');
+                } else {
+                    select.innerHTML = '<option value="">暂无可用协作者</option>';
+                }
+            } catch (e) {
+                console.error('Failed to load collaborators:', e);
+                select.innerHTML = '<option value="">加载失败</option>';
+            }
+        }
+        
+        async function confirmAssign() {
+            const sceneId = document.getElementById('assign-scene-id').value;
+            const collaboratorId = document.getElementById('assign-collaborator').value;
+            const role = document.getElementById('assign-role').value;
+            
+            if (!collaboratorId) {
+                alert('请选择协作者');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/v1/scene-groups/${sceneId}/participants`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        participantId: collaboratorId,
+                        role: role,
+                        participantType: 'USER'
+                    })
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert('指派成功');
+                    closeAssignModal();
+                    loadRunningScenes();
+                } else {
+                    alert('指派失败: ' + (result.message || '未知错误'));
+                }
+            } catch (e) {
+                alert('指派失败: ' + e.message);
+            }
+        }
+        
+        function closeAssignModal() {
+            document.getElementById('assign-modal').classList.remove('nx-modal--open');
+        }
+        
+        function handleLogout() {
+            fetch('/api/v1/auth/logout', { method: 'POST' }).catch(() => {});
+            localStorage.clear();
+            window.location.href = '/console/pages/login.html';
+        }
+        
+        document.addEventListener('DOMContentLoaded', checkLogin);
+    </script>
+</body>
+</html>

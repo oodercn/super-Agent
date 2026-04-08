@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能力地址空间 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/address-space.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <div class="address-space-page">
+                <header class="nx-page__header" style="border-bottom: none;">
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                            <i class="ri-menu-line"></i>
+                        </button>
+                        <div>
+                            <h2 class="page-title">
+                                <i class="ri-map-2-line"></i>
+                                能力地址空间
+                            </h2>
+                            <p class="page-subtitle">128个固定地址空间的可视化管理</p>
+                        </div>
+                    </div>
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                            <i class="ri-sun-line"></i>
+                        </button>
+                        <div class="nx-relative">
+                            <div class="nx-page__user-menu" id="user-menu">
+                                <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                                <span class="nx-page__user-name" id="user-name">加载中...</span>
+                                <i class="ri-arrow-down-s-line"></i>
+                            </div>
+                            <div class="nx-page__dropdown-menu" id="user-dropdown">
+                                <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                    <i class="ri-user-line"></i> 个人中心
+                                </div>
+                                <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                    <i class="ri-logout-box-line"></i> 退出登录
+                                </div>
+                            </div>
+                        </div>
+                        <button class="nx-btn nx-btn--secondary" onclick="refreshStatus()">
+                            <i class="ri-refresh-line"></i> 刷新状态
+                        </button>
+                    </div>
+                </header>
+
+                <div class="address-space-container">
+                    <div class="map-section">
+                        <div class="section-header">
+                            <h2><i class="ri-grid-line"></i> 地址空间地图</h2>
+                            <div class="map-controls">
+                                <div class="filter-group">
+                                    <label>筛选分类:</label>
+                                    <select id="categoryFilter" class="form-select" onchange="filterByCategory()">
+                                        <option value="all">全部分类</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <label>状态:</label>
+                                    <select id="statusFilter" class="form-select" onchange="filterByStatus()">
+                                        <option value="all">全部状态</option>
+                                        <option value="active">已注册</option>
+                                        <option value="inactive">空闲</option>
+                                        <option value="pending">待分配</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="address-map" id="addressMap">
+                            <div class="map-loading">
+                                <i class="ri-loader-4-line"></i>
+                                <span>加载中...</span>
+                            </div>
+                        </div>
+
+                        <div class="map-legend">
+                            <div class="legend-title">图例</div>
+                            <div class="legend-items" id="legendItems"></div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <div class="category-tree-section">
+                            <div class="section-header">
+                                <h3><i class="ri-folder-tree-line"></i> 分类导航</h3>
+                            </div>
+                            <div class="category-tree" id="categoryTree"></div>
+                        </div>
+
+                        <div class="stats-section">
+                            <div class="section-header">
+                                <h3><i class="ri-pie-chart-line"></i> 统计概览</h3>
+                            </div>
+                            <div class="stats-grid" id="statsGrid"></div>
+                        </div>
+
+                        <div class="quick-actions-section">
+                            <div class="section-header">
+                                <h3><i class="ri-flashlight-line"></i> 快捷操作</h3>
+                            </div>
+                            <div class="quick-actions">
+                                <button class="action-btn" onclick="goToCategory('llm')">
+                                    <i class="ri-brain-line"></i>
+                                    <span>LLM配置</span>
+                                </button>
+                                <button class="action-btn" onclick="goToCategory('vfs')">
+                                    <i class="ri-database-2-line"></i>
+                                    <span>存储配置</span>
+                                </button>
+                                <button class="action-btn" onclick="goToCategory('org')">
+                                    <i class="ri-team-line"></i>
+                                    <span>组织配置</span>
+                                </button>
+                                <button class="action-btn" onclick="goToCategory('knowledge')">
+                                    <i class="ri-book-line"></i>
+                                    <span>知识库配置</span>
+                                </button>
+                                <button class="action-btn" onclick="goToCategory('msg')">
+                                    <i class="ri-message-3-line"></i>
+                                    <span>通讯配置</span>
+                                </button>
+                                <button class="action-btn" onclick="goToCategory('biz')">
+                                    <i class="ri-briefcase-line"></i>
+                                    <span>业务场景</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="addressDetailModal">
+        <div class="modal-content address-detail-modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">地址详情</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeModal()">关闭</button>
+                <button class="nx-btn nx-btn--primary" id="modalActionBtn">配置</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/common/category-service.js"></script>
+    <script src="/console/js/pages/address-space.js"></script>
+</body>
+</html>

@@ -1,0 +1,330 @@
+/**
+ * ooderNexus 树形组件样式
+ * 统一的树形结构样式规范
+ */
+
+/* 树形容器 */
+.tree {
+    font-size: 14px;
+    user-select: none;
+}
+
+.tree ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* 树节点 */
+.tree-node {
+    position: relative;
+}
+
+.tree-node-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: var(--ns-radius);
+    transition: all 0.2s ease;
+}
+
+.tree-node-content:hover {
+    background: var(--ns-bg-hover);
+}
+
+.tree-node.selected > .tree-node-content {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.tree-node.disabled > .tree-node-content {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 展开/折叠图标 */
+.tree-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    color: var(--ns-secondary);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.tree-toggle:hover {
+    color: var(--nx-primary);
+}
+
+.tree-toggle.expanded {
+    transform: rotate(90deg);
+}
+
+.tree-toggle.leaf {
+    visibility: hidden;
+}
+
+/* 节点图标 */
+.tree-node-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    color: var(--ns-secondary);
+    flex-shrink: 0;
+}
+
+.tree-node-icon.folder {
+    color: var(--ns-warning);
+}
+
+.tree-node-icon.file {
+    color: var(--nx-primary);
+}
+
+/* 节点标签 */
+.tree-node-label {
+    flex: 1;
+    color: var(--ns-dark);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tree-node-count {
+    font-size: 12px;
+    color: var(--ns-secondary);
+    background: var(--ns-input-bg);
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 8px;
+}
+
+/* 子节点容器 */
+.tree-children {
+    margin-left: 20px;
+    position: relative;
+}
+
+.tree-children::before {
+    content: '';
+    position: absolute;
+    left: -14px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--ns-border);
+}
+
+.tree-children.collapsed {
+    display: none;
+}
+
+/* 连接线 */
+.tree-line {
+    position: absolute;
+    left: -14px;
+    top: 16px;
+    width: 12px;
+    height: 1px;
+    background: var(--ns-border);
+}
+
+.tree-line::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -8px;
+    width: 1px;
+    height: 17px;
+    background: var(--ns-border);
+}
+
+/* 复选框树 */
+.tree-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.tree-checkbox input {
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    accent-color: var(--nx-primary);
+}
+
+/* 拖拽样式 */
+.tree-node.dragging > .tree-node-content {
+    opacity: 0.5;
+}
+
+.tree-node.drag-over > .tree-node-content {
+    background: rgba(59, 130, 246, 0.2);
+    border: 2px dashed var(--nx-primary);
+}
+
+/* 可编辑树 */
+.tree-node-editing .tree-node-label {
+    display: none;
+}
+
+.tree-node-input {
+    flex: 1;
+    padding: 4px 8px;
+    font-size: 14px;
+    color: var(--ns-dark);
+    background: var(--ns-input-bg);
+    border: 1px solid var(--nx-primary);
+    border-radius: 4px;
+    outline: none;
+}
+
+/* 树工具栏 */
+.tree-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    border-bottom: 1px solid var(--ns-border);
+    margin-bottom: 8px;
+}
+
+.tree-toolbar .btn {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* 树搜索 */
+.tree-search {
+    padding: 12px;
+    border-bottom: 1px solid var(--ns-border);
+}
+
+.tree-search .form-control {
+    padding-left: 36px;
+}
+
+.tree-search-icon {
+    position: absolute;
+    left: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ns-secondary);
+}
+
+/* 树空状态 */
+.tree-empty {
+    padding: 32px;
+    text-align: center;
+    color: var(--ns-secondary);
+}
+
+.tree-empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.tree-empty-text {
+    font-size: 14px;
+}
+
+/* 树加载状态 */
+.tree-loading {
+    padding: 32px;
+    text-align: center;
+}
+
+.tree-loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--ns-border);
+    border-top-color: var(--nx-primary);
+    border-radius: 50%;
+    animation: tree-spin 1s linear infinite;
+    margin: 0 auto 12px;
+}
+
+@keyframes tree-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 树上下文菜单 */
+.tree-context-menu {
+    position: absolute;
+    background: var(--ns-card-bg);
+    border: 1px solid var(--ns-border);
+    border-radius: var(--ns-radius);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 160px;
+    padding: 4px 0;
+}
+
+.tree-context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    color: var(--ns-dark);
+    font-size: 14px;
+}
+
+.tree-context-menu-item:hover {
+    background: var(--ns-bg-hover);
+}
+
+.tree-context-menu-item i {
+    color: var(--ns-secondary);
+}
+
+.tree-context-menu-divider {
+    height: 1px;
+    background: var(--ns-border);
+    margin: 4px 0;
+}
+
+/* 树尺寸 */
+.tree-sm .tree-node-content {
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+.tree-sm .tree-toggle,
+.tree-sm .tree-node-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.tree-lg .tree-node-content {
+    padding: 12px 16px;
+    font-size: 15px;
+}
+
+.tree-lg .tree-toggle,
+.tree-lg .tree-node-icon {
+    width: 24px;
+    height: 24px;
+}
+
+/* 树筛选高亮 */
+.tree-node.matched > .tree-node-content .tree-node-label {
+    background: rgba(245, 158, 11, 0.3);
+    border-radius: 2px;
+}
+
+.tree-node.filter-hidden {
+    display: none;
+}

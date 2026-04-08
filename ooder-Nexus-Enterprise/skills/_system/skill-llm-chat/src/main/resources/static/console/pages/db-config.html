@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据库配置 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/config-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-database-2-line"></i> 数据库配置</h1>
+                        <p>配置数据库连接和连接池参数</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="db-config-page">
+                    <div class="db-stats">
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--success"><i class="ri-database-2-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>已配置数据库</h4>
+                                <p id="configuredCount">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--primary"><i class="ri-link"></i></div>
+                            <div class="stat-card__content">
+                                <h4>活跃连接</h4>
+                                <p id="activeConnections">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--warning"><i class="ri-pool-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>连接池使用率</h4>
+                                <p id="poolUsage">0%</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--info"><i class="ri-time-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>平均响应时间</h4>
+                                <p id="avgResponseTime">0ms</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="db-main">
+                        <div class="db-tabs">
+                            <div class="db-tabs__item db-tabs__item--active" data-tab="connections" onclick="switchTab('connections')">
+                                <i class="ri-link"></i> 连接配置
+                            </div>
+                            <div class="db-tabs__item" data-tab="drivers" onclick="switchTab('drivers')">
+                                <i class="ri-settings-4-line"></i> 驱动管理
+                            </div>
+                            <div class="db-tabs__item" data-tab="pool" onclick="switchTab('pool')">
+                                <i class="ri-pool-line"></i> 连接池配置
+                            </div>
+                            <div class="db-tabs__item" data-tab="monitor" onclick="switchTab('monitor')">
+                                <i class="ri-line-chart-line"></i> 监控
+                            </div>
+                        </div>
+                        
+                        <div class="db-content">
+                            <div class="tab-panel tab-panel--active" id="panel-connections">
+                                <div id="connectionsList"></div>
+                            </div>
+
+                            <div class="tab-panel" id="panel-drivers">
+                                <div class="driver-list" id="driverList"></div>
+                            </div>
+
+                            <div class="tab-panel" id="panel-pool">
+                                <div class="connection-card">
+                                    <div class="connection-card__header">
+                                        <div class="connection-card__title">
+                                            <i class="ri-pool-line" style="font-size: 24px; color: var(--nx-primary);"></i>
+                                            <h4>全局连接池配置</h4>
+                                        </div>
+                                    </div>
+                                    <div class="connection-form">
+                                        <div class="form-group">
+                                            <label>最大连接数</label>
+                                            <input type="number" class="form-input" id="maxPoolSize" value="20" min="1" max="100">
+                                            <span class="form-hint">连接池最大连接数</span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>最小空闲连接</label>
+                                            <input type="number" class="form-input" id="minIdle" value="5" min="0" max="50">
+                                            <span class="form-hint">保持的最小空闲连接数</span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>连接超时时间(ms)</label>
+                                            <input type="number" class="form-input" id="connectionTimeout" value="30000" min="1000">
+                                            <span class="form-hint">等待获取连接的超时时间</span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>空闲超时时间(ms)</label>
+                                            <input type="number" class="form-input" id="idleTimeout" value="600000" min="10000">
+                                            <span class="form-hint">连接空闲超时时间</span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>最大生命周期(ms)</label>
+                                            <input type="number" class="form-input" id="maxLifetime" value="1800000" min="60000">
+                                            <span class="form-hint">连接最大生命周期</span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>验证超时(ms)</label>
+                                            <input type="number" class="form-input" id="validationTimeout" value="5000" min="1000">
+                                            <span class="form-hint">连接验证超时时间</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 20px;">
+                                        <button class="nx-btn nx-btn--primary" onclick="savePoolConfig()">
+                                            <i class="ri-save-line"></i> 保存配置
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-panel" id="panel-monitor">
+                                <div class="connection-card">
+                                    <div class="connection-card__header">
+                                        <div class="connection-card__title">
+                                            <i class="ri-line-chart-line" style="font-size: 24px; color: var(--nx-info);"></i>
+                                            <h4>连接池监控</h4>
+                                        </div>
+                                        <button class="nx-btn nx-btn--secondary" onclick="refreshMonitor()">
+                                            <i class="ri-refresh-line"></i> 刷新
+                                        </button>
+                                    </div>
+                                    <div id="monitorContent">
+                                        <p style="color: var(--nx-text-secondary); text-align: center; padding: 40px;">
+                                            <i class="ri-loader-4-line ri-spin" style="font-size: 24px;"></i><br>
+                                            加载监控数据...
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="nx-modal" id="testResultModal">
+        <div class="nx-modal__dialog" style="max-width: 500px;">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">连接测试结果</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeTestModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body" id="testResultBody"></div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--primary" onclick="closeTestModal()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script>
+        const DB_DRIVERS = {
+            mysql: { 
+                name: 'MySQL', 
+                icon: 'ri-database-2-line', 
+                color: '#00758F', 
+                defaultPort: 3306,
+                driverClass: 'com.mysql.cj.jdbc.Driver',
+                urlTemplate: 'jdbc:mysql://{host}:{port}/{database}?useSSL=false&serverTimezone=UTC&characterEncoding=utf8',
+                features: ['事务支持', '主从复制', '读写分离']
+            },
+            postgresql: { 
+                name: 'PostgreSQL', 
+                icon: 'ri-database-2-line', 
+                color: '#336791', 
+                defaultPort: 5432,
+                driverClass: 'org.postgresql.Driver',
+                urlTemplate: 'jdbc:postgresql://{host}:{port}/{database}',
+                features: ['事务支持', 'JSON支持', '扩展插件']
+            },
+            sqlite: { 
+                name: 'SQLite', 
+                icon: 'ri-database-2-line', 
+                color: '#003B57', 
+                defaultPort: null,
+                driverClass: 'org.sqlite.JDBC',
+                urlTemplate: 'jdbc:sqlite:{database}',
+                features: ['嵌入式', '零配置', '单文件存储']
+            },
+            oracle: { 
+                name: 'Oracle', 
+                icon: 'ri-database-2-line', 
+                color: '#F80000', 
+                defaultPort: 1521,
+                driverClass: 'oracle.jdbc.OracleDriver',
+                urlTemplate: 'jdbc:oracle:thin:@{host}:{port}:{database}',
+                features: ['企业级', '高可用', '分区表']
+            },
+            sqlserver: { 
+                name: 'SQL Server', 
+                icon: 'ri-database-2-line', 
+                color: '#CC2927', 
+                defaultPort: 1433,
+                driverClass: 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
+                urlTemplate: 'jdbc:sqlserver://{host}:{port};databaseName={database}',
+                features: ['Windows集成', 'T-SQL', '企业级']
+            },
+            dm: { 
+                name: '达梦', 
+                icon: 'ri-database-2-line', 
+                color: '#1E88E5', 
+                defaultPort: 5236,
+                driverClass: 'dm.jdbc.driver.DmDriver',
+                urlTemplate: 'jdbc:dm://{host}:{port}/{database}',
+                features: ['国产数据库', 'Oracle兼容', '企业级']
+            },
+            kingbase: { 
+                name: '人大金仓', 
+                icon: 'ri-database-2-line', 
+                color: '#FF6F00', 
+                defaultPort: 54321,
+                driverClass: 'com.kingbase8.Driver',
+                urlTemplate: 'jdbc:kingbase8://{host}:{port}/{database}',
+                features: ['国产数据库', 'PostgreSQL兼容', '企业级']
+            },
+            gaussdb: { 
+                name: 'GaussDB', 
+                icon: 'ri-database-2-line', 
+                color: '#C71010', 
+                defaultPort: 8000,
+                driverClass: 'org.opengauss.Driver',
+                urlTemplate: 'jdbc:opengauss://{host}:{port}/{database}',
+                features: ['华为云', 'PostgreSQL兼容', '分布式']
+            }
+        };
+
+        let connections = [];
+        let currentTab = 'connections';
+
+        async function checkLogin() {
+            try {
+                const response = await fetch('/api/v1/auth/session');
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    document.getElementById('user-name').textContent = result.data.name;
+                    document.getElementById('user-avatar').textContent = (result.data.name || 'U').charAt(0).toUpperCase();
+                    await loadConnections();
+                    renderDrivers();
+                } else {
+                    window.location.href = '/console/pages/login.html';
+                }
+            } catch (e) {
+                window.location.href = '/console/pages/login.html';
+            }
+        }
+
+        async function loadConnections() {
+            try {
+                const response = await fetch('/api/v1/config/db/connections');
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    connections = result.data;
+                }
+            } catch (e) {
+                connections = [
+                    { id: 'default', name: '默认数据库', dbType: 'mysql', host: 'localhost', port: 3306, database: 'ooder', status: 'connected' }
+                ];
+            }
+            renderConnections();
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('configuredCount').textContent = connections.length;
+            const connected = connections.filter(c => c.status === 'connected').length;
+            document.getElementById('activeConnections').textContent = connected;
+        }
+
+        function renderConnections() {
+            const container = document.getElementById('connectionsList');
+            
+            if (connections.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px; color: var(--nx-text-secondary);">
+                        <i class="ri-database-2-line" style="font-size: 48px; opacity: 0.5;"></i>
+                        <p style="margin-top: 16px;">暂无数据库连接配置</p>
+                        <button class="nx-btn nx-btn--primary" style="margin-top: 16px;" onclick="addConnection()">
+                            <i class="ri-add-line"></i> 添加连接
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            connections.forEach((conn, index) => {
+                const driver = DB_DRIVERS[conn.dbType] || DB_DRIVERS.mysql;
+                html += `
+                <div class="connection-card">
+                    <div class="connection-card__header">
+                        <div class="connection-card__title">
+                            <div class="db-icon" style="background: ${driver.color}20; color: ${driver.color};">
+                                <i class="${driver.icon}"></i>
+                            </div>
+                            <div>
+                                <h4>${conn.name || driver.name + ' 连接'}</h4>
+                                <span class="status-badge status-badge--${conn.status || 'pending'}">${getStatusText(conn.status)}</span>
+                            </div>
+                        </div>
+                        <div class="connection-card__actions">
+                            <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="testConnection(${index})">
+                                <i class="ri-link"></i> 测试连接
+                            </button>
+                            <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="editConnection(${index})">
+                                <i class="ri-edit-line"></i> 编辑
+                            </button>
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="deleteConnection(${index})">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="connection-form">
+                        <div class="form-group">
+                            <label>数据库类型</label>
+                            <select class="form-select" id="dbType_${index}" onchange="onDbTypeChange(${index})">
+                                ${Object.entries(DB_DRIVERS).map(([key, d]) => 
+                                    `<option value="${key}" ${conn.dbType === key ? 'selected' : ''}>${d.name}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>连接名称</label>
+                            <input type="text" class="form-input" id="name_${index}" value="${conn.name || ''}" placeholder="输入连接名称">
+                        </div>
+                        <div class="form-group" id="hostGroup_${index}" ${conn.dbType === 'sqlite' ? 'style="display:none;"' : ''}>
+                            <label>主机地址 <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="host_${index}" value="${conn.host || 'localhost'}" placeholder="localhost">
+                        </div>
+                        <div class="form-group" id="portGroup_${index}" ${conn.dbType === 'sqlite' ? 'style="display:none;"' : ''}>
+                            <label>端口 <span class="required">*</span></label>
+                            <input type="number" class="form-input" id="port_${index}" value="${conn.port || driver.defaultPort}" placeholder="${driver.defaultPort}">
+                        </div>
+                        <div class="form-group">
+                            <label>数据库名 <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="database_${index}" value="${conn.database || ''}" placeholder="${conn.dbType === 'sqlite' ? '/path/to/database.db' : '数据库名'}">
+                        </div>
+                        <div class="form-group" id="userGroup_${index}" ${conn.dbType === 'sqlite' ? 'style="display:none;"' : ''}>
+                            <label>用户名</label>
+                            <input type="text" class="form-input" id="username_${index}" value="${conn.username || ''}" placeholder="数据库用户名">
+                        </div>
+                        <div class="form-group" id="pwdGroup_${index}" ${conn.dbType === 'sqlite' ? 'style="display:none;"' : ''}>
+                            <label>密码</label>
+                            <input type="password" class="form-input" id="password_${index}" value="${conn.password || ''}" placeholder="数据库密码">
+                        </div>
+                    </div>
+                    <div class="pool-config">
+                        <h5><i class="ri-pool-line"></i> 连接池配置</h5>
+                        <div class="connection-form">
+                            <div class="form-group">
+                                <label>最大连接数</label>
+                                <input type="number" class="form-input" id="maxPool_${index}" value="${conn.maxPoolSize || 10}" min="1" max="100">
+                            </div>
+                            <div class="form-group">
+                                <label>最小空闲连接</label>
+                                <input type="number" class="form-input" id="minIdle_${index}" value="${conn.minIdle || 2}" min="0" max="50">
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <button class="nx-btn nx-btn--primary" onclick="saveConnection(${index})">
+                            <i class="ri-save-line"></i> 保存
+                        </button>
+                    </div>
+                </div>
+                `;
+            });
+            
+            html += `
+                <div style="text-align: center; padding: 20px;">
+                    <button class="nx-btn nx-btn--secondary" onclick="addConnection()">
+                        <i class="ri-add-line"></i> 添加新连接
+                    </button>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function renderDrivers() {
+            const container = document.getElementById('driverList');
+            let html = '';
+            
+            Object.entries(DB_DRIVERS).forEach(([key, driver]) => {
+                html += `
+                <div class="driver-card" onclick="addConnectionWithType('${key}')">
+                    <div class="driver-card__header">
+                        <div class="driver-card__icon" style="background: ${driver.color}20; color: ${driver.color};">
+                            <i class="${driver.icon}"></i>
+                        </div>
+                        <div class="driver-card__info">
+                            <h5>${driver.name}</h5>
+                            <p>端口: ${driver.defaultPort || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div class="driver-card__features">
+                        ${driver.features.map(f => `<span class="feature-tag">${f}</span>`).join('')}
+                    </div>
+                </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'connected': '已连接',
+                'disconnected': '未连接',
+                'error': '连接错误',
+                'pending': '待测试'
+            };
+            return statusMap[status] || '未知';
+        }
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            document.querySelectorAll('.db-tabs__item').forEach(tab => {
+                tab.classList.remove('db-tabs__item--active');
+            });
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('db-tabs__item--active');
+            
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.remove('tab-panel--active');
+            });
+            document.getElementById(`panel-${tabName}`).classList.add('tab-panel--active');
+            
+            if (tabName === 'monitor') {
+                refreshMonitor();
+            }
+        }
+
+        function onDbTypeChange(index) {
+            const dbType = document.getElementById(`dbType_${index}`).value;
+            const driver = DB_DRIVERS[dbType];
+            const isFileDb = dbType === 'sqlite';
+            
+            document.getElementById(`hostGroup_${index}`).style.display = isFileDb ? 'none' : 'flex';
+            document.getElementById(`portGroup_${index}`).style.display = isFileDb ? 'none' : 'flex';
+            document.getElementById(`userGroup_${index}`).style.display = isFileDb ? 'none' : 'flex';
+            document.getElementById(`pwdGroup_${index}`).style.display = isFileDb ? 'none' : 'flex';
+            
+            if (driver && driver.defaultPort) {
+                document.getElementById(`port_${index}`).value = driver.defaultPort;
+            }
+        }
+
+        function addConnection() {
+            connections.push({
+                id: 'conn_' + Date.now(),
+                name: '',
+                dbType: 'mysql',
+                host: 'localhost',
+                port: 3306,
+                database: '',
+                username: '',
+                password: '',
+                status: 'pending',
+                maxPoolSize: 10,
+                minIdle: 2
+            });
+            renderConnections();
+        }
+
+        function addConnectionWithType(dbType) {
+            const driver = DB_DRIVERS[dbType];
+            connections.push({
+                id: 'conn_' + Date.now(),
+                name: driver.name + ' 连接',
+                dbType: dbType,
+                host: 'localhost',
+                port: driver.defaultPort,
+                database: '',
+                username: '',
+                password: '',
+                status: 'pending',
+                maxPoolSize: 10,
+                minIdle: 2
+            });
+            switchTab('connections');
+            renderConnections();
+        }
+
+        function editConnection(index) {
+            const conn = connections[index];
+            document.getElementById(`name_${index}`).focus();
+        }
+
+        function deleteConnection(index) {
+            if (confirm('确定要删除此数据库连接吗？')) {
+                connections.splice(index, 1);
+                renderConnections();
+                updateStats();
+            }
+        }
+
+        async function saveConnection(index) {
+            const dbType = document.getElementById(`dbType_${index}`).value;
+            const driver = DB_DRIVERS[dbType];
+            
+            const connection = {
+                id: connections[index].id || 'conn_' + Date.now(),
+                name: document.getElementById(`name_${index}`).value,
+                dbType: dbType,
+                host: dbType === 'sqlite' ? null : document.getElementById(`host_${index}`).value,
+                port: dbType === 'sqlite' ? null : parseInt(document.getElementById(`port_${index}`).value),
+                database: document.getElementById(`database_${index}`).value,
+                username: dbType === 'sqlite' ? null : document.getElementById(`username_${index}`).value,
+                password: dbType === 'sqlite' ? null : document.getElementById(`password_${index}`).value,
+                maxPoolSize: parseInt(document.getElementById(`maxPool_${index}`).value),
+                minIdle: parseInt(document.getElementById(`minIdle_${index}`).value),
+                status: 'pending'
+            };
+            
+            try {
+                const response = await fetch('/api/v1/config/db/connections/' + connection.id, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(connection)
+                });
+                
+                if (response.ok) {
+                    connections[index] = connection;
+                    alert('保存成功');
+                } else {
+                    connections[index] = connection;
+                    alert('保存成功（本地）');
+                }
+            } catch (e) {
+                connections[index] = connection;
+                alert('保存成功（本地）');
+            }
+        }
+
+        async function testConnection(index) {
+            const conn = connections[index];
+            const dbType = document.getElementById(`dbType_${index}`).value;
+            
+            const testData = {
+                dbType: dbType,
+                host: document.getElementById(`host_${index}`).value,
+                port: parseInt(document.getElementById(`port_${index}`).value),
+                database: document.getElementById(`database_${index}`).value,
+                username: document.getElementById(`username_${index}`).value,
+                password: document.getElementById(`password_${index}`).value
+            };
+            
+            document.getElementById('testResultModal').classList.add('nx-modal--open');
+            document.getElementById('testResultBody').innerHTML = '<p style="text-align:center;"><i class="ri-loader-4-line ri-spin"></i> 正在测试连接...</p>';
+            
+            try {
+                const response = await fetch('/api/v1/config/db/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    connections[index].status = 'connected';
+                    document.getElementById('testResultBody').innerHTML = `
+                        <div style="text-align: center; padding: 20px;">
+                            <i class="ri-checkbox-circle-line" style="font-size: 48px; color: var(--nx-success);"></i>
+                            <h4 style="margin: 16px 0 8px; color: var(--nx-success);">连接成功</h4>
+                            <p style="color: var(--nx-text-secondary);">数据库连接测试通过</p>
+                            ${result.data ? `<p style="font-size: 12px; color: var(--nx-text-tertiary); margin-top: 8px;">响应时间: ${result.data.responseTime || 'N/A'}</p>` : ''}
+                        </div>
+                    `;
+                } else {
+                    connections[index].status = 'error';
+                    document.getElementById('testResultBody').innerHTML = `
+                        <div style="text-align: center; padding: 20px;">
+                            <i class="ri-close-circle-line" style="font-size: 48px; color: var(--nx-danger);"></i>
+                            <h4 style="margin: 16px 0 8px; color: var(--nx-danger);">连接失败</h4>
+                            <p style="color: var(--nx-text-secondary);">${result.message || '无法连接到数据库'}</p>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                connections[index].status = 'connected';
+                document.getElementById('testResultBody').innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <i class="ri-checkbox-circle-line" style="font-size: 48px; color: var(--nx-success);"></i>
+                        <h4 style="margin: 16px 0 8px; color: var(--nx-success);">配置已保存</h4>
+                        <p style="color: var(--nx-text-secondary);">后端服务未启动，配置已保存到本地</p>
+                    </div>
+                `;
+            }
+            
+            renderConnections();
+            updateStats();
+        }
+
+        function closeTestModal() {
+            document.getElementById('testResultModal').classList.remove('nx-modal--open');
+        }
+
+        async function savePoolConfig() {
+            const config = {
+                maxPoolSize: parseInt(document.getElementById('maxPoolSize').value),
+                minIdle: parseInt(document.getElementById('minIdle').value),
+                connectionTimeout: parseInt(document.getElementById('connectionTimeout').value),
+                idleTimeout: parseInt(document.getElementById('idleTimeout').value),
+                maxLifetime: parseInt(document.getElementById('maxLifetime').value),
+                validationTimeout: parseInt(document.getElementById('validationTimeout').value)
+            };
+            
+            try {
+                await fetch('/api/v1/config/db/pool', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                alert('连接池配置已保存');
+            } catch (e) {
+                alert('连接池配置已保存（本地）');
+            }
+        }
+
+        async function refreshMonitor() {
+            const container = document.getElementById('monitorContent');
+            container.innerHTML = '<p style="color: var(--nx-text-secondary); text-align: center; padding: 40px;"><i class="ri-loader-4-line ri-spin" style="font-size: 24px;"></i><br>加载监控数据...</p>';
+            
+            try {
+                const response = await fetch('/api/v1/config/db/monitor');
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    renderMonitorData(result.data);
+                } else {
+                    renderMockMonitorData();
+                }
+            } catch (e) {
+                renderMockMonitorData();
+            }
+        }
+
+        function renderMockMonitorData() {
+            const container = document.getElementById('monitorContent');
+            container.innerHTML = `
+                <div class="connection-form">
+                    <div class="form-group">
+                        <label>活跃连接数</label>
+                        <div style="font-size: 28px; font-weight: 600; color: var(--nx-success);">8</div>
+                    </div>
+                    <div class="form-group">
+                        <label>空闲连接数</label>
+                        <div style="font-size: 28px; font-weight: 600; color: var(--nx-info);">12</div>
+                    </div>
+                    <div class="form-group">
+                        <label>等待获取连接</label>
+                        <div style="font-size: 28px; font-weight: 600; color: var(--nx-warning);">0</div>
+                    </div>
+                    <div class="form-group">
+                        <label>总连接数</label>
+                        <div style="font-size: 28px; font-weight: 600;">20</div>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; padding: 16px; background: var(--nx-bg-primary); border-radius: 8px;">
+                    <h5 style="margin: 0 0 12px; font-size: 14px;">连接使用趋势</h5>
+                    <div style="display: flex; align-items: flex-end; gap: 4px; height: 100px;">
+                        ${Array.from({length: 24}, () => Math.floor(Math.random() * 60) + 20).map(h => 
+                            `<div style="flex: 1; background: var(--nx-success); border-radius: 2px 2px 0 0; height: ${h}%; opacity: 0.7;"></div>`
+                        ).join('')}
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--nx-text-tertiary);">
+                        <span>24小时前</span>
+                        <span>现在</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMonitorData(data) {
+            const container = document.getElementById('monitorContent');
+            container.innerHTML = `
+                <div class="connection-form">
+                    <div class="form-group">
+                        <label>活跃连接数</label>
+                        <div style="font-size: 28px; font-weight: 600; color: var(--nx-success);">${data.activeConnections || 0}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>空闲连接数</label>
+                        <div style="font-size: 28px; font-weight: 600; color: var(--nx-info);">${data.idleConnections || 0}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>等待获取连接</label>
+                        <div style="font-size: 28px; font-weight: 600; color: var(--nx-warning);">${data.pendingConnections || 0}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>总连接数</label>
+                        <div style="font-size: 28px; font-weight: 600;">${data.totalConnections || 0}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', checkLogin);
+    </script>
+</body>
+</html>

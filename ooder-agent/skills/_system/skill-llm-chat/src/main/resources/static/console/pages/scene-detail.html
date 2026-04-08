@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景详情 - Skill Scene</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/nx-page.css">
+    <link rel="stylesheet" href="/console/css/pages/scene-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-apps-line"></i> Skill Scene
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">场景详情</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost" onclick="goBack()">
+                        <i class="ri-arrow-left-line"></i> 返回
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                <i class="ri-puzzle-line"></i> 我的能力
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="detail-header">
+                        <div class="nx-flex nx-justify-between nx-items-center">
+                            <div>
+                                <h2 id="sceneName">加载中...</h2>
+                                <div class="scene-id" id="sceneId">-</div>
+                            </div>
+                            <div class="nx-flex nx-gap-2">
+                                <button class="nx-btn" style="background: rgba(255,255,255,0.2);" onclick="activateScene()">
+                                    <i class="ri-play-line"></i> 激活
+                                </button>
+                                <button class="nx-btn" style="background: rgba(255,255,255,0.2);" onclick="deactivateScene()">
+                                    <i class="ri-stop-line"></i> 停用
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-grid nx-grid-cols-4 nx-gap-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-flashlight-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">能力数</div>
+                                <div class="nx-stat-card__value" id="capCount">0</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-group-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">协作场景</div>
+                                <div class="nx-stat-card__value" id="collabCount">0</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-camera-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">快照数</div>
+                                <div class="nx-stat-card__value" id="snapshotCount">0</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--info">
+                                <i class="ri-code-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">版本</div>
+                                <div class="nx-stat-card__value" id="version">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-tabs">
+                        <button class="nx-tabs__tab nx-tabs__tab--active" onclick="switchTab('overview', this)">概览</button>
+                        <button class="nx-tabs__tab" onclick="switchTab('capabilities', this)">能力列表</button>
+                        <button class="nx-tabs__tab" onclick="switchTab('collaborative', this)">协作场景</button>
+                        <button class="nx-tabs__tab" onclick="switchTab('snapshots', this)">快照管理</button>
+                        <button class="nx-tabs__tab" onclick="switchTab('config', this)">配置</button>
+                        <button class="nx-tabs__tab" onclick="switchTab('logs', this)">日志</button>
+                    </div>
+                    
+                    <div id="overview-panel">
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-6">
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h3 class="nx-card__title">基本信息</h3>
+                                </div>
+                                <div class="nx-card__body">
+                                    <table class="info-table">
+                                        <tr><td>场景ID</td><td id="info-id">-</td></tr>
+                                        <tr><td>名称</td><td id="info-name">-</td></tr>
+                                        <tr><td>类型</td><td id="info-type">-</td></tr>
+                                        <tr><td>状态</td><td id="info-status">-</td></tr>
+                                        <tr><td>版本</td><td id="info-version">-</td></tr>
+                                        <tr><td>创建时间</td><td id="info-created">-</td></tr>
+                                        <tr><td>更新时间</td><td id="info-updated">-</td></tr>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h3 class="nx-card__title">描述</h3>
+                                </div>
+                                <div class="nx-card__body">
+                                    <p id="info-description" style="color: var(--ns-secondary); line-height: 1.6;">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="capabilities-panel" style="display: none;">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">能力列表</h3>
+                                <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="showAddCapabilityModal()">
+                                    <i class="ri-add-line"></i> 添加能力
+                                </button>
+                            </div>
+                            <div class="nx-card__body" id="capabilitiesList">
+                                <div class="empty-state"><i class="ri-flashlight-line"></i><p>暂无能力</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="collaborative-panel" style="display: none;">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">协作场景</h3>
+                                <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="showAddCollabModal()">
+                                    <i class="ri-add-line"></i> 添加协作场景
+                                </button>
+                            </div>
+                            <div class="nx-card__body" id="collaborativeList">
+                                <div class="empty-state"><i class="ri-group-line"></i><p>暂无协作场景</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="snapshots-panel" style="display: none;">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">快照管理</h3>
+                                <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="createSnapshot()">
+                                    <i class="ri-camera-line"></i> 创建快照
+                                </button>
+                            </div>
+                            <div class="nx-card__body" id="snapshotsList">
+                                <div class="empty-state"><i class="ri-camera-line"></i><p>暂无快照</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="config-panel" style="display: none;">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">场景配置</h3>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="config-block">
+                                    <h4><i class="ri-settings-3-line"></i> 基础配置</h4>
+                                    <pre id="configBasic">-</pre>
+                                </div>
+                                <div class="config-block">
+                                    <h4><i class="ri-folder-line"></i> VFS配置</h4>
+                                    <pre id="configVfs">-</pre>
+                                </div>
+                                <div class="config-block">
+                                    <h4><i class="ri-shield-line"></i> 认证配置</h4>
+                                    <pre id="configAuth">-</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="logs-panel" style="display: none;">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">运行日志</h3>
+                                <div class="nx-flex nx-gap-2">
+                                    <select class="form-control" id="logLevel" style="width: 120px;" onchange="loadLogs()">
+                                        <option value="">全部级别</option>
+                                        <option value="INFO">INFO</option>
+                                        <option value="WARN">WARN</option>
+                                        <option value="ERROR">ERROR</option>
+                                        <option value="DEBUG">DEBUG</option>
+                                    </select>
+                                    <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="refreshLogs()">
+                                        <i class="ri-refresh-line"></i> 刷新
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="log-filter nx-mb-4">
+                                    <div class="nx-grid nx-grid-cols-3 nx-gap-4">
+                                        <div class="form-group">
+                                            <label class="form-label">开始时间</label>
+                                            <input type="datetime-local" class="form-control" id="logStartTime">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">结束时间</label>
+                                            <input type="datetime-local" class="form-control" id="logEndTime">
+                                        </div>
+                                        <div class="form-group nx-flex nx-items-end">
+                                            <button class="nx-btn nx-btn--primary" onclick="loadLogs()">查询</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="logsList">
+                                    <table class="nx-table">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 180px;">时间</th>
+                                                <th style="width: 80px;">级别</th>
+                                                <th style="width: 150px;">来源</th>
+                                                <th>消息</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="logsTableBody">
+                                            <tr><td colspan="4" class="nx-text-center nx-text-secondary">暂无日志</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="addCapabilityModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加能力</h3>
+                <button class="modal-close" onclick="hideAddCapabilityModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">能力ID</label>
+                    <input type="text" class="form-control" id="capId" placeholder="cap-xxx">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">能力名称</label>
+                    <input type="text" class="form-control" id="capName" placeholder="输入能力名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">描述</label>
+                    <textarea class="form-control" id="capDesc" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="hideAddCapabilityModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="addCapability()">添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="addCollabModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加协作场景</h3>
+                <button class="modal-close" onclick="hideAddCollabModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">协作场景ID</label>
+                    <input type="text" class="form-control" id="collabSceneId" placeholder="scene-xxx">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="hideAddCollabModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="addCollaborativeScene()">添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/llm-assistant.js"></script>
+    <script src="/console/js/pages/scene-detail.js"></script>
+</body>
+</html>

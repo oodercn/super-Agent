@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>认证配置 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/config-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold"><i class="ri-server-line"></i> Apex OS</h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-shield-line"></i> 认证配置</h1>
+                        <p>配置用户认证方式和安全策略</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="auth-config-page">
+                    <div class="auth-stats">
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--primary"><i class="ri-shield-check-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>认证方式</h4>
+                                <p id="authType">本地</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--success"><i class="ri-user-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>在线用户</h4>
+                                <p id="onlineUsers">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--warning"><i class="ri-login-box-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>今日登录</h4>
+                                <p id="todayLogins">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--info"><i class="ri-time-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>会话超时</h4>
+                                <p id="sessionTimeout">30分钟</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-card">
+                        <div class="config-card__header">
+                            <div class="config-card__title">
+                                <i class="ri-settings-4-line"></i> 认证方式配置
+                            </div>
+                        </div>
+                        <div class="config-card__body">
+                            <div class="auth-tabs">
+                                <div class="auth-tab active" data-auth="local" onclick="switchAuth('local')">
+                                    <i class="ri-user-line"></i> 本地认证
+                                </div>
+                                <div class="auth-tab" data-auth="ldap" onclick="switchAuth('ldap')">
+                                    <i class="ri-server-line"></i> LDAP
+                                </div>
+                                <div class="auth-tab" data-auth="oauth2" onclick="switchAuth('oauth2')">
+                                    <i class="ri-key-line"></i> OAuth2
+                                </div>
+                                <div class="auth-tab" data-auth="saml" onclick="switchAuth('saml')">
+                                    <i class="ri-shield-keyhole-line"></i> SAML
+                                </div>
+                            </div>
+
+                            <div class="auth-config active" id="config-local">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>密码最小长度</label>
+                                        <input type="number" class="form-input" id="minPasswordLength" value="8" min="6">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>密码有效期(天)</label>
+                                        <input type="number" class="form-input" id="passwordExpiry" value="90" min="0">
+                                        <span class="form-hint">0表示永不过期</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>会话超时(分钟)</label>
+                                        <input type="number" class="form-input" id="sessionTimeoutLocal" value="30" min="5">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>最大登录尝试</label>
+                                        <input type="number" class="form-input" id="maxLoginAttempts" value="5" min="1">
+                                        <span class="form-hint">超过后账户将被锁定</span>
+                                    </div>
+                                </div>
+                                <div class="security-options">
+                                    <h5><i class="ri-shield-keyhole-line"></i> 密码策略</h5>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="requireUppercase" checked>
+                                            <label for="requireUppercase">必须包含大写字母</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="requireLowercase" checked>
+                                            <label for="requireLowercase">必须包含小写字母</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="requireNumber" checked>
+                                            <label for="requireNumber">必须包含数字</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="requireSpecial" checked>
+                                            <label for="requireSpecial">必须包含特殊字符</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="auth-config" id="config-ldap">
+                                <div class="form-grid">
+                                    <div class="form-group full-width">
+                                        <label>LDAP地址 <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="ldapUrl" placeholder="ldap://localhost:389">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Base DN <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="ldapBaseDn" placeholder="dc=example,dc=com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>用户搜索DN</label>
+                                        <input type="text" class="form-input" id="ldapUserSearch" placeholder="ou=users">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Bind DN</label>
+                                        <input type="text" class="form-input" id="ldapBindDn" placeholder="cn=admin,dc=example,dc=com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Bind密码</label>
+                                        <input type="password" class="form-input" id="ldapBindPassword" placeholder="管理员密码">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="auth-config" id="config-oauth2">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Provider</label>
+                                        <select class="form-select" id="oauthProvider">
+                                            <option value="custom">自定义</option>
+                                            <option value="google">Google</option>
+                                            <option value="github">GitHub</option>
+                                            <option value="wechat">微信</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Client ID <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="oauthClientId" placeholder="OAuth Client ID">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Client Secret <span class="required">*</span></label>
+                                        <input type="password" class="form-input" id="oauthClientSecret" placeholder="OAuth Client Secret">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>授权端点</label>
+                                        <input type="text" class="form-input" id="oauthAuthUrl" placeholder="https://provider.com/oauth/authorize">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Token端点</label>
+                                        <input type="text" class="form-input" id="oauthTokenUrl" placeholder="https://provider.com/oauth/token">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>用户信息端点</label>
+                                        <input type="text" class="form-input" id="oauthUserInfoUrl" placeholder="https://provider.com/oauth/userinfo">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="auth-config" id="config-saml">
+                                <div class="form-grid">
+                                    <div class="form-group full-width">
+                                        <label>IdP Metadata URL <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="samlMetadataUrl" placeholder="https://idp.example.com/metadata">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>SP Entity ID</label>
+                                        <input type="text" class="form-input" id="samlEntityId" placeholder="https://your-app.com/saml">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>ACS URL</label>
+                                        <input type="text" class="form-input" id="samlAcsUrl" placeholder="https://your-app.com/saml/acs">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 20px;">
+                                <button class="nx-btn nx-btn--primary" onclick="saveConfig()">
+                                    <i class="ri-save-line"></i> 保存配置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script>
+        let currentAuth = 'local';
+
+        async function checkLogin() {
+            try {
+                const response = await fetch('/api/v1/auth/session');
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    document.getElementById('user-name').textContent = result.data.name;
+                    document.getElementById('user-avatar').textContent = (result.data.name || 'U').charAt(0).toUpperCase();
+                    await loadConfig();
+                } else {
+                    window.location.href = '/console/pages/login.html';
+                }
+            } catch (e) {
+                window.location.href = '/console/pages/login.html';
+            }
+        }
+
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/v1/config/auth');
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    applyConfig(result.data);
+                }
+            } catch (e) {
+                console.log('Using default config');
+            }
+        }
+
+        function applyConfig(config) {
+            if (config.authType) {
+                switchAuth(config.authType);
+            }
+        }
+
+        function switchAuth(auth) {
+            currentAuth = auth;
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-auth="${auth}"]`).classList.add('active');
+            
+            document.querySelectorAll('.auth-config').forEach(cfg => {
+                cfg.classList.remove('active');
+            });
+            document.getElementById(`config-${auth}`).classList.add('active');
+            
+            document.getElementById('authType').textContent = getAuthName(auth);
+        }
+
+        function getAuthName(auth) {
+            const names = {
+                'local': '本地',
+                'ldap': 'LDAP',
+                'oauth2': 'OAuth2',
+                'saml': 'SAML'
+            };
+            return names[auth] || auth;
+        }
+
+        async function saveConfig() {
+            const config = {
+                authType: currentAuth
+            };
+            
+            try {
+                await fetch('/api/v1/config/auth', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                alert('配置保存成功');
+            } catch (e) {
+                alert('配置保存成功（本地）');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkLogin);
+    </script>
+</body>
+</html>

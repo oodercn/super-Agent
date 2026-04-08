@@ -1,21 +1,27 @@
-package net.ooder.nexus.dto.config;
+﻿package net.ooder.nexus.dto.config;
 
-import java.io.Serializable;
-
-public class ConfigCategoryDTO implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class ConfigCategoryDTO {
     private String id;
+    private String code;
     private String name;
     private String icon;
-    private Integer itemCount;
+    private String color;
+    private Boolean userFacing;
 
     public String getId() {
-        return id;
+        return id != null ? id : code;
     }
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getName() {
@@ -34,11 +40,19 @@ public class ConfigCategoryDTO implements Serializable {
         this.icon = icon;
     }
 
-    public Integer getItemCount() {
-        return itemCount;
+    public String getColor() {
+        return color;
     }
 
-    public void setItemCount(Integer itemCount) {
-        this.itemCount = itemCount;
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public Boolean getUserFacing() {
+        return userFacing;
+    }
+
+    public void setUserFacing(Boolean userFacing) {
+        this.userFacing = userFacing;
     }
 }

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消息中心 - Apex OS</title>
+    <link rel="stylesheet" href="../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../css/nexus.css">
+    <link rel="stylesheet" href="../css/pages/notification-center.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-page__sidebar-header">
+                <div class="nx-page__sidebar-brand">
+                    <h1><i class="ri-hexagon-fill"></i> Apex OS</h1>
+                </div>
+            </div>
+            <nav class="nav-menu" id="nav-menu">
+            </nav>
+        </aside>
+
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-message-3-line" aria-hidden="true"></i> 消息中心</h1>
+                        <p>系统通知与消息管理</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" id="markAllReadBtn" title="全部已读">
+                        <i class="ri-check-double-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" id="settingsBtn" title="设置">
+                        <i class="ri-settings-3-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="nx-page__body">
+                <div class="message-center-container">
+                    <div class="message-tabs">
+                        <div class="message-tab active" data-type="all">
+                            <i class="ri-inbox-line"></i>
+                            <span>全部</span>
+                            <span class="tab-count" id="allCount">0</span>
+                        </div>
+                        <div class="message-tab" data-type="scene">
+                            <i class="ri-folder-line"></i>
+                            <span>场景</span>
+                            <span class="tab-count" id="sceneCount">0</span>
+                        </div>
+                        <div class="message-tab" data-type="todo">
+                            <i class="ri-task-line"></i>
+                            <span>待办</span>
+                            <span class="tab-count" id="todoCount">0</span>
+                        </div>
+                        <div class="message-tab" data-type="system">
+                            <i class="ri-settings-2-line"></i>
+                            <span>系统</span>
+                            <span class="tab-count" id="systemCount">0</span>
+                        </div>
+                    </div>
+
+                    <div class="message-list-container">
+                        <div class="message-filter">
+                            <input type="text" class="nx-input" id="searchInput" placeholder="搜索消息...">
+                            <select class="nx-select" id="timeFilter">
+                                <option value="">全部时间</option>
+                                <option value="today">今天</option>
+                                <option value="week">本周</option>
+                                <option value="month">本月</option>
+                            </select>
+                        </div>
+
+                        <div class="message-list" id="messageList">
+                            <div class="loading-state">
+                                <i class="ri-loader-4-line spin"></i>
+                                <span>加载中...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="nx-modal" id="messageModal" style="display:none;">
+        <div class="nx-modal__content">
+            <div class="nx-modal__header">
+                <h3 id="modalTitle">消息详情</h3>
+                <button class="nx-modal__close" id="modalClose">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body" id="modalBody">
+            </div>
+            <div class="nx-modal__footer" id="modalFooter">
+                <button class="nx-btn nx-btn--secondary" id="modalCloseBtn">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/nexus.js?v=3"></script>
+    <script src="../js/menu.js?v=3"></script>
+    <script src="../js/api-service.js?v=3"></script>
+    <script src="../js/page-init.js?v=3" data-auto-init></script>
+    <script>
+    (function() {
+        let currentType = 'all';
+        let messages = [];
+
+        function init() {
+            loadMessages();
+            bindEvents();
+        }
+
+        function loadMessages() {
+            const container = document.getElementById('messageList');
+            container.innerHTML = '<div class="loading-state"><i class="ri-loader-4-line spin"></i><span>加载中...</span></div>';
+
+            if (window.ApiService && window.ApiService.message) {
+                window.ApiService.message.getMessages({ type: currentType })
+                    .then(function(response) {
+                        if (response.code === 200) {
+                            messages = response.data || [];
+                            renderMessages(messages);
+                            updateCounts();
+                        } else {
+                            container.innerHTML = '<div class="empty-state"><i class="ri-error-warning-line"></i><span>加载失败</span></div>';
+                        }
+                    })
+                    .catch(function() {
+                        renderMockMessages();
+                    });
+            } else {
+                renderMockMessages();
+            }
+        }
+
+        function renderMockMessages() {
+            messages = [
+                { id: 1, type: 'scene', title: '场景审批通过', content: '您的场景"招聘流程"已通过审批', time: '10分钟前', read: false },
+                { id: 2, type: 'todo', title: '新待办任务', content: '您有一个新的审批任务待处理', time: '30分钟前', read: false },
+                { id: 3, type: 'system', title: '系统维护通知', content: '系统将于今晚22:00进行维护', time: '1小时前', read: true },
+                { id: 4, type: 'scene', title: '场景激活成功', content: '技能"简历解析"已成功激活', time: '2小时前', read: true },
+                { id: 5, type: 'todo', title: '待办即将到期', content: '您有一个待办将于明天到期', time: '3小时前', read: false }
+            ];
+            renderMessages(messages);
+            updateCounts();
+        }
+
+        function renderMessages(list) {
+            const container = document.getElementById('messageList');
+            if (!list || list.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="ri-inbox-line"></i><span>暂无消息</span></div>';
+                return;
+            }
+
+            container.innerHTML = list.map(function(msg) {
+                return '<div class="message-item ' + (msg.read ? 'read' : 'unread') + '" data-id="' + msg.id + '">' +
+                    '<div class="message-icon ' + msg.type + '">' +
+                        '<i class="ri-' + getTypeIcon(msg.type) + '"></i>' +
+                    '</div>' +
+                    '<div class="message-content">' +
+                        '<div class="message-title">' + msg.title + '</div>' +
+                        '<div class="message-text">' + msg.content + '</div>' +
+                        '<div class="message-time">' + msg.time + '</div>' +
+                    '</div>' +
+                    '<div class="message-actions">' +
+                        '<button class="nx-btn nx-btn--ghost nx-btn--sm" title="标记已读" onclick="markAsRead(' + msg.id + ')">' +
+                            '<i class="ri-check-line"></i>' +
+                        '</button>' +
+                        '<button class="nx-btn nx-btn--ghost nx-btn--sm" title="删除" onclick="deleteMessage(' + msg.id + ')">' +
+                            '<i class="ri-delete-bin-line"></i>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function getTypeIcon(type) {
+            const icons = {
+                'scene': 'folder-line',
+                'todo': 'task-line',
+                'system': 'settings-2-line'
+            };
+            return icons[type] || 'message-3-line';
+        }
+
+        function updateCounts() {
+            const counts = { all: 0, scene: 0, todo: 0, system: 0 };
+            messages.forEach(function(msg) {
+                counts.all++;
+                if (counts[msg.type] !== undefined) {
+                    counts[msg.type]++;
+                }
+            });
+
+            document.getElementById('allCount').textContent = counts.all;
+            document.getElementById('sceneCount').textContent = counts.scene;
+            document.getElementById('todoCount').textContent = counts.todo;
+            document.getElementById('systemCount').textContent = counts.system;
+        }
+
+        function bindEvents() {
+            document.querySelectorAll('.message-tab').forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.message-tab').forEach(function(t) { t.classList.remove('active'); });
+                    this.classList.add('active');
+                    currentType = this.dataset.type;
+                    loadMessages();
+                });
+            });
+
+            document.getElementById('searchInput').addEventListener('input', function() {
+                const keyword = this.value.toLowerCase();
+                const filtered = messages.filter(function(msg) {
+                    return msg.title.toLowerCase().includes(keyword) || msg.content.toLowerCase().includes(keyword);
+                });
+                renderMessages(filtered);
+            });
+
+            document.getElementById('markAllReadBtn').addEventListener('click', function() {
+                messages.forEach(function(msg) { msg.read = true; });
+                renderMessages(messages);
+            });
+
+            document.getElementById('modalClose').addEventListener('click', function() {
+                document.getElementById('messageModal').style.display = 'none';
+            });
+
+            document.getElementById('modalCloseBtn').addEventListener('click', function() {
+                document.getElementById('messageModal').style.display = 'none';
+            });
+        }
+
+        window.markAsRead = function(id) {
+            const msg = messages.find(function(m) { return m.id === id; });
+            if (msg) {
+                msg.read = true;
+                renderMessages(messages);
+            }
+        };
+
+        window.deleteMessage = function(id) {
+            messages = messages.filter(function(m) { return m.id !== id; });
+            renderMessages(messages);
+            updateCounts();
+        };
+
+        // 等待 pageInitComplete 事件后再初始化
+        window.addEventListener('pageInitComplete', function() {
+            console.log('[MessageCenter] pageInitComplete 事件触发，开始初始化');
+            init();
+        });
+        
+        // 如果 PageInit 已经初始化完成，直接执行
+        if (window.PageInit && window.PageInit.initialized) {
+            console.log('[MessageCenter] PageInit 已初始化，直接执行');
+            init();
+        }
+    })();
+    </script>
+    <style>
+    .message-center-container {
+        padding: 24px;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .message-tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--nx-border);
+    }
+
+    .message-tab {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        color: var(--nx-text-secondary);
+        transition: all 0.2s ease;
+    }
+
+    .message-tab:hover {
+        color: var(--nx-text-primary);
+    }
+
+    .message-tab.active {
+        color: var(--nx-primary);
+        border-bottom-color: var(--nx-primary);
+    }
+
+    .tab-count {
+        background: var(--nx-bg-elevated);
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+    }
+
+    .message-tab.active .tab-count {
+        background: var(--nx-primary);
+        color: white;
+    }
+
+    .message-filter {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .message-filter .nx-input {
+        flex: 1;
+    }
+
+    .message-list {
+        background: var(--nx-bg-card);
+        border-radius: 12px;
+        border: 1px solid var(--nx-border);
+        overflow: hidden;
+    }
+
+    .message-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 16px;
+        border-bottom: 1px solid var(--nx-border);
+        transition: background 0.2s ease;
+    }
+
+    .message-item:last-child {
+        border-bottom: none;
+    }
+
+    .message-item:hover {
+        background: var(--nx-bg-hover);
+    }
+
+    .message-item.unread {
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .message-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .message-icon.scene {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+
+    .message-icon.todo {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .message-icon.system {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+
+    .message-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .message-title {
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .message-text {
+        font-size: 14px;
+        color: var(--nx-text-secondary);
+        margin-bottom: 4px;
+    }
+
+    .message-time {
+        font-size: 12px;
+        color: var(--nx-text-secondary);
+    }
+
+    .message-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--nx-text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    .loading-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        color: var(--nx-text-secondary);
+    }
+
+    .loading-state i {
+        font-size: 32px;
+        margin-bottom: 12px;
+    }
+
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    </style>
+</body>
+</html>

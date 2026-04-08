@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="能力调用日志 - 查看能力调用记录和统计">
+    <title>能力调用日志 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/capability-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <nav>
+                <ul class="nav-menu" id="nav-menu" role="navigation" aria-label="主导航"></ul>
+            </nav>
+        </aside>
+        
+        <main class="nx-page__content" id="main-content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-file-list-3-line" aria-hidden="true"></i> 能力调用日志</h1>
+                        <p>查看能力调用记录和统计分析</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                    <button class="nx-btn nx-btn--secondary" onclick="goBack()">
+                        <i class="ri-arrow-left-line"></i> 返回
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container log-page">
+                    <div class="log-toolbar">
+                        <div class="log-search">
+                            <i class="ri-search-line"></i>
+                            <input type="text" id="search-input" placeholder="搜索日志内容、请求ID...">
+                        </div>
+                        <div class="log-filter-group">
+                            <select class="log-filter-select" id="level-filter">
+                                <option value="">全部级别</option>
+                                <option value="INFO">INFO</option>
+                                <option value="WARN">WARN</option>
+                                <option value="ERROR">ERROR</option>
+                            </select>
+                            <select class="log-filter-select" id="time-filter">
+                                <option value="1h">最近1小时</option>
+                                <option value="24h" selected>最近24小时</option>
+                                <option value="7d">最近7天</option>
+                                <option value="30d">最近30天</option>
+                            </select>
+                        </div>
+                        <button class="nx-btn nx-btn--secondary" onclick="refreshLogs()">
+                            <i class="ri-refresh-line"></i> 刷新
+                        </button>
+                        <button class="nx-btn nx-btn--secondary" onclick="exportLogs()">
+                            <i class="ri-download-line"></i> 导出
+                        </button>
+                    </div>
+                    
+                    <div class="log-stats-row">
+                        <div class="log-stat-card">
+                            <div class="log-stat-icon log-stat-icon--total">
+                                <i class="ri-bar-chart-line"></i>
+                            </div>
+                            <div class="log-stat-value" id="stat-total">0</div>
+                            <div class="log-stat-label">总调用次数</div>
+                        </div>
+                        <div class="log-stat-card">
+                            <div class="log-stat-icon log-stat-icon--success">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                            <div class="log-stat-value" id="stat-success">0</div>
+                            <div class="log-stat-label">成功调用</div>
+                        </div>
+                        <div class="log-stat-card">
+                            <div class="log-stat-icon log-stat-icon--error">
+                                <i class="ri-close-circle-line"></i>
+                            </div>
+                            <div class="log-stat-value" id="stat-error">0</div>
+                            <div class="log-stat-label">失败调用</div>
+                        </div>
+                        <div class="log-stat-card">
+                            <div class="log-stat-icon log-stat-icon--duration">
+                                <i class="ri-timer-line"></i>
+                            </div>
+                            <div class="log-stat-value" id="stat-duration">0ms</div>
+                            <div class="log-stat-label">平均耗时</div>
+                        </div>
+                        <div class="log-stat-card">
+                            <div class="log-stat-icon log-stat-icon--rate">
+                                <i class="ri-percent-line"></i>
+                            </div>
+                            <div class="log-stat-value" id="stat-rate">0%</div>
+                            <div class="log-stat-label">成功率</div>
+                        </div>
+                    </div>
+                    
+                    <div class="log-container">
+                        <div class="log-list-panel">
+                            <div class="log-list-header">
+                                <div class="log-list-title">
+                                    <i class="ri-file-list-3-line"></i>
+                                    <span>调用日志</span>
+                                </div>
+                                <span class="nx-badge" id="log-count">0</span>
+                            </div>
+                            <div class="log-list" id="log-list">
+                            </div>
+                            <div class="log-pagination">
+                                <button class="log-pagination-btn" onclick="prevPage()" id="prev-btn">上一页</button>
+                                <span class="log-pagination-info" id="pagination-info">第 1 页</span>
+                                <button class="log-pagination-btn" onclick="nextPage()" id="next-btn">下一页</button>
+                            </div>
+                        </div>
+                        
+                        <div class="log-detail-panel">
+                            <div class="log-detail-card">
+                                <div class="log-detail-header">
+                                    <i class="ri-information-line"></i>
+                                    <span>日志详情</span>
+                                </div>
+                                <div class="log-detail-body" id="log-detail-body">
+                                    <div class="log-empty">
+                                        <i class="ri-file-list-3-line"></i>
+                                        <p>选择日志查看详情</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="log-detail-card">
+                                <div class="log-detail-header">
+                                    <i class="ri-line-chart-line"></i>
+                                    <span>调用趋势</span>
+                                </div>
+                                <div class="log-detail-body">
+                                    <div class="log-chart" id="log-chart">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        (function() {
+            'use strict';
+            
+            let capabilityId = null;
+            let logs = [];
+            let currentLog = null;
+            let currentPage = 1;
+            let pageSize = 20;
+            let totalLogs = 0;
+            
+            async function loadData() {
+                const params = new URLSearchParams(window.location.search);
+                capabilityId = params.get('id');
+                
+                if (!capabilityId) {
+                    showError('缺少能力ID参数');
+                    return;
+                }
+                
+                loadMockData();
+            }
+            
+            function loadMockData() {
+                const now = Date.now();
+                logs = [];
+                
+                for (let i = 0; i < 100; i++) {
+                    const isSuccess = Math.random() > 0.1;
+                    const level = isSuccess ? 'INFO' : (Math.random() > 0.5 ? 'ERROR' : 'WARN');
+                    logs.push({
+                        id: 'req-' + (1000 + i),
+                        timestamp: new Date(now - i * 60000 * Math.random() * 10).toISOString(),
+                        level: level,
+                        status: isSuccess ? 200 : 500,
+                        duration: Math.round(Math.random() * 500 + 50),
+                        action: ['invoke', 'query', 'update', 'delete'][Math.floor(Math.random() * 4)],
+                        source: ['web', 'api', 'schedule', 'event'][Math.floor(Math.random() * 4)],
+                        message: isSuccess ? '调用成功' : '调用失败: ' + ['超时', '参数错误', '权限不足'][Math.floor(Math.random() * 3)],
+                        request: { method: 'POST', path: '/api/v1/capabilities/' + capabilityId + '/invoke' },
+                        response: isSuccess ? { code: 200, data: { result: 'success' } } : { code: 500, error: 'Internal Error' }
+                    });
+                }
+                
+                totalLogs = logs.length;
+                updateStats();
+                renderLogList();
+                renderChart();
+            }
+            
+            function showError(message) {
+                document.getElementById('log-list').innerHTML = `
+                    <div class="log-empty">
+                        <i class="ri-error-warning-line" style="color: var(--nx-danger);"></i>
+                        <p>${message}</p>
+                    </div>
+                `;
+            }
+            
+            function updateStats() {
+                const total = logs.length;
+                const success = logs.filter(l => l.level === 'INFO').length;
+                const error = logs.filter(l => l.level === 'ERROR').length;
+                const avgDuration = Math.round(logs.reduce((sum, l) => sum + l.duration, 0) / total);
+                const rate = Math.round((success / total) * 100);
+                
+                document.getElementById('stat-total').textContent = total;
+                document.getElementById('stat-success').textContent = success;
+                document.getElementById('stat-error').textContent = error;
+                document.getElementById('stat-duration').textContent = avgDuration + 'ms';
+                document.getElementById('stat-rate').textContent = rate + '%';
+            }
+            
+            function renderLogList() {
+                const container = document.getElementById('log-list');
+                document.getElementById('log-count').textContent = totalLogs;
+                
+                const start = (currentPage - 1) * pageSize;
+                const end = start + pageSize;
+                const pageLogs = logs.slice(start, end);
+                
+                if (pageLogs.length === 0) {
+                    container.innerHTML = `
+                        <div class="log-empty">
+                            <i class="ri-file-list-3-line"></i>
+                            <p>暂无日志记录</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = pageLogs.map((log, i) => `
+                    <div class="log-item ${i === 0 ? 'active' : ''}" onclick="selectLog(${start + i})">
+                        <div class="log-item-header">
+                            <div class="log-item-id">
+                                <span class="log-level-badge log-level-badge--${log.level.toLowerCase()}">${log.level}</span>
+                                ${log.id}
+                            </div>
+                            <div class="log-item-time">${formatTime(log.timestamp)}</div>
+                        </div>
+                        <div class="log-item-body">
+                            <div class="log-item-meta">
+                                <i class="ri-timer-line"></i>
+                                <strong>${log.duration}ms</strong>
+                            </div>
+                            <div class="log-item-meta">
+                                <i class="ri-arrow-right-line"></i>
+                                <strong>${log.status}</strong>
+                            </div>
+                            <div class="log-item-meta">
+                                <i class="ri-route-line"></i>
+                                ${log.action}
+                            </div>
+                            <div class="log-item-meta">
+                                <i class="ri-device-line"></i>
+                                ${log.source}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('pagination-info').textContent = 
+                    `第 ${currentPage} 页 / 共 ${Math.ceil(totalLogs / pageSize)} 页`;
+                document.getElementById('prev-btn').disabled = currentPage <= 1;
+                document.getElementById('next-btn').disabled = currentPage >= Math.ceil(totalLogs / pageSize);
+                
+                if (pageLogs.length > 0) {
+                    selectLog(start);
+                }
+            }
+            
+            function renderChart() {
+                const chart = document.getElementById('log-chart');
+                const hours = 24;
+                const bars = [];
+                
+                for (let i = 0; i < hours; i++) {
+                    const count = Math.floor(Math.random() * 50 + 10);
+                    bars.push(count);
+                }
+                
+                const max = Math.max(...bars);
+                chart.innerHTML = bars.map((count, i) => 
+                    `<div class="log-chart-bar" style="height: ${(count / max) * 100}px" title="${i}:00 - ${count}次"></div>`
+                ).join('');
+            }
+            
+            function formatTime(timestamp) {
+                const date = new Date(timestamp);
+                return date.toLocaleString('zh-CN', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+            }
+            
+            function selectLog(index) {
+                currentLog = logs[index];
+                
+                document.querySelectorAll('.log-item').forEach((item, i) => {
+                    item.classList.toggle('active', i === index % pageSize);
+                });
+                
+                const body = document.getElementById('log-detail-body');
+                body.innerHTML = `
+                    <div class="log-detail-row">
+                        <div class="log-detail-label">请求ID</div>
+                        <div class="log-detail-value">${currentLog.id}</div>
+                    </div>
+                    <div class="log-detail-row">
+                        <div class="log-detail-label">时间</div>
+                        <div class="log-detail-value">${formatTime(currentLog.timestamp)}</div>
+                    </div>
+                    <div class="log-detail-row">
+                        <div class="log-detail-label">级别</div>
+                        <div class="log-detail-value">
+                            <span class="log-level-badge log-level-badge--${currentLog.level.toLowerCase()}">${currentLog.level}</span>
+                        </div>
+                    </div>
+                    <div class="log-detail-row">
+                        <div class="log-detail-label">状态码</div>
+                        <div class="log-detail-value">${currentLog.status}</div>
+                    </div>
+                    <div class="log-detail-row">
+                        <div class="log-detail-label">耗时</div>
+                        <div class="log-detail-value">${currentLog.duration}ms</div>
+                    </div>
+                    <div class="log-detail-row">
+                        <div class="log-detail-label">操作</div>
+                        <div class="log-detail-value">${currentLog.action}</div>
+                    </div>
+                    <div class="log-detail-row">
+                        <div class="log-detail-label">来源</div>
+                        <div class="log-detail-value">${currentLog.source}</div>
+                    </div>
+                    <div class="log-detail-row">
+                        <div class="log-detail-label">消息</div>
+                        <div class="log-detail-value">${currentLog.message}</div>
+                    </div>
+                    <div class="log-detail-row">
+                        <div class="log-detail-label">请求</div>
+                        <div class="log-detail-value">
+                            <div class="log-json-viewer">${JSON.stringify(currentLog.request, null, 2)}</div>
+                        </div>
+                    </div>
+                    <div class="log-detail-row">
+                        <div class="log-detail-label">响应</div>
+                        <div class="log-detail-value">
+                            <div class="log-json-viewer">${JSON.stringify(currentLog.response, null, 2)}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function goBack() {
+                window.history.back();
+            }
+            
+            function refreshLogs() {
+                loadData();
+            }
+            
+            function exportLogs() {
+                const data = JSON.stringify(logs, null, 2);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'capability-' + capabilityId + '-logs.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+            
+            function prevPage() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderLogList();
+                }
+            }
+            
+            function nextPage() {
+                if (currentPage < Math.ceil(totalLogs / pageSize)) {
+                    currentPage++;
+                    renderLogList();
+                }
+            }
+            
+            window.goBack = goBack;
+            window.refreshLogs = refreshLogs;
+            window.exportLogs = exportLogs;
+            window.selectLog = selectLog;
+            window.prevPage = prevPage;
+            window.nextPage = nextPage;
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                loadData();
+                
+                document.getElementById('level-filter').addEventListener('change', function() {
+                    filterLogs();
+                });
+                
+                document.getElementById('search-input').addEventListener('input', function() {
+                    filterLogs();
+                });
+            });
+            
+            function filterLogs() {
+                const level = document.getElementById('level-filter').value;
+                const keyword = document.getElementById('search-input').value.toLowerCase();
+                
+                let filtered = logs;
+                
+                if (level) {
+                    filtered = filtered.filter(l => l.level === level);
+                }
+                
+                if (keyword) {
+                    filtered = filtered.filter(l => 
+                        l.id.toLowerCase().includes(keyword) ||
+                        l.message.toLowerCase().includes(keyword) ||
+                        l.action.toLowerCase().includes(keyword)
+                    );
+                }
+                
+                totalLogs = filtered.length;
+                currentPage = 1;
+                
+                const originalLogs = logs;
+                logs = filtered;
+                renderLogList();
+                logs = originalLogs;
+            }
+        })();
+    </script>
+</body>
+</html>

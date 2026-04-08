@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent注册 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/nx-page.css">
+    <link rel="stylesheet" href="/console/css/pages/agent-pages.css">
+    <style>
+        .register-form { max-width: 600px; margin: 0 auto; }
+        .form-section { margin-bottom: 24px; }
+        .form-section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--nx-border-color, #e0e0e0); }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--nx-text-primary, #333); }
+        .form-label .required { color: #f44336; margin-left: 4px; }
+        .form-input { width: 100%; padding: 10px 12px; border: 1px solid var(--nx-border-color, #e0e0e0); border-radius: 8px; font-size: 14px; background: var(--nx-bg-primary, #fff); color: var(--nx-text-primary, #333); }
+        .form-input:focus { outline: none; border-color: #667eea; }
+        .form-select { width: 100%; padding: 10px 12px; border: 1px solid var(--nx-border-color, #e0e0e0); border-radius: 8px; font-size: 14px; background: var(--nx-bg-primary, #fff); color: var(--nx-text-primary, #333); }
+        .form-hint { font-size: 12px; color: var(--nx-text-tertiary, #999); margin-top: 4px; }
+        .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--nx-border-color, #e0e0e0); }
+        .btn { padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; border: none; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+        .btn-secondary { background: var(--nx-bg-secondary, #f5f5f5); color: var(--nx-text-primary, #333); border: 1px solid var(--nx-border-color, #e0e0e0); }
+        .btn-secondary:hover { background: var(--nx-bg-tertiary, #eee); }
+        .capability-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .capability-tag { padding: 6px 12px; background: rgba(102, 126, 234, 0.1); color: #667eea; border-radius: 16px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .capability-tag.selected { background: #667eea; color: white; }
+        .capability-tag:hover { background: rgba(102, 126, 234, 0.2); }
+        .capability-tag.selected:hover { background: #5a6fd6; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold"><i class="ri-robot-line"></i> Apex OS</h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-2">
+                    <a href="/console/pages/agent-list.html" class="nx-text-gray-500 hover:nx-text-gray-700">
+                        <i class="ri-arrow-left-line"></i>
+                    </a>
+                    <h2 class="nx-text-xl nx-font-semibold">Agent注册</h2>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="register-form">
+                    <form id="registerForm">
+                        <div class="form-section">
+                            <div class="form-section-title">基本信息</div>
+                            <div class="form-group">
+                                <label class="form-label">Agent名称<span class="required">*</span></label>
+                                <input type="text" class="form-input" id="agentName" placeholder="请输入Agent名称" required>
+                                <div class="form-hint">建议使用有意义的名称，如"LLM助手"、"数据处理Agent"等</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Agent类型<span class="required">*</span></label>
+                                <select class="form-select" id="agentType" required>
+                                    <option value="">请选择类型</option>
+                                    <option value="LLM">LLM - 大语言模型Agent</option>
+                                    <option value="WORKER">WORKER - 工作Agent</option>
+                                    <option value="DEVICE">DEVICE - 设备Agent</option>
+                                    <option value="PLATFORM">PLATFORM - 平台Agent</option>
+                                    <option value="SUPER_AGENT">SUPER_AGENT - 超级Agent</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">所属集群</label>
+                                <select class="form-select" id="clusterId">
+                                    <option value="">请选择集群</option>
+                                    <option value="cluster-default">默认集群</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">描述</label>
+                                <textarea class="form-input" id="description" rows="3" placeholder="请输入Agent描述"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <div class="form-section-title">连接配置</div>
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                                <div class="form-group">
+                                    <label class="form-label">IP地址<span class="required">*</span></label>
+                                    <input type="text" class="form-input" id="ipAddress" placeholder="如: 192.168.1.100" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">端口<span class="required">*</span></label>
+                                    <input type="number" class="form-input" id="port" placeholder="如: 8080" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">版本</label>
+                                <input type="text" class="form-input" id="version" placeholder="如: 1.0.0">
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <div class="form-section-title">能力配置</div>
+                            <div class="form-group">
+                                <label class="form-label">支持的能力</label>
+                                <div class="capability-tags" id="capabilityTags">
+                                    <span class="capability-tag" data-cap="chat">对话</span>
+                                    <span class="capability-tag" data-cap="completion">补全</span>
+                                    <span class="capability-tag" data-cap="embedding">向量化</span>
+                                    <span class="capability-tag" data-cap="function_call">函数调用</span>
+                                    <span class="capability-tag" data-cap="stream">流式输出</span>
+                                    <span class="capability-tag" data-cap="coordinate">协调</span>
+                                    <span class="capability-tag" data-cap="dispatch">调度</span>
+                                    <span class="capability-tag" data-cap="monitor">监控</span>
+                                    <span class="capability-tag" data-cap="manage">管理</span>
+                                    <span class="capability-tag" data-cap="orchestrate">编排</span>
+                                    <span class="capability-tag" data-cap="analyze">分析</span>
+                                </div>
+                                <input type="hidden" id="capabilities" value="">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">最大并发数</label>
+                                <input type="number" class="form-input" id="maxConcurrency" placeholder="默认20" value="20">
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <div class="form-section-title">LLM配置（仅LLM类型Agent需要）</div>
+                            <div class="form-group">
+                                <label class="form-label">支持的模型</label>
+                                <div class="capability-tags" id="modelTags">
+                                    <span class="capability-tag" data-model="qwen-plus">通义千问Plus</span>
+                                    <span class="capability-tag" data-model="qwen-turbo">通义千问Turbo</span>
+                                    <span class="capability-tag" data-model="deepseek-chat">DeepSeek Chat</span>
+                                    <span class="capability-tag" data-model="deepseek-coder">DeepSeek Coder</span>
+                                </div>
+                                <input type="hidden" id="supportedModels" value="">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">LLM配置ID</label>
+                                <input type="text" class="form-input" id="llmConfigId" placeholder="关联的LLM配置ID">
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="window.location.href='/console/pages/agent-list.html'">取消</button>
+                            <button type="submit" class="btn btn-primary"><i class="ri-check-line"></i> 注册Agent</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+    (function() {
+        'use strict';
+        
+        var selectedCapabilities = [];
+        var selectedModels = [];
+        
+        document.querySelectorAll('#capabilityTags .capability-tag').forEach(function(tag) {
+            tag.addEventListener('click', function() {
+                var cap = this.dataset.cap;
+                var idx = selectedCapabilities.indexOf(cap);
+                if (idx > -1) {
+                    selectedCapabilities.splice(idx, 1);
+                    this.classList.remove('selected');
+                } else {
+                    selectedCapabilities.push(cap);
+                    this.classList.add('selected');
+                }
+                document.getElementById('capabilities').value = selectedCapabilities.join(',');
+            });
+        });
+        
+        document.querySelectorAll('#modelTags .capability-tag').forEach(function(tag) {
+            tag.addEventListener('click', function() {
+                var model = this.dataset.model;
+                var idx = selectedModels.indexOf(model);
+                if (idx > -1) {
+                    selectedModels.splice(idx, 1);
+                    this.classList.remove('selected');
+                } else {
+                    selectedModels.push(model);
+                    this.classList.add('selected');
+                }
+                document.getElementById('supportedModels').value = selectedModels.join(',');
+            });
+        });
+        
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            var data = {
+                agentName: document.getElementById('agentName').value,
+                agentType: document.getElementById('agentType').value,
+                clusterId: document.getElementById('clusterId').value || null,
+                description: document.getElementById('description').value,
+                ipAddress: document.getElementById('ipAddress').value,
+                port: parseInt(document.getElementById('port').value),
+                version: document.getElementById('version').value,
+                capabilities: selectedCapabilities,
+                maxConcurrency: parseInt(document.getElementById('maxConcurrency').value) || 20,
+                supportedModels: selectedModels,
+                llmConfigId: document.getElementById('llmConfigId').value || null
+            };
+            
+            ApiClient.post('/api/agent/register', data).then(function(result) {
+                if (result.status === 'success') {
+                    alert('Agent注册成功！');
+                    window.location.href = '/console/pages/agent-list.html';
+                } else {
+                    alert('注册失败: ' + (result.message || '未知错误'));
+                }
+            }).catch(function(err) {
+                alert('注册失败: ' + err.message);
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

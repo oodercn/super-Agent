@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统初始化 - Ooder MVP</title>
+    <link rel="stylesheet" href="../console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="setup.css">
+</head>
+<body>
+    <button class="setup-theme-toggle" onclick="toggleTheme()" title="切换主题">
+        <i class="ri-sun-line" id="themeIcon"></i>
+    </button>
+
+    <div class="setup-page">
+        <div class="setup-container">
+            <div class="setup-header">
+                <div class="setup-logo">
+                    <i class="ri-bolt-line"></i>
+                </div>
+                <h1 class="setup-title">Ooder MVP</h1>
+                <p class="setup-subtitle">场景技能平台 - 系统初始化</p>
+            </div>
+
+            <div class="setup-steps">
+                <div class="setup-step setup-step--active" id="step-welcome">
+                    <div class="setup-step-content">
+                        <h2 class="setup-step-title">欢迎使用 Ooder MVP</h2>
+                        <p class="setup-step-desc">
+                            这是首次启动，系统需要安装基础模块才能正常运行。<br>
+                            安装过程大约需要 1-2 分钟。
+                        </p>
+                        <div class="setup-step-actions">
+                            <button class="setup-btn setup-btn--primary" onclick="startSetup()">
+                                <i class="ri-rocket-line"></i> 开始初始化
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setup-step" id="step-modules">
+                    <div class="setup-step-content">
+                        <h2 class="setup-step-title">选择安装模块</h2>
+                        <p class="setup-step-desc">以下模块将作为系统基础功能被安装</p>
+                        
+                        <div class="setup-modules">
+                            <div class="setup-module">
+                                <div class="setup-module-check">
+                                    <i class="ri-checkbox-circle-fill"></i>
+                                </div>
+                                <div class="setup-module-info">
+                                    <div class="setup-module-name">skill-capability</div>
+                                    <div class="setup-module-desc">能力管理 - 包含能力发现、能力验证、能力绑定等核心功能</div>
+                                </div>
+                            </div>
+                            <div class="setup-module">
+                                <div class="setup-module-check">
+                                    <i class="ri-checkbox-circle-fill"></i>
+                                </div>
+                                <div class="setup-module-info">
+                                    <div class="setup-module-name">skill-scene-management</div>
+                                    <div class="setup-module-desc">场景管理 - 包含场景定义、会话管理、能力验证等核心功能</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="setup-step-actions">
+                            <button class="setup-btn setup-btn--secondary" onclick="prevStep()">
+                                <i class="ri-arrow-left-line"></i> 返回
+                            </button>
+                            <button class="setup-btn setup-btn--primary" onclick="startInstall()">
+                                <i class="ri-download-line"></i> 开始安装
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setup-step" id="step-install">
+                    <div class="setup-step-content">
+                        <h2 class="setup-step-title">正在安装...</h2>
+                        <p class="setup-step-desc" id="installStatus">正在准备安装环境...</p>
+                        
+                        <div class="setup-progress">
+                            <div class="setup-progress-bar">
+                                <div class="setup-progress-fill" id="progressFill" style="width: 0%"></div>
+                            </div>
+                            <div class="setup-progress-text" id="progressText">0%</div>
+                        </div>
+
+                        <div class="setup-log" id="installLog"></div>
+                    </div>
+                </div>
+
+                <div class="setup-step" id="step-admin">
+                    <div class="setup-step-content">
+                        <h2 class="setup-step-title">创建管理员账户</h2>
+                        <p class="setup-step-desc">请设置系统管理员账户信息</p>
+                        
+                        <form class="setup-form" id="adminForm" onsubmit="createAdmin(event)">
+                            <div class="setup-form-group">
+                                <label class="setup-form-label">用户名</label>
+                                <input type="text" class="setup-input" id="adminUsername" value="admin" required>
+                            </div>
+                            <div class="setup-form-group">
+                                <label class="setup-form-label">密码</label>
+                                <input type="password" class="setup-input" id="adminPassword" placeholder="请输入密码" required>
+                            </div>
+                            <div class="setup-form-group">
+                                <label class="setup-form-label">确认密码</label>
+                                <input type="password" class="setup-input" id="adminPasswordConfirm" placeholder="请再次输入密码" required>
+                            </div>
+                            <div class="setup-step-actions">
+                                <button type="submit" class="setup-btn setup-btn--primary">
+                                    <i class="ri-user-add-line"></i> 创建账户
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="setup-step" id="step-done">
+                    <div class="setup-step-content">
+                        <div class="setup-success">
+                            <div class="setup-success-icon">
+                                <i class="ri-checkbox-circle-line"></i>
+                            </div>
+                            <h2 class="setup-success-title">初始化完成！</h2>
+                            <p class="setup-success-desc">系统已准备就绪，点击下方按钮进入系统</p>
+                            <button class="setup-btn setup-btn--primary" onclick="goToLogin()">
+                                <i class="ri-login-box-line"></i> 进入系统
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setup-footer">
+                <p>Ooder MVP v2.3.1 &copy; 2024 Ooder Team</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="setup.js?v=20260316b"></script>
+</body>
+</html>

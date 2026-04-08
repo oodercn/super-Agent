@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM知识配置 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/llm-knowledge-config.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-robot-line" aria-hidden="true"></i> LLM知识配置</h1>
+                        <p>知识库与LLM的关联配置、字典表、接口表等</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="lkc-page">
+                <div class="nx-tabs nx-mb-4">
+                    <div class="nx-tabs__list">
+                        <div class="nx-tabs__tab" onclick="window.location.href='llm-config.html'">
+                            <i class="ri-settings-4-line"></i> LLM配置
+                        </div>
+                        <div class="nx-tabs__tab nx-tabs__tab--active" onclick="window.location.href='llm-knowledge-config.html'">
+                            <i class="ri-book-2-line"></i> 知识库配置
+                        </div>
+                        <div class="nx-tabs__tab" onclick="window.location.href='llm-monitor.html'">
+                            <i class="ri-line-chart-line"></i> LLM监控
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="config-tabs">
+                    <div class="config-tab active" onclick="switchConfigTab('embedding')">
+                        <i class="ri-cpu-line"></i> 嵌入模型配置
+                    </div>
+                    <div class="config-tab" onclick="switchConfigTab('dictionary')">
+                        <i class="ri-book-2-line"></i> 字典表管理
+                    </div>
+                    <div class="config-tab" onclick="switchConfigTab('interface')">
+                        <i class="ri-code-line"></i> 接口表述配置
+                    </div>
+                    <div class="config-tab" onclick="switchConfigTab('prompt')">
+                        <i class="ri-file-text-line"></i> 提示词模板
+                    </div>
+                </div>
+                
+                <div id="tab-embedding" class="tab-content active">
+                    <div class="info-tip">
+                        <i class="ri-information-line"></i>
+                        <div class="info-tip-content">
+                            <div class="info-tip-title">嵌入模型配置</div>
+                            <div class="info-tip-desc">嵌入模型用于将文本转换为向量，是知识库语义检索的核心。选择合适的嵌入模型可以提高检索精度。</div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <div class="config-section-header">
+                            <h3><i class="ri-cpu-line"></i> 嵌入模型设置</h3>
+                        </div>
+                        <div class="config-section-body">
+                            <div class="config-grid">
+                                <div class="config-item">
+                                    <label class="config-label">当前嵌入模型</label>
+                                    <select class="config-input config-select" id="embeddingModel">
+                                        <option value="text-embedding-ada-002">text-embedding-ada-002 (OpenAI)</option>
+                                        <option value="text-embedding-3-small">text-embedding-3-small (OpenAI)</option>
+                                        <option value="text-embedding-3-large">text-embedding-3-large (OpenAI)</option>
+                                        <option value="bge-large-zh">bge-large-zh (本地)</option>
+                                        <option value="bge-m3">bge-m3 (本地)</option>
+                                    </select>
+                                </div>
+                                <div class="config-item">
+                                    <label class="config-label">向量维度</label>
+                                    <input type="number" class="config-input" id="vectorDimension" value="1536" readonly>
+                                </div>
+                                <div class="config-item">
+                                    <label class="config-label">分块大小</label>
+                                    <input type="number" class="config-input" id="chunkSize" value="500" min="100" max="2000">
+                                </div>
+                                <div class="config-item">
+                                    <label class="config-label">分块重叠</label>
+                                    <input type="number" class="config-input" id="chunkOverlap" value="50" min="0" max="500">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <div class="config-section-header">
+                            <h3><i class="ri-test-tube-line"></i> 模型测试</h3>
+                        </div>
+                        <div class="config-section-body">
+                            <div class="config-item" style="margin-bottom: 16px;">
+                                <label class="config-label">测试文本</label>
+                                <textarea class="config-input" id="testText" style="min-height: 80px;" placeholder="输入测试文本，点击测试按钮查看向量化结果"></textarea>
+                            </div>
+                            <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                                <button class="nx-btn nx-btn--primary" onclick="testEmbedding()">
+                                    <i class="ri-play-line"></i> 测试向量化
+                                </button>
+                            </div>
+                            <div id="testResult" style="display: none; padding: 16px; background: var(--nx-bg-input); border-radius: 8px; font-family: monospace; font-size: 12px; word-break: break-all;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="tab-dictionary" class="tab-content">
+                    <div class="info-tip">
+                        <i class="ri-information-line"></i>
+                        <div class="info-tip-content">
+                            <div class="info-tip-title">字典表管理</div>
+                            <div class="info-tip-desc">字典表用于定义专业术语、缩写、同义词等，帮助LLM更准确地理解和生成专业内容。</div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <div class="config-section-header">
+                            <h3><i class="ri-book-2-line"></i> 术语字典</h3>
+                            <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="showAddDictModal()">
+                                <i class="ri-add-line"></i> 添加术语
+                            </button>
+                        </div>
+                        <div class="config-section-body">
+                            <table class="dict-table">
+                                <thead>
+                                    <tr>
+                                        <th>术语</th>
+                                        <th>全称/解释</th>
+                                        <th>分类</th>
+                                        <th>关联知识库</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dictTableBody">
+                                    <tr>
+                                        <td><span class="dict-key">API</span></td>
+                                        <td class="dict-desc">Application Programming Interface，应用程序接口</td>
+                                        <td><span class="layer-badge general">技术术语</span></td>
+                                        <td>技术文档库</td>
+                                        <td class="dict-actions">
+                                            <button class="nx-btn nx-btn--ghost nx-btn--sm"><i class="ri-edit-line"></i></button>
+                                            <button class="nx-btn nx-btn--ghost nx-btn--sm nx-btn--danger"><i class="ri-delete-bin-line"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="dict-key">RAG</span></td>
+                                        <td class="dict-desc">Retrieval-Augmented Generation，检索增强生成</td>
+                                        <td><span class="layer-badge professional">AI术语</span></td>
+                                        <td>AI知识库</td>
+                                        <td class="dict-actions">
+                                            <button class="nx-btn nx-btn--ghost nx-btn--sm"><i class="ri-edit-line"></i></button>
+                                            <button class="nx-btn nx-btn--ghost nx-btn--sm nx-btn--danger"><i class="ri-delete-bin-line"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="dict-key">LLM</span></td>
+                                        <td class="dict-desc">Large Language Model，大语言模型</td>
+                                        <td><span class="layer-badge professional">AI术语</span></td>
+                                        <td>AI知识库</td>
+                                        <td class="dict-actions">
+                                            <button class="nx-btn nx-btn--ghost nx-btn--sm"><i class="ri-edit-line"></i></button>
+                                            <button class="nx-btn nx-btn--ghost nx-btn--sm nx-btn--danger"><i class="ri-delete-bin-line"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <div class="config-section-header">
+                            <h3><i class="ri-links-line"></i> 同义词映射</h3>
+                            <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="showAddSynonymModal()">
+                                <i class="ri-add-line"></i> 添加映射
+                            </button>
+                        </div>
+                        <div class="config-section-body">
+                            <div class="mapping-section">
+                                <div class="mapping-grid">
+                                    <div class="mapping-box">
+                                        <h5>主词</h5>
+                                        <div class="mapping-item"><i class="ri-checkbox-circle-line"></i> 人工智能</div>
+                                    </div>
+                                    <div class="mapping-arrow"><i class="ri-arrow-left-right-line"></i></div>
+                                    <div class="mapping-box">
+                                        <h5>同义词</h5>
+                                        <div class="mapping-item"><i class="ri-add-circle-line"></i> AI</div>
+                                        <div class="mapping-item"><i class="ri-add-circle-line"></i> Artificial Intelligence</div>
+                                        <div class="mapping-item"><i class="ri-add-circle-line"></i> 智能系统</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mapping-section">
+                                <div class="mapping-grid">
+                                    <div class="mapping-box">
+                                        <h5>主词</h5>
+                                        <div class="mapping-item"><i class="ri-checkbox-circle-line"></i> 知识库</div>
+                                    </div>
+                                    <div class="mapping-arrow"><i class="ri-arrow-left-right-line"></i></div>
+                                    <div class="mapping-box">
+                                        <h5>同义词</h5>
+                                        <div class="mapping-item"><i class="ri-add-circle-line"></i> KB</div>
+                                        <div class="mapping-item"><i class="ri-add-circle-line"></i> Knowledge Base</div>
+                                        <div class="mapping-item"><i class="ri-add-circle-line"></i> 知识管理系统</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="tab-interface" class="tab-content">
+                    <div class="info-tip">
+                        <i class="ri-information-line"></i>
+                        <div class="info-tip-content">
+                            <div class="info-tip-title">接口表述配置</div>
+                            <div class="info-tip-desc">配置LLM可调用的知识库相关接口，包括接口描述、参数说明、返回格式等，帮助LLM正确使用知识库功能。</div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <div class="config-section-header">
+                            <h3><i class="ri-code-line"></i> 知识库接口定义</h3>
+                            <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="showAddInterfaceModal()">
+                                <i class="ri-add-line"></i> 添加接口
+                            </button>
+                        </div>
+                        <div class="config-section-body">
+                            <div class="interface-card">
+                                <div class="interface-header" onclick="toggleInterface(this)">
+                                    <div class="interface-title">
+                                        <span class="interface-method post">POST</span>
+                                        <span class="interface-path">/api/v1/knowledge-bases/{kbId}/search</span>
+                                    </div>
+                                    <span class="interface-desc">知识检索接口</span>
+                                </div>
+                                <div class="interface-body">
+                                    <div style="margin-bottom: 16px;">
+                                        <h4 style="margin: 0 0 8px 0; font-size: 14px;">接口描述</h4>
+                                        <p style="margin: 0; font-size: 13px; color: var(--nx-text-secondary);">在指定知识库中进行语义检索，返回与查询最相关的文档片段。</p>
+                                    </div>
+                                    <div style="margin-bottom: 16px;">
+                                        <h4 style="margin: 0 0 8px 0; font-size: 14px;">请求参数</h4>
+                                        <table class="param-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>参数名</th>
+                                                    <th>类型</th>
+                                                    <th>必填</th>
+                                                    <th>说明</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="param-name">query</td>
+                                                    <td><span class="param-type">string</span></td>
+                                                    <td><span class="param-required">是</span></td>
+                                                    <td>检索查询文本</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="param-name">topK</td>
+                                                    <td><span class="param-type">integer</span></td>
+                                                    <td>否</td>
+                                                    <td>返回结果数量，默认5</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="param-name">threshold</td>
+                                                    <td><span class="param-type">float</span></td>
+                                                    <td>否</td>
+                                                    <td>相似度阈值，默认0.7</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div>
+                                        <h4 style="margin: 0 0 8px 0; font-size: 14px;">LLM调用提示</h4>
+                                        <div style="background: var(--nx-bg-input); padding: 12px; border-radius: 6px; font-size: 13px; font-family: monospace;">
+                                            当用户询问与{知识库名称}相关的问题时，使用此接口检索相关文档。
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="interface-card">
+                                <div class="interface-header" onclick="toggleInterface(this)">
+                                    <div class="interface-title">
+                                        <span class="interface-method get">GET</span>
+                                        <span class="interface-path">/api/v1/knowledge-bases</span>
+                                    </div>
+                                    <span class="interface-desc">获取知识库列表</span>
+                                </div>
+                                <div class="interface-body">
+                                    <div style="margin-bottom: 16px;">
+                                        <h4 style="margin: 0 0 8px 0; font-size: 14px;">接口描述</h4>
+                                        <p style="margin: 0; font-size: 13px; color: var(--nx-text-secondary);">获取当前用户可访问的所有知识库列表。</p>
+                                    </div>
+                                    <div>
+                                        <h4 style="margin: 0 0 8px 0; font-size: 14px;">LLM调用提示</h4>
+                                        <div style="background: var(--nx-bg-input); padding: 12px; border-radius: 6px; font-size: 13px; font-family: monospace;">
+                                            当需要了解有哪些知识库可用时，调用此接口获取列表。
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="interface-card">
+                                <div class="interface-header" onclick="toggleInterface(this)">
+                                    <div class="interface-title">
+                                        <span class="interface-method post">POST</span>
+                                        <span class="interface-path">/api/v1/scene-groups/{sceneGroupId}/knowledge/search</span>
+                                    </div>
+                                    <span class="interface-desc">场景知识检索</span>
+                                </div>
+                                <div class="interface-body">
+                                    <div style="margin-bottom: 16px;">
+                                        <h4 style="margin: 0 0 8px 0; font-size: 14px;">接口描述</h4>
+                                        <p style="margin: 0; font-size: 13px; color: var(--nx-text-secondary);">在场景绑定的所有知识库中进行跨层检索，按优先级返回结果。</p>
+                                    </div>
+                                    <div style="margin-bottom: 16px;">
+                                        <h4 style="margin: 0 0 8px 0; font-size: 14px;">请求参数</h4>
+                                        <table class="param-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>参数名</th>
+                                                    <th>类型</th>
+                                                    <th>必填</th>
+                                                    <th>说明</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="param-name">query</td>
+                                                    <td><span class="param-type">string</span></td>
+                                                    <td><span class="param-required">是</span></td>
+                                                    <td>检索查询文本</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="param-name">layers</td>
+                                                    <td><span class="param-type">array</span></td>
+                                                    <td>否</td>
+                                                    <td>指定检索层级：SCENE/PROFESSIONAL/GENERAL</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="param-name">topK</td>
+                                                    <td><span class="param-type">integer</span></td>
+                                                    <td>否</td>
+                                                    <td>返回结果数量，默认5</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div>
+                                        <h4 style="margin: 0 0 8px 0; font-size: 14px;">LLM调用提示</h4>
+                                        <div style="background: var(--nx-bg-input); padding: 12px; border-radius: 6px; font-size: 13px; font-family: monospace;">
+                                            在场景对话中，使用此接口检索与场景相关的知识。检索会按场景层→专业层→通用层的优先级进行。
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="tab-prompt" class="tab-content">
+                    <div class="info-tip">
+                        <i class="ri-information-line"></i>
+                        <div class="info-tip-content">
+                            <div class="info-tip-title">提示词模板</div>
+                            <div class="info-tip-desc">配置知识检索相关的提示词模板，用于指导LLM如何使用检索到的知识生成回答。</div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <div class="config-section-header">
+                            <h3><i class="ri-file-text-line"></i> 知识检索提示词模板</h3>
+                        </div>
+                        <div class="config-section-body">
+                            <div class="config-item" style="margin-bottom: 16px;">
+                                <label class="config-label">模板名称</label>
+                                <input type="text" class="config-input" value="知识增强回答模板">
+                            </div>
+                            <div class="prompt-editor">
+                                <div class="prompt-editor-header">
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm"><i class="ri-variable-line"></i> 插入变量</button>
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm"><i class="ri-history-line"></i> 历史</button>
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm"><i class="ri-eye-line"></i> 预览</button>
+                                </div>
+                                <textarea id="promptTemplate">你是一个专业的知识助手。请根据以下检索到的知识内容回答用户问题。
+
+## 检索到的相关知识：
+{{knowledge_context}}
+
+## 用户问题：
+{{user_query}}
+
+## 回答要求：
+1. 优先使用检索到的知识内容回答问题
+2. 如果知识内容不足以回答问题，请明确说明
+3. 引用知识内容时，标注来源（如：[知识库: XXX]）
+4. 回答要简洁、准确、专业
+
+## 回答：</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <div class="config-section-header">
+                            <h3><i class="ri-list-check"></i> 可用变量</h3>
+                        </div>
+                        <div class="config-section-body">
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                                <div style="padding: 12px; background: var(--nx-bg-input); border-radius: 8px;">
+                                    <div style="font-family: monospace; color: var(--nx-primary); margin-bottom: 4px;">{{knowledge_context}}</div>
+                                    <div style="font-size: 12px; color: var(--nx-text-secondary);">检索到的知识内容</div>
+                                </div>
+                                <div style="padding: 12px; background: var(--nx-bg-input); border-radius: 8px;">
+                                    <div style="font-family: monospace; color: var(--nx-primary); margin-bottom: 4px;">{{user_query}}</div>
+                                    <div style="font-size: 12px; color: var(--nx-text-secondary);">用户问题</div>
+                                </div>
+                                <div style="padding: 12px; background: var(--nx-bg-input); border-radius: 8px;">
+                                    <div style="font-family: monospace; color: var(--nx-primary); margin-bottom: 4px;">{{scene_name}}</div>
+                                    <div style="font-size: 12px; color: var(--nx-text-secondary);">当前场景名称</div>
+                                </div>
+                                <div style="padding: 12px; background: var(--nx-bg-input); border-radius: 8px;">
+                                    <div style="font-family: monospace; color: var(--nx-primary); margin-bottom: 4px;">{{kb_names}}</div>
+                                    <div style="font-size: 12px; color: var(--nx-text-secondary);">检索的知识库名称</div>
+                                </div>
+                                <div style="padding: 12px; background: var(--nx-bg-input); border-radius: 8px;">
+                                    <div style="font-family: monospace; color: var(--nx-primary); margin-bottom: 4px;">{{confidence_score}}</div>
+                                    <div style="font-size: 12px; color: var(--nx-text-secondary);">检索置信度分数</div>
+                                </div>
+                                <div style="padding: 12px; background: var(--nx-bg-input); border-radius: 8px;">
+                                    <div style="font-family: monospace; color: var(--nx-primary); margin-bottom: 4px;">{{conversation_history}}</div>
+                                    <div style="font-size: 12px; color: var(--nx-text-secondary);">对话历史</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <button class="nx-btn nx-btn--secondary" onclick="resetPromptTemplate()">
+                            <i class="ri-refresh-line"></i> 重置默认
+                        </button>
+                        <button class="nx-btn nx-btn--primary" onclick="savePromptTemplate()">
+                            <i class="ri-save-line"></i> 保存模板
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="addDictModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-add-circle-line"></i> 添加术语</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal('addDictModal')">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">术语/缩写 *</label>
+                    <input type="text" class="form-input" id="dictTerm" placeholder="如：API">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">全称/解释 *</label>
+                    <input type="text" class="form-input" id="dictFull" placeholder="如：Application Programming Interface">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">详细描述</label>
+                    <textarea class="form-input form-textarea" id="dictDesc" placeholder="术语的详细解释和使用场景"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">分类</label>
+                    <select class="form-input" id="dictCategory">
+                        <option value="tech">技术术语</option>
+                        <option value="business">业务术语</option>
+                        <option value="ai">AI术语</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">关联知识库</label>
+                    <select class="form-input" id="dictKb">
+                        <option value="">选择知识库</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('addDictModal')">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="addDictTerm()">添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/llm-knowledge-config.js"></script>
+</body>
+</html>

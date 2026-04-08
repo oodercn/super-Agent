@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能力绑定管理 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/nx-page.css">
+    <link rel="stylesheet" href="/console/css/pages/capability-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-link" aria-hidden="true"></i> 能力绑定管理</h1>
+                        <p>管理能力与场景组的绑定关系</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--primary" onclick="showCreateModal()">
+                        <i class="ri-add-line"></i> 创建绑定
+                    </button>
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container bindings-page">
+                    <div class="stats-row" id="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-icon primary"><i class="ri-link"></i></div>
+                            <div class="stat-content">
+                                <h4>总绑定数</h4>
+                                <div class="stat-value" id="stat-total">-</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon success"><i class="ri-checkbox-circle-line"></i></div>
+                            <div class="stat-content">
+                                <h4>活跃</h4>
+                                <div class="stat-value" id="stat-active">-</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon warning"><i class="ri-time-line"></i></div>
+                            <div class="stat-content">
+                                <h4>待绑定</h4>
+                                <div class="stat-value" id="stat-pending">-</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon danger"><i class="ri-error-warning-line"></i></div>
+                            <div class="stat-content">
+                                <h4>错误</h4>
+                                <div class="stat-value" id="stat-error">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-bar">
+                        <div class="search-box">
+                            <i class="ri-search-line"></i>
+                            <input type="text" id="search-input" placeholder="搜索绑定 ID、能力 ID 或场景组...">
+                        </div>
+                        <select class="filter-select" id="scene-filter">
+                            <option value="">全部场景组</option>
+                        </select>
+                        <select class="filter-select" id="status-filter">
+                            <option value="">全部状态</option>
+                            <option value="ACTIVE">活跃</option>
+                            <option value="PENDING">待绑定</option>
+                            <option value="BINDING">绑定中</option>
+                            <option value="INACTIVE">不活跃</option>
+                            <option value="ERROR">错误</option>
+                        </select>
+                    </div>
+                    
+                    <div id="binding-container">
+                        <div class="bindings-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>绑定</th>
+                                        <th>场景组</th>
+                                        <th>提供者</th>
+                                        <th>Agent</th>
+                                        <th>Link</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="binding-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal-overlay" id="create-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>创建能力绑定</h3>
+                <button class="modal-close" onclick="closeCreateModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>场景组</label>
+                    <select id="create-scene-group">
+                        <option value="">选择场景组</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>能力 ID</label>
+                    <input type="text" id="create-capability-id" placeholder="输入能力 ID">
+                </div>
+                <div class="form-group">
+                    <label>场景内短 ID (capId)</label>
+                    <input type="text" id="create-cap-id" placeholder="输入场景内短 ID">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>提供者类型</label>
+                        <select id="create-provider-type">
+                            <option value="SKILL">SKILL</option>
+                            <option value="AGENT">AGENT</option>
+                            <option value="PLATFORM">PLATFORM</option>
+                            <option value="DEVICE">DEVICE</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>连接器类型</label>
+                        <select id="create-connector-type">
+                            <option value="INTERNAL">INTERNAL</option>
+                            <option value="HTTP">HTTP</option>
+                            <option value="GRPC">GRPC</option>
+                            <option value="WEBSOCKET">WEBSOCKET</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>选择 Agent</label>
+                    <div class="select-list" id="agent-select-list"></div>
+                </div>
+                <div class="form-group">
+                    <label>选择 Link</label>
+                    <div class="select-list" id="link-select-list"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCreateModal()">取消</button>
+                <button class="btn btn-primary" onclick="createBinding()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>绑定详情</h3>
+                <button class="modal-close" onclick="closeDetailModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="detail-content"></div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="test-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="ri-play-line"></i> 绑定测试</h3>
+                <button class="modal-close" onclick="closeTestModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="test-result-container">
+                    <div class="test-loading">
+                        <i class="ri-loader-4-line ri-spin"></i>
+                        <span>正在测试绑定...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeTestModal()">关闭</button>
+                <button class="btn btn-primary" onclick="retryTest()">重新测试</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="monitor-modal">
+        <div class="modal" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3><i class="ri-line-chart-line"></i> 状态监控</h3>
+                <button class="modal-close" onclick="closeMonitorModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="monitor-content"></div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script>
+        (function() {
+            'use strict';
+            
+            let allBindings = [];
+            let allAgents = [];
+            let allLinks = [];
+            let allSceneGroups = [];
+            let searchKeyword = '';
+            let sceneFilter = '';
+            let statusFilter = '';
+            let selectedAgentId = null;
+            let selectedLinkId = null;
+            
+            async function loadData() {
+                try {
+                    const [bindingsRes, agentsRes, linksRes, sceneGroupsRes] = await Promise.all([
+                        fetch('/api/v1/capabilities/bindings'),
+                        fetch('/api/agent/list'),
+                        fetch('/api/network/topology'),
+                        fetch('/api/v1/scene-groups')
+                    ]);
+                    
+                    const bindings = await bindingsRes.json();
+                    const agents = await agentsRes.json();
+                    const links = await linksRes.json();
+                    const sceneGroups = await sceneGroupsRes.json();
+                    
+                    if (bindings.status === 'success') allBindings = bindings.data || [];
+                    if (agents.status === 'success') allAgents = agents.data || [];
+                    if (links.status === 'success' && links.data) allLinks = links.data.links || [];
+                    if (sceneGroups.status === 'success') allSceneGroups = sceneGroups.data || [];
+                    
+                    updateStats();
+                    updateSceneFilter();
+                    renderBindings();
+                } catch (e) {
+                    console.error('Failed to load data:', e);
+                }
+            }
+            
+            function updateStats() {
+                const stats = {
+                    total: allBindings.length,
+                    active: 0,
+                    pending: 0,
+                    error: 0
+                };
+                
+                allBindings.forEach(binding => {
+                    const status = binding.status || 'PENDING';
+                    if (status === 'ACTIVE') stats.active++;
+                    else if (status === 'PENDING' || status === 'BINDING') stats.pending++;
+                    else if (status === 'ERROR') stats.error++;
+                });
+                
+                document.getElementById('stat-total').textContent = stats.total;
+                document.getElementById('stat-active').textContent = stats.active;
+                document.getElementById('stat-pending').textContent = stats.pending;
+                document.getElementById('stat-error').textContent = stats.error;
+            }
+            
+            function updateSceneFilter() {
+                const select = document.getElementById('scene-filter');
+                const sceneIds = [...new Set(allBindings.map(b => b.sceneGroupId).filter(Boolean))];
+                
+                select.innerHTML = '<option value="">全部场景组</option>' +
+                    sceneIds.map(id => `<option value="${id}">${id}</option>`).join('');
+            }
+            
+            function filterBindings() {
+                return allBindings.filter(binding => {
+                    if (sceneFilter && binding.sceneGroupId !== sceneFilter) return false;
+                    if (statusFilter && binding.status !== statusFilter) return false;
+                    if (searchKeyword) {
+                        const keyword = searchKeyword.toLowerCase();
+                        const bindingId = (binding.bindingId || '').toLowerCase();
+                        const capId = (binding.capId || binding.capabilityId || '').toLowerCase();
+                        const sceneId = (binding.sceneGroupId || '').toLowerCase();
+                        return bindingId.includes(keyword) || capId.includes(keyword) || sceneId.includes(keyword);
+                    }
+                    return true;
+                });
+            }
+            
+            function renderBindings() {
+                const filtered = filterBindings();
+                const container = document.getElementById('binding-list');
+                
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <i class="ri-link"></i>
+                                    <h3>暂无绑定</h3>
+                                    <p>没有找到匹配的能力绑定</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = filtered.map(binding => renderBindingRow(binding)).join('');
+            }
+            
+            function renderBindingRow(binding) {
+                const bindingId = binding.bindingId || '-';
+                const capId = binding.capId || binding.capabilityId || '-';
+                const sceneGroupId = binding.sceneGroupId || '-';
+                const providerType = (binding.providerType || 'SKILL').toLowerCase();
+                const status = binding.status || 'PENDING';
+                const agentId = binding.agentId;
+                const linkId = binding.linkId;
+                
+                const statusClass = status === 'ACTIVE' ? 'active' :
+                                   status === 'PENDING' ? 'pending' :
+                                   status === 'BINDING' ? 'binding' :
+                                   status === 'ERROR' ? 'error' : 'inactive';
+                
+                return `
+                    <tr>
+                        <td>
+                            <div class="binding-id">
+                                <div class="binding-icon"><i class="ri-link"></i></div>
+                                <div class="binding-info">
+                                    <h4>${capId}</h4>
+                                    <span>${bindingId}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="scene-group-detail.html?id=${sceneGroupId}" class="ref-link">
+                                <i class="ri-folder-line"></i>
+                                ${sceneGroupId.substring(0, 16)}...
+                            </a>
+                        </td>
+                        <td><span class="provider-badge ${providerType}">${binding.providerType || 'SKILL'}</span></td>
+                        <td>
+                            ${agentId ? `
+                                <a href="agent-list.html" class="ref-link">
+                                    <i class="ri-robot-line"></i>
+                                    ${agentId.substring(0, 12)}...
+                                </a>
+                            ` : '<span style="color: var(--nx-text-secondary);">-</span>'}
+                        </td>
+                        <td>
+                            ${linkId ? `
+                                <a href="link-list.html" class="ref-link">
+                                    <i class="ri-link"></i>
+                                    ${linkId.substring(0, 12)}...
+                                </a>
+                            ` : '<span style="color: var(--nx-text-secondary);">-</span>'}
+                        </td>
+                        <td>
+                            <span class="status-badge ${statusClass}">
+                                <i class="ri-checkbox-blank-circle-fill"></i>
+                                ${status}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="action-btn" onclick="showBindingDetail('${bindingId}')" title="查看详情">
+                                    <i class="ri-eye-line"></i>
+                                </button>
+                                <button class="action-btn" onclick="editBinding('${bindingId}')" title="编辑">
+                                    <i class="ri-edit-line"></i>
+                                </button>
+                                <button class="action-btn" onclick="testBinding('${bindingId}')" title="测试">
+                                    <i class="ri-play-line"></i>
+                                </button>
+                                <button class="action-btn" onclick="showMonitor('${bindingId}')" title="监控">
+                                    <i class="ri-line-chart-line"></i>
+                                </button>
+                                <button class="action-btn danger" onclick="deleteBinding('${bindingId}')" title="删除">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            function showCreateModal() {
+                selectedAgentId = null;
+                selectedLinkId = null;
+                
+                const sceneGroupSelect = document.getElementById('create-scene-group');
+                sceneGroupSelect.innerHTML = '<option value="">选择场景组</option>' +
+                    allSceneGroups.map(sg => `<option value="${sg.sceneGroupId}">${sg.name || sg.sceneGroupId}</option>`).join('');
+                
+                renderAgentSelectList();
+                renderLinkSelectList();
+                
+                document.getElementById('create-modal').classList.add('active');
+            }
+            
+            function closeCreateModal() {
+                document.getElementById('create-modal').classList.remove('active');
+                document.querySelector('#create-modal .modal-header h3').textContent = '创建能力绑定';
+                document.querySelector('#create-modal .modal-footer .btn-primary').textContent = '创建';
+                document.querySelector('#create-modal .modal-footer .btn-primary').removeAttribute('data-edit-id');
+                document.getElementById('create-scene-group').value = '';
+                document.getElementById('create-capability-id').value = '';
+                document.getElementById('create-cap-id').value = '';
+                selectedAgentId = null;
+                selectedLinkId = null;
+            }
+            
+            function renderAgentSelectList() {
+                const container = document.getElementById('agent-select-list');
+                
+                if (allAgents.length === 0) {
+                    container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--nx-text-secondary);">暂无可用 Agent</div>';
+                    return;
+                }
+                
+                container.innerHTML = allAgents.map(agent => {
+                    const agentId = agent.agentId || agent.id;
+                    const name = agent.agentName || agent.name || agentId;
+                    const status = agent.status || 'offline';
+                    const isSelected = selectedAgentId === agentId;
+                    
+                    return `
+                        <div class="select-item ${isSelected ? 'selected' : ''}" onclick="selectAgent('${agentId}')">
+                            <div class="select-item-info">
+                                <h5>${name}</h5>
+                                <span>${agentId} - ${status}</span>
+                            </div>
+                            <i class="ri-${isSelected ? 'checkbox-circle' : 'checkbox-blank-circle'}-line"></i>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            function renderLinkSelectList() {
+                const container = document.getElementById('link-select-list');
+                
+                if (allLinks.length === 0) {
+                    container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--nx-text-secondary);">暂无可用 Link</div>';
+                    return;
+                }
+                
+                container.innerHTML = allLinks.map(link => {
+                    const linkId = link.linkId || link.id;
+                    const type = link.linkType || link.type || 'P2P';
+                    const status = link.status || 'inactive';
+                    const isSelected = selectedLinkId === linkId;
+                    
+                    return `
+                        <div class="select-item ${isSelected ? 'selected' : ''}" onclick="selectLink('${linkId}')">
+                            <div class="select-item-info">
+                                <h5>${linkId}</h5>
+                                <span>${type} - ${status}</span>
+                            </div>
+                            <i class="ri-${isSelected ? 'checkbox-circle' : 'checkbox-blank-circle'}-line"></i>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            function selectAgent(agentId) {
+                selectedAgentId = selectedAgentId === agentId ? null : agentId;
+                renderAgentSelectList();
+            }
+            
+            function selectLink(linkId) {
+                selectedLinkId = selectedLinkId === linkId ? null : linkId;
+                renderLinkSelectList();
+            }
+            
+            async function createBinding() {
+                const sceneGroupId = document.getElementById('create-scene-group').value;
+                const capabilityId = document.getElementById('create-capability-id').value;
+                const capId = document.getElementById('create-cap-id').value;
+                const providerType = document.getElementById('create-provider-type').value;
+                const connectorType = document.getElementById('create-connector-type').value;
+                
+                const editBtn = document.querySelector('#create-modal .modal-footer .btn-primary');
+                const editId = editBtn.getAttribute('data-edit-id');
+                
+                if (!sceneGroupId || !capabilityId) {
+                    alert('请填写场景组和能力 ID');
+                    return;
+                }
+                
+                const payload = {
+                    sceneGroupId,
+                    capabilityId,
+                    capId,
+                    providerType,
+                    connectorType,
+                    agentId: selectedAgentId,
+                    linkId: selectedLinkId
+                };
+                
+                try {
+                    let response;
+                    if (editId) {
+                        response = await fetch('/api/v1/capabilities/bindings/' + editId, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                    } else {
+                        response = await fetch('/api/v1/capabilities/bindings', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        closeCreateModal();
+                        loadData();
+                        alert(editId ? '绑定更新成功' : '绑定创建成功');
+                    } else {
+                        alert((editId ? '更新失败: ' : '创建失败: ') + (result.message || '未知错误'));
+                    }
+                } catch (e) {
+                    alert((editId ? '更新失败: ' : '创建失败: ') + e.message);
+                }
+            }
+            
+            async function showBindingDetail(bindingId) {
+                const binding = allBindings.find(b => b.bindingId === bindingId);
+                if (!binding) return;
+                
+                document.getElementById('detail-content').innerHTML = `
+                    <div class="detail-row">
+                        <div class="detail-label">绑定 ID</div>
+                        <div class="detail-value">${binding.bindingId}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">场景组</div>
+                        <div class="detail-value">${binding.sceneGroupId || '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">能力 ID</div>
+                        <div class="detail-value">${binding.capabilityId || '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">场景内 ID</div>
+                        <div class="detail-value">${binding.capId || '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">CAP 地址</div>
+                        <div class="detail-value">${binding.capAddress || '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">提供者类型</div>
+                        <div class="detail-value">${binding.providerType || '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">连接器类型</div>
+                        <div class="detail-value">${binding.connectorType || '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Agent</div>
+                        <div class="detail-value">${binding.agentId || '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Link</div>
+                        <div class="detail-value">${binding.linkId || '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">状态</div>
+                        <div class="detail-value">${binding.status || '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">创建时间</div>
+                        <div class="detail-value">${binding.createTime ? new Date(binding.createTime).toLocaleString() : '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">最后调用</div>
+                        <div class="detail-value">${binding.lastInvokeTime ? new Date(binding.lastInvokeTime).toLocaleString() : '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">调用统计</div>
+                        <div class="detail-value">成功: ${binding.successCount || 0}, 失败: ${binding.failureCount || 0}</div>
+                    </div>
+                `;
+                
+                document.getElementById('detail-modal').classList.add('active');
+            }
+            
+            function closeDetailModal() {
+                document.getElementById('detail-modal').classList.remove('active');
+            }
+            
+            function editBinding(bindingId) {
+                const binding = allBindings.find(b => b.bindingId === bindingId);
+                if (!binding) {
+                    alert('绑定不存在');
+                    return;
+                }
+                
+                document.getElementById('create-scene-group').value = binding.sceneGroupId || '';
+                document.getElementById('create-capability-id').value = binding.capabilityId || '';
+                document.getElementById('create-cap-id').value = binding.capId || '';
+                document.getElementById('create-provider-type').value = binding.providerType || 'SKILL';
+                document.getElementById('create-connector-type').value = binding.connectorType || 'INTERNAL';
+                
+                selectedAgentId = binding.agentId || null;
+                selectedLinkId = binding.linkId || null;
+                
+                renderAgentSelectList();
+                renderLinkSelectList();
+                
+                document.querySelector('#create-modal .modal-header h3').textContent = '编辑能力绑定';
+                document.querySelector('#create-modal .modal-footer .btn-primary').textContent = '保存';
+                document.querySelector('#create-modal .modal-footer .btn-primary').setAttribute('data-edit-id', bindingId);
+                
+                document.getElementById('create-modal').classList.add('active');
+            }
+            
+            async function testBinding(bindingId) {
+                currentTestBindingId = bindingId;
+                document.getElementById('test-modal').classList.add('active');
+                document.getElementById('test-result-container').innerHTML = `
+                    <div class="test-loading">
+                        <i class="ri-loader-4-line ri-spin"></i>
+                        <span>正在测试绑定...</span>
+                    </div>
+                `;
+                
+                try {
+                    const startTime = Date.now();
+                    const response = await fetch(`/api/v1/capabilities/bindings/${bindingId}/test`, { method: 'POST' });
+                    const duration = Date.now() - startTime;
+                    const result = await response.json();
+                    
+                    renderTestResult(result, duration);
+                } catch (e) {
+                    renderTestResult({ status: 'error', message: e.message }, 0);
+                }
+            }
+            
+            function renderTestResult(result, duration) {
+                const isSuccess = result.status === 'success';
+                const container = document.getElementById('test-result-container');
+                
+                container.innerHTML = `
+                    <div class="test-result test-result--${isSuccess ? 'success' : 'error'}">
+                        <div class="test-result-header">
+                            <i class="ri-${isSuccess ? 'checkbox-circle' : 'close-circle'}-line"></i>
+                            <span class="test-result-title">${isSuccess ? '测试成功' : '测试失败'}</span>
+                        </div>
+                        <div class="test-metrics">
+                            <div class="test-metric">
+                                <div class="test-metric-value">${duration}ms</div>
+                                <div class="test-metric-label">响应时间</div>
+                            </div>
+                            <div class="test-metric">
+                                <div class="test-metric-value">${result.statusCode || '-'}</div>
+                                <div class="test-metric-label">状态码</div>
+                            </div>
+                            <div class="test-metric">
+                                <div class="test-metric-value">${result.data ? '有' : '无'}</div>
+                                <div class="test-metric-label">返回数据</div>
+                            </div>
+                        </div>
+                        ${result.message ? `<div class="test-details">${result.message}</div>` : ''}
+                        ${result.data ? `<div class="test-details">${JSON.stringify(result.data, null, 2)}</div>` : ''}
+                    </div>
+                `;
+            }
+            
+            function closeTestModal() {
+                document.getElementById('test-modal').classList.remove('active');
+            }
+            
+            function retryTest() {
+                if (currentTestBindingId) {
+                    testBinding(currentTestBindingId);
+                }
+            }
+            
+            let currentTestBindingId = null;
+            let currentMonitorBindingId = null;
+            
+            async function showMonitor(bindingId) {
+                currentMonitorBindingId = bindingId;
+                document.getElementById('monitor-modal').classList.add('active');
+                
+                const binding = allBindings.find(b => b.bindingId === bindingId);
+                if (!binding) return;
+                
+                const successRate = binding.successCount + binding.failureCount > 0 
+                    ? Math.round(binding.successCount / (binding.successCount + binding.failureCount) * 100) 
+                    : 0;
+                
+                document.getElementById('monitor-content').innerHTML = `
+                    <div class="monitor-stats">
+                        <div class="monitor-stat">
+                            <div class="monitor-stat-value" style="color: var(--nx-success)">${binding.successCount || 0}</div>
+                            <div class="monitor-stat-label">成功调用</div>
+                        </div>
+                        <div class="monitor-stat">
+                            <div class="monitor-stat-value" style="color: var(--nx-danger)">${binding.failureCount || 0}</div>
+                            <div class="monitor-stat-label">失败调用</div>
+                        </div>
+                        <div class="monitor-stat">
+                            <div class="monitor-stat-value">${successRate}%</div>
+                            <div class="monitor-stat-label">成功率</div>
+                        </div>
+                        <div class="monitor-stat">
+                            <div class="monitor-stat-value">${binding.avgLatency || 0}ms</div>
+                            <div class="monitor-stat-label">平均延迟</div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 14px;">调用趋势 (最近24小时)</h4>
+                        <div class="monitor-chart" id="trend-chart">
+                            ${generateTrendChart(binding.trendData || [])}
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0 0 12px 0; font-size: 14px;">绑定信息</h4>
+                        <div class="detail-row">
+                            <div class="detail-label">绑定 ID</div>
+                            <div class="detail-value">${binding.bindingId}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">能力 ID</div>
+                            <div class="detail-value">${binding.capabilityId || '-'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">状态</div>
+                            <div class="detail-value">
+                                <span class="status-badge ${binding.status === 'ACTIVE' ? 'active' : 'inactive'}">
+                                    ${binding.status || 'UNKNOWN'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">最后调用</div>
+                            <div class="detail-value">${binding.lastInvokeTime ? new Date(binding.lastInvokeTime).toLocaleString() : '-'}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function generateTrendChart(data) {
+                if (!data || data.length === 0) {
+                    const hours = 24;
+                    let bars = '';
+                    for (let i = 0; i < hours; i++) {
+                        const height = Math.random() * 80 + 20;
+                        bars += `<div class="chart-bar" style="height: ${height}px" title="${i}:00"></div>`;
+                    }
+                    return bars;
+                }
+                const max = Math.max(...data.map(d => d.count || 0));
+                return data.map(d => {
+                    const height = max > 0 ? (d.count / max * 160) : 4;
+                    return `<div class="chart-bar" style="height: ${height}px" title="${d.hour}:00 - ${d.count}次"></div>`;
+                }).join('');
+            }
+            
+            function closeMonitorModal() {
+                document.getElementById('monitor-modal').classList.remove('active');
+            }
+            
+            async function deleteBinding(bindingId) {
+                if (!confirm('确定要删除绑定 ' + bindingId + ' 吗？')) return;
+                
+                try {
+                    const response = await fetch(`/api/v1/capabilities/bindings/${bindingId}`, { method: 'DELETE' });
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        loadData();
+                    } else {
+                        alert('删除失败: ' + (result.message || '未知错误'));
+                    }
+                } catch (e) {
+                    alert('删除失败: ' + e.message);
+                }
+            }
+            
+            function initFilters() {
+                const searchInput = document.getElementById('search-input');
+                let debounceTimer;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        searchKeyword = this.value.trim();
+                        renderBindings();
+                    }, 300);
+                });
+                
+                document.getElementById('scene-filter').addEventListener('change', function() {
+                    sceneFilter = this.value;
+                    renderBindings();
+                });
+                
+                document.getElementById('status-filter').addEventListener('change', function() {
+                    statusFilter = this.value;
+                    renderBindings();
+                });
+            }
+            
+            window.showCreateModal = showCreateModal;
+            window.closeCreateModal = closeCreateModal;
+            window.selectAgent = selectAgent;
+            window.selectLink = selectLink;
+            window.createBinding = createBinding;
+            window.showBindingDetail = showBindingDetail;
+            window.closeDetailModal = closeDetailModal;
+            window.editBinding = editBinding;
+            window.testBinding = testBinding;
+            window.closeTestModal = closeTestModal;
+            window.retryTest = retryTest;
+            window.showMonitor = showMonitor;
+            window.closeMonitorModal = closeMonitorModal;
+            window.deleteBinding = deleteBinding;
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                initFilters();
+                loadData();
+            });
+        })();
+    </script>
+</body>
+</html>

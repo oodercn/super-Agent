@@ -4,39 +4,41 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.ooderCN</groupId>
+    <groupId>net.ooder</groupId>
     <artifactId>super-agent-parent</artifactId>
-    <version>0.6.6</version>
+    <version>3.0.2</version>
     <packaging>pom</packaging>
     <name>Super Agent Parent</name>
-    <description>Parent POM for Super Agent Modules</description>
+    <description>Parent POM for ooderAgent 3.0.2 Modules</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.0</version>
+        <version>3.4.4</version>
         <relativePath/>
     </parent>
 
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <agent-sdk.version>0.7.3</agent-sdk.version>
-        <ooder-core.version>2.2</ooder-core.version>
-        <fastjson.version>1.2.83</fastjson.version>
-        <slf4j.version>1.7.36</slf4j.version>
+        <ooder.sdk.version>3.0.2</ooder.sdk.version>
+        <fastjson2.version>2.0.57</fastjson2.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.enablePreview>true</maven.compiler.enablePreview>
     </properties>
 
     <modules>
-        <module>agent-skillcenter</module>
-        <module>ooder-Nexus</module>
-        <module>ooder-Nexus-Enterprise</module>
+        <module>ooder-agent</module>
+        <module>ooder-nexus</module>
+        <module>ooder-nexus-enterprise</module>
     </modules>
 
     <repositories>
         <repository>
-            <id>central</id>
-            <url>https://repo.maven.apache.org/maven2/</url>
+            <id>mvn-central</id>
+            <name>Maven Central</name>
+            <url>https://repo1.maven.org/maven2</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -44,175 +46,78 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
-        <repository>
-            <id>aliyunmaven</id>
-            <url>https://maven.aliyun.com/repository/public</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
     </repositories>
 
     <pluginRepositories>
         <pluginRepository>
-            <id>aliyunmaven</id>
-            <url>https://maven.aliyun.com/repository/public</url>
+            <id>mvn-central</id>
+            <name>Maven Central</name>
+            <url>https://repo1.maven.org/maven2</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
             <snapshots>
-                <enabled>true</enabled>
+                <enabled>false</enabled>
             </snapshots>
         </pluginRepository>
     </pluginRepositories>
 
     <dependencyManagement>
         <dependencies>
-            <!-- Agent SDK -->
             <dependency>
                 <groupId>net.ooder</groupId>
-                <artifactId>agent-sdk</artifactId>
-                <version>${agent-sdk.version}</version>
-            </dependency>
-
-            <!-- Skill Modules -->
-            <dependency>
-                <groupId>net.ooder</groupId>
-                <artifactId>skill-vfs</artifactId>
-                <version>${agent-sdk.version}</version>
-            </dependency>
-
-            <!-- Ooder Core Dependencies -->
-            <dependency>
-                <groupId>net.ooder</groupId>
-                <artifactId>ooder-vfs-web</artifactId>
-                <version>${ooder-core.version}</version>
+                <artifactId>agent-sdk-core</artifactId>
+                <version>${ooder.sdk.version}</version>
             </dependency>
             <dependency>
                 <groupId>net.ooder</groupId>
-                <artifactId>ooder-server</artifactId>
-                <version>${ooder-core.version}</version>
+                <artifactId>skill-common</artifactId>
+                <version>${ooder.sdk.version}</version>
             </dependency>
             <dependency>
                 <groupId>net.ooder</groupId>
-                <artifactId>ooder-common-client</artifactId>
-                <version>${ooder-core.version}</version>
+                <artifactId>scene-engine</artifactId>
+                <version>${ooder.sdk.version}</version>
             </dependency>
             <dependency>
                 <groupId>net.ooder</groupId>
-                <artifactId>ooder-annotation</artifactId>
-                <version>${ooder-core.version}</version>
+                <artifactId>skill-discovery</artifactId>
+                <version>${ooder.sdk.version}</version>
             </dependency>
             <dependency>
                 <groupId>net.ooder</groupId>
-                <artifactId>ooder-core</artifactId>
-                <version>${ooder-core.version}</version>
+                <artifactId>skill-hotplug-starter</artifactId>
+                <version>${ooder.sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.ooder</groupId>
+                <artifactId>skills-framework</artifactId>
+                <version>${ooder.sdk.version}</version>
             </dependency>
             <dependency>
                 <groupId>net.ooder</groupId>
                 <artifactId>ooder-bpm-web</artifactId>
-                <version>${ooder-core.version}</version>
+                <version>${ooder.sdk.version}</version>
             </dependency>
             <dependency>
                 <groupId>net.ooder</groupId>
-                <artifactId>ooder-plugins-dsm</artifactId>
-                <version>${ooder-core.version}</version>
+                <artifactId>skill-tenant</artifactId>
+                <version>${ooder.sdk.version}</version>
             </dependency>
             <dependency>
                 <groupId>net.ooder</groupId>
-                <artifactId>ooder-config</artifactId>
-                <version>${ooder-core.version}</version>
+                <artifactId>skill-org</artifactId>
+                <version>${ooder.sdk.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.ooder</groupId>
-                <artifactId>ooder-database</artifactId>
-                <version>${ooder-core.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.ooder</groupId>
-                <artifactId>ooder-index-web</artifactId>
-                <version>${ooder-core.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.ooder</groupId>
-                <artifactId>ooder-iot-webclient</artifactId>
-                <version>${ooder-core.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.ooder</groupId>
-                <artifactId>ooder-msg-web</artifactId>
-                <version>${ooder-core.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.ooder</groupId>
-                <artifactId>ooder-org-web</artifactId>
-                <version>${ooder-core.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.ooder</groupId>
-                <artifactId>ooder-plugins-db</artifactId>
-                <version>${ooder-core.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.ooder</groupId>
-                <artifactId>ooder-plugins-formula</artifactId>
-                <version>${ooder-core.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.ooder</groupId>
-                <artifactId>ooder-plugins-org</artifactId>
-                <version>${ooder-core.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.ooder</groupId>
-                <artifactId>ooder-plugins-right</artifactId>
-                <version>${ooder-core.version}</version>
-            </dependency>
-
-            <!-- Third-party Dependencies -->
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>fastjson</artifactId>
-                <version>${fastjson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
-                <version>1.18.24</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-lang3</artifactId>
-                <version>3.12.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-web</artifactId>
-                <version>2.7.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-webflux</artifactId>
-                <version>2.7.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-actuator</artifactId>
-                <version>2.7.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-test</artifactId>
-                <version>2.7.0</version>
-                <scope>test</scope>
+                <version>1.18.30</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -222,11 +127,14 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.10.1</version>
+                <version>3.13.0</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
+                    <compilerArgs>
+                        <arg>--enable-preview</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
         </plugins>

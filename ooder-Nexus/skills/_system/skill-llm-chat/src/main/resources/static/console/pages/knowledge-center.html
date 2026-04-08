@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识中心 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/knowledge-base.css">
+    <link rel="stylesheet" href="/console/css/pages/knowledge-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-book-3-line" aria-hidden="true"></i> 知识中心</h1>
+                        <p>SKILLS-AGENT 知识库统一管理入口</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="kc-page">
+                <div class="kc-sidebar">
+                    <div class="kc-sidebar-header">
+                        <h3><i class="ri-folder-tree-line"></i> 知识库目录</h3>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="showCreateKbModal()" title="新建知识库">
+                            <i class="ri-add-line"></i>
+                        </button>
+                    </div>
+                    <div class="kc-tree" id="knowledgeTree">
+                        <div class="tree-item active" data-view="overview" onclick="switchView('overview')">
+                            <i class="ri-dashboard-line"></i>
+                            <span class="tree-name">概览</span>
+                        </div>
+                        
+                        <div class="tree-section">
+                            <div class="tree-section-header" onclick="toggleTreeSection(this)">
+                                <span class="tree-toggle"><i class="ri-arrow-down-s-line"></i></span>
+                                <i class="ri-building-line" style="color: #2563eb;"></i>
+                                <span class="tree-name">业务知识库</span>
+                            </div>
+                            <div class="tree-children">
+                                <div class="tree-item" data-view="company" onclick="switchView('company')">
+                                    <i class="ri-building-2-line"></i>
+                                    <span class="tree-name">公司级</span>
+                                </div>
+                                <div class="tree-item" data-view="department" onclick="switchView('department')">
+                                    <i class="ri-team-line"></i>
+                                    <span class="tree-name">部门级</span>
+                                </div>
+                                <div class="tree-item" data-view="special" onclick="switchView('special')">
+                                    <i class="ri-focus-3-line"></i>
+                                    <span class="tree-name">专用业务</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tree-section">
+                            <div class="tree-section-header" onclick="toggleTreeSection(this)">
+                                <span class="tree-toggle"><i class="ri-arrow-down-s-line"></i></span>
+                                <i class="ri-stack-line" style="color: #059669;"></i>
+                                <span class="tree-name">知识层级</span>
+                            </div>
+                            <div class="tree-children" id="layerTree">
+                                <div class="tree-item" data-view="layer-general" onclick="switchView('layer-general')">
+                                    <i class="ri-global-line"></i>
+                                    <span class="tree-name">通用知识层</span>
+                                    <span class="tree-count" id="generalCount">0</span>
+                                </div>
+                                <div class="tree-item" data-view="layer-professional" onclick="switchView('layer-professional')">
+                                    <i class="ri-briefcase-line"></i>
+                                    <span class="tree-name">专业模块层</span>
+                                    <span class="tree-count" id="professionalCount">0</span>
+                                </div>
+                                <div class="tree-item" data-view="layer-scene" onclick="switchView('layer-scene')">
+                                    <i class="ri-flashlight-line"></i>
+                                    <span class="tree-name">场景知识层</span>
+                                    <span class="tree-count" id="sceneCount">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tree-section">
+                            <div class="tree-section-header" onclick="toggleTreeSection(this)">
+                                <span class="tree-toggle"><i class="ri-arrow-down-s-line"></i></span>
+                                <i class="ri-book-line" style="color: #7c3aed;"></i>
+                                <span class="tree-name">全部知识库</span>
+                                <span class="tree-count" id="totalCount">0</span>
+                            </div>
+                            <div class="tree-children" id="kbTree"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="kc-main">
+                    <div class="kc-content" id="mainContent">
+                        <div id="view-overview">
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-icon primary"><i class="ri-book-3-line"></i></div>
+                                    <div class="stat-value" id="statTotalKb">0</div>
+                                    <div class="stat-label">知识库总数</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon success"><i class="ri-file-text-line"></i></div>
+                                    <div class="stat-value" id="statTotalDocs">0</div>
+                                    <div class="stat-label">文档总数</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon warning"><i class="ri-cpu-line"></i></div>
+                                    <div class="stat-value" id="statEmbeddingModel">-</div>
+                                    <div class="stat-label">嵌入模型</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon info"><i class="ri-link"></i></div>
+                                    <div class="stat-value" id="statBindings">0</div>
+                                    <div class="stat-label">场景绑定</div>
+                                </div>
+                            </div>
+                            
+                            <div class="section-card">
+                                <div class="section-header">
+                                    <h3><i class="ri-flashlight-line"></i> 快捷操作</h3>
+                                </div>
+                                <div class="section-body">
+                                    <div class="quick-actions">
+                                        <a class="quick-action" onclick="showCreateKbModal()">
+                                            <i class="ri-add-circle-line"></i>
+                                            <span>创建知识库</span>
+                                        </a>
+                                        <a class="quick-action" href="llm-knowledge-config.html">
+                                            <i class="ri-robot-line"></i>
+                                            <span>LLM配置</span>
+                                        </a>
+                                        <a class="quick-action" href="knowledge-search.html">
+                                            <i class="ri-search-line"></i>
+                                            <span>知识检索</span>
+                                        </a>
+                                        <a class="quick-action" onclick="switchView('company')">
+                                            <i class="ri-briefcase-line"></i>
+                                            <span>业务知识库</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="section-card">
+                                <div class="section-header">
+                                    <h3><i class="ri-building-line"></i> 业务知识库</h3>
+                                </div>
+                                <div class="section-body">
+                                    <div class="org-section">
+                                        <div class="org-header" onclick="switchView('company')">
+                                            <div class="org-icon company"><i class="ri-building-2-line"></i></div>
+                                            <div class="org-info">
+                                                <div class="org-name">公司级</div>
+                                                <div class="org-desc">全公司共享的通用业务知识</div>
+                                            </div>
+                                            <div class="org-stats">
+                                                <div class="org-stat">
+                                                    <div class="org-stat-value" id="companyKbCount">0</div>
+                                                    <div class="org-stat-label">知识库</div>
+                                                </div>
+                                                <div class="org-stat">
+                                                    <div class="org-stat-value" id="companyDocCount">0</div>
+                                                    <div class="org-stat-label">文档</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="org-header" onclick="switchView('department')">
+                                            <div class="org-icon department"><i class="ri-team-line"></i></div>
+                                            <div class="org-info">
+                                                <div class="org-name">部门级</div>
+                                                <div class="org-desc">部门专属的业务知识</div>
+                                            </div>
+                                            <div class="org-stats">
+                                                <div class="org-stat">
+                                                    <div class="org-stat-value" id="deptKbCount">0</div>
+                                                    <div class="org-stat-label">知识库</div>
+                                                </div>
+                                                <div class="org-stat">
+                                                    <div class="org-stat-value" id="deptDocCount">0</div>
+                                                    <div class="org-stat-label">文档</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="org-header" onclick="switchView('special')">
+                                            <div class="org-icon special"><i class="ri-focus-3-line"></i></div>
+                                            <div class="org-info">
+                                                <div class="org-name">专用业务</div>
+                                                <div class="org-desc">特定业务领域的专业知识</div>
+                                            </div>
+                                            <div class="org-stats">
+                                                <div class="org-stat">
+                                                    <div class="org-stat-value" id="specialKbCount">0</div>
+                                                    <div class="org-stat-label">知识库</div>
+                                                </div>
+                                                <div class="org-stat">
+                                                    <div class="org-stat-value" id="specialDocCount">0</div>
+                                                    <div class="org-stat-label">文档</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="view-list" style="display: none;">
+                            <div class="section-card">
+                                <div class="section-header">
+                                    <h3><i class="ri-book-line"></i> <span id="listTitle">知识库列表</span></h3>
+                                    <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="showCreateKbModal()">
+                                        <i class="ri-add-line"></i> 新建
+                                    </button>
+                                </div>
+                                <div class="section-body">
+                                    <div class="kb-grid" id="kbGrid"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="createKbModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-add-circle-line"></i> 新建知识库</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal('createKbModal')">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">知识库名称 *</label>
+                    <input type="text" class="form-input" id="newKbName" placeholder="输入知识库名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">描述</label>
+                    <textarea class="form-input form-textarea" id="newKbDesc" placeholder="输入知识库描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">业务类型</label>
+                    <select class="form-input form-select" id="newKbOrg">
+                        <option value="company">公司级</option>
+                        <option value="department">部门级</option>
+                        <option value="special">专用业务</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">知识层级</label>
+                    <select class="form-input form-select" id="newKbLayer">
+                        <option value="GENERAL">通用知识层</option>
+                        <option value="PROFESSIONAL">专业模块层</option>
+                        <option value="SCENE">场景知识层</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">可见性</label>
+                    <select class="form-input form-select" id="newKbVisibility">
+                        <option value="private">私有</option>
+                        <option value="team">团队</option>
+                        <option value="public">公开</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('createKbModal')">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createKb()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/knowledge-center.js"></script>
+</body>
+</html>

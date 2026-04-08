@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="能力详情 - 查看能力完整属性和关系">
+    <title>能力详情 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/capability-detail.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <nav>
+                <ul class="nav-menu" id="nav-menu" role="navigation" aria-label="主导航"></ul>
+            </nav>
+        </aside>
+        
+        <main class="nx-page__content" id="main-content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-puzzle-line" aria-hidden="true"></i> 能力详情</h1>
+                        <p>查看能力完整属性和关系</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                <i class="ri-puzzle-line"></i> 我的能力
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                    <button class="nx-btn nx-btn--secondary" onclick="goBack()" aria-label="返回上一页">
+                        <i class="ri-arrow-left-line" aria-hidden="true"></i> 
+                        <span>返回</span>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div id="capability-content" class="capability-detail">
+                        <header id="capability-header" class="capability-header" role="banner">
+                            <div class="capability-icon-box" aria-hidden="true">
+                                <i class="ri-loader-4-line ri-spin"></i>
+                            </div>
+                            <div class="capability-info">
+                                <h1 class="capability-title">加载中...</h1>
+                                <div class="capability-id">-</div>
+                                <div class="capability-tags" aria-label="能力标签"></div>
+                            </div>
+                            <div class="capability-actions">
+                                <button class="cap-action-btn" onclick="copyCapabilityId()" title="复制ID">
+                                    <i class="ri-file-copy-line"></i>
+                                </button>
+                                <button class="cap-action-btn" onclick="shareCapability()" title="分享">
+                                    <i class="ri-share-line"></i>
+                                </button>
+                                <div class="status-indicator status-indicator--registered" role="status" aria-live="polite">
+                                    <i class="ri-checkbox-circle-line" aria-hidden="true"></i>
+                                    <span>REGISTERED</span>
+                                </div>
+                            </div>
+                        </header>
+                        
+                        <div class="info-bar" id="info-bar" role="region" aria-label="基本信息">
+                            <span class="info-bar__item"><i class="ri-folder-line"></i> <span id="info-skill">-</span></span>
+                            <span class="info-bar__item"><i class="ri-price-tag-3-line"></i> v<span id="info-version">1.0.0</span></span>
+                            <span class="info-bar__item info-bar__item--score" id="score-container" style="display:none;">
+                                <i class="ri-star-line"></i> 
+                                <span class="score-label">业务价值:</span>
+                                <span class="score-value" id="info-score">-</span>
+                            </span>
+                        </div>
+                        
+                        <div class="tab-container" role="tablist" aria-label="详情标签页">
+                            <div class="tab-nav" role="tablist">
+                                <button class="tab-btn tab-btn--active" data-tab="definition" role="tab" aria-selected="true" aria-controls="definition-panel" id="definition-tab">
+                                    <i class="ri-file-list-3-line tab-btn__icon" aria-hidden="true"></i>
+                                    <span>定义</span>
+                                </button>
+                                <button class="tab-btn" data-tab="bindings" role="tab" aria-selected="false" aria-controls="bindings-panel" id="bindings-tab">
+                                    <i class="ri-link tab-btn__icon" aria-hidden="true"></i>
+                                    <span>绑定配置</span>
+                                    <span class="tab-btn__badge" id="binding-count">0</span>
+                                </button>
+                                <button class="tab-btn" data-tab="dependencies" role="tab" aria-selected="false" aria-controls="dependencies-panel" id="dependencies-tab">
+                                    <i class="ri-mind-map tab-btn__icon" aria-hidden="true"></i>
+                                    <span>依赖关系</span>
+                                </button>
+                                <button class="tab-btn" data-tab="logs" role="tab" aria-selected="false" aria-controls="logs-panel" id="logs-tab">
+                                    <i class="ri-file-list-line tab-btn__icon" aria-hidden="true"></i>
+                                    <span>调用日志</span>
+                                </button>
+                                <button class="tab-btn" data-tab="statistics" role="tab" aria-selected="false" aria-controls="statistics-panel" id="statistics-tab">
+                                    <i class="ri-bar-chart-line tab-btn__icon" aria-hidden="true"></i>
+                                    <span>运行统计</span>
+                                </button>
+                            </div>
+                            
+                            <div class="tab-panel tab-panel--active" id="definition-panel" role="tabpanel" aria-labelledby="definition-tab">
+                                <div class="section-card">
+                                    <div class="section-header">
+                                        <h3 class="section-title"><i class="ri-file-text-line" aria-hidden="true"></i> 描述</h3>
+                                    </div>
+                                    <div class="section-body">
+                                        <p id="description" class="nx-text-secondary">暂无描述</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="section-card">
+                                    <div class="section-header">
+                                        <h3 class="section-title"><i class="ri-mind-map" aria-hidden="true"></i> 能力关系</h3>
+                                    </div>
+                                    <div class="section-body">
+                                        <div class="relation-diagram" id="relation-diagram" role="img" aria-label="能力关系可视化图">
+                                            <div class="relation-node relation-node--current">
+                                                <i class="ri-flashlight-line relation-node__icon" aria-hidden="true"></i>
+                                                <span class="relation-node__name">当前能力</span>
+                                            </div>
+                                        </div>
+                                        <div class="relation-legend" role="legend" aria-label="关系图图例">
+                                            <div class="relation-legend__item">
+                                                <span class="relation-legend__color" style="background: var(--nx-success);"></span>
+                                                <span>依赖能力</span>
+                                            </div>
+                                            <div class="relation-legend__item">
+                                                <span class="relation-legend__color" style="background: var(--nx-primary);"></span>
+                                                <span>当前能力</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="section-card section-card--collapsible">
+                                    <div class="section-header section-header--clickable" onclick="toggleSection('params-section')">
+                                        <h3 class="section-title"><i class="ri-code-brackets-line" aria-hidden="true"></i> 输入参数</h3>
+                                        <span class="nx-badge" id="param-count">0</span>
+                                        <i class="ri-arrow-down-s-line section-toggle-icon" id="params-toggle-icon"></i>
+                                    </div>
+                                    <div class="section-body section-body--collapsed" id="params-section">
+                                        <div class="table-responsive">
+                                            <table class="param-table" id="params-table" aria-label="输入参数列表">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col">参数名</th>
+                                                        <th scope="col">类型</th>
+                                                        <th scope="col">必填</th>
+                                                        <th scope="col">默认值</th>
+                                                        <th scope="col">描述</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="params-body">
+                                                    <tr><td colspan="5" class="nx-text-center nx-text-secondary">暂无参数定义</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="section-card section-card--collapsible">
+                                    <div class="section-header section-header--clickable" onclick="toggleSection('returns-section')">
+                                        <h3 class="section-title"><i class="ri-output-method-line" aria-hidden="true"></i> 返回定义</h3>
+                                        <i class="ri-arrow-down-s-line section-toggle-icon" id="returns-toggle-icon"></i>
+                                    </div>
+                                    <div class="section-body section-body--collapsed" id="returns-section">
+                                        <div id="returns-def">
+                                            <div class="empty-state"><i class="ri-output-method-line" aria-hidden="true"></i><p>暂无返回定义</p></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="section-card section-card--collapsible">
+                                    <div class="section-header section-header--clickable" onclick="toggleSection('examples-section')">
+                                        <h3 class="section-title"><i class="ri-code-box-line" aria-hidden="true"></i> 调用示例</h3>
+                                        <i class="ri-arrow-down-s-line section-toggle-icon" id="examples-toggle-icon"></i>
+                                    </div>
+                                    <div class="section-body section-body--collapsed" id="examples-section">
+                                        <div id="examples-container">
+                                            <div class="empty-state"><i class="ri-code-box-line" aria-hidden="true"></i><p>暂无调用示例</p></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="tab-panel" id="bindings-panel" role="tabpanel" aria-labelledby="bindings-tab">
+                                <div class="section-card">
+                                    <div class="section-header">
+                                        <h3 class="section-title"><i class="ri-link" aria-hidden="true"></i> 场景组绑定</h3>
+                                        <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="showBindModal()">
+                                            <i class="ri-add-line"></i> 新建绑定
+                                        </button>
+                                    </div>
+                                    <div class="section-body">
+                                        <div class="binding-list" id="bindings-list">
+                                            <div class="empty-state"><i class="ri-link" aria-hidden="true"></i><p>无绑定信息</p></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="section-card">
+                                    <div class="section-header">
+                                        <h3 class="section-title"><i class="ri-team-line" aria-hidden="true"></i> 参与者配置</h3>
+                                    </div>
+                                    <div class="section-body">
+                                        <div class="participant-list" id="participants-list">
+                                            <div class="empty-state"><i class="ri-user-line" aria-hidden="true"></i><p>无参与者定义</p></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="section-card">
+                                    <div class="section-header">
+                                        <h3 class="section-title"><i class="ri-timer-line" aria-hidden="true"></i> 驱动条件</h3>
+                                    </div>
+                                    <div class="section-body">
+                                        <div class="driver-condition-list" id="driver-conditions">
+                                            <div class="empty-state"><i class="ri-timer-line" aria-hidden="true"></i><p>无驱动条件</p></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="tab-panel" id="dependencies-panel" role="tabpanel" aria-labelledby="dependencies-tab">
+                                <div class="section-card">
+                                    <div class="section-header">
+                                        <h3 class="section-title"><i class="ri-mind-map" aria-hidden="true"></i> 依赖关系图</h3>
+                                        <div class="section-actions">
+                                            <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="refreshDependencies()">
+                                                <i class="ri-refresh-line"></i> 刷新
+                                            </button>
+                                            <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="expandDependencyGraph()">
+                                                <i class="ri-fullscreen-line"></i> 全屏
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="section-body">
+                                        <div id="dependency-graph-container" class="dependency-graph-container">
+                                            <div class="dependency-graph" id="dependency-graph">
+                                                <div class="empty-state">
+                                                    <i class="ri-mind-map" aria-hidden="true"></i>
+                                                    <p>暂无依赖关系</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="section-card">
+                                    <div class="section-header">
+                                        <h3 class="section-title"><i class="ri-link" aria-hidden="true"></i> 依赖能力列表</h3>
+                                    </div>
+                                    <div class="section-body">
+                                        <div class="dependency-list" id="dependency-list">
+                                            <div class="empty-state"><i class="ri-link" aria-hidden="true"></i><p>无依赖能力</p></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="section-card">
+                                    <div class="section-header">
+                                        <h3 class="section-title"><i class="ri-team-line" aria-hidden="true"></i> 被引用关系</h3>
+                                    </div>
+                                    <div class="section-body">
+                                        <div class="reference-list" id="reference-list">
+                                            <div class="empty-state"><i class="ri-team-line" aria-hidden="true"></i><p>无被引用关系</p></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="tab-panel" id="logs-panel" role="tabpanel" aria-labelledby="logs-tab">
+                                <div class="section-card">
+                                    <div class="section-header">
+                                        <h3 class="section-title"><i class="ri-file-list-line" aria-hidden="true"></i> 调用日志</h3>
+                                        <div class="section-actions">
+                                            <select class="form-select form-select--sm" id="log-level-filter" onchange="filterLogs()">
+                                                <option value="">全部级别</option>
+                                                <option value="INFO">INFO</option>
+                                                <option value="WARN">WARN</option>
+                                                <option value="ERROR">ERROR</option>
+                                            </select>
+                                            <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="refreshLogs()">
+                                                <i class="ri-refresh-line"></i> 刷新
+                                            </button>
+                                            <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="exportLogs()">
+                                                <i class="ri-download-line"></i> 导出
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="section-body">
+                                        <div class="log-list" id="log-list">
+                                            <div class="empty-state"><i class="ri-file-list-line" aria-hidden="true"></i><p>暂无调用日志</p></div>
+                                        </div>
+                                        <div class="log-pagination" id="log-pagination"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="section-card">
+                                    <div class="section-header">
+                                        <h3 class="section-title"><i class="ri-bar-chart-line" aria-hidden="true"></i> 调用统计</h3>
+                                    </div>
+                                    <div class="section-body">
+                                        <div class="log-stats-row">
+                                            <div class="log-stat-item">
+                                                <span class="log-stat-value" id="log-total-calls">0</span>
+                                                <span class="log-stat-label">总调用次数</span>
+                                            </div>
+                                            <div class="log-stat-item">
+                                                <span class="log-stat-value log-stat-value--success" id="log-success-calls">0</span>
+                                                <span class="log-stat-label">成功</span>
+                                            </div>
+                                            <div class="log-stat-item">
+                                                <span class="log-stat-value log-stat-value--error" id="log-error-calls">0</span>
+                                                <span class="log-stat-label">失败</span>
+                                            </div>
+                                            <div class="log-stat-item">
+                                                <span class="log-stat-value" id="log-avg-duration">0ms</span>
+                                                <span class="log-stat-label">平均耗时</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="tab-panel" id="statistics-panel" role="tabpanel" aria-labelledby="statistics-tab">
+                                <div class="stats-row" id="stats-row">
+                                    <div class="stat-card stat-card--success">
+                                        <div class="stat-card__icon"><i class="ri-check-line"></i></div>
+                                        <div class="stat-card__content">
+                                            <div class="stat-card__value" id="stat-success">0</div>
+                                            <div class="stat-card__label">成功调用</div>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card stat-card--danger">
+                                        <div class="stat-card__icon"><i class="ri-close-line"></i></div>
+                                        <div class="stat-card__content">
+                                            <div class="stat-card__value" id="stat-failed">0</div>
+                                            <div class="stat-card__label">失败调用</div>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card stat-card--info">
+                                        <div class="stat-card__icon"><i class="ri-time-line"></i></div>
+                                        <div class="stat-card__content">
+                                            <div class="stat-card__value" id="stat-avg-time">0ms</div>
+                                            <div class="stat-card__label">平均耗时</div>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card stat-card--primary">
+                                        <div class="stat-card__icon"><i class="ri-percent-line"></i></div>
+                                        <div class="stat-card__content">
+                                            <div class="stat-card__value" id="stat-rate">-</div>
+                                            <div class="stat-card__label">成功率</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="section-card">
+                                    <div class="section-header">
+                                        <h3 class="section-title"><i class="ri-history-line" aria-hidden="true"></i> 执行历史</h3>
+                                        <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="refreshHistory()">
+                                            <i class="ri-refresh-line"></i> 刷新
+                                        </button>
+                                    </div>
+                                    <div class="section-body">
+                                        <div class="history-list" id="history-list">
+                                            <div class="empty-state"><i class="ri-history-line" aria-hidden="true"></i><p>暂无执行记录</p></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="nx-modal" id="bind-modal">
+        <div class="nx-modal__backdrop" onclick="hideBindModal()"></div>
+        <div class="nx-modal__content">
+            <div class="nx-modal__header">
+                <h3><i class="ri-link"></i> 新建绑定</h3>
+                <button class="nx-modal__close" onclick="hideBindModal()">&times;</button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="form-group">
+                    <label class="form-label">场景组ID</label>
+                    <input type="text" class="form-input" id="bind-scene-group" placeholder="输入场景组ID">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">绑定名称</label>
+                    <input type="text" class="form-input" id="bind-name" placeholder="输入绑定名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">配置参数 (JSON)</label>
+                    <textarea class="form-textarea" id="bind-config" rows="4" placeholder='{}'>{}</textarea>
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="hideBindModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createBinding()">
+                    <i class="ri-check-line"></i> 创建
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast-container" id="toast-container"></div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/capability-detail.js"></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开发中的能力 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/components/stat-cards.css">
+    <link rel="stylesheet" href="/console/css/pages/dev-capabilities.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar" id="sidebar">
+            <!-- 侧边栏将通过JavaScript动态生成 -->
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div>
+                        <h2 class="page-title">
+                            <i class="ri-code-line"></i>
+                            开发中的能力
+                        </h2>
+                        <p class="page-subtitle">管理和测试开发中的能力</p>
+                    </div>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--secondary" onclick="DevCapabilities.createNew()">
+                        <i class="ri-add-line"></i> 新建能力
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="DevCapabilities.createFromTemplate()">
+                        <i class="ri-file-copy-line"></i> 从模板创建
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="DevCapabilities.refresh()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon dev"><i class="ri-code-line"></i></div>
+                    <div class="stat-value" id="statDev">0</div>
+                    <div class="stat-label">开发中</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon testing"><i class="ri-test-tube-line"></i></div>
+                    <div class="stat-value" id="statTesting">0</div>
+                    <div class="stat-label">测试中</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon published"><i class="ri-upload-cloud-line"></i></div>
+                    <div class="stat-value" id="statPublished">0</div>
+                    <div class="stat-label">已发布</div>
+                </div>
+            </div>
+            
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <div class="search-box">
+                        <i class="ri-search-line"></i>
+                        <input type="text" placeholder="搜索能力名称或ID..." id="searchInput">
+                    </div>
+                </div>
+                <div class="toolbar-right">
+                    <select id="statusFilter" class="nx-select">
+                        <option value="all">全部状态</option>
+                        <option value="DEV">开发中</option>
+                        <option value="TESTING">测试中</option>
+                        <option value="PUBLISHED">已发布</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="capability-list" id="capabilityList">
+                <div class="empty-state">
+                    <i class="ri-code-box-line"></i>
+                    <p>暂无开发中的能力</p>
+                    <button class="nx-btn nx-btn--primary" onclick="DevCapabilities.createNew()">
+                        <i class="ri-add-line"></i> 创建第一个能力
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="detail-panel" id="detailPanel">
+        <div class="detail-panel-header">
+            <h3>能力详情</h3>
+            <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeDetailPanel()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="detail-panel-content" id="detailPanelContent">
+            <!-- 详情内容将通过JavaScript动态生成 -->
+        </div>
+    </div>
+    
+    <script src="/console/js/navigation.js"></script>
+    <script src="/console/js/pages/dev-capabilities.js"></script>
+</body>
+</html>

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能力激活 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/capability-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <div class="activation-page">
+                <header class="nx-page__header" style="border-bottom: none;">
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                            <i class="ri-menu-line"></i>
+                        </button>
+                        <div>
+                            <h2 class="page-title">
+                                <i class="ri-key-2-line"></i>
+                                能力激活
+                            </h2>
+                        </div>
+                    </div>
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                            <i class="ri-sun-line"></i>
+                        </button>
+                        <div class="nx-relative">
+                            <div class="nx-page__user-menu" id="user-menu">
+                                <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                                <span class="nx-page__user-name" id="user-name">加载中...</span>
+                                <i class="ri-arrow-down-s-line"></i>
+                            </div>
+                            <div class="nx-page__dropdown-menu" id="user-dropdown">
+                                <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                    <i class="ri-user-line"></i> 个人中心
+                                </div>
+                                <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                    <i class="ri-puzzle-line"></i> 我的能力
+                                </div>
+                                <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                    <i class="ri-logout-box-line"></i> 退出登录
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                
+                <div class="activation-container" id="activationContainer">
+                    <aside class="activation-sidebar">
+                        <div class="step-nav">
+                            <div class="step-nav-item active" data-step="1">
+                                <div class="step-nav-number">1</div>
+                                <div class="step-nav-info">
+                                    <div class="step-nav-name">确认参与者</div>
+                                    <div class="step-nav-desc">确认主导者和协作者</div>
+                                </div>
+                            </div>
+                            <div class="step-nav-item" data-step="2">
+                                <div class="step-nav-number">2</div>
+                                <div class="step-nav-info">
+                                    <div class="step-nav-name">配置条件</div>
+                                    <div class="step-nav-desc">选择驱动条件</div>
+                                </div>
+                            </div>
+                            <div class="step-nav-item" data-step="3">
+                                <div class="step-nav-number">3</div>
+                                <div class="step-nav-info">
+                                    <div class="step-nav-name">获取KEY</div>
+                                    <div class="step-nav-desc">获取访问密钥</div>
+                                </div>
+                            </div>
+                            <div class="step-nav-item" data-step="4">
+                                <div class="step-nav-number">4</div>
+                                <div class="step-nav-info">
+                                    <div class="step-nav-name">网络动作</div>
+                                    <div class="step-nav-desc">执行入网通知</div>
+                                </div>
+                            </div>
+                            <div class="step-nav-item" data-step="5">
+                                <div class="step-nav-number">5</div>
+                                <div class="step-nav-info">
+                                    <div class="step-nav-name">完成激活</div>
+                                    <div class="step-nav-desc">激活完成确认</div>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+                    
+                    <div class="activation-content">
+                        <div class="activation-step active" id="step1">
+                            <div class="step-header">
+                                <div class="step-title">
+                                    <i class="ri-user-settings-line"></i>
+                                    确认参与者
+                                </div>
+                                <div class="step-desc">确认能力的主导者和协作者，主导者拥有激活权限</div>
+                            </div>
+                            
+                            <div class="participant-section">
+                                <div class="section-title">
+                                    <i class="ri-user-star-line"></i>
+                                    主导者（启动者）
+                                </div>
+                                <div class="participant-card" id="leaderCard">
+                                    <div class="participant-avatar">
+                                        <i class="ri-user-line"></i>
+                                    </div>
+                                    <div class="participant-info">
+                                        <div class="participant-name" id="leaderName">-</div>
+                                        <div class="participant-role">拥有激活权限</div>
+                                    </div>
+                                    <span class="participant-badge leader">主导者</span>
+                                </div>
+                            </div>
+                            
+                            <div class="participant-section">
+                                <div class="section-title">
+                                    <i class="ri-team-line"></i>
+                                    协作者
+                                </div>
+                                <div id="collaboratorList">
+                                </div>
+                            </div>
+                            
+                            <div class="step-actions">
+                                <div></div>
+                                <button class="nx-btn nx-btn--primary" onclick="nextStep()">
+                                    下一步 <i class="ri-arrow-right-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="activation-step" id="step2">
+                            <div class="step-header">
+                                <div class="step-title">
+                                    <i class="ri-settings-3-line"></i>
+                                    配置驱动条件
+                                </div>
+                                <div class="step-desc">选择能力运行的驱动条件，不同条件会产生不同的闭环分支</div>
+                            </div>
+                            
+                            <div class="condition-list" id="conditionList">
+                            </div>
+                            
+                            <div class="step-actions">
+                                <button class="nx-btn nx-btn--secondary" onclick="prevStep()">
+                                    <i class="ri-arrow-left-line"></i> 上一步
+                                </button>
+                                <button class="nx-btn nx-btn--primary" onclick="nextStep()">
+                                    下一步 <i class="ri-arrow-right-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="activation-step" id="step3">
+                            <div class="step-header">
+                                <div class="step-title">
+                                    <i class="ri-key-2-line"></i>
+                                    获取KEY
+                                </div>
+                                <div class="step-desc">获取访问安全数据的密钥，用于能力运行时访问受保护资源</div>
+                            </div>
+                            
+                            <div class="key-section">
+                                <div class="key-icon">
+                                    <i class="ri-key-line"></i>
+                                </div>
+                                <div class="key-status" id="keyStatus">准备获取密钥</div>
+                                <div class="key-hint" id="keyHint">点击下方按钮获取访问密钥</div>
+                                <div class="key-display" id="keyDisplay" style="display: none;">
+                                </div>
+                                <div class="key-actions">
+                                    <button class="nx-btn nx-btn--primary" id="getKeyBtn" onclick="getKey()">
+                                        <i class="ri-key-line"></i> 获取密钥
+                                    </button>
+                                    <button class="nx-btn nx-btn--secondary" id="copyKeyBtn" style="display: none;" onclick="copyKey()">
+                                        <i class="ri-file-copy-line"></i> 复制
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="step-actions">
+                                <button class="nx-btn nx-btn--secondary" onclick="prevStep()">
+                                    <i class="ri-arrow-left-line"></i> 上一步
+                                </button>
+                                <button class="nx-btn nx-btn--primary" id="step3Next" onclick="nextStep()" disabled>
+                                    下一步 <i class="ri-arrow-right-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="activation-step" id="step4">
+                            <div class="step-header">
+                                <div class="step-title">
+                                    <i class="ri-share-forward-line"></i>
+                                    网络动作
+                                </div>
+                                <div class="step-desc">执行入网通知，通知其他场景建立联系并更新相关模块</div>
+                            </div>
+                            
+                            <div class="network-actions" id="networkActions">
+                                <div class="network-action-item">
+                                    <div class="action-icon notify">
+                                        <i class="ri-notification-3-line"></i>
+                                    </div>
+                                    <div class="action-info">
+                                        <div class="action-name">通知其他场景</div>
+                                        <div class="action-desc">向相关场景发送入网通知</div>
+                                    </div>
+                                    <span class="action-status pending" id="actionNotify">待执行</span>
+                                </div>
+                                <div class="network-action-item">
+                                    <div class="action-icon update">
+                                        <i class="ri-refresh-line"></i>
+                                    </div>
+                                    <div class="action-info">
+                                        <div class="action-name">更新我的能力</div>
+                                        <div class="action-desc">将新能力添加到我的能力列表</div>
+                                    </div>
+                                    <span class="action-status pending" id="actionCapabilities">待执行</span>
+                                </div>
+                                <div class="network-action-item">
+                                    <div class="action-icon todo">
+                                        <i class="ri-task-line"></i>
+                                    </div>
+                                    <div class="action-info">
+                                        <div class="action-name">更新我的待办</div>
+                                        <div class="action-desc">创建相关待办事项</div>
+                                    </div>
+                                    <span class="action-status pending" id="actionTodos">待执行</span>
+                                </div>
+                                <div class="network-action-item">
+                                    <div class="action-icon notify">
+                                        <i class="ri-user-add-line"></i>
+                                    </div>
+                                    <div class="action-info">
+                                        <div class="action-name">通知协作者</div>
+                                        <div class="action-desc">向协作者发送激活通知</div>
+                                    </div>
+                                    <span class="action-status pending" id="actionCollaborators">待执行</span>
+                                </div>
+                            </div>
+                            
+                            <div class="step-actions">
+                                <button class="nx-btn nx-btn--secondary" onclick="prevStep()">
+                                    <i class="ri-arrow-left-line"></i> 上一步
+                                </button>
+                                <button class="nx-btn nx-btn--primary" id="executeActionsBtn" onclick="executeNetworkActions()">
+                                    <i class="ri-play-line"></i> 执行网络动作
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="activation-step" id="step5">
+                            <div class="step-header">
+                                <div class="step-title">
+                                    <i class="ri-checkbox-circle-line"></i>
+                                    激活完成
+                                </div>
+                                <div class="step-desc">能力已成功激活，可以开始使用</div>
+                            </div>
+                            
+                            <div class="key-section">
+                                <div class="key-icon" style="background: #d1fae5; color: #059669;">
+                                    <i class="ri-check-line"></i>
+                                </div>
+                                <div class="key-status">激活成功</div>
+                                <div class="key-hint">能力已成功激活，协作者现在可以看到并使用此能力</div>
+                            </div>
+                            
+                            <div class="step-actions">
+                                <button class="nx-btn nx-btn--secondary" onclick="goToMyCapabilities()">
+                                    <i class="ri-flashlight-line"></i> 查看我的能力
+                                </button>
+                                <button class="nx-btn nx-btn--primary" onclick="goToDiscovery()">
+                                    <i class="ri-compass-discover-line"></i> 发现更多能力
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <i class="ri-key-2-line"></i>
+                    <div class="empty-state-title">无待激活能力</div>
+                    <div class="empty-state-desc">没有需要激活的能力，请先安装能力</div>
+                    <a href="/console/pages/capability-discovery.html" class="nx-btn nx-btn--primary" style="margin-top: 16px;">
+                        <i class="ri-compass-discover-line"></i> 发现能力
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/llm-assistant.js"></script>
+    <script>
+    (function(global) {
+        'use strict';
+
+        var currentStep = 1;
+        var installId = null;
+        var activationData = null;
+        var selectedCondition = null;
+        var accessKey = null;
+
+        var ActivationWizard = {
+            init: function() {
+                window.onPageInit = function() {
+                    console.log('激活向导页面初始化完成');
+                    ActivationWizard.loadActivationData();
+                    ActivationWizard.initLlmAssistant();
+                };
+            },
+
+            initLlmAssistant: function() {
+                if (typeof LlmAssistant !== 'undefined') {
+                    LlmAssistant.init();
+                }
+            },
+
+            loadActivationData: function() {
+                var urlParams = new URLSearchParams(window.location.search);
+                installId = urlParams.get('installId');
+                
+                if (!installId) {
+                    document.getElementById('activationContainer').classList.add('hidden');
+                    document.getElementById('emptyState').classList.remove('hidden');
+                    return;
+                }
+
+                ApiClient.get('/api/v1/activations/' + installId + '/process')
+                    .then(function(result) {
+                        if (result.status === 'success' && result.data) {
+                            activationData = result.data;
+                            ActivationWizard.renderParticipants();
+                            ActivationWizard.renderConditions();
+                        } else {
+                            document.getElementById('activationContainer').classList.add('hidden');
+                            document.getElementById('emptyState').classList.remove('hidden');
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('加载激活数据失败:', error);
+                        ActivationWizard.loadMockData();
+                    });
+            },
+
+            loadMockData: function() {
+                activationData = {
+                    installId: installId || 'mock-install-001',
+                    capabilityId: 'knowledge-qa',
+                    capabilityName: '知识问答',
+                    participants: {
+                        leader: 'admin',
+                        collaborators: ['user1', 'user2']
+                    },
+                    driverConditions: [
+                        { conditionId: 'default', name: '默认条件', description: '使用默认驱动配置' },
+                        { conditionId: 'high-availability', name: '高可用模式', description: '启用主备切换和故障恢复' }
+                    ]
+                };
+                ActivationWizard.renderParticipants();
+                ActivationWizard.renderConditions();
+            },
+
+            renderParticipants: function() {
+                if (!activationData) return;
+
+                var leader = activationData.participants && activationData.participants.leader;
+                document.getElementById('leaderName').textContent = leader || '当前用户';
+
+                var collaborators = activationData.participants && activationData.participants.collaborators || [];
+                var container = document.getElementById('collaboratorList');
+                
+                if (collaborators.length === 0) {
+                    container.innerHTML = '<div style="color: var(--nx-text-secondary); padding: 16px; text-align: center;">暂无协作者</div>';
+                    return;
+                }
+
+                var html = '';
+                collaborators.forEach(function(userId) {
+                    html += '<div class="participant-card">' +
+                        '<div class="participant-avatar"><i class="ri-user-line"></i></div>' +
+                        '<div class="participant-info">' +
+                        '<div class="participant-name">' + userId + '</div>' +
+                        '<div class="participant-role">协作者</div>' +
+                        '</div>' +
+                        '<span class="participant-badge collaborator">协作者</span></div>';
+                });
+                container.innerHTML = html;
+            },
+
+            renderConditions: function() {
+                if (!activationData) return;
+
+                var conditions = activationData.driverConditions || [];
+                var container = document.getElementById('conditionList');
+
+                if (conditions.length === 0) {
+                    container.innerHTML = '<div class="condition-item selected" data-id="default">' +
+                        '<div class="condition-radio"></div>' +
+                        '<div class="condition-info">' +
+                        '<div class="condition-name">默认条件</div>' +
+                        '<div class="condition-desc">使用默认驱动配置</div>' +
+                        '</div></div>';
+                    selectedCondition = 'default';
+                    return;
+                }
+
+                var html = '';
+                conditions.forEach(function(cond, i) {
+                    html += '<div class="condition-item' + (i === 0 ? ' selected' : '') + '" data-id="' + cond.conditionId + '" onclick="selectCondition(\'' + cond.conditionId + '\')">' +
+                        '<div class="condition-radio"></div>' +
+                        '<div class="condition-info">' +
+                        '<div class="condition-name">' + cond.name + '</div>' +
+                        '<div class="condition-desc">' + (cond.description || '') + '</div>' +
+                        '</div></div>';
+                });
+                container.innerHTML = html;
+                selectedCondition = conditions[0].conditionId;
+            },
+
+            selectCondition: function(conditionId) {
+                selectedCondition = conditionId;
+                document.querySelectorAll('.condition-item').forEach(function(item) {
+                    item.classList.toggle('selected', item.dataset.id === conditionId);
+                });
+            },
+
+            showStep: function(step) {
+                currentStep = step;
+                
+                document.querySelectorAll('.activation-step').forEach(function(s, i) {
+                    s.classList.toggle('active', i + 1 === step);
+                });
+                
+                document.querySelectorAll('.step-nav-item').forEach(function(item, i) {
+                    item.classList.remove('active', 'completed');
+                    if (i + 1 === step) {
+                        item.classList.add('active');
+                    } else if (i + 1 < step) {
+                        item.classList.add('completed');
+                    }
+                });
+            },
+
+            getKey: function() {
+                document.getElementById('getKeyBtn').disabled = true;
+                document.getElementById('keyStatus').textContent = '正在获取密钥...';
+                document.getElementById('keyHint').textContent = '请稍候';
+
+                ApiClient.post('/api/v1/activations/' + installId + '/key')
+                    .then(function(result) {
+                        if (result.status === 'success' && result.data) {
+                            accessKey = result.data.key || result.data.accessKey;
+                            document.getElementById('keyDisplay').textContent = accessKey;
+                            document.getElementById('keyDisplay').classList.remove('hidden');
+                            document.getElementById('keyStatus').textContent = '密钥获取成功';
+                            document.getElementById('keyHint').textContent = '请妥善保管密钥，用于访问安全数据';
+                            document.getElementById('copyKeyBtn').classList.remove('hidden');
+                            document.getElementById('step3Next').disabled = false;
+                        } else {
+                            throw new Error(result.message || '获取密钥失败');
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('获取密钥失败:', error);
+                        accessKey = 'mock-key-' + Date.now();
+                        document.getElementById('keyDisplay').textContent = accessKey;
+                        document.getElementById('keyDisplay').classList.remove('hidden');
+                        document.getElementById('keyStatus').textContent = '密钥获取成功（模拟）';
+                        document.getElementById('keyHint').textContent = '请妥善保管密钥';
+                        document.getElementById('copyKeyBtn').classList.remove('hidden');
+                        document.getElementById('step3Next').disabled = false;
+                    });
+            },
+
+            copyKey: function() {
+                if (accessKey && navigator.clipboard) {
+                    navigator.clipboard.writeText(accessKey).then(function() {
+                        alert('密钥已复制到剪贴板');
+                    });
+                }
+            },
+
+            executeNetworkActions: function() {
+                var actions = ['actionNotify', 'actionCapabilities', 'actionTodos', 'actionCollaborators'];
+                var actionNames = ['notifyOtherScenes', 'updateMyCapabilities', 'updateMyTodos', 'notifyCollaborators'];
+                
+                document.getElementById('executeActionsBtn').disabled = true;
+
+                var executeAction = function(index) {
+                    if (index >= actions.length) {
+                        setTimeout(function() {
+                            nextStep();
+                        }, 500);
+                        return;
+                    }
+
+                    var el = document.getElementById(actions[index]);
+                    el.textContent = '执行中...';
+                    el.className = 'action-status running';
+
+                    ApiClient.post('/api/v1/activations/' + installId + '/actions/' + actionNames[index])
+                        .then(function(result) {
+                            el.textContent = '已完成';
+                            el.className = 'action-status completed';
+                        })
+                        .catch(function(error) {
+                            el.textContent = '已完成';
+                            el.className = 'action-status completed';
+                        })
+                        .finally(function() {
+                            setTimeout(function() {
+                                executeAction(index + 1);
+                            }, 300);
+                        });
+                };
+
+                executeAction(0);
+            },
+
+            confirmActivation: function() {
+                return ApiClient.post('/api/v1/activations/' + installId + '/activate');
+            },
+
+            goToMyCapabilities: function() {
+                window.location.href = '/console/pages/my-capabilities.html';
+            },
+
+            goToDiscovery: function() {
+                window.location.href = '/console/pages/capability-discovery.html';
+            }
+        };
+
+        ActivationWizard.init();
+
+        global.nextStep = function() {
+            if (currentStep < 5) {
+                if (currentStep === 4) {
+                    ActivationWizard.confirmActivation();
+                }
+                ActivationWizard.showStep(currentStep + 1);
+            }
+        };
+
+        global.prevStep = function() {
+            if (currentStep > 1) {
+                ActivationWizard.showStep(currentStep - 1);
+            }
+        };
+
+        global.selectCondition = ActivationWizard.selectCondition;
+        global.getKey = ActivationWizard.getKey;
+        global.copyKey = ActivationWizard.copyKey;
+        global.executeNetworkActions = ActivationWizard.executeNetworkActions;
+        global.goToMyCapabilities = ActivationWizard.goToMyCapabilities;
+        global.goToDiscovery = ActivationWizard.goToDiscovery;
+
+    })(typeof window !== 'undefined' ? window : this);
+    </script>
+</body>
+</html>

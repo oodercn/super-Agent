@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景组详情 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/nx-page.css">
+    <link rel="stylesheet" href="/console/css/pages/scene-group-detail.css">
+    <link rel="stylesheet" href="/console/css/components/llm-enhancement.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <a href="scene-group-management.html" class="nx-btn nx-btn--ghost nx-btn--icon">
+                        <i class="ri-arrow-left-line"></i>
+                    </a>
+                    <div class="nx-page__title">
+                        <h1 id="pageTitle">场景组详情</h1>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                <i class="ri-puzzle-line"></i> 我的能力
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                    <button class="nx-btn nx-btn--secondary" id="toggleStatusBtn" onclick="toggleStatus()">
+                        <i class="ri-pause-line"></i> <span>暂停</span>
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="startWorkflow()">
+                        <i class="ri-play-line"></i> 启动工作流
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__body">
+                            <div class="nx-flex nx-items-center nx-justify-between">
+                                <div class="nx-flex nx-items-center nx-gap-4">
+                                    <div class="scene-group-icon-box">
+                                        <i class="ri-group-line"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="nx-text-xl nx-font-semibold" id="groupName">加载中...</h3>
+                                        <div class="nx-flex nx-items-center nx-gap-3 nx-mt-1">
+                                            <span class="nx-badge nx-badge--secondary" id="groupTemplate">-</span>
+                                            <span class="nx-badge" id="groupStatus">-</span>
+                                            <span class="nx-text-sm nx-text-secondary"><code id="sceneGroupId">-</code></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="nx-flex nx-gap-6">
+                                    <div class="nx-text-center">
+                                        <div class="nx-text-2xl nx-font-bold" id="memberCount">0</div>
+                                        <div class="nx-text-sm nx-text-secondary">成员数</div>
+                                    </div>
+                                    <div class="nx-text-center">
+                                        <div class="nx-text-2xl nx-font-bold" id="bindingCount">0</div>
+                                        <div class="nx-text-sm nx-text-secondary">能力绑定</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-tabs nx-mb-4">
+                        <div class="nx-tabs__list">
+                            <button class="nx-tabs__tab nx-tabs__tab--active" data-tab="overview">概览</button>
+                            <button class="nx-tabs__tab" data-tab="participants">参与者</button>
+                            <button class="nx-tabs__tab" data-tab="capabilities">能力绑定</button>
+                            <button class="nx-tabs__tab" data-tab="knowledge">知识库</button>
+                            <button class="nx-tabs__tab" data-tab="llm">LLM配置</button>
+                            <button class="nx-tabs__tab" data-tab="snapshots">快照</button>
+                            <button class="nx-tabs__tab" data-tab="logs">日志</button>
+                            <button class="nx-tabs__tab" data-tab="collaboration">场景协作</button>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-overview" class="tab-content" style="display: block;">
+                        <div id="llm-status-container" class="nx-mb-6"></div>
+                        
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-6">
+                            <div class="nx-card">
+                                <div class="nx-card__header"><h4>基本信息</h4></div>
+                                <div class="nx-card__body">
+                                    <div class="nx-form-group nx-mb-3">
+                                        <label class="nx-form-label">描述</label>
+                                        <p id="groupDescription" class="nx-text-secondary">-</p>
+                                    </div>
+                                    <div class="nx-form-group nx-mb-3">
+                                        <label class="nx-form-label">创建者</label>
+                                        <p id="groupCreator">-</p>
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">创建时间</label>
+                                        <p id="groupCreateTime">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="nx-card">
+                                <div class="nx-card__header"><h4>参与者概览</h4></div>
+                                <div class="nx-card__body" id="participantOverview">
+                                    <p class="nx-text-secondary">暂无参与者</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-6 nx-mt-6">
+                            <div class="nx-card">
+                                <div class="nx-card__header"><h4>知识库绑定</h4></div>
+                                <div class="nx-card__body" id="kb-bindings-container">
+                                </div>
+                            </div>
+                            <div class="nx-card">
+                                <div class="nx-card__header"><h4>配置继承链</h4></div>
+                                <div class="nx-card__body" id="config-chain-container">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-participants" class="tab-content" style="display: none;">
+                        <div class="nx-flex nx-justify-end nx-mb-4">
+                            <button class="nx-btn nx-btn--primary" onclick="inviteParticipant()">
+                                <i class="ri-user-add-line"></i> 邀请参与者
+                            </button>
+                        </div>
+                        <div id="participantList">
+                            <p class="nx-text-secondary">暂无参与者</p>
+                        </div>
+                        
+                        <div class="nx-card nx-mt-6">
+                            <div class="nx-card__header">
+                                <h4><i class="ri-git-branch-line"></i> 组网拓扑</h4>
+                            </div>
+                            <div class="nx-card__body">
+                                <div id="networkTopology" class="network-topology-container">
+                                    <p class="nx-text-secondary nx-text-center nx-py-12">加载中...</p>
+                                </div>
+                                <div class="nx-mt-4">
+                                    <h5 class="nx-text-sm nx-font-medium nx-mb-2">图例说明</h5>
+                                    <div class="nx-flex nx-flex-wrap nx-gap-4 nx-text-sm">
+                                        <div class="nx-flex nx-items-center nx-gap-1">
+                                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #FFD700;"></span>
+                                            <span>创建者</span>
+                                        </div>
+                                        <div class="nx-flex nx-items-center nx-gap-1">
+                                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #2196F3;"></span>
+                                            <span>管理者</span>
+                                        </div>
+                                        <div class="nx-flex nx-items-center nx-gap-1">
+                                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #4CAF50;"></span>
+                                            <span>员工/成员</span>
+                                        </div>
+                                        <div class="nx-flex nx-items-center nx-gap-1">
+                                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #9C27B0;"></span>
+                                            <span>LLM助手</span>
+                                        </div>
+                                        <div class="nx-flex nx-items-center nx-gap-1">
+                                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #FF9800;"></span>
+                                            <span>协调者</span>
+                                        </div>
+                                        <div class="nx-flex nx-items-center nx-gap-1">
+                                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #9E9E9E;"></span>
+                                            <span>观察者</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-capabilities" class="tab-content" style="display: none;">
+                        <div class="nx-flex nx-justify-end nx-mb-4">
+                            <button class="nx-btn nx-btn--primary" onclick="bindCapability()">
+                                <i class="ri-link"></i> 绑定能力
+                            </button>
+                        </div>
+                        <div id="bindingList">
+                            <p class="nx-text-secondary">暂无能力绑定</p>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-knowledge" class="tab-content" style="display: none;">
+                        <div class="nx-flex nx-justify-end nx-mb-4">
+                            <button class="nx-btn nx-btn--primary" onclick="bindKnowledge()">
+                                <i class="ri-book-3-line"></i> 绑定知识库
+                            </button>
+                        </div>
+                        <div class="nx-card nx-mb-4">
+                            <div class="nx-card__header">
+                                <h4><i class="ri-stack-line"></i> 三层知识架构</h4>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="knowledge-layers">
+                                    <div class="knowledge-layer">
+                                        <div class="knowledge-layer__header">
+                                            <span class="knowledge-layer__icon general"><i class="ri-global-line"></i></span>
+                                            <span class="knowledge-layer__name">通用知识层 (GENERAL)</span>
+                                            <span class="knowledge-layer__priority">优先级: 0</span>
+                                        </div>
+                                        <div class="knowledge-layer__content" id="generalKnowledgeList">
+                                            <p class="nx-text-secondary nx-text-sm">暂无绑定</p>
+                                        </div>
+                                    </div>
+                                    <div class="knowledge-layer">
+                                        <div class="knowledge-layer__header">
+                                            <span class="knowledge-layer__icon professional"><i class="ri-briefcase-line"></i></span>
+                                            <span class="knowledge-layer__name">专业模块层 (PROFESSIONAL)</span>
+                                            <span class="knowledge-layer__priority">优先级: 1</span>
+                                        </div>
+                                        <div class="knowledge-layer__content" id="professionalKnowledgeList">
+                                            <p class="nx-text-secondary nx-text-sm">暂无绑定</p>
+                                        </div>
+                                    </div>
+                                    <div class="knowledge-layer">
+                                        <div class="knowledge-layer__header">
+                                            <span class="knowledge-layer__icon scene"><i class="ri-flashlight-line"></i></span>
+                                            <span class="knowledge-layer__name">场景知识层 (SCENE)</span>
+                                            <span class="knowledge-layer__priority">优先级: 2</span>
+                                        </div>
+                                        <div class="knowledge-layer__content" id="sceneKnowledgeList">
+                                            <p class="nx-text-secondary nx-text-sm">暂无绑定</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h4><i class="ri-settings-4-line"></i> 检索配置</h4>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-form-row">
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">默认返回数量 (Top K)</label>
+                                        <input type="number" class="nx-input" id="knowledgeTopK" value="5" min="1" max="20">
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">相似度阈值</label>
+                                        <input type="number" class="nx-input" id="knowledgeThreshold" value="0.7" min="0" max="1" step="0.1">
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">跨层检索</label>
+                                        <select class="nx-input" id="crossLayerSearch">
+                                            <option value="true">启用</option>
+                                            <option value="false">禁用</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button class="nx-btn nx-btn--primary" onclick="saveKnowledgeConfig()">
+                                    <i class="ri-save-line"></i> 保存配置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-llm" class="tab-content" style="display: none;">
+                        <div class="nx-flex nx-justify-between nx-items-center nx-mb-4">
+                            <div id="llmConfigStatus">
+                                <span class="nx-badge nx-badge--info"><i class="ri-loader-4-line ri-spin"></i> 加载中...</span>
+                            </div>
+                            <div class="nx-flex nx-gap-2">
+                                <button class="nx-btn nx-btn--ghost" onclick="resetLlmConfig()">
+                                    <i class="ri-refresh-line"></i> 重置为系统默认
+                                </button>
+                                <button class="nx-btn nx-btn--secondary" onclick="testLlmConnection()">
+                                    <i class="ri-play-line"></i> 测试连接
+                                </button>
+                            </div>
+                        </div>
+                        <div class="nx-card nx-mb-4">
+                            <div class="nx-card__header">
+                                <h4><i class="ri-robot-line"></i> LLM 提供者配置</h4>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-form-row">
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">默认提供者</label>
+                                        <select class="nx-input" id="llmProvider" onchange="onLlmProviderChange()">
+                                            <option value="">加载中...</option>
+                                        </select>
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">默认模型</label>
+                                        <select class="nx-input" id="llmModel">
+                                            <option value="">请先选择提供者</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nx-card nx-mb-4">
+                            <div class="nx-card__header">
+                                <h4><i class="ri-cpu-line"></i> 决策引擎配置</h4>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-form-row">
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">决策模式</label>
+                                        <select class="nx-input" id="decisionMode">
+                                            <option value="ONLINE_FIRST">优先在线 (推荐)</option>
+                                            <option value="ONLINE_ONLY">仅在线</option>
+                                            <option value="OFFLINE_ONLY">仅离线</option>
+                                        </select>
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">决策超时 (ms)</label>
+                                        <input type="number" class="nx-input" id="decisionTimeout" value="30000">
+                                    </div>
+                                </div>
+                                <div class="nx-form-row">
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">决策缓存</label>
+                                        <select class="nx-input" id="decisionCache">
+                                            <option value="true">启用</option>
+                                            <option value="false">禁用</option>
+                                        </select>
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">缓存 TTL (ms)</label>
+                                        <input type="number" class="nx-input" id="cacheTtl" value="300000">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nx-card nx-mb-4">
+                            <div class="nx-card__header">
+                                <h4><i class="ri-function-line"></i> 函数调用配置</h4>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-form-row">
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">函数调用</label>
+                                        <select class="nx-input" id="functionCalling">
+                                            <option value="true">启用</option>
+                                            <option value="false">禁用</option>
+                                        </select>
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">最大迭代次数</label>
+                                        <input type="number" class="nx-input" id="maxIterations" value="5" min="1" max="10">
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">LLM 超时 (ms)</label>
+                                        <input type="number" class="nx-input" id="llmTimeout" value="60000">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h4><i class="ri-pie-chart-line"></i> Token 配额</h4>
+                            </div>
+                            <div class="nx-card__body">
+                                <div class="nx-form-row">
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">每日 Token 限额</label>
+                                        <input type="number" class="nx-input" id="dailyTokenLimit" value="100000">
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">已使用 Token</label>
+                                        <input type="text" class="nx-input" id="usedTokens" value="0" readonly>
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">剩余 Token</label>
+                                        <input type="text" class="nx-input" id="remainingTokens" value="100000" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nx-mt-4">
+                            <button class="nx-btn nx-btn--primary" onclick="saveLlmConfig()">
+                                <i class="ri-save-line"></i> 保存配置
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-snapshots" class="tab-content" style="display: none;">
+                        <div class="nx-flex nx-justify-end nx-mb-4">
+                            <button class="nx-btn nx-btn--primary" onclick="createSnapshot()">
+                                <i class="ri-camera-line"></i> 创建快照
+                            </button>
+                        </div>
+                        <div id="snapshotList">
+                            <p class="nx-text-secondary">暂无快照</p>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-logs" class="tab-content" style="display: none;">
+                        <div class="nx-card">
+                            <div class="nx-card__body" id="logList">
+                                <p class="nx-text-secondary">暂无日志</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-collaboration" class="tab-content" style="display: none;">
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-6">
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h4><i class="ri-flow-chart"></i> 协作流程</h4>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div id="collaborationFlow" class="collaboration-flow-container">
+                                        <p class="nx-text-secondary nx-text-center nx-py-12">加载中...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h4><i class="ri-message-3-line"></i> 协作消息</h4>
+                                </div>
+                                <div class="nx-card__body collaboration-messages-container">
+                                    <div id="collaborationMessages">
+                                        <p class="nx-text-secondary">暂无协作消息</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nx-card nx-mt-6">
+                            <div class="nx-card__header">
+                                <h4><i class="ri-history-line"></i> 协作历史</h4>
+                            </div>
+                            <div class="nx-card__body">
+                                <div id="collaborationHistory">
+                                    <p class="nx-text-secondary">暂无协作历史记录</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="nx-modal" id="participantModal">
+        <div class="nx-modal__overlay" onclick="closeParticipantModal()"></div>
+        <div class="nx-modal__content" style="max-width: 600px;">
+            <div class="nx-modal__header">
+                <h3>邀请参与者</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeParticipantModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <form id="participantForm">
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">参与者类型 <span class="nx-text-danger">*</span></label>
+                        <select class="nx-input" id="participantType" onchange="onParticipantTypeChange()" required>
+                            <option value="">请选择类型</option>
+                            <option value="USER">用户参与者</option>
+                            <option value="AGENT">Agent参与者</option>
+                        </select>
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">选择参与者 <span class="nx-text-danger">*</span></label>
+                        <div id="participantSelectorContainer">
+                            <p class="nx-text-secondary nx-p-3">请先选择参与者类型</p>
+                        </div>
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">已选择</label>
+                        <div id="selectedParticipantDisplay" class="nx-p-3 nx-bg-elevated nx-rounded">
+                            <span class="nx-text-secondary">-</span>
+                        </div>
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">角色 <span class="nx-text-danger">*</span></label>
+                        <select class="nx-input" id="participantRole" required>
+                            <option value="">请选择角色</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeParticipantModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="saveParticipant()">邀请</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nx-modal" id="capabilityModal">
+        <div class="nx-modal__overlay" onclick="closeCapabilityModal()"></div>
+        <div class="nx-modal__content" style="max-width: 700px;">
+            <div class="nx-modal__header">
+                <h3>绑定能力</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeCapabilityModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <form id="capabilityForm">
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">选择能力 <span class="nx-text-danger">*</span></label>
+                        <select class="nx-input" id="capabilitySelect" onchange="onCapabilitySelect()">
+                            <option value="">请选择能力</option>
+                        </select>
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">提供者类型</label>
+                        <select class="nx-input" id="providerType">
+                            <option value="SKILL">Skill</option>
+                            <option value="AGENT">Agent</option>
+                        </select>
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">提供者</label>
+                        <select class="nx-input" id="providerSelect">
+                            <option value="">请选择提供者</option>
+                        </select>
+                    </div>
+                    <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                        <div class="nx-form-group nx-mb-3">
+                            <label class="nx-form-label">优先级</label>
+                            <input type="number" class="nx-input" id="bindingPriority" value="1" min="1" max="100">
+                            <div class="nx-text-sm nx-text-secondary nx-mt-1">数值越小优先级越高</div>
+                        </div>
+                        <div class="nx-form-group nx-mb-3">
+                            <label class="nx-form-label">故障转移</label>
+                            <div class="nx-flex nx-items-center nx-gap-2 nx-mt-2">
+                                <input type="checkbox" id="bindingFallback" checked>
+                                <label for="bindingFallback">启用故障转移</label>
+                            </div>
+                            <div class="nx-text-sm nx-text-secondary nx-mt-1">失败时自动切换到备用能力</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeCapabilityModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="saveCapabilityBinding()">绑定</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nx-modal" id="capabilityDetailModal">
+        <div class="nx-modal__overlay" onclick="closeCapabilityDetailModal()"></div>
+        <div class="nx-modal__content" style="max-width: 900px;">
+            <div class="nx-modal__header">
+                <h3 id="capabilityDetailTitle">能力详情</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeCapabilityDetailModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-tabs nx-mb-4">
+                    <div class="nx-tabs__list">
+                        <button class="nx-tabs__tab nx-tabs__tab--active" data-detail-tab="definition">能力定义</button>
+                        <button class="nx-tabs__tab" data-detail-tab="parameters">提供者配置</button>
+                        <button class="nx-tabs__tab" data-detail-tab="logs">调用日志</button>
+                    </div>
+                </div>
+                
+                <div id="detail-tab-definition" class="detail-tab-content">
+                    <div class="nx-card nx-mb-4">
+                        <div class="nx-card__header"><h4>基本信息</h4></div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">能力ID</label>
+                                    <p id="detailCapId" class="nx-text-secondary">-</p>
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">能力名称</label>
+                                    <p id="detailCapName" class="nx-text-secondary">-</p>
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">能力类型</label>
+                                    <p id="detailCapType" class="nx-text-secondary">-</p>
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">所属分类</label>
+                                    <p id="detailCapCategory" class="nx-text-secondary">-</p>
+                                </div>
+                            </div>
+                            <div class="nx-form-group nx-mt-3">
+                                <label class="nx-form-label">描述</label>
+                                <p id="detailCapDescription" class="nx-text-secondary">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nx-card">
+                        <div class="nx-card__header"><h4>绑定配置</h4></div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid-cols-3 nx-gap-4">
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">优先级</label>
+                                    <p id="detailPriority" class="nx-text-secondary">-</p>
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">故障转移</label>
+                                    <p id="detailFallback" class="nx-text-secondary">-</p>
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">绑定状态</label>
+                                    <p id="detailBindingStatus" class="nx-text-secondary">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="detail-tab-parameters" class="detail-tab-content" style="display: none;">
+                    <div class="nx-card">
+                        <div class="nx-card__header"><h4>提供者配置列表</h4></div>
+                        <div class="nx-card__body" id="detailParameters">
+                            <p class="nx-text-secondary">暂无提供者配置</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="detail-tab-logs" class="detail-tab-content" style="display: none;">
+                    <div class="nx-card">
+                        <div class="nx-card__header nx-flex nx-justify-between nx-items-center">
+                            <h4>调用日志</h4>
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="refreshCapabilityLogs()">
+                                <i class="ri-refresh-line"></i> 刷新
+                            </button>
+                        </div>
+                        <div class="nx-card__body" id="detailCapabilityLogs">
+                            <p class="nx-text-secondary">暂无调用日志</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeCapabilityDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nx-modal" id="roleChangeModal">
+        <div class="nx-modal__overlay" onclick="closeRoleChangeModal()"></div>
+        <div class="nx-modal__content" style="max-width: 450px;">
+            <div class="nx-modal__header">
+                <h3>变更角色</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeRoleChangeModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-form-group nx-mb-3">
+                    <label class="nx-form-label">参与者</label>
+                    <p id="roleChangeParticipantName" class="nx-text-secondary">-</p>
+                </div>
+                <div class="nx-form-group nx-mb-3">
+                    <label class="nx-form-label">当前角色</label>
+                    <p id="roleChangeCurrentRole" class="nx-text-secondary">-</p>
+                </div>
+                <div class="nx-form-group">
+                    <label class="nx-form-label">新角色 <span class="nx-text-danger">*</span></label>
+                    <select class="nx-input" id="newRoleSelect">
+                        <option value="">请选择角色</option>
+                        <option value="OWNER">创建者 (OWNER)</option>
+                        <option value="MANAGER">管理者 (MANAGER)</option>
+                        <option value="EMPLOYEE">员工 (EMPLOYEE)</option>
+                        <option value="LLM_ASSISTANT">LLM助手 (LLM_ASSISTANT)</option>
+                        <option value="COORDINATOR">协调者 (COORDINATOR)</option>
+                        <option value="OBSERVER">观察者 (OBSERVER)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeRoleChangeModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="confirmRoleChange()">确认变更</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nx-modal" id="knowledgeBindModal">
+        <div class="nx-modal__overlay" onclick="closeKnowledgeBindModal()"></div>
+        <div class="nx-modal__content" style="max-width: 600px;">
+            <div class="nx-modal__header">
+                <h3>绑定知识库</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeKnowledgeBindModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-form-group nx-mb-3">
+                    <label class="nx-form-label">选择知识库 <span class="nx-text-danger">*</span></label>
+                    <select class="nx-input" id="knowledgeSelect">
+                        <option value="">加载中...</option>
+                    </select>
+                </div>
+                <div class="nx-form-group nx-mb-3">
+                    <label class="nx-form-label">知识层 <span class="nx-text-danger">*</span></label>
+                    <select class="nx-input" id="knowledgeLayer">
+                        <option value="SCENE">场景知识层 (优先级最高)</option>
+                        <option value="PROFESSIONAL">专业模块层</option>
+                        <option value="GENERAL">通用知识层</option>
+                    </select>
+                </div>
+                <div class="nx-form-group">
+                    <label class="nx-form-label">优先级</label>
+                    <input type="number" class="nx-input" id="knowledgePriority" value="0" min="0">
+                    <div class="nx-text-sm nx-text-secondary nx-mt-1">数值越大优先级越高</div>
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeKnowledgeBindModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="confirmKnowledgeBind()">绑定</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/components/llm-enhancement.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/scene-group-detail.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            LLMEnhancement.renderStatusIndicator('llm-status-container', { compact: true });
+            LLMEnhancement.renderContextLevelViewer('context-level-container');
+            LLMEnhancement.renderConfigChain('config-chain-container', 'scene', 'scene-discovery');
+        });
+    </script>
+</body>
+</html>

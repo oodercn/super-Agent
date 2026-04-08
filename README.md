@@ -1,92 +1,198 @@
-# Ooder SuperAgent - 企业级 AI 能力分发与自动化协作框架
+# Ooder SuperAgent 3.0.2 - 企业级 AI Agent 核心框架
+
+<div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.7.3-blue.svg)](https://github.com/ooderCN/super-Agent)
-[![Java](https://img.shields.io/badge/Java-8+-green.svg)](https://openjdk.org/)
+[![Version](https://img.shields.io/badge/version-3.0.2-blue.svg)](https://github.com/ooderCN/super-Agent)
+[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.4-brightgreen.svg)](https://spring.io/projects/spring-boot)
 
-## 项目概述
+**面向企业级应用的 AI Agent 操作系统**
 
-Ooder SuperAgent 是一套基于 MIT 协议的开源企业级 AI 能力分发与自动化协作框架，采用 P2P 网络架构，支持多 Agent 协作、Skill 模块化能力封装和场景化编排，旨在实现去中心化的分布式 AI 协同与自动化流程管理。
+[在线文档](https://gitee.com/ooderCN/super-Agent) | [快速开始](#快速开始) | [架构设计](#架构设计) | [升级报告](ooder-agent/UPGRADE_REPORT.md)
 
-### 核心特性
+</div>
 
-- **P2P 分布式架构**：去中心化的节点发现和通信
-- **三层 Agent 架构**：MCP Agent → Route Agent → End Agent
-- **场景驱动设计**：基于场景的能力编排和协作
-- **技能模块化**：可插拔的 Skill 能力封装
-- **离线支持**：网络断开时的本地优先执行
-- **云原生部署**：支持 Kubernetes 集群部署
+---
+
+## 📋 目录
+
+- [项目简介](#项目简介)
+- [核心特性](#核心特性)
+- [版本信息](#版本信息)
+- [快速开始](#快速开始)
+- [架构设计](#架构设计)
+- [功能模块](#功能模块)
+- [技术栈](#技术栈)
+- [项目生态](#项目生态)
+- [开发指南](#开发指南)
+- [开源协议](#开源协议)
+
+---
+
+## 项目简介
+
+### 什么是 Ooder SuperAgent？
+
+Ooder SuperAgent 是一个面向企业级应用的 AI Agent 核心框架，采用模块化设计，内置核心驱动，支持通过 Gitee/GitHub 发现机制动态安装和扩展应用。它为企业提供了一个灵活、可扩展、易于管理的 AI Agent 运行平台。
+
+### 核心价值
+
+- **🚀 快速部署**: 最小化设计，开箱即用，5 分钟完成部署
+- **🔌 灵活扩展**: 模块化架构，按需安装，动态扩展
+- **🔐 安全可控**: MIT 开源协议，企业级安全，完全自主可控
+- **📊 统一管理**: 集中式管理，可视化监控，简化运维
+- **🤖 AI 驱动**: 内置 LLM 支持，智能决策，自动化执行
+- **🌐 分布式架构**: P2P 网络，多 Agent 协作，去中心化
+
+---
+
+## 核心特性
+
+### 🎯 Agent 管理系统
+- Agent 会话管理
+- Agent 心跳监控
+- Agent 消息服务
+- Agent 故障转移
+- Agent 拓扑管理
+
+### 🔌 Capability 能力中心
+- 能力激活服务
+- 能力连接器 (Http/WebSocket/Internal)
+- 能力安装服务
+- 能力调用服务
+- 能力注册表
+- 密钥管理服务
+- 能力状态管理
+- 依赖健康检查
+
+### 🎭 Scene 场景引擎
+- 场景定义与执行
+- 场景组管理
+- 场景生命周期控制
+- 场景模板服务
+
+### 🤖 LLM 多模型集成
+- DeepSeek 支持
+- 百度千帆支持
+- 阿里百炼支持
+- 流式对话
+- Function Calling
+- 提示词索引服务
+- 多级上下文管理
+
+### 📊 Knowledge 知识库
+- 知识存储和检索
+- 向量嵌入服务
+- 场景知识绑定
+- 文档导入 (URL/文本)
+
+### 🔄 Workflow 工作流引擎
+- BPMN 2.0 支持
+- 流程编排
+- 任务管理
+- 待办事项
+
+### 🌐 WebSocket 实时通信
+- 执行 WebSocket 处理器
+- 实时消息推送
+- 会话管理
+
+### 📈 监控与审计
+- 操作日志审计
+- LLM 调用统计
+- 能力使用统计
+- 健康检查端点
+
+---
 
 ## 版本信息
 
+### 当前版本: 3.0.2
+
+| 组件 | 版本 | 说明 |
+|------|------|------|
+| **Ooder SuperAgent** | 3.0.2 | 当前版本 |
+| **Ooder SDK** | 3.0.2 | SDK 核心 |
+| **Spring Boot** | 3.4.4 | 基础框架 |
+| **Java** | 21 | 运行环境 |
+| **SpringDoc** | 2.8.6 | API 文档 |
+
+### 版本历史
+
 | 版本 | 发布日期 | 状态 | 说明 |
 |------|----------|------|------|
-| **0.7.3** | 2026-02-20 | 当前版本 | 协议增强、云托管、GitHub/Gitee 发现 |
-| 0.7.2 | 2026-02-17 | 已发布 | 能力中心、南北向协议完善 |
-| 0.7.1 | 2026-02-15 | 已发布 | 场景驱动架构 |
-| 0.6.6 | 2026-01-31 | 已发布 | 配置体系优化 |
+| **3.0.2** | 2026-04-08 | 当前版本 | 从 MVP (apexos) 同步完整功能 |
+| 3.0.1 | 2026-04-07 | 已发布 | 基础 Agent 框架 |
+| 3.0.0 | 2026-03-23 | 已发布 | 项目初始化 |
 
-## 0.7.3 版本新特性
+### 3.0.2 版本新特性
 
-### 协议体系增强
+#### 🎉 从 MVP (apexos) 同步的完整功能
 
-| 协议 | 说明 |
-|------|------|
-| **DiscoveryProtocol** | 9 种发现方法 (UDP/DHT/mDNS/GitHub/Gitee/...) |
-| **LoginProtocol** | 本地认证协议，支持离线认证 |
-| **CollaborationProtocol** | 场景组协作协议，多 Agent 协同 |
-| **OfflineService** | 离线服务，网络断开时运行 |
-| **EventBus** | 事件总线，模块解耦 |
-| **CloudHostingProtocol** | 云托管协议，K8s 部署支持 |
+- ✅ **Agent 管理模块** (27 文件) - 完整的 Agent 生命周期管理
+- ✅ **Capability 能力管理模块** (75 文件) - 能力注册、激活、调用、监控
+- ✅ **Config 配置管理模块** (20+ 文件) - 配置加载、继承、存储
+- ✅ **Controller 控制器层** (30+ 文件) - 完整的 REST API
+- ✅ **DTO 数据传输对象** (212+ 文件) - 完整的数据模型
+- ✅ **Service 服务层** (32 文件) - 核心业务逻辑
+- ✅ **其他核心模块** - Engine, Event, Knowledge, LLM, Notification, Snapshot, SPI, Template, Tool, WebSocket
 
-### 技能发现方法
+详见: [UPGRADE_REPORT.md](ooder-agent/UPGRADE_REPORT.md)
 
-```java
-public enum DiscoveryMethod {
-    UDP_BROADCAST,      // UDP 广播发现
-    DHT_KADEMLIA,       // DHT 发现
-    MDNS_DNS_SD,        // mDNS 服务发现
-    SKILL_CENTER,       // 技能中心发现
-    LOCAL_FS,           // 本地文件系统发现
-    GITHUB,             // GitHub 仓库发现 (v0.7.3)
-    GITEE,              // Gitee 仓库发现 (v0.7.3)
-    GIT_REPOSITORY,     // 通用 Git 仓库发现 (v0.7.3)
-    AUTO                // 自动检测
-}
+---
+
+## 快速开始
+
+### 环境要求
+
+- JDK 21+
+- Maven 3.8+
+- 8GB+ 内存
+
+### 编译运行
+
+```bash
+# 克隆仓库
+git clone https://gitee.com/ooderCN/super-Agent.git
+cd super-Agent
+
+# 编译
+mvn clean compile
+
+# 运行
+cd ooder-agent
+mvn spring-boot:run
+
+# 打包
+mvn clean package -DskipTests
 ```
 
-## 项目生态
+### Docker 部署
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Ooder 开源生态                                │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                    super-Agent (本仓库)                   │   │
-│  │  ├── agent-skillcenter   技能中心                        │   │
-│  │  ├── ooder-Nexus         分发枢纽 (个人版)               │   │
-│  │  └── ooder-Nexus-Enterprise 分发枢纽 (企业版)            │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                              │                                   │
-│              ┌───────────────┼───────────────┐                  │
-│              │               │               │                  │
-│              ▼               ▼               ▼                  │
-│     ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
-│     │ ooder-sdk   │  │ ooder-skills│  │   common    │          │
-│     │ (SDK核心)   │  │ (能力库)    │  │ (企业套包)  │          │
-│     └─────────────┘  └─────────────┘  └─────────────┘          │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+```bash
+# 构建镜像
+docker build -t ooder-agent:3.0.2 .
+
+# 运行容器
+docker run -d -p 8099:8099 ooder-agent:3.0.2
 ```
 
-## 核心架构
+### 访问应用
+
+- **主页**: http://localhost:8099
+- **API 文档**: http://localhost:8099/swagger-ui.html
+- **健康检查**: http://localhost:8099/actuator/health
+
+---
+
+## 架构设计
 
 ### 一核两翼三链架构
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Ooder Agent SDK 0.7.3 架构                    │
+│                    Ooder Agent 3.0.2 架构                        │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  应用层                                                          │
@@ -119,58 +225,173 @@ public enum DiscoveryMethod {
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 三层 Agent 架构
+### 项目结构
 
-| Agent 类型 | 职责 | 说明 |
-|-----------|------|------|
-| **MCP Agent** | 主控节点 | AI 能力分发和管理，网络协调和安全认证 |
-| **Route Agent** | 路由节点 | 命令路由和任务协调，动态拓扑和负载均衡 |
-| **End Agent** | 终端节点 | 数据采集、处理和执行，本地优先执行 |
+```
+ooder-agent/
+├── src/main/java/net/ooder/agent/
+│   ├── AgentApplication.java           # 主应用
+│   ├── config/                          # 配置类
+│   ├── controller/                      # REST 控制器
+│   ├── dto/                             # 数据传输对象
+│   ├── llm/                             # LLM 服务
+│   ├── service/                         # 业务服务
+│   └── skill/                           # 技能管理
+│       └── scene/                       # 场景引擎
+│           ├── agent/                   # Agent 管理
+│           ├── capability/              # 能力管理
+│           ├── config/                  # 配置管理
+│           ├── controller/              # 场景控制器
+│           ├── dto/                     # 场景 DTO
+│           ├── engine/                  # 场景引擎
+│           ├── event/                   # 事件处理
+│           ├── knowledge/               # 知识库
+│           ├── llm/                     # LLM 集成
+│           ├── notification/            # 通知服务
+│           ├── service/                 # 场景服务
+│           ├── snapshot/                # 快照管理
+│           ├── spi/                     # SPI 接口
+│           ├── template/                # 模板管理
+│           ├── tool/                    # 工具集成
+│           └── websocket/               # WebSocket
+├── src/main/resources/
+│   ├── application.yml                  # 配置文件
+│   └── static/console/                  # 前端资源
+└── pom.xml
+```
 
-## 快速开始
+---
 
-### 环境要求
+## 功能模块
 
-- JDK 1.8+
-- Maven 3.6+
-- Spring Boot 2.7.0
+### 核心模块
+
+| 模块 | 说明 | 文件数 |
+|------|------|--------|
+| **Agent 管理** | Agent 会话、心跳、消息、故障转移 | 27 |
+| **Capability 能力** | 能力激活、连接、安装、调用、注册 | 75 |
+| **Config 配置** | 配置加载、继承、存储、初始化 | 20+ |
+| **Controller 控制器** | REST API 控制器 | 30+ |
+| **DTO 数据对象** | 数据传输对象 | 212+ |
+| **Service 服务** | 核心业务服务 | 32 |
+| **LLM 集成** | 多模型支持、提示词、上下文 | 27 |
+| **Knowledge 知识库** | 知识存储、嵌入、绑定 | 2 |
+| **Event 事件** | 事件监听、发布 | 7 |
+| **Engine 引擎** | 上下文信任、脚本执行 | 4 |
+| **Notification 通知** | 场景通知服务 | 1 |
+| **Snapshot 快照** | 版本快照管理 | 4 |
+| **WebSocket** | 实时通信 | 2 |
+
+### 功能统计
+
+- **Java 文件**: 400+
+- **配置文件**: 5
+- **前端文件**: 100+
+- **代码行数**: 60,000+
+
+---
+
+## 技术栈
+
+### 后端技术栈
+
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| **Java** | 21 | LTS 版本，虚拟线程支持 |
+| **Spring Boot** | 3.4.4 | 基础框架 |
+| **Ooder SDK** | 3.0.2 | Agent SDK 核心 |
+| **SpringDoc** | 2.8.6 | OpenAPI 文档 |
+| **SQLite** | 3.49.1 | 嵌入式数据库 |
+| **MVEL** | 2.5.0 | 表达式引擎 |
+| **FastJSON2** | 2.0.57 | JSON 处理 |
+| **Lombok** | 1.18.30 | 代码简化 |
+
+### 前端技术栈
+
+| 技术 | 说明 |
+|------|------|
+| **JavaScript** | ES6+ 原生实现 |
+| **CSS3** | 组件化样式 |
+| **RemixIcon** | 图标库 |
+| **模块化** | 组件化设计 |
+
+### AI 模型支持
+
+| 模型 | 提供商 | 说明 |
+|------|--------|------|
+| **DeepSeek** | DeepSeek | 深度求索 |
+| **千帆** | 百度 | 百度智能云 |
+| **百炼** | 阿里 | 阿里云 |
+
+---
+
+## 项目生态
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Ooder 开源生态                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    super-Agent (本仓库)                   │   │
+│  │  ├── ooder-agent           Agent 核心 (3.0.2)            │   │
+│  │  ├── ooder-nexus           分发枢纽 (个人版)             │   │
+│  │  └── ooder-nexus-enterprise 分发枢纽 (企业版)            │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                   │
+│              ┌───────────────┼───────────────┐                  │
+│              │               │               │                  │
+│              ▼               ▼               ▼                  │
+│     ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
+│     │ ooder-sdk   │  │ ooder-skills│  │   common    │          │
+│     │ (SDK核心)   │  │ (能力库)    │  │ (企业套包)  │          │
+│     │  3.0.2      │  │  mvp/apexos │  │             │          │
+│     └─────────────┘  └─────────────┘  └─────────────┘          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 相关项目
+
+| 项目 | 说明 | 地址 |
+|------|------|------|
+| **ooder-sdk** | Agent SDK 核心 (3.0.2) | [github.com/oodercn/ooder-sdk](https://github.com/oodercn/ooder-sdk) |
+| **ooder-skills** | 共享能力库 (MVP/ApexOS) | [github.com/oodercn/ooder-skills](https://github.com/oodercn/ooder-skills) |
+| **common** | 企业开发套包 | [github.com/oodercn/common](https://github.com/oodercn/common) |
+
+---
+
+## 开发指南
 
 ### 添加依赖
 
 ```xml
 <dependency>
     <groupId>net.ooder</groupId>
-    <artifactId>agent-sdk</artifactId>
-    <version>0.7.3</version>
+    <artifactId>agent-sdk-core</artifactId>
+    <version>3.0.2</version>
 </dependency>
 ```
 
-### 初始化 SDK
+### 配置示例
 
-```java
-import net.ooder.sdk.OoderSDK;
-import net.ooder.sdk.infra.config.SDKConfiguration;
+```yaml
+server:
+  port: 8099
 
-public class QuickStart {
-    public static void main(String[] args) {
-        SDKConfiguration config = new SDKConfiguration();
-        config.setAgentId("my-agent-001");
-        config.setAgentName("My Agent");
-        config.setEndpoint("http://localhost:8080");
-        
-        OoderSDK sdk = OoderSDK.builder()
-            .configuration(config)
-            .build();
-        
-        sdk.initialize();
-        sdk.start();
-        
-        System.out.println("SDK started successfully!");
-    }
-}
+ooder:
+  scene:
+    auto-init: true
+    default-group-id: sg-default
+  discovery:
+    use-se-sdk: true
+    use-index-first: true
+  llm:
+    provider: deepseek
+    model: deepseek-chat
 ```
 
-### 从 GitHub/Gitee 安装技能
+### 从 Gitee/GitHub 安装技能
 
 ```java
 import net.ooder.sdk.api.skill.SkillPackageManager;
@@ -180,88 +401,25 @@ SkillPackageManager packageManager = sdk.getSkillPackageManager();
 
 InstallRequest request = new InstallRequest();
 request.setSkillId("skill-org-feishu");
-request.setVersion("0.7.3");
-request.setDiscoveryMethod(DiscoveryMethod.GITHUB);
+request.setVersion("3.0.2");
+request.setDiscoveryMethod(DiscoveryMethod.GITEE);
 
 packageManager.install(request).join();
 ```
 
-## 项目结构
-
-```
-super-Agent/
-├── agent-skillcenter/            # 技能中心 (v2.2)
-│   ├── src/main/java/net/ooder/
-│   │   ├── nexus/skillcenter/    # 控制器和 DTO 层
-│   │   └── skillcenter/          # 核心服务层
-│   │       ├── sdk/              # SDK 适配器
-│   │       ├── service/          # 业务服务
-│   │       ├── market/           # 技能市场
-│   │       ├── p2p/              # P2P 网络
-│   │       └── storage/          # 存储管理
-│   └── pom.xml
-│
-├── ooder-Nexus/                  # 分发枢纽 (个人版)
-│   ├── src/main/resources/
-│   │   ├── scenes/               # 场景配置
-│   │   ├── skills/               # 技能配置
-│   │   └── static/               # 静态资源
-│   └── pom.xml
-│
-├── ooder-Nexus-Enterprise/       # 分发枢纽 (企业版)
-│   ├── src/main/resources/
-│   │   ├── scenes/               # 场景配置
-│   │   └── static/               # 静态资源
-│   └── pom.xml
-│
-├── docs/                         # 文档
-│   ├── overview/
-│   └── skills/
-│
-├── protocol-release/             # 协议发布文档
-│
-└── README.md
-```
-
-> **注意**: agent-sdk 已迁移到独立仓库 [ooder-sdk](https://github.com/oodercn/ooder-sdk)
-
-## 协议文档
-
-### v0.7.3 协议体系
-
-| 协议 | 文档 | 说明 |
-|------|------|------|
-| 主协议 | [protocol-main-v0.7.3.md](docs/protocols/protocol-main-v0.7.3.md) | 协议总览 |
-| 发现协议 | [skill-discovery-protocol-v0.7.3.md](docs/protocols/skill-discovery-protocol-v0.7.3.md) | 技能发现 |
-| 技能包协议 | [skill-package-protocol-v0.7.3.md](docs/protocols/skill-package-protocol-v0.7.3.md) | 技能包规范 |
-| 云托管协议 | [cloud-hosting-protocol-v0.7.3.md](docs/protocols/cloud-hosting-protocol-v0.7.3.md) | K8s 托管 |
-
-### 核心协议
-
-| 协议类型 | 协议名称 | 说明 |
-|---------|---------|------|
-| **南向协议** | DiscoveryProtocol | Agent 发现、网络探测 |
-| | LoginProtocol | 用户认证、会话管理 |
-| | RoleProtocol | 角色决策、角色注册 |
-| | CollaborationProtocol | 场景组协作、任务协同 |
-| **北向协议** | DomainManagementProtocol | 域创建、成员管理 |
-| | ObservationProtocol | 指标采集、日志查询 |
-
-## 相关项目
-
-| 项目 | 说明 | 地址 |
-|------|------|------|
-| **ooder-sdk** | Agent SDK 核心 | [github.com/oodercn/ooder-sdk](https://github.com/oodercn/ooder-sdk) |
-| **ooder-skills** | 共享能力库 | [github.com/oodercn/ooder-skills](https://github.com/oodercn/ooder-skills) |
-| **common** | 企业开发套包 | [github.com/oodercn/common](https://github.com/oodercn/common) |
+---
 
 ## 文档资源
 
 | 文档 | 说明 |
 |------|------|
+| [升级报告](ooder-agent/UPGRADE_REPORT.md) | 3.0.2 升级详情 |
+| [变更日志](ooder-agent/CHANGELOG.md) | 版本变更记录 |
 | [协议文档](protocol-release/) | 协议发布文档 |
 | [开发指南](docs/overview/) | 开发概述 |
 | [技能开发](docs/skills/) | 技能开发规范 |
+
+---
 
 ## 贡献指南
 
@@ -273,15 +431,25 @@ super-Agent/
 4. 推送到分支 (`git push origin feature/amazing-feature`)
 5. 创建 Pull Request
 
-## 许可证
+---
 
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
+## 开源协议
 
-## 联系方式
-
-- GitHub: [https://github.com/ooderCN/super-Agent](https://github.com/ooderCN/super-Agent)
-- Gitee: [https://gitee.com/ooderCN/super-Agent](https://gitee.com/ooderCN/super-Agent)
+本项目采用 [MIT License](LICENSE) 开源协议。
 
 ---
 
+## 联系方式
+
+- **GitHub**: [https://github.com/ooderCN/super-Agent](https://github.com/ooderCN/super-Agent)
+- **Gitee**: [https://gitee.com/ooderCN/super-Agent](https://gitee.com/ooderCN/super-Agent)
+
+---
+
+<div align="center">
+
+**Ooder SuperAgent 3.0.2** - 让 AI Agent 更简单
+
 **Made with ❤️ by Ooder Team**
+
+</div>

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识检索 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/knowledge-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-search-line" aria-hidden="true"></i> 知识检索</h1>
+                        <p>在知识库中搜索相关内容</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="ks-page">
+                <div class="search-hero">
+                    <h1><i class="ri-search-2-line"></i> 知识检索</h1>
+                    <p>在知识库中搜索您需要的信息</p>
+                </div>
+                
+                <div class="search-box">
+                    <div class="search-input-wrapper">
+                        <input type="text" id="searchInput" placeholder="输入您想查询的问题或关键词..." onkeydown="handleSearchKeydown(event)">
+                        <button class="nx-btn nx-btn--primary" onclick="doSearch()">
+                            <i class="ri-search-line"></i> 搜索
+                        </button>
+                    </div>
+                    
+                    <div class="kb-selector" id="kbSelector">
+                        <div class="kb-chip selected" data-id="all" onclick="selectKb('all')">
+                            <i class="ri-book-3-line"></i>
+                            <span>全部知识库</span>
+                        </div>
+                    </div>
+                    
+                    <div class="search-options">
+                        <div class="search-option">
+                            <label>返回数量</label>
+                            <select id="topK">
+                                <option value="5">5条</option>
+                                <option value="10" selected>10条</option>
+                                <option value="20">20条</option>
+                            </select>
+                        </div>
+                        <div class="search-option">
+                            <label>相似度阈值</label>
+                            <select id="threshold">
+                                <option value="0.5">0.5 (宽松)</option>
+                                <option value="0.7" selected>0.7 (标准)</option>
+                                <option value="0.8">0.8 (严格)</option>
+                            </select>
+                        </div>
+                        <div class="search-option">
+                            <label>检索层级</label>
+                            <select id="searchLayer">
+                                <option value="all">全部层级</option>
+                                <option value="SCENE">场景层</option>
+                                <option value="PROFESSIONAL">专业层</option>
+                                <option value="GENERAL">通用层</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="searchResults" style="display: none;">
+                    <div class="search-results">
+                        <div class="results-header">
+                            <h2><i class="ri-file-list-3-line"></i> 检索结果</h2>
+                            <span class="results-count" id="resultsCount">找到 0 条相关结果</span>
+                        </div>
+                        <div id="resultsList"></div>
+                    </div>
+                </div>
+                
+                <div id="emptyState">
+                    <div class="search-history" id="historySection">
+                        <div class="history-title">
+                            <i class="ri-history-line"></i> 最近搜索
+                        </div>
+                        <div class="history-tags" id="historyTags">
+                            <span class="history-tag" onclick="quickSearch('API接口规范')">API接口规范</span>
+                            <span class="history-tag" onclick="quickSearch('如何配置LLM')">如何配置LLM</span>
+                            <span class="history-tag" onclick="quickSearch('知识库使用方法')">知识库使用方法</span>
+                        </div>
+                    </div>
+                    
+                    <div class="hot-topics">
+                        <h3><i class="ri-fire-line"></i> 热门搜索</h3>
+                        <div class="hot-topics-grid">
+                            <div class="hot-topic" onclick="quickSearch('RAG技术原理')">
+                                <div class="topic-icon"><i class="ri-lightbulb-line"></i></div>
+                                <div class="topic-text">RAG技术原理</div>
+                            </div>
+                            <div class="hot-topic" onclick="quickSearch('场景配置指南')">
+                                <div class="topic-icon"><i class="ri-settings-4-line"></i></div>
+                                <div class="topic-text">场景配置指南</div>
+                            </div>
+                            <div class="hot-topic" onclick="quickSearch('能力开发文档')">
+                                <div class="topic-icon"><i class="ri-code-line"></i></div>
+                                <div class="topic-text">能力开发文档</div>
+                            </div>
+                            <div class="hot-topic" onclick="quickSearch('系统架构说明')">
+                                <div class="topic-icon"><i class="ri-organization-chart"></i></div>
+                                <div class="topic-text">系统架构说明</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="result-detail-modal" id="detailModal">
+        <div class="result-detail-content">
+            <div class="result-detail-header">
+                <div>
+                    <h3 id="detailTitle">文档详情</h3>
+                    <div id="detailMeta" style="font-size: 13px; color: var(--nx-text-secondary); margin-top: 4px;"></div>
+                </div>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeDetailModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="result-detail-body">
+                <div id="detailContent" style="white-space: pre-wrap; line-height: 1.8;"></div>
+            </div>
+            <div class="result-detail-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="copyContent()">
+                    <i class="ri-file-copy-line"></i> 复制内容
+                </button>
+                <button class="nx-btn nx-btn--primary" onclick="closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+    (function() {
+        'use strict';
+        
+        var KnowledgeSearch = {
+            knowledgeBases: [],
+            selectedKb: 'all',
+            searchHistory: [],
+            
+            init: function() {
+                this.loadKnowledgeBases();
+                this.loadSearchHistory();
+            },
+            
+            loadKnowledgeBases: function() {
+                var self = this;
+                ApiClient.get('/api/v1/knowledge-bases')
+                    .then(function(result) {
+                        if (result.status === 'success' && result.data) {
+                            self.knowledgeBases = result.data;
+                            self.renderKbSelector();
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('Failed to load knowledge bases:', error);
+                    });
+            },
+            
+            loadSearchHistory: function() {
+                var saved = localStorage.getItem('knowledgeSearchHistory');
+                if (saved) {
+                    this.searchHistory = JSON.parse(saved);
+                    this.renderSearchHistory();
+                }
+            },
+            
+            renderKbSelector: function() {
+                var container = document.getElementById('kbSelector');
+                var html = '<div class="kb-chip ' + (this.selectedKb === 'all' ? 'selected' : '') + '" data-id="all" onclick="selectKb(\'all\')">' +
+                    '<i class="ri-book-3-line"></i><span>全部知识库</span>' +
+                '</div>';
+                
+                this.knowledgeBases.forEach(function(kb) {
+                    html += '<div class="kb-chip" data-id="' + kb.kbId + '" onclick="selectKb(\'' + kb.kbId + '\')">' +
+                        '<i class="ri-book-line"></i><span>' + kb.name + '</span>' +
+                    '</div>';
+                });
+                
+                container.innerHTML = html;
+            },
+            
+            renderSearchHistory: function() {
+                if (this.searchHistory.length === 0) return;
+                
+                var container = document.getElementById('historyTags');
+                var html = '';
+                this.searchHistory.slice(0, 5).forEach(function(query) {
+                    html += '<span class="history-tag" onclick="quickSearch(\'' + query.replace(/'/g, "\\'") + '\')">' + query + '</span>';
+                });
+                container.innerHTML = html;
+            },
+            
+            saveSearchHistory: function(query) {
+                var idx = this.searchHistory.indexOf(query);
+                if (idx >= 0) {
+                    this.searchHistory.splice(idx, 1);
+                }
+                this.searchHistory.unshift(query);
+                if (this.searchHistory.length > 10) {
+                    this.searchHistory = this.searchHistory.slice(0, 10);
+                }
+                localStorage.setItem('knowledgeSearchHistory', JSON.stringify(this.searchHistory));
+                this.renderSearchHistory();
+            },
+            
+            search: function(query) {
+                var self = this;
+                var topK = parseInt(document.getElementById('topK').value);
+                var threshold = parseFloat(document.getElementById('threshold').value);
+                var layer = document.getElementById('searchLayer').value;
+                
+                if (!query || !query.trim()) {
+                    alert('请输入搜索内容');
+                    return;
+                }
+                
+                this.saveSearchHistory(query);
+                
+                document.getElementById('searchInput').value = query;
+                document.getElementById('emptyState').style.display = 'none';
+                document.getElementById('searchResults').style.display = 'block';
+                document.getElementById('resultsList').innerHTML = '<div style="text-align: center; padding: 40px;"><i class="ri-loader-4-line ri-spin" style="font-size: 32px;"></i><div style="margin-top: 12px;">搜索中...</div></div>';
+                
+                var searchPromise;
+                
+                if (this.selectedKb === 'all') {
+                    var layers = layer === 'all' ? null : [layer];
+                    searchPromise = this.searchAllKbs(query, topK, threshold, layers);
+                } else {
+                    searchPromise = this.searchSingleKb(this.selectedKb, query, topK, threshold);
+                }
+                
+                searchPromise.then(function(results) {
+                    self.renderResults(results, query);
+                }).catch(function(error) {
+                    console.error('Search error:', error);
+                    document.getElementById('resultsList').innerHTML = '<div style="text-align: center; padding: 40px; color: var(--nx-text-secondary);">搜索失败，请重试</div>';
+                });
+            },
+            
+            searchAllKbs: function(query, topK, threshold, layers) {
+                var self = this;
+                var promises = this.knowledgeBases.map(function(kb) {
+                    return ApiClient.post('/api/v1/knowledge-bases/' + kb.kbId + '/search', {
+                        query: query,
+                        topK: Math.ceil(topK / self.knowledgeBases.length),
+                        threshold: threshold
+                    }).then(function(result) {
+                        if (result.status === 'success' && result.data && result.data.results) {
+                            return result.data.results.map(function(r) {
+                                r.kbId = kb.kbId;
+                                r.kbName = kb.name;
+                                return r;
+                            });
+                        }
+                        return [];
+                    }).catch(function() { return []; });
+                });
+                
+                return Promise.all(promises).then(function(allResults) {
+                    var flat = [];
+                    allResults.forEach(function(r) { flat = flat.concat(r); });
+                    flat.sort(function(a, b) { return (b.score || 0) - (a.score || 0); });
+                    return flat.slice(0, topK);
+                });
+            },
+            
+            searchSingleKb: function(kbId, query, topK, threshold) {
+                return ApiClient.post('/api/v1/knowledge-bases/' + kbId + '/search', {
+                    query: query,
+                    topK: topK,
+                    threshold: threshold
+                }).then(function(result) {
+                    if (result.status === 'success' && result.data && result.data.results) {
+                        var kb = KnowledgeSearch.knowledgeBases.find(function(k) { return k.kbId === kbId; });
+                        return result.data.results.map(function(r) {
+                            r.kbId = kbId;
+                            r.kbName = kb ? kb.name : '未知知识库';
+                            return r;
+                        });
+                    }
+                    return [];
+                });
+            },
+            
+            renderResults: function(results, query) {
+                var container = document.getElementById('resultsList');
+                document.getElementById('resultsCount').textContent = '找到 ' + results.length + ' 条相关结果';
+                
+                if (results.length === 0) {
+                    container.innerHTML = '<div class="empty-state">' +
+                        '<i class="ri-search-line"></i>' +
+                        '<div class="empty-title">未找到相关结果</div>' +
+                        '<div class="empty-desc">尝试使用不同的关键词或调整搜索条件</div>' +
+                    '</div>';
+                    return;
+                }
+                
+                var queryTerms = query.toLowerCase().split(/\s+/);
+                
+                container.innerHTML = results.map(function(result, idx) {
+                    var score = Math.round((result.score || 0) * 100);
+                    var content = result.content || '';
+                    var highlighted = content;
+                    queryTerms.forEach(function(term) {
+                        if (term.length > 1) {
+                            var regex = new RegExp('(' + term + ')', 'gi');
+                            highlighted = highlighted.replace(regex, '<span class="highlight">$1</span>');
+                        }
+                    });
+                    
+                    if (highlighted.length > 300) {
+                        var firstHighlight = highlighted.indexOf('<span class="highlight">');
+                        if (firstHighlight > 50) {
+                            highlighted = '...' + highlighted.substring(firstHighlight - 50);
+                        }
+                        if (highlighted.length > 400) {
+                            highlighted = highlighted.substring(0, 400) + '...';
+                        }
+                    }
+                    
+                    var layer = result.layer || 'GENERAL';
+                    var layerName = layer === 'GENERAL' ? '通用层' : (layer === 'PROFESSIONAL' ? '专业层' : '场景层');
+                    
+                    return '<div class="result-card">' +
+                        '<div class="result-header">' +
+                            '<div class="result-title">' +
+                                '<i class="ri-file-text-line"></i>' +
+                                '<span>' + (result.title || '文档 #' + (idx + 1)) + '</span>' +
+                            '</div>' +
+                            '<div class="result-score">' +
+                                '<div class="score-bar"><div class="score-fill" style="width: ' + score + '%"></div></div>' +
+                                '<span class="score-value">' + score + '%</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="result-body">' +
+                            '<div class="result-content">' + highlighted + '</div>' +
+                        '</div>' +
+                        '<div class="result-footer">' +
+                            '<div class="result-meta">' +
+                                '<span><i class="ri-book-line"></i> ' + (result.kbName || '未知知识库') + '</span>' +
+                                '<span class="layer-badge ' + layer.toLowerCase() + '">' + layerName + '</span>' +
+                            '</div>' +
+                            '<div class="result-actions">' +
+                                '<button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="viewDetail(' + idx + ')"><i class="ri-eye-line"></i> 查看详情</button>' +
+                                '<button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="copyResult(' + idx + ')"><i class="ri-file-copy-line"></i> 复制</button>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+                
+                window.currentResults = results;
+            },
+            
+            selectKb: function(kbId) {
+                this.selectedKb = kbId;
+                document.querySelectorAll('.kb-chip').forEach(function(el) {
+                    el.classList.remove('selected');
+                    if (el.dataset.id === kbId) {
+                        el.classList.add('selected');
+                    }
+                });
+            }
+        };
+        
+        window.selectKb = function(kbId) {
+            KnowledgeSearch.selectKb(kbId);
+        };
+        
+        window.handleSearchKeydown = function(event) {
+            if (event.key === 'Enter') {
+                doSearch();
+            }
+        };
+        
+        window.doSearch = function() {
+            var query = document.getElementById('searchInput').value;
+            KnowledgeSearch.search(query);
+        };
+        
+        window.quickSearch = function(query) {
+            document.getElementById('searchInput').value = query;
+            KnowledgeSearch.search(query);
+        };
+        
+        window.viewDetail = function(idx) {
+            var result = window.currentResults[idx];
+            if (!result) return;
+            
+            document.getElementById('detailTitle').textContent = result.title || '文档详情';
+            document.getElementById('detailMeta').innerHTML = 
+                '<span style="margin-right: 16px;"><i class="ri-book-line"></i> ' + (result.kbName || '未知知识库') + '</span>' +
+                '<span style="margin-right: 16px;"><i class="ri-file-text-line"></i> ' + (result.docId || '-') + '</span>' +
+                '<span><i class="ri-percent-line"></i> 相似度: ' + Math.round((result.score || 0) * 100) + '%</span>';
+            document.getElementById('detailContent').textContent = result.content || '无内容';
+            document.getElementById('detailModal').classList.add('open');
+        };
+        
+        window.closeDetailModal = function() {
+            document.getElementById('detailModal').classList.remove('open');
+        };
+        
+        window.copyResult = function(idx) {
+            var result = window.currentResults[idx];
+            if (!result) return;
+            
+            var text = '【' + (result.title || '文档') + '】\n来源: ' + (result.kbName || '未知知识库') + '\n相似度: ' + Math.round((result.score || 0) * 100) + '%\n\n' + (result.content || '');
+            
+            navigator.clipboard.writeText(text).then(function() {
+                alert('已复制到剪贴板');
+            }).catch(function() {
+                alert('复制失败');
+            });
+        };
+        
+        window.copyContent = function() {
+            var content = document.getElementById('detailContent').textContent;
+            navigator.clipboard.writeText(content).then(function() {
+                alert('已复制到剪贴板');
+            }).catch(function() {
+                alert('复制失败');
+            });
+        };
+        
+        document.addEventListener('DOMContentLoaded', KnowledgeSearch.init.bind(KnowledgeSearch));
+    })();
+    </script>
+</body>
+</html>

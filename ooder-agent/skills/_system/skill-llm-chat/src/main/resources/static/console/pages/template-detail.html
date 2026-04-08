@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>场景能力详情 - Skill Scene</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/template-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-apps-line"></i> Skill Scene
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <a href="template-management.html" class="nx-btn nx-btn--ghost nx-btn--icon">
+                        <i class="ri-arrow-left-line"></i>
+                    </a>
+                    <h2 class="nx-text-lg nx-font-semibold" id="pageTitle">场景能力详情</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                <i class="ri-puzzle-line"></i> 我的能力
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                    <button class="nx-btn nx-btn--secondary" onclick="editTemplate()">
+                        <i class="ri-edit-line"></i> 编辑
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="saveTemplate()">
+                        <i class="ri-save-line"></i> 保存
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="createSceneGroup()">
+                        <i class="ri-play-line"></i> 实例化
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__body">
+                            <div class="nx-flex nx-items-center nx-justify-between">
+                                <div class="nx-flex nx-items-center nx-gap-4">
+                                    <div class="nx-flex nx-items-center nx-justify-center" style="width: 64px; height: 64px; background: var(--nx-color-primary-bg); border-radius: 12px;">
+                                        <i class="ri-file-copy-line" style="font-size: 32px; color: var(--nx-color-primary);"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="nx-text-xl nx-font-semibold" id="templateName">加载中...</h3>
+                                        <div class="nx-flex nx-items-center nx-gap-3 nx-mt-1">
+                                            <span class="nx-badge nx-badge--secondary" id="templateCategory">-</span>
+                                            <span class="nx-text-sm nx-text-secondary"><code id="templateId">-</code></span>
+                                            <span class="nx-text-sm nx-text-secondary">v<span id="templateVersion">-</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="nx-flex nx-gap-6">
+                                    <div class="nx-text-center">
+                                        <div class="nx-text-2xl nx-font-bold" id="capabilityCount">0</div>
+                                        <div class="nx-text-sm nx-text-secondary">能力数</div>
+                                    </div>
+                                    <div class="nx-text-center">
+                                        <div class="nx-text-2xl nx-font-bold" id="roleCount">0</div>
+                                        <div class="nx-text-sm nx-text-secondary">角色数</div>
+                                    </div>
+                                    <div class="nx-text-center">
+                                        <div class="nx-text-2xl nx-font-bold" id="instanceCount">0</div>
+                                        <div class="nx-text-sm nx-text-secondary">实例数</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-tabs nx-mb-4">
+                        <div class="nx-tabs__list">
+                            <button class="nx-tabs__tab active" data-tab="overview">概览</button>
+                            <button class="nx-tabs__tab" data-tab="capabilities">能力定义</button>
+                            <button class="nx-tabs__tab" data-tab="roles">角色定义</button>
+                            <button class="nx-tabs__tab" data-tab="workflow">工作流</button>
+                            <button class="nx-tabs__tab" data-tab="security">安全策略</button>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-overview" class="tab-content active">
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-6">
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h4 class="nx-card__title">基本信息</h4>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div class="nx-form-group nx-mb-3">
+                                        <label class="nx-form-label">描述</label>
+                                        <p id="templateDescription" class="nx-text-secondary">-</p>
+                                    </div>
+                                    <div class="nx-form-group nx-mb-3">
+                                        <label class="nx-form-label">场景类型</label>
+                                        <p id="templateType">-</p>
+                                    </div>
+                                    <div class="nx-form-group nx-mb-3">
+                                        <label class="nx-form-label">创建时间</label>
+                                        <p id="templateCreateTime">-</p>
+                                    </div>
+                                    <div class="nx-form-group">
+                                        <label class="nx-form-label">状态</label>
+                                        <p><span class="nx-badge" id="templateStatus">-</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h4 class="nx-card__title">能力概览</h4>
+                                </div>
+                                <div class="nx-card__body" id="capabilityOverview">
+                                    <p class="nx-text-secondary">暂无能力定义</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-capabilities" class="tab-content">
+                        <div class="nx-flex nx-justify-end nx-mb-4">
+                            <button class="nx-btn nx-btn--primary" onclick="addCapability()">
+                                <i class="ri-add-line"></i> 添加能力
+                            </button>
+                        </div>
+                        <div id="capabilityList">
+                            <p class="nx-text-secondary">暂无能力定义</p>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-roles" class="tab-content">
+                        <div class="nx-flex nx-justify-end nx-mb-4">
+                            <button class="nx-btn nx-btn--primary" onclick="addRole()">
+                                <i class="ri-add-line"></i> 添加角色
+                            </button>
+                        </div>
+                        <div id="roleList">
+                            <p class="nx-text-secondary">暂无角色定义</p>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-workflow" class="tab-content">
+                        <div class="nx-flex nx-justify-end nx-mb-4">
+                            <button class="nx-btn nx-btn--primary" onclick="editWorkflow()">
+                                <i class="ri-edit-line"></i> 编辑工作流
+                            </button>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h4 class="nx-card__title">触发器</h4>
+                            </div>
+                            <div class="nx-card__body" id="triggerList">
+                                <p class="nx-text-secondary">暂无触发器定义</p>
+                            </div>
+                        </div>
+                        <div class="nx-card nx-mt-4">
+                            <div class="nx-card__header">
+                                <h4 class="nx-card__title">执行步骤</h4>
+                            </div>
+                            <div class="nx-card__body" id="stepList">
+                                <p class="nx-text-secondary">暂无步骤定义</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="tab-security" class="tab-content">
+                        <div class="nx-flex nx-justify-end nx-mb-4">
+                            <button class="nx-btn nx-btn--primary" onclick="editSecurity()">
+                                <i class="ri-edit-line"></i> 编辑安全策略
+                            </button>
+                        </div>
+                        <div class="nx-grid nx-grid-cols-2 nx-gap-6">
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h4 class="nx-card__title">数据隔离规则</h4>
+                                </div>
+                                <div class="nx-card__body" id="dataIsolationList">
+                                    <p class="nx-text-secondary">暂无数据隔离规则</p>
+                                </div>
+                            </div>
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h4 class="nx-card__title">审计日志配置</h4>
+                                </div>
+                                <div class="nx-card__body" id="auditConfig">
+                                    <p class="nx-text-secondary">暂无审计配置</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="capabilityModal" style="display: none;">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header">
+                <h3 id="capabilityModalTitle">添加能力</h3>
+                <button class="modal-close" onclick="closeCapabilityModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="capabilityForm">
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">选择能力 <span class="nx-text-error">*</span></label>
+                        <div class="nx-input-group" style="display: flex; gap: 8px;">
+                            <input type="text" class="nx-input" id="selectedCapabilityDisplay" readonly placeholder="点击选择能力" style="flex: 1; cursor: pointer; background: var(--nx-bg-elevated);" onclick="selectCapabilityFromList()">
+                            <button type="button" class="nx-btn nx-btn--secondary" onclick="selectCapabilityFromList()">
+                                <i class="ri-search-line"></i>
+                            </button>
+                        </div>
+                        <small class="nx-text-secondary">从系统已注册的能力中选择</small>
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">能力ID</label>
+                        <input type="text" class="nx-input" id="capId" readonly style="background: var(--nx-bg-secondary);">
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">能力名称</label>
+                        <input type="text" class="nx-input" id="capName" readonly style="background: var(--nx-bg-secondary);">
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">分类</label>
+                        <input type="text" class="nx-input" id="capCategory" readonly style="background: var(--nx-bg-secondary);">
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">描述/备注</label>
+                        <textarea class="nx-textarea" id="capDescription" rows="2" placeholder="添加使用说明或备注信息"></textarea>
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">LLM提示</label>
+                        <textarea class="nx-textarea" id="capLlmHint" rows="3" placeholder="为LLM提供理解此能力的上下文提示，帮助AI更好地执行此能力"></textarea>
+                        <small class="nx-text-secondary">此提示将帮助LLM理解如何使用此能力</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeCapabilityModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="saveCapability()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="roleModal" style="display: none;">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 id="roleModalTitle">添加角色</h3>
+                <button class="modal-close" onclick="closeRoleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="roleForm">
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">角色类型 <span class="nx-text-error">*</span></label>
+                        <select class="nx-select" id="roleTypeSelect" onchange="onRoleTypeSelect()" required>
+                            <option value="">请选择角色类型</option>
+                        </select>
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">角色名称</label>
+                        <input type="text" class="nx-input" id="roleName" placeholder="如: manager" required>
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">描述</label>
+                        <textarea class="nx-textarea" id="roleDescription" rows="2"></textarea>
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">组织机构绑定</label>
+                        <select class="nx-select" id="roleOrgBinding">
+                            <option value="">不绑定组织</option>
+                        </select>
+                        <small class="nx-text-secondary">绑定后，该角色将自动从组织机构中选取成员</small>
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">绑定能力 <span class="nx-text-secondary">(多选)</span></label>
+                        <select class="nx-select" id="roleCapabilities" multiple style="height: 120px;">
+                        </select>
+                        <small class="nx-text-secondary">按住Ctrl键可多选</small>
+                    </div>
+                    <div class="nx-grid nx-grid-cols-3 nx-gap-3">
+                        <div class="nx-form-group">
+                            <label class="nx-form-label">最小人数</label>
+                            <input type="number" class="nx-input" id="roleMinCount" value="1" min="0">
+                        </div>
+                        <div class="nx-form-group">
+                            <label class="nx-form-label">最大人数</label>
+                            <input type="number" class="nx-input" id="roleMaxCount" value="10" min="1">
+                        </div>
+                        <div class="nx-form-group">
+                            <label class="nx-form-label">是否必需</label>
+                            <select class="nx-select" id="roleRequired">
+                                <option value="true">是</option>
+                                <option value="false">否</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeRoleModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="saveRole()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="sceneGroupModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>创建场景组实例</h3>
+                <button class="modal-close" onclick="closeSceneGroupModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="sceneGroupForm">
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">场景组名称</label>
+                        <input type="text" class="nx-input" id="sgName" required>
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">描述</label>
+                        <textarea class="nx-textarea" id="sgDescription" rows="2"></textarea>
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">最小成员数</label>
+                        <input type="number" class="nx-input" id="sgMinMembers" value="1" min="1">
+                    </div>
+                    <div class="nx-form-group nx-mb-3">
+                        <label class="nx-form-label">最大成员数</label>
+                        <input type="number" class="nx-input" id="sgMaxMembers" value="100" min="1">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeSceneGroupModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="saveSceneGroup()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/nx-selectors.js"></script>
+    <script src="/console/js/llm-assistant.js"></script>
+    <script src="/console/js/pages/template-detail.js"></script>
+</body>
+</html>

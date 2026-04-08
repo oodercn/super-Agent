@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OODER Skills Platform</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .loading-logo {
+            font-size: 48px;
+            color: white;
+            margin-bottom: 24px;
+        }
+        .loading-text {
+            color: white;
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-top: 24px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container">
+        <div class="loading-logo"><i class="ri-loader-4-line"></i></div>
+        <div class="loading-text">Skills Platform Loading...</div>
+        <div class="loading-spinner"></div>
+    </div>
+    <script>
+        (function() {
+            fetch('/api/v1/setup/status')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.data && data.data.installed) {
+                        window.location.href = '/console/';
+                    } else {
+                        window.location.href = '/setup/';
+                    }
+                })
+                .catch(() => {
+                    window.location.href = '/setup/';
+                });
+        })();
+    </script>
+</body>
+</html>

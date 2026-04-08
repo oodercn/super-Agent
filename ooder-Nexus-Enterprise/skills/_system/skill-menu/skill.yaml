@@ -1,0 +1,104 @@
+apiVersion: skill.ooder.net/v1
+kind: Skill
+
+metadata:
+  id: skill-menu
+  name: 菜单权限服务
+  version: 3.0.2
+  description: 提供菜单配置、角色菜单、用户菜单等功能 - 包含JPA存储驱动
+  author: ooder Team
+  type: system-service
+  license: Apache-2.0
+
+spec:
+  skillForm: PROVIDER
+  type: system-skill
+
+  ownership: platform
+
+  storage:
+    driver: jpa
+    type: sqlite
+    persistenceUnit: menu
+    autoCreate: true
+    config:
+      hibernate:
+        ddl-auto: update
+      datasource:
+        url: jdbc:sqlite:./data/menu.db
+    description: JPA + SQLite 存储驱动，用于持久化菜单数据
+
+  drivers:
+    - id: jpa
+      name: JPA存储驱动
+      type: storage
+      description: 基于Spring Data JPA + Hibernate的SQLite存储驱动
+      required: true
+      version: ">=3.0.0"
+      dependencies:
+        - spring-boot-starter-data-jpa
+        - sqlite-jdbc
+        - hibernate-community-dialect
+    - id: json
+      name: JSON文件存储驱动
+      type: storage
+      description: 基于JSON文件的轻量级存储驱动（开发中）
+      required: false
+      version: ">=3.0.0"
+
+  capability:
+    address: 0x31
+    category: SYS
+    code: SYS_MENU
+    operations: [create, update, delete, query, assign]
+
+  runtime:
+    language: java
+    javaVersion: "21"
+    framework: spring-boot
+
+  dependencies:
+    - skillId: skill-common
+      version: ">=3.0.0"
+      required: true
+    - skillId: skills-framework
+      version: ">=3.0.0"
+      required: true
+
+  endpoints:
+    - path: /api/v1/menus
+      method: GET
+      description: 获取菜单列表
+      capability: query
+    - path: /api/v1/menus/tree
+      method: GET
+      description: 获取菜单树
+      capability: query
+    - path: /api/v1/menus/{menuId}
+      method: GET
+      description: 获取菜单详情
+      capability: query
+    - path: /api/v1/menus
+      method: POST
+      description: 创建菜单
+      capability: create
+    - path: /api/v1/menus/{menuId}
+      method: PUT
+      description: 更新菜单
+      capability: update
+    - path: /api/v1/menus/{menuId}
+      method: DELETE
+      description: 删除菜单
+      capability: delete
+
+  config:
+    optional:
+      - name: MENU_CACHE_ENABLED
+        type: boolean
+        default: true
+        description: 是否启用菜单缓存
+
+  resources:
+    cpu: "50m"
+    memory: "64Mi"
+    storage: "10Mi"

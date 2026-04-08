@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能力详情 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/nx-page.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-puzzle-line" aria-hidden="true"></i> 能力详情</h1>
+                        <p>查看能力详细信息和执行测试</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                <i class="ri-puzzle-line"></i> 我的能力
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                    <button class="nx-btn nx-btn--secondary" onclick="goBack()">
+                        <i class="ri-arrow-left-line"></i> 返回
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="openTestModal()">
+                        <i class="ri-play-line"></i> 执行测试
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                        <div>
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h3 id="capability-name">加载中...</h3>
+                                    <span class="nx-badge" id="capability-type">-</span>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div id="capability-detail">
+                                        <div class="nx-flex nx-items-center nx-justify-center nx-p-8">
+                                            <i class="ri-loader-4-line ri-spin" style="font-size: 24px;"></i>
+                                            <span class="nx-ml-2">加载中...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="nx-card nx-mt-4">
+                                <div class="nx-card__header">
+                                    <h3>输入参数</h3>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div id="input-params">
+                                        <p class="nx-text-secondary">暂无输入参数</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="nx-card nx-mt-4">
+                                <div class="nx-card__header">
+                                    <h3>输出定义</h3>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div id="output-params">
+                                        <p class="nx-text-secondary">暂无输出定义</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="nx-card nx-mt-4">
+                                <div class="nx-card__header">
+                                    <h3>参与者配置</h3>
+                                    <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="openParticipantModal()">
+                                        <i class="ri-user-add-line"></i> 添加参与者
+                                    </button>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div id="participants-list">
+                                        <p class="nx-text-secondary">暂无参与者配置</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="nx-card nx-mt-4">
+                                <div class="nx-card__header">
+                                    <h3>驱动条件</h3>
+                                    <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="openDriverConditionModal()">
+                                        <i class="ri-timer-line"></i> 添加条件
+                                    </button>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div id="driver-conditions-list">
+                                        <p class="nx-text-secondary">暂无驱动条件</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="nx-card nx-mt-4">
+                                <div class="nx-card__header">
+                                    <h3>LLM配置</h3>
+                                    <button class="nx-btn nx-btn--sm nx-btn--secondary" onclick="openLlmConfigModal()">
+                                        <i class="ri-settings-3-line"></i> 配置
+                                    </button>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div id="llm-config-summary">
+                                        <p class="nx-text-secondary">暂无LLM配置</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="nx-card">
+                                <div class="nx-card__header">
+                                    <h3>执行统计</h3>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div class="nx-mb-4">
+                                        <label class="nx-text-sm nx-text-secondary">执行次数</label>
+                                        <p class="nx-text-xl nx-font-bold" id="execute-count">0</p>
+                                    </div>
+                                    <div class="nx-mb-4">
+                                        <label class="nx-text-sm nx-text-secondary">最近执行</label>
+                                        <p id="last-execute-time">-</p>
+                                    </div>
+                                    <div class="nx-mb-4">
+                                        <label class="nx-text-sm nx-text-secondary">运行状态</label>
+                                        <p><span class="nx-badge" id="status-badge">-</span></p>
+                                    </div>
+                                    <div>
+                                        <label class="nx-text-sm nx-text-secondary">提供者</label>
+                                        <p id="provider">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="nx-card nx-mt-4">
+                                <div class="nx-card__header">
+                                    <h3>执行日志</h3>
+                                </div>
+                                <div class="nx-card__body">
+                                    <div id="execution-logs" style="max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px;">
+                                        <p class="nx-text-secondary">暂无执行日志</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="nx-modal" id="test-modal">
+        <div class="nx-modal__content">
+            <div class="nx-modal__header">
+                <h3>执行测试</h3>
+                <button class="nx-modal__close" onclick="closeTestModal()">&times;</button>
+            </div>
+            <div class="nx-modal__body">
+                <div id="test-params-form">
+                    <p class="nx-text-secondary">加载参数表单...</p>
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeTestModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="executeTest()">
+                    <i class="ri-play-line"></i> 执行
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script>
+        let capabilityId = null;
+        let capabilityData = null;
+        
+        async function loadCapabilityDetail() {
+            const params = new URLSearchParams(window.location.search);
+            capabilityId = params.get('id');
+            
+            if (!capabilityId) {
+                showError('缺少能力ID，请从能力列表页面进入');
+                document.querySelector('.nx-page__actions').innerHTML = `
+                    <button class="nx-btn nx-btn--primary" onclick="window.location.href='/console/pages/scene-capabilities.html'">
+                        <i class="ri-arrow-left-line"></i> 返回能力列表
+                    </button>
+                `;
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/v1/capabilities/${capabilityId}`);
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    capabilityData = result.data;
+                    renderCapability();
+                } else {
+                    showError('加载失败: ' + (result.message || '未知错误'));
+                }
+            } catch (e) {
+                console.error('Failed to load capability:', e);
+                showError('加载失败，请稍后重试');
+            }
+        }
+        
+        function showError(message) {
+            document.getElementById('capability-detail').innerHTML = `
+                <div class="nx-flex nx-items-center nx-justify-center nx-p-8">
+                    <i class="ri-error-warning-line" style="font-size: 24px; color: var(--nx-danger);"></i>
+                    <span class="nx-ml-2">${message}</span>
+                </div>
+            `;
+        }
+        
+        function renderCapability() {
+            const cap = capabilityData;
+            
+            document.getElementById('capability-name').textContent = cap.name || cap.capabilityName || '未命名能力';
+            document.getElementById('capability-type').textContent = cap.type || 'SERVICE';
+            document.getElementById('capability-type').className = `nx-badge ${getTypeBadgeClass(cap.type)}`;
+            
+            document.getElementById('provider').textContent = cap.provider || cap.skillId || '-';
+            document.getElementById('execute-count').textContent = cap.executeCount || 0;
+            document.getElementById('last-execute-time').textContent = cap.lastExecuteTime ? formatDate(cap.lastExecuteTime) : '-';
+            
+            document.getElementById('status-badge').textContent = cap.status || 'normal';
+            document.getElementById('status-badge').className = `nx-badge ${getStatusBadgeClass(cap.status)}`;
+            
+            const detail = document.getElementById('capability-detail');
+            detail.innerHTML = `
+                <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                    <div>
+                        <label class="nx-text-sm nx-text-secondary">能力ID</label>
+                        <p class="nx-font-medium">${cap.id || cap.capabilityId}</p>
+                    </div>
+                    <div>
+                        <label class="nx-text-sm nx-text-secondary">能力名称</label>
+                        <p class="nx-font-medium">${cap.name || cap.capabilityName}</p>
+                    </div>
+                    <div class="nx-col-span-2">
+                        <label class="nx-text-sm nx-text-secondary">描述</label>
+                        <p>${cap.description || cap.desc || '暂无描述'}</p>
+                    </div>
+                </div>
+            `;
+            
+            renderInputParams(cap.input || cap.parameters || []);
+            renderOutputParams(cap.output || {});
+        }
+        
+        function renderInputParams(params) {
+            const container = document.getElementById('input-params');
+            
+            if (!params || params.length === 0) {
+                container.innerHTML = '<p class="nx-text-secondary">暂无输入参数</p>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <table class="nx-w-full">
+                    <thead>
+                        <tr class="nx-border-b nx-border-[var(--nx-border)]">
+                            <th class="nx-text-left nx-p-2">参数名</th>
+                            <th class="nx-text-left nx-p-2">类型</th>
+                            <th class="nx-text-left nx-p-2">必填</th>
+                            <th class="nx-text-left nx-p-2">描述</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${params.map(p => `
+                            <tr class="nx-border-b nx-border-[var(--nx-border)]">
+                                <td class="nx-p-2 nx-font-mono">${p.name}</td>
+                                <td class="nx-p-2"><span class="nx-badge">${p.type || 'string'}</span></td>
+                                <td class="nx-p-2">${p.required ? '<span class="nx-badge nx-badge--danger">必填</span>' : '-'}</td>
+                                <td class="nx-p-2 nx-text-secondary">${p.description || '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+        
+        function renderOutputParams(output) {
+            const container = document.getElementById('output-params');
+            
+            if (!output || Object.keys(output).length === 0) {
+                container.innerHTML = '<p class="nx-text-secondary">暂无输出定义</p>';
+                return;
+            }
+            
+            const fields = Object.entries(output).map(([key, value]) => ({
+                name: key,
+                type: typeof value === 'object' ? value.type || 'object' : typeof value,
+                description: typeof value === 'object' ? value.description || '-' : '-'
+            }));
+            
+            container.innerHTML = `
+                <table class="nx-w-full">
+                    <thead>
+                        <tr class="nx-border-b nx-border-[var(--nx-border)]">
+                            <th class="nx-text-left nx-p-2">字段名</th>
+                            <th class="nx-text-left nx-p-2">类型</th>
+                            <th class="nx-text-left nx-p-2">描述</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${fields.map(f => `
+                            <tr class="nx-border-b nx-border-[var(--nx-border)]">
+                                <td class="nx-p-2 nx-font-mono">${f.name}</td>
+                                <td class="nx-p-2"><span class="nx-badge">${f.type}</span></td>
+                                <td class="nx-p-2 nx-text-secondary">${f.description}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+        
+        function getTypeBadgeClass(type) {
+            const classes = {
+                'SERVICE': 'nx-badge--primary',
+                'COMMUNICATION': 'nx-badge--success',
+                'AI': 'nx-badge--warning',
+                'STORAGE': 'nx-badge--info'
+            };
+            return classes[type] || '';
+        }
+        
+        function getStatusBadgeClass(status) {
+            const classes = {
+                'normal': 'nx-badge--success',
+                'error': 'nx-badge--danger',
+                'disabled': 'nx-badge--secondary'
+            };
+            return classes[status] || 'nx-badge--success';
+        }
+        
+        function formatDate(timestamp) {
+            return new Date(timestamp).toLocaleString();
+        }
+        
+        function goBack() {
+            window.history.back();
+        }
+        
+        function openTestModal() {
+            document.getElementById('test-modal').classList.add('nx-modal--open');
+            renderTestForm();
+        }
+        
+        function closeTestModal() {
+            document.getElementById('test-modal').classList.remove('nx-modal--open');
+        }
+        
+        function renderTestForm() {
+            const container = document.getElementById('test-params-form');
+            const params = capabilityData?.input || capabilityData?.parameters || [];
+            
+            if (params.length === 0) {
+                container.innerHTML = '<p class="nx-text-secondary">此能力无需输入参数</p>';
+                return;
+            }
+            
+            container.innerHTML = params.map(p => `
+                <div class="nx-mb-4">
+                    <label class="nx-block nx-mb-2">
+                        ${p.name}
+                        ${p.required ? '<span class="nx-text-danger">*</span>' : ''}
+                    </label>
+                    <input type="text" class="nx-input nx-w-full" id="param-${p.name}" 
+                           placeholder="${p.description || p.name}"
+                           ${p.defaultValue ? `value="${p.defaultValue}"` : ''}>
+                    <p class="nx-text-sm nx-text-secondary nx-mt-1">${p.description || ''}</p>
+                </div>
+            `).join('');
+        }
+        
+        async function executeTest() {
+            const params = capabilityData?.input || capabilityData?.parameters || [];
+            const testParams = {};
+            
+            params.forEach(p => {
+                const input = document.getElementById(`param-${p.name}`);
+                if (input) {
+                    testParams[p.name] = input.value;
+                }
+            });
+            
+            addLog('info', `开始执行能力: ${capabilityData?.name || capabilityId}`);
+            
+            try {
+                const response = await fetch(`/api/v1/capabilities/${capabilityId}/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ parameters: testParams })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    addLog('success', '执行成功');
+                    addLog('info', `结果: ${JSON.stringify(result.data, null, 2)}`);
+                } else {
+                    addLog('error', `执行失败: ${result.message || '未知错误'}`);
+                }
+            } catch (e) {
+                addLog('error', `执行异常: ${e.message}`);
+            }
+            
+            closeTestModal();
+        }
+        
+        function addLog(type, message) {
+            const logs = document.getElementById('execution-logs');
+            const time = new Date().toLocaleTimeString();
+            const colors = {
+                'info': 'var(--nx-text-secondary)',
+                'success': 'var(--nx-success)',
+                'error': 'var(--nx-danger)'
+            };
+            
+            const log = document.createElement('div');
+            log.style.color = colors[type];
+            log.innerHTML = `<span style="color: var(--nx-text-secondary)">[${time}]</span> ${message}`;
+            logs.insertBefore(log, logs.firstChild);
+        }
+        
+        function renderParticipants(participants) {
+            const container = document.getElementById('participants-list');
+            if (!participants || participants.length === 0) {
+                container.innerHTML = '<p class="nx-text-secondary">暂无参与者配置</p>';
+                return;
+            }
+            
+            container.innerHTML = participants.map(p => `
+                <div class="nx-flex nx-items-center nx-justify-between nx-p-3 nx-mb-2 nx-bg-[var(--nx-bg-elevated)] nx-rounded">
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <div class="nx-w-10 nx-h-10 nx-rounded-full nx-bg-[var(--nx-primary)] nx-flex nx-items-center nx-justify-center nx-text-white">
+                            <i class="ri-user-line"></i>
+                        </div>
+                        <div>
+                            <div class="nx-font-medium">${p.name || p.userId}</div>
+                            <div class="nx-text-sm nx-text-secondary">${p.role || 'PARTICIPANT'}</div>
+                        </div>
+                    </div>
+                    <div class="nx-flex nx-gap-2">
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="editParticipant('${p.userId}')">
+                            <i class="ri-edit-line"></i>
+                        </button>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm nx-text-danger" onclick="removeParticipant('${p.userId}')">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function renderDriverConditions(conditions) {
+            const container = document.getElementById('driver-conditions-list');
+            if (!conditions || conditions.length === 0) {
+                container.innerHTML = '<p class="nx-text-secondary">暂无驱动条件</p>';
+                return;
+            }
+            
+            const typeConfig = {
+                'SCHEDULE': { icon: 'ri-timer-line', name: '定时驱动', color: 'var(--nx-info)' },
+                'EVENT': { icon: 'ri-notification-3-line', name: '事件驱动', color: 'var(--nx-warning)' },
+                'MANUAL': { icon: 'ri-hand-coin-line', name: '手动驱动', color: 'var(--nx-success)' },
+                'INTENT': { icon: 'ri-chat-voice-line', name: '意图驱动', color: 'var(--nx-primary)' }
+            };
+            
+            container.innerHTML = conditions.map(c => {
+                const config = typeConfig[c.type] || typeConfig['MANUAL'];
+                return `
+                    <div class="nx-flex nx-items-center nx-justify-between nx-p-3 nx-mb-2 nx-bg-[var(--nx-bg-elevated)] nx-rounded">
+                        <div class="nx-flex nx-items-center nx-gap-3">
+                            <div class="nx-w-10 nx-h-10 nx-rounded nx-flex nx-items-center nx-justify-center" style="background: ${config.color}20; color: ${config.color}">
+                                <i class="${config.icon}"></i>
+                            </div>
+                            <div>
+                                <div class="nx-font-medium">${c.name || config.name}</div>
+                                <div class="nx-text-sm nx-text-secondary">${c.expression || c.cron || '-'}</div>
+                            </div>
+                        </div>
+                        <div class="nx-flex nx-gap-2">
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="editDriverCondition('${c.id}')">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm nx-text-danger" onclick="removeDriverCondition('${c.id}')">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function renderLlmConfig(config) {
+            const container = document.getElementById('llm-config-summary');
+            if (!config || Object.keys(config).length === 0) {
+                container.innerHTML = '<p class="nx-text-secondary">暂无LLM配置</p>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="nx-grid nx-grid-cols-2 nx-gap-4">
+                    <div>
+                        <label class="nx-text-sm nx-text-secondary">模型提供商</label>
+                        <p class="nx-font-medium">${config.provider || '-'}</p>
+                    </div>
+                    <div>
+                        <label class="nx-text-sm nx-text-secondary">模型名称</label>
+                        <p class="nx-font-medium">${config.model || '-'}</p>
+                    </div>
+                    <div>
+                        <label class="nx-text-sm nx-text-secondary">Temperature</label>
+                        <p class="nx-font-medium">${config.temperature || 0.7}</p>
+                    </div>
+                    <div>
+                        <label class="nx-text-sm nx-text-secondary">最大Token</label>
+                        <p class="nx-font-medium">${config.maxTokens || 4096}</p>
+                    </div>
+                    <div class="nx-col-span-2">
+                        <label class="nx-text-sm nx-text-secondary">系统提示词</label>
+                        <p class="nx-text-sm" style="white-space: pre-wrap; max-height: 100px; overflow: auto;">${config.systemPrompt || '-'}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function openParticipantModal() {
+            alert('参与者配置弹窗开发中');
+        }
+        
+        function openDriverConditionModal() {
+            alert('驱动条件配置弹窗开发中');
+        }
+        
+        function openLlmConfigModal() {
+            window.location.href = 'llm-config.html?capabilityId=' + capabilityId;
+        }
+        
+        function editParticipant(userId) {
+            alert('编辑参与者: ' + userId);
+        }
+        
+        function removeParticipant(userId) {
+            if (confirm('确定要移除参与者 ' + userId + ' 吗？')) {
+                alert('已移除');
+            }
+        }
+        
+        function editDriverCondition(id) {
+            alert('编辑驱动条件: ' + id);
+        }
+        
+        function removeDriverCondition(id) {
+            if (confirm('确定要删除此驱动条件吗？')) {
+                alert('已删除');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadCapabilityDetail);
+    </script>
+</body>
+</html>

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="能力版本历史 - 查看能力版本变更记录">
+    <title>能力版本历史 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/capability-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <nav>
+                <ul class="nav-menu" id="nav-menu" role="navigation" aria-label="主导航"></ul>
+            </nav>
+        </aside>
+        
+        <main class="nx-page__content" id="main-content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-history-line" aria-hidden="true"></i> 能力版本历史</h1>
+                        <p>查看能力版本变更记录</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                    <button class="nx-btn nx-btn--secondary" onclick="goBack()">
+                        <i class="ri-arrow-left-line"></i> 返回
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container version-page">
+                    <div class="version-toolbar">
+                        <button class="nx-btn nx-btn--secondary" onclick="refreshVersions()">
+                            <i class="ri-refresh-line"></i> 刷新
+                        </button>
+                        <button class="nx-btn nx-btn--secondary" onclick="openCompareModal()">
+                            <i class="ri-file-compare-line"></i> 版本对比
+                        </button>
+                        <button class="nx-btn nx-btn--primary" onclick="createNewVersion()">
+                            <i class="ri-add-line"></i> 发布新版本
+                        </button>
+                    </div>
+                    
+                    <div class="version-container">
+                        <div class="version-list-panel">
+                            <div class="version-list-header">
+                                <span><i class="ri-list-check"></i> 版本列表</span>
+                                <span class="nx-badge" id="version-count">0</span>
+                            </div>
+                            <div class="version-list" id="version-list">
+                                <div class="version-empty">
+                                    <i class="ri-history-line"></i>
+                                    <p>加载中...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="version-detail-panel">
+                            <div class="version-detail-header">
+                                <div class="version-detail-title">
+                                    <i class="ri-code-s-slash-line"></i>
+                                    <span id="detail-version">选择版本查看详情</span>
+                                </div>
+                                <div class="version-detail-actions" id="detail-actions" style="display: none;">
+                                    <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="rollbackVersion()">
+                                        <i class="ri-arrow-go-back-line"></i> 回滚到此版本
+                                    </button>
+                                    <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="downloadVersion()">
+                                        <i class="ri-download-line"></i> 下载
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="version-detail-body" id="version-detail-body">
+                                <div class="version-empty">
+                                    <i class="ri-git-branch-line"></i>
+                                    <p>请从左侧选择一个版本查看详情</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="version-compare-modal" id="compare-modal">
+        <div class="version-compare-content">
+            <div class="version-compare-header">
+                <h3><i class="ri-file-compare-line"></i> 版本对比</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeCompareModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="version-compare-body">
+                <div class="version-compare-panel">
+                    <div class="version-compare-panel-title">
+                        <select class="form-select" id="compare-version-a" onchange="updateCompare()">
+                            <option value="">选择版本 A</option>
+                        </select>
+                    </div>
+                    <div id="compare-content-a" class="diff-content"></div>
+                </div>
+                <div class="version-compare-panel">
+                    <div class="version-compare-panel-title">
+                        <select class="form-select" id="compare-version-b" onchange="updateCompare()">
+                            <option value="">选择版本 B</option>
+                        </select>
+                    </div>
+                    <div id="compare-content-b" class="diff-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        (function() {
+            'use strict';
+            
+            let capabilityId = null;
+            let versions = [];
+            let currentVersion = null;
+            
+            async function loadData() {
+                const params = new URLSearchParams(window.location.search);
+                capabilityId = params.get('id');
+                
+                if (!capabilityId) {
+                    showError('缺少能力ID参数');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/v1/capabilities/' + capabilityId + '/versions');
+                    const result = await response.json();
+                    
+                    if (result.status === 'success' && result.data) {
+                        versions = result.data;
+                        renderVersionList();
+                        populateCompareSelects();
+                    } else {
+                        loadMockData();
+                    }
+                } catch (e) {
+                    console.error('Failed to load versions:', e);
+                    loadMockData();
+                }
+            }
+            
+            function loadMockData() {
+                versions = [
+                    {
+                        version: '2.1.0',
+                        status: 'latest',
+                        releaseDate: new Date().toISOString(),
+                        author: 'admin',
+                        changes: [
+                            { type: 'add', title: '新增批量操作接口', desc: '支持批量创建和更新能力' },
+                            { type: 'modify', title: '优化查询性能', desc: '查询响应时间减少50%' }
+                        ],
+                        config: { timeout: 30000, retries: 3 }
+                    },
+                    {
+                        version: '2.0.0',
+                        status: 'current',
+                        releaseDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+                        author: 'admin',
+                        changes: [
+                            { type: 'modify', title: 'API重构', desc: '全面升级API接口' },
+                            { type: 'remove', title: '废弃旧版接口', desc: '移除v1.x兼容接口' }
+                        ],
+                        config: { timeout: 30000, retries: 3 }
+                    },
+                    {
+                        version: '1.5.0',
+                        status: 'deprecated',
+                        releaseDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+                        author: 'developer',
+                        changes: [
+                            { type: 'fix', title: '修复内存泄漏', desc: '解决长时间运行内存增长问题' },
+                            { type: 'add', title: '新增健康检查接口', desc: '/health端点' }
+                        ],
+                        config: { timeout: 20000, retries: 2 }
+                    },
+                    {
+                        version: '1.0.0',
+                        status: 'deprecated',
+                        releaseDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+                        author: 'admin',
+                        changes: [
+                            { type: 'add', title: '初始版本发布', desc: '核心功能实现' }
+                        ],
+                        config: { timeout: 10000, retries: 1 }
+                    }
+                ];
+                renderVersionList();
+                populateCompareSelects();
+            }
+            
+            function showError(message) {
+                document.getElementById('version-list').innerHTML = `
+                    <div class="version-empty">
+                        <i class="ri-error-warning-line" style="color: var(--nx-danger);"></i>
+                        <p>${message}</p>
+                    </div>
+                `;
+            }
+            
+            function renderVersionList() {
+                document.getElementById('version-count').textContent = versions.length;
+                
+                const container = document.getElementById('version-list');
+                container.innerHTML = versions.map((v, i) => {
+                    const statusBadge = getStatusBadge(v.status);
+                    return `
+                        <div class="version-item ${i === 0 ? 'active' : ''}" onclick="selectVersion(${i})">
+                            <div class="version-item-header">
+                                <div class="version-number">
+                                    <i class="ri-git-tag-line"></i>
+                                    v${v.version}
+                                </div>
+                                ${statusBadge}
+                            </div>
+                            <div class="version-meta">
+                                <span class="version-meta-item">
+                                    <i class="ri-calendar-line"></i>
+                                    ${formatDate(v.releaseDate)}
+                                </span>
+                                <span class="version-meta-item">
+                                    <i class="ri-user-line"></i>
+                                    ${v.author}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                if (versions.length > 0) {
+                    selectVersion(0);
+                }
+            }
+            
+            function getStatusBadge(status) {
+                const configs = {
+                    'latest': '<span class="version-badge version-badge--latest">最新</span>',
+                    'current': '<span class="version-badge version-badge--current">当前</span>',
+                    'deprecated': '<span class="version-badge version-badge--deprecated">已废弃</span>'
+                };
+                return configs[status] || '';
+            }
+            
+            function formatDate(dateStr) {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('zh-CN');
+            }
+            
+            function selectVersion(index) {
+                currentVersion = versions[index];
+                
+                document.querySelectorAll('.version-item').forEach((item, i) => {
+                    item.classList.toggle('active', i === index);
+                });
+                
+                document.getElementById('detail-version').textContent = 'v' + currentVersion.version;
+                document.getElementById('detail-actions').style.display = 'flex';
+                
+                renderVersionDetail();
+            }
+            
+            function renderVersionDetail() {
+                const container = document.getElementById('version-detail-body');
+                
+                const changeIcons = {
+                    'add': { icon: 'ri-add-line', class: 'change-icon--add' },
+                    'modify': { icon: 'ri-edit-line', class: 'change-icon--modify' },
+                    'remove': { icon: 'ri-subtract-line', class: 'change-icon--remove' },
+                    'fix': { icon: 'ri-tools-line', class: 'change-icon--fix' }
+                };
+                
+                container.innerHTML = `
+                    <div class="version-section">
+                        <div class="version-section-title">
+                            <i class="ri-information-line"></i> 基本信息
+                        </div>
+                        <div class="version-info-grid">
+                            <div class="version-info-item">
+                                <div class="version-info-label">版本号</div>
+                                <div class="version-info-value">v${currentVersion.version}</div>
+                            </div>
+                            <div class="version-info-item">
+                                <div class="version-info-label">发布日期</div>
+                                <div class="version-info-value">${formatDate(currentVersion.releaseDate)}</div>
+                            </div>
+                            <div class="version-info-item">
+                                <div class="version-info-label">发布者</div>
+                                <div class="version-info-value">${currentVersion.author}</div>
+                            </div>
+                            <div class="version-info-item">
+                                <div class="version-info-label">状态</div>
+                                <div class="version-info-value">${getStatusText(currentVersion.status)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="version-section">
+                        <div class="version-section-title">
+                            <i class="ri-file-list-3-line"></i> 变更记录
+                        </div>
+                        <div class="change-list">
+                            ${currentVersion.changes.map(c => {
+                                const iconConfig = changeIcons[c.type] || changeIcons['modify'];
+                                return `
+                                    <div class="change-item">
+                                        <div class="change-icon ${iconConfig.class}">
+                                            <i class="${iconConfig.icon}"></i>
+                                        </div>
+                                        <div class="change-content">
+                                            <div class="change-title">${c.title}</div>
+                                            <div class="change-desc">${c.desc}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="version-section">
+                        <div class="version-section-title">
+                            <i class="ri-settings-3-line"></i> 配置参数
+                        </div>
+                        <div class="version-diff">
+                            <div class="diff-content">
+                                <pre>${JSON.stringify(currentVersion.config || {}, null, 2)}</pre>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function getStatusText(status) {
+                const texts = {
+                    'latest': '最新版本',
+                    'current': '当前使用',
+                    'deprecated': '已废弃'
+                };
+                return texts[status] || status;
+            }
+            
+            function populateCompareSelects() {
+                const selectA = document.getElementById('compare-version-a');
+                const selectB = document.getElementById('compare-version-b');
+                
+                const options = '<option value="">选择版本</option>' + 
+                    versions.map(v => `<option value="${v.version}">v${v.version}</option>`).join('');
+                
+                selectA.innerHTML = options;
+                selectB.innerHTML = options;
+            }
+            
+            function goBack() {
+                window.history.back();
+            }
+            
+            function refreshVersions() {
+                loadData();
+            }
+            
+            function openCompareModal() {
+                document.getElementById('compare-modal').classList.add('active');
+            }
+            
+            function closeCompareModal() {
+                document.getElementById('compare-modal').classList.remove('active');
+            }
+            
+            function updateCompare() {
+                const versionA = document.getElementById('compare-version-a').value;
+                const versionB = document.getElementById('compare-version-b').value;
+                
+                const contentA = document.getElementById('compare-content-a');
+                const contentB = document.getElementById('compare-content-b');
+                
+                if (versionA) {
+                    const vA = versions.find(v => v.version === versionA);
+                    contentA.innerHTML = '<pre>' + JSON.stringify(vA, null, 2) + '</pre>';
+                } else {
+                    contentA.innerHTML = '<p style="color: var(--nx-text-secondary);">请选择版本</p>';
+                }
+                
+                if (versionB) {
+                    const vB = versions.find(v => v.version === versionB);
+                    contentB.innerHTML = '<pre>' + JSON.stringify(vB, null, 2) + '</pre>';
+                } else {
+                    contentB.innerHTML = '<p style="color: var(--nx-text-secondary);">请选择版本</p>';
+                }
+            }
+            
+            function createNewVersion() {
+                if (!capabilityId) {
+                    alert('能力ID不存在');
+                    return;
+                }
+                
+                const latestVersion = versions.find(v => v.status === 'latest');
+                const newVersionNum = latestVersion ? (parseFloat(latestVersion.version) + 0.1).toFixed(1) : '1.0';
+                
+                const modalHtml = `
+                    <div class="modal-overlay" id="newVersionModal" style="display: flex; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                        <div class="modal" style="background: var(--nx-bg-elevated); border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+                            <div class="modal-header" style="padding: 16px 20px; border-bottom: 1px solid var(--nx-border-color); display: flex; justify-content: space-between; align-items: center;">
+                                <h3 style="margin: 0; font-size: 16px;"><i class="ri-upload-cloud-line"></i> 发布新版本</h3>
+                                <button class="modal-close" onclick="closeNewVersionModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--nx-text-secondary);">
+                                    <i class="ri-close-line"></i>
+                                </button>
+                            </div>
+                            <div class="modal-body" style="padding: 20px;">
+                                <div class="nx-form-group nx-mb-3">
+                                    <label class="nx-form-label">版本号</label>
+                                    <input type="text" class="nx-input" id="newVersionNumber" value="${newVersionNum}" placeholder="例如: 1.1">
+                                </div>
+                                <div class="nx-form-group nx-mb-3">
+                                    <label class="nx-form-label">变更说明</label>
+                                    <textarea class="nx-input" id="newVersionChangelog" rows="4" placeholder="描述此版本的变更内容..."></textarea>
+                                </div>
+                                <div class="nx-form-group">
+                                    <label class="nx-form-label">配置JSON (可选)</label>
+                                    <textarea class="nx-input" id="newVersionConfig" rows="6" placeholder='{"key": "value"}'>${latestVersion ? JSON.stringify(latestVersion.config || {}, null, 2) : '{}'}</textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer" style="padding: 16px 20px; border-top: 1px solid var(--nx-border-color); display: flex; justify-content: flex-end; gap: 8px;">
+                                <button class="nx-btn nx-btn--secondary" onclick="closeNewVersionModal()">取消</button>
+                                <button class="nx-btn nx-btn--primary" onclick="submitNewVersion()">发布</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                const existingModal = document.getElementById('newVersionModal');
+                if (existingModal) existingModal.remove();
+                
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+            }
+            
+            function closeNewVersionModal() {
+                const modal = document.getElementById('newVersionModal');
+                if (modal) modal.remove();
+            }
+            
+            function submitNewVersion() {
+                const version = document.getElementById('newVersionNumber').value.trim();
+                const changelog = document.getElementById('newVersionChangelog').value.trim();
+                const configStr = document.getElementById('newVersionConfig').value.trim();
+                
+                if (!version) {
+                    alert('请输入版本号');
+                    return;
+                }
+                
+                let config = {};
+                try {
+                    config = configStr ? JSON.parse(configStr) : {};
+                } catch (e) {
+                    alert('配置JSON格式错误');
+                    return;
+                }
+                
+                fetch('/api/v1/capabilities/' + capabilityId + '/versions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        version: version,
+                        changelog: changelog,
+                        config: config
+                    })
+                })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.status === 'success') {
+                            closeNewVersionModal();
+                            alert('新版本发布成功');
+                            loadData();
+                        } else {
+                            alert('发布失败: ' + (result.message || '未知错误'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to create version:', error);
+                        alert('发布失败: ' + error.message);
+                    });
+            }
+            
+            function rollbackVersion() {
+                if (!currentVersion) {
+                    alert('请先选择要回滚的版本');
+                    return;
+                }
+                
+                if (!confirm('确定要回滚到 v' + currentVersion.version + ' 吗？此操作将把该版本设为当前使用版本。')) {
+                    return;
+                }
+                
+                fetch('/api/v1/capabilities/' + capabilityId + '/versions/' + currentVersion.version + '/rollback', {
+                    method: 'POST'
+                })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.status === 'success') {
+                            alert('已成功回滚到 v' + currentVersion.version);
+                            loadData();
+                        } else {
+                            alert('回滚失败: ' + (result.message || '未知错误'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to rollback version:', error);
+                        alert('回滚失败: ' + error.message);
+                    });
+            }
+            
+            function downloadVersion() {
+                if (currentVersion) {
+                    const data = JSON.stringify(currentVersion, null, 2);
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'capability-' + capabilityId + '-v' + currentVersion.version + '.json';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+            }
+            
+            window.goBack = goBack;
+            window.refreshVersions = refreshVersions;
+            window.openCompareModal = openCompareModal;
+            window.closeCompareModal = closeCompareModal;
+            window.updateCompare = updateCompare;
+            window.selectVersion = selectVersion;
+            window.createNewVersion = createNewVersion;
+            window.rollbackVersion = rollbackVersion;
+            window.downloadVersion = downloadVersion;
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                loadData();
+            });
+        })();
+    </script>
+</body>
+</html>

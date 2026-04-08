@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="能力权限配置 - 管理能力访问权限">
+    <title>能力权限配置 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/capability-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <nav>
+                <ul class="nav-menu" id="nav-menu" role="navigation" aria-label="主导航"></ul>
+            </nav>
+        </aside>
+        
+        <main class="nx-page__content" id="main-content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-shield-keyhole-line" aria-hidden="true"></i> 能力权限配置</h1>
+                        <p>管理能力访问权限和角色授权</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                    <button class="nx-btn nx-btn--secondary" onclick="goBack()">
+                        <i class="ri-arrow-left-line"></i> 返回
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container perm-page">
+                    <div class="perm-toolbar">
+                        <button class="nx-btn nx-btn--secondary" onclick="refreshPermissions()">
+                            <i class="ri-refresh-line"></i> 刷新
+                        </button>
+                        <button class="nx-btn nx-btn--secondary" onclick="openAddUserModal()">
+                            <i class="ri-user-add-line"></i> 添加用户
+                        </button>
+                        <button class="nx-btn nx-btn--primary" onclick="savePermissions()">
+                            <i class="ri-save-line"></i> 保存配置
+                        </button>
+                    </div>
+                    
+                    <div class="perm-container">
+                        <div class="perm-main-panel">
+                            <div class="perm-card">
+                                <div class="perm-card-header">
+                                    <div class="perm-card-title">
+                                        <i class="ri-key-2-line"></i>
+                                        <span>角色权限矩阵</span>
+                                    </div>
+                                    <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="resetToDefault()">
+                                        <i class="ri-restart-line"></i> 重置为默认
+                                    </button>
+                                </div>
+                                <div class="perm-card-body">
+                                    <div class="perm-matrix">
+                                        <table class="perm-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>角色</th>
+                                                    <th>查看</th>
+                                                    <th>调用</th>
+                                                    <th>编辑</th>
+                                                    <th>删除</th>
+                                                    <th>管理权限</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="perm-matrix-body">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="perm-card">
+                                <div class="perm-card-header">
+                                    <div class="perm-card-title">
+                                        <i class="ri-team-line"></i>
+                                        <span>用户授权列表</span>
+                                    </div>
+                                    <span class="nx-badge" id="user-count">0</span>
+                                </div>
+                                <div class="perm-card-body">
+                                    <div class="perm-user-list" id="perm-user-list">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="perm-side-panel">
+                            <div class="perm-info-card">
+                                <div class="perm-info-header">
+                                    <i class="ri-bar-chart-line"></i>
+                                    <span>权限统计</span>
+                                </div>
+                                <div class="perm-info-body">
+                                    <div class="perm-stat-grid">
+                                        <div class="perm-stat-item">
+                                            <div class="perm-stat-value" id="stat-roles">4</div>
+                                            <div class="perm-stat-label">角色数</div>
+                                        </div>
+                                        <div class="perm-stat-item">
+                                            <div class="perm-stat-value" id="stat-users">0</div>
+                                            <div class="perm-stat-label">授权用户</div>
+                                        </div>
+                                        <div class="perm-stat-item">
+                                            <div class="perm-stat-value" id="stat-perms">0</div>
+                                            <div class="perm-stat-label">权限项</div>
+                                        </div>
+                                        <div class="perm-stat-item">
+                                            <div class="perm-stat-value" id="stat-inherit">0</div>
+                                            <div class="perm-stat-label">继承层级</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="perm-info-card">
+                                <div class="perm-info-header">
+                                    <i class="ri-git-branch-line"></i>
+                                    <span>权限继承关系</span>
+                                </div>
+                                <div class="perm-info-body">
+                                    <div class="perm-inheritance" id="perm-inheritance">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="perm-info-card">
+                                <div class="perm-info-header">
+                                    <i class="ri-information-line"></i>
+                                    <span>权限说明</span>
+                                </div>
+                                <div class="perm-info-body" style="font-size: 13px; color: var(--nx-text-secondary);">
+                                    <p><strong>查看:</strong> 查看能力详情和配置</p>
+                                    <p style="margin-top: 8px;"><strong>调用:</strong> 执行能力操作</p>
+                                    <p style="margin-top: 8px;"><strong>编辑:</strong> 修改能力配置</p>
+                                    <p style="margin-top: 8px;"><strong>删除:</strong> 删除能力</p>
+                                    <p style="margin-top: 8px;"><strong>管理权限:</strong> 修改权限配置</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="perm-modal" id="add-user-modal">
+        <div class="perm-modal-content">
+            <div class="perm-modal-header">
+                <h3><i class="ri-user-add-line"></i> 添加用户授权</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeAddUserModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="perm-modal-body">
+                <div class="form-group">
+                    <label class="form-label">用户ID</label>
+                    <input type="text" class="form-input" id="new-user-id" placeholder="输入用户ID">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">用户名称</label>
+                    <input type="text" class="form-input" id="new-user-name" placeholder="输入用户名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">分配角色</label>
+                    <select class="form-select" id="new-user-role">
+                        <option value="admin">管理员</option>
+                        <option value="developer">开发者</option>
+                        <option value="user">普通用户</option>
+                        <option value="guest">访客</option>
+                    </select>
+                </div>
+            </div>
+            <div class="perm-modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeAddUserModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="addUser()">添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        (function() {
+            'use strict';
+            
+            let capabilityId = null;
+            let permissions = {};
+            let users = [];
+            
+            const ROLES = [
+                { id: 'admin', name: '管理员', desc: '完全控制权限', icon: 'ri-shield-star-line', iconClass: 'perm-role-icon--admin' },
+                { id: 'developer', name: '开发者', desc: '开发和调试权限', icon: 'ri-code-line', iconClass: 'perm-role-icon--dev' },
+                { id: 'user', name: '普通用户', desc: '基本使用权限', icon: 'ri-user-line', iconClass: 'perm-role-icon--user' },
+                { id: 'guest', name: '访客', desc: '只读权限', icon: 'ri-eye-line', iconClass: 'perm-role-icon--guest' }
+            ];
+            
+            const DEFAULT_PERMISSIONS = {
+                admin: { view: true, invoke: true, edit: true, delete: true, manage: true },
+                developer: { view: true, invoke: true, edit: true, delete: false, manage: false },
+                user: { view: true, invoke: true, edit: false, delete: false, manage: false },
+                guest: { view: true, invoke: false, edit: false, delete: false, manage: false }
+            };
+            
+            async function loadData() {
+                const params = new URLSearchParams(window.location.search);
+                capabilityId = params.get('id');
+                
+                if (!capabilityId) {
+                    showError('缺少能力ID参数');
+                    return;
+                }
+                
+                permissions = { ...DEFAULT_PERMISSIONS };
+                users = [
+                    { id: 'user-001', name: '张三', role: 'admin' },
+                    { id: 'user-002', name: '李四', role: 'developer' },
+                    { id: 'user-003', name: '王五', role: 'user' }
+                ];
+                
+                renderPermissionMatrix();
+                renderUserList();
+                renderInheritance();
+                updateStats();
+            }
+            
+            function showError(message) {
+                document.getElementById('perm-matrix-body').innerHTML = `
+                    <tr><td colspan="6" class="perm-empty">
+                        <i class="ri-error-warning-line" style="color: var(--nx-danger);"></i>
+                        <p>${message}</p>
+                    </td></tr>
+                `;
+            }
+            
+            function renderPermissionMatrix() {
+                const tbody = document.getElementById('perm-matrix-body');
+                
+                tbody.innerHTML = ROLES.map(role => {
+                    const perm = permissions[role.id] || {};
+                    return `
+                        <tr>
+                            <td>
+                                <div class="perm-role-cell">
+                                    <div class="perm-role-icon ${role.iconClass}">
+                                        <i class="${role.icon}"></i>
+                                    </div>
+                                    <div class="perm-role-info">
+                                        <div class="perm-role-name">${role.name}</div>
+                                        <div class="perm-role-desc">${role.desc}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><input type="checkbox" class="perm-checkbox" data-role="${role.id}" data-perm="view" ${perm.view ? 'checked' : ''} ${role.id === 'admin' ? 'disabled' : ''}></td>
+                            <td><input type="checkbox" class="perm-checkbox" data-role="${role.id}" data-perm="invoke" ${perm.invoke ? 'checked' : ''} ${role.id === 'admin' ? 'disabled' : ''}></td>
+                            <td><input type="checkbox" class="perm-checkbox" data-role="${role.id}" data-perm="edit" ${perm.edit ? 'checked' : ''} ${role.id === 'admin' ? 'disabled' : ''}></td>
+                            <td><input type="checkbox" class="perm-checkbox" data-role="${role.id}" data-perm="delete" ${perm.delete ? 'checked' : ''} ${role.id === 'admin' ? 'disabled' : ''}></td>
+                            <td><input type="checkbox" class="perm-checkbox" data-role="${role.id}" data-perm="manage" ${perm.manage ? 'checked' : ''} ${role.id === 'admin' ? 'disabled' : ''}></td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                document.querySelectorAll('.perm-checkbox').forEach(cb => {
+                    cb.addEventListener('change', function() {
+                        const role = this.dataset.role;
+                        const perm = this.dataset.perm;
+                        if (!permissions[role]) permissions[role] = {};
+                        permissions[role][perm] = this.checked;
+                        updateStats();
+                    });
+                });
+            }
+            
+            function renderUserList() {
+                const container = document.getElementById('perm-user-list');
+                document.getElementById('user-count').textContent = users.length;
+                
+                if (users.length === 0) {
+                    container.innerHTML = `
+                        <div class="perm-empty">
+                            <i class="ri-team-line"></i>
+                            <p>暂无授权用户</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = users.map(user => {
+                    const role = ROLES.find(r => r.id === user.role) || ROLES[3];
+                    return `
+                        <div class="perm-user-item">
+                            <div class="perm-user-avatar">${user.name.charAt(0)}</div>
+                            <div class="perm-user-info">
+                                <div class="perm-user-name">${user.name}</div>
+                                <div class="perm-user-role">${role.name}</div>
+                            </div>
+                            <button class="perm-action-btn perm-action-btn--edit" onclick="editUser('${user.id}')">
+                                编辑
+                            </button>
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="removeUser('${user.id}')">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            function renderInheritance() {
+                const container = document.getElementById('perm-inheritance');
+                
+                container.innerHTML = `
+                    <div class="perm-inheritance-item">
+                        <div class="perm-inheritance-icon perm-inheritance-icon--parent">
+                            <i class="ri-arrow-up-line"></i>
+                        </div>
+                        <div class="perm-inheritance-info">
+                            <div class="perm-inheritance-name">系统默认权限</div>
+                            <div class="perm-inheritance-type">父级继承</div>
+                        </div>
+                    </div>
+                    <div class="perm-inheritance-item">
+                        <div class="perm-inheritance-icon perm-inheritance-icon--current">
+                            <i class="ri-checkbox-circle-line"></i>
+                        </div>
+                        <div class="perm-inheritance-info">
+                            <div class="perm-inheritance-name">当前能力权限</div>
+                            <div class="perm-inheritance-type">自定义配置</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function updateStats() {
+                document.getElementById('stat-roles').textContent = ROLES.length;
+                document.getElementById('stat-users').textContent = users.length;
+                
+                let permCount = 0;
+                Object.values(permissions).forEach(p => {
+                    Object.values(p).forEach(v => { if (v) permCount++; });
+                });
+                document.getElementById('stat-perms').textContent = permCount;
+                document.getElementById('stat-inherit').textContent = 1;
+            }
+            
+            function goBack() {
+                window.history.back();
+            }
+            
+            function refreshPermissions() {
+                loadData();
+            }
+            
+            function resetToDefault() {
+                if (confirm('确定要重置为默认权限配置吗？')) {
+                    permissions = { ...DEFAULT_PERMISSIONS };
+                    renderPermissionMatrix();
+                    updateStats();
+                }
+            }
+            
+            function savePermissions() {
+                console.log('Saving permissions:', permissions);
+                alert('权限配置已保存');
+            }
+            
+            function openAddUserModal() {
+                document.getElementById('add-user-modal').classList.add('active');
+            }
+            
+            function closeAddUserModal() {
+                document.getElementById('add-user-modal').classList.remove('active');
+            }
+            
+            function addUser() {
+                const id = document.getElementById('new-user-id').value.trim();
+                const name = document.getElementById('new-user-name').value.trim();
+                const role = document.getElementById('new-user-role').value;
+                
+                if (!id || !name) {
+                    alert('请填写完整信息');
+                    return;
+                }
+                
+                users.push({ id, name, role });
+                renderUserList();
+                updateStats();
+                closeAddUserModal();
+                
+                document.getElementById('new-user-id').value = '';
+                document.getElementById('new-user-name').value = '';
+            }
+            
+            function editUser(userId) {
+                alert('编辑用户: ' + userId);
+            }
+            
+            function removeUser(userId) {
+                if (confirm('确定要移除此用户的授权吗？')) {
+                    users = users.filter(u => u.id !== userId);
+                    renderUserList();
+                    updateStats();
+                }
+            }
+            
+            window.goBack = goBack;
+            window.refreshPermissions = refreshPermissions;
+            window.resetToDefault = resetToDefault;
+            window.savePermissions = savePermissions;
+            window.openAddUserModal = openAddUserModal;
+            window.closeAddUserModal = closeAddUserModal;
+            window.addUser = addUser;
+            window.editUser = editUser;
+            window.removeUser = removeUser;
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                loadData();
+            });
+        })();
+    </script>
+</body>
+</html>

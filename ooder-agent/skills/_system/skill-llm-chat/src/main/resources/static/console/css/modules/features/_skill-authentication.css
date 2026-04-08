@@ -1,0 +1,196 @@
+/* 技能认证功能样式 */
+
+/* 认证管理容器 */
+.skillcenter-skill-authentication-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--skillcenter-spacing-lg);
+}
+
+/* 页面头部 */
+.skillcenter-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--skillcenter-spacing-lg);
+}
+
+/* 搜索和筛选区域 */
+.skillcenter-search-box {
+    margin-bottom: var(--skillcenter-spacing-md);
+}
+
+.skillcenter-filter-box {
+    margin-bottom: var(--skillcenter-spacing-lg);
+}
+
+/* 认证列表 */
+.skillcenter-authentication-list {
+    background-color: var(--skillcenter-bg-primary);
+    border-radius: var(--skillcenter-radius-md);
+    box-shadow: var(--skillcenter-shadow-sm);
+    overflow: hidden;
+}
+
+.skillcenter-authentication-list table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.skillcenter-authentication-list th,
+.skillcenter-authentication-list td {
+    padding: var(--skillcenter-spacing-md);
+    text-align: left;
+    border-bottom: 1px solid var(--skillcenter-border);
+}
+
+.skillcenter-authentication-list th {
+    background-color: var(--skillcenter-bg-secondary);
+    font-weight: 600;
+    color: var(--skillcenter-text-primary);
+}
+
+.skillcenter-authentication-list tr:hover {
+    background-color: var(--skillcenter-bg-secondary);
+}
+
+/* 认证状态 */
+.skillcenter-auth-status {
+    padding: var(--skillcenter-spacing-xs) var(--skillcenter-spacing-sm);
+    border-radius: var(--skillcenter-radius-full);
+    font-size: var(--skillcenter-font-size-sm);
+    font-weight: 500;
+}
+
+.skillcenter-status-pending {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: var(--skillcenter-warning);
+}
+
+.skillcenter-status-approved {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: var(--skillcenter-success);
+}
+
+.skillcenter-status-rejected {
+    background-color: rgba(244, 67, 54, 0.2);
+    color: var(--skillcenter-danger);
+}
+
+/* 操作按钮组 */
+.skillcenter-action-buttons {
+    display: flex;
+    gap: var(--skillcenter-spacing-sm);
+}
+
+/* 模态框样式 */
+.skillcenter-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.skillcenter-modal-content {
+    background-color: var(--skillcenter-bg-primary);
+    margin: 15% auto;
+    padding: var(--skillcenter-spacing-lg);
+    border-radius: var(--skillcenter-radius-md);
+    box-shadow: var(--skillcenter-shadow-lg);
+    width: 90%;
+    max-width: 500px;
+    animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+    from {opacity: 0; transform: translateY(-20px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+.skillcenter-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--skillcenter-spacing-lg);
+    padding-bottom: var(--skillcenter-spacing-sm);
+    border-bottom: 1px solid var(--skillcenter-border);
+}
+
+.skillcenter-modal-header h2 {
+    margin: 0;
+    font-size: var(--skillcenter-font-size-lg);
+    color: var(--skillcenter-text-primary);
+}
+
+.skillcenter-close-btn {
+    background: none;
+    border: none;
+    font-size: var(--skillcenter-font-size-xl);
+    cursor: pointer;
+    color: var(--skillcenter-text-secondary);
+    transition: color var(--skillcenter-transition-fast);
+}
+
+.skillcenter-close-btn:hover {
+    color: var(--skillcenter-text-primary);
+}
+
+.skillcenter-modal-body {
+    margin-bottom: var(--skillcenter-spacing-lg);
+}
+
+.skillcenter-modal-footer {
+    display: flex;
+    gap: var(--skillcenter-spacing-md);
+    justify-content: flex-end;
+    padding-top: var(--skillcenter-spacing-sm);
+    border-top: 1px solid var(--skillcenter-border);
+}
+
+/* 技能详情 */
+.skillcenter-skill-details {
+    background-color: var(--skillcenter-bg-secondary);
+    border-radius: var(--skillcenter-radius-sm);
+    padding: var(--skillcenter-spacing-md);
+    margin-bottom: var(--skillcenter-spacing-lg);
+}
+
+.skillcenter-skill-details h4 {
+    margin-top: 0;
+    margin-bottom: var(--skillcenter-spacing-sm);
+    color: var(--skillcenter-text-primary);
+}
+
+.skillcenter-skill-details p {
+    margin: var(--skillcenter-spacing-xs) 0;
+    color: var(--skillcenter-text-secondary);
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+    .skillcenter-page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--skillcenter-spacing-md);
+    }
+
+    .skillcenter-action-buttons {
+        flex-direction: column;
+    }
+
+    .skillcenter-authentication-list th,
+    .skillcenter-authentication-list td {
+        padding: var(--skillcenter-spacing-sm);
+        font-size: var(--skillcenter-font-size-sm);
+    }
+
+    .skillcenter-modal-content {
+        width: 95%;
+        margin: 20% auto;
+    }
+}

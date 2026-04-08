@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent拓扑视图 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/nx-page.css">
+    <link rel="stylesheet" href="/console/css/pages/agent-pages.css">
+    <style>
+        .topology-page { padding: 0; }
+        
+        .topology-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .topology-stats {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .topology-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--nx-bg-elevated);
+            border-radius: 8px;
+            border: 1px solid var(--nx-border);
+        }
+        
+        .topology-stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--nx-primary);
+        }
+        
+        .topology-stat-label {
+            font-size: 12px;
+            color: var(--nx-text-secondary);
+        }
+        
+        .topology-container {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 280px);
+            min-height: 500px;
+        }
+        
+        .topology-canvas {
+            flex: 1;
+            background: var(--nx-bg-elevated);
+            border: 1px solid var(--nx-border);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .topology-sidebar {
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .legend-card {
+            background: var(--nx-bg-elevated);
+            border: 1px solid var(--nx-border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        .legend-card h4 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--nx-border);
+        }
+        
+        .legend-item:last-child {
+            border-bottom: none;
+        }
+        
+        .legend-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .legend-icon.mcp { background: rgba(102, 126, 234, 0.15); color: #667eea; }
+        .legend-icon.route { background: rgba(76, 175, 80, 0.15); color: #4caf50; }
+        .legend-icon.end { background: rgba(255, 152, 0, 0.15); color: #ff9800; }
+        .legend-icon.llm { background: rgba(156, 39, 176, 0.15); color: #9c27b0; }
+        
+        .legend-text {
+            flex: 1;
+        }
+        
+        .legend-text h5 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .legend-text p {
+            margin: 2px 0 0 0;
+            font-size: 11px;
+            color: var(--nx-text-secondary);
+        }
+        
+        .node-info-card {
+            background: var(--nx-bg-elevated);
+            border: 1px solid var(--nx-border);
+            border-radius: 12px;
+            padding: 16px;
+            display: none;
+        }
+        
+        .node-info-card.visible {
+            display: block;
+        }
+        
+        .node-info-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--nx-border);
+        }
+        
+        .node-info-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .node-info-title h4 {
+            margin: 0;
+            font-size: 16px;
+        }
+        
+        .node-info-title p {
+            margin: 4px 0 0 0;
+            font-size: 12px;
+            color: var(--nx-text-secondary);
+        }
+        
+        .node-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 13px;
+        }
+        
+        .node-info-label {
+            color: var(--nx-text-secondary);
+        }
+        
+        .node-info-value {
+            font-weight: 500;
+        }
+        
+        .node-info-value.online { color: var(--nx-success); }
+        .node-info-value.busy { color: var(--nx-warning); }
+        .node-info-value.offline { color: var(--nx-text-secondary); }
+        
+        .node-info-actions {
+            margin-top: 16px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .node-info-actions button {
+            flex: 1;
+        }
+        
+        .topology-node {
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .topology-node:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+        
+        .topology-node.selected .node-circle {
+            box-shadow: 0 0 0 3px var(--nx-primary-light), 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .node-circle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--nx-bg-elevated);
+            border: 3px solid var(--nx-border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        
+        .node-circle.mcp { border-color: #667eea; background: rgba(102, 126, 234, 0.1); }
+        .node-circle.route { border-color: #4caf50; background: rgba(76, 175, 80, 0.1); }
+        .node-circle.end { border-color: #ff9800; background: rgba(255, 152, 0, 0.1); }
+        .node-circle.llm { border-color: #9c27b0; background: rgba(156, 39, 176, 0.1); }
+        
+        .node-circle i {
+            font-size: 22px;
+            color: inherit;
+        }
+        
+        .node-circle.mcp i { color: #667eea; }
+        .node-circle.route i { color: #4caf50; }
+        .node-circle.end i { color: #ff9800; }
+        .node-circle.llm i { color: #9c27b0; }
+        
+        .node-label {
+            margin-top: 6px;
+            font-size: 11px;
+            color: var(--nx-text-secondary);
+            max-width: 80px;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .node-status-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--nx-bg-elevated);
+        }
+        
+        .node-status-dot.online { background: var(--nx-success); }
+        .node-status-dot.busy { background: var(--nx-warning); }
+        .node-status-dot.offline { background: var(--nx-text-secondary); }
+        
+        .empty-topology {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--nx-text-secondary);
+        }
+        
+        .empty-topology i {
+            font-size: 64px;
+            opacity: 0.3;
+            margin-bottom: 16px;
+        }
+        
+        .empty-topology h3 {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            color: var(--nx-text-primary);
+        }
+        
+        .empty-topology p {
+            margin: 0 0 16px 0;
+            font-size: 14px;
+        }
+        
+        .scene-group-section {
+            margin-bottom: 20px;
+        }
+        
+        .scene-group-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--nx-text-secondary);
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: var(--nx-bg-input);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .scene-group-title i {
+            color: var(--nx-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold"><i class="ri-robot-line"></i> Apex OS</h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-node-tree"></i> Agent拓扑视图</h1>
+                        <p>展示 Agent 层级关系和通信链路</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--secondary" onclick="TopologyView.refresh()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container topology-page">
+                    <div class="topology-header">
+                        <div class="topology-stats">
+                            <div class="topology-stat">
+                                <div>
+                                    <div class="topology-stat-value" id="totalNodes">0</div>
+                                    <div class="topology-stat-label">总节点</div>
+                                </div>
+                            </div>
+                            <div class="topology-stat">
+                                <div>
+                                    <div class="topology-stat-value" id="onlineNodes">0</div>
+                                    <div class="topology-stat-label">在线</div>
+                                </div>
+                            </div>
+                            <div class="topology-stat">
+                                <div>
+                                    <div class="topology-stat-value" id="totalEdges">0</div>
+                                    <div class="topology-stat-label">连接数</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="topology-container">
+                        <div class="topology-canvas" id="topologyCanvas">
+                            <svg id="edgesSvg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></svg>
+                            <div id="nodesContainer"></div>
+                        </div>
+                        <div class="topology-sidebar">
+                            <div class="legend-card">
+                                <h4><i class="ri-legend-line"></i> 节点类型</h4>
+                                <div class="legend-item">
+                                    <div class="legend-icon mcp"><i class="ri-cpu-line"></i></div>
+                                    <div class="legend-text">
+                                        <h5>MCP Agent</h5>
+                                        <p>场景组管理者</p>
+                                    </div>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-icon route"><i class="ri-route-line"></i></div>
+                                    <div class="legend-text">
+                                        <h5>Route Agent</h5>
+                                        <p>任务路由分发</p>
+                                    </div>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-icon end"><i class="ri-terminal-box-line"></i></div>
+                                    <div class="legend-text">
+                                        <h5>End Agent</h5>
+                                        <p>技能执行节点</p>
+                                    </div>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-icon llm"><i class="ri-brain-line"></i></div>
+                                    <div class="legend-text">
+                                        <h5>LLM Agent</h5>
+                                        <p>大语言模型</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="legend-card">
+                                <h4><i class="ri-checkbox-blank-circle-line"></i> 状态图例</h4>
+                                <div class="legend-item">
+                                    <div class="node-status-dot online" style="position: static;"></div>
+                                    <div class="legend-text">
+                                        <h5>在线</h5>
+                                        <p>心跳正常</p>
+                                    </div>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="node-status-dot busy" style="position: static;"></div>
+                                    <div class="legend-text">
+                                        <h5>繁忙</h5>
+                                        <p>负载较高</p>
+                                    </div>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="node-status-dot offline" style="position: static;"></div>
+                                    <div class="legend-text">
+                                        <h5>离线</h5>
+                                        <p>心跳超时</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="node-info-card" id="nodeInfoCard">
+                                <div class="node-info-header">
+                                    <div class="node-info-icon" id="nodeInfoIcon">
+                                        <i class="ri-robot-line"></i>
+                                    </div>
+                                    <div class="node-info-title">
+                                        <h4 id="nodeInfoName">-</h4>
+                                        <p id="nodeInfoId">-</p>
+                                    </div>
+                                </div>
+                                <div class="node-info-row">
+                                    <span class="node-info-label">类型</span>
+                                    <span class="node-info-value" id="nodeInfoType">-</span>
+                                </div>
+                                <div class="node-info-row">
+                                    <span class="node-info-label">状态</span>
+                                    <span class="node-info-value" id="nodeInfoStatus">-</span>
+                                </div>
+                                <div class="node-info-row">
+                                    <span class="node-info-label">场景组</span>
+                                    <span class="node-info-value" id="nodeInfoSceneGroup">-</span>
+                                </div>
+                                <div class="node-info-row">
+                                    <span class="node-info-label">IP地址</span>
+                                    <span class="node-info-value" id="nodeInfoIp">-</span>
+                                </div>
+                                <div class="node-info-row">
+                                    <span class="node-info-label">负载</span>
+                                    <span class="node-info-value" id="nodeInfoLoad">-</span>
+                                </div>
+                                <div class="node-info-actions">
+                                    <button class="nx-btn nx-btn--primary" onclick="TopologyView.goToDetail()">
+                                        <i class="ri-external-link-line"></i> 详情
+                                    </button>
+                                    <button class="nx-btn nx-btn--secondary" onclick="TopologyView.sendHeartbeat()">
+                                        <i class="ri-heart-pulse-line"></i> 心跳
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+    (function() {
+        'use strict';
+        
+        var TopologyView = window.TopologyView = {
+            scale: 1,
+            selectedNode: null,
+            topologyData: null,
+            
+            init: function() {
+                this.loadTopology();
+            },
+            
+            loadTopology: function() {
+                var self = this;
+                ApiClient.get('/api/agent/topology').then(function(result) {
+                    if (result.status === 'success' && result.data) {
+                        self.topologyData = result.data;
+                        self.render();
+                        self.updateStats();
+                    } else {
+                        self.showEmpty();
+                    }
+                }).catch(function(err) {
+                    console.error('Failed to load topology:', err);
+                    self.showEmpty();
+                });
+            },
+            
+            render: function() {
+                if (!this.topologyData) {
+                    this.showEmpty();
+                    return;
+                }
+                
+                var nodes = this.topologyData.nodes || [];
+                var edges = this.topologyData.edges || [];
+                
+                if (nodes.length === 0) {
+                    this.showEmpty();
+                    return;
+                }
+                
+                var container = document.getElementById('nodesContainer');
+                var svg = document.getElementById('edgesSvg');
+                container.innerHTML = '';
+                svg.innerHTML = '';
+                
+                var canvas = document.getElementById('topologyCanvas');
+                var canvasWidth = canvas.offsetWidth;
+                var canvasHeight = canvas.offsetHeight;
+                
+                var nodeSize = 56;
+                var nodeSpacingX = 150;
+                var nodeSpacingY = 120;
+                var padding = 80;
+                
+                var cols = Math.max(3, Math.floor((canvasWidth - padding * 2) / nodeSpacingX));
+                var rows = Math.ceil(nodes.length / cols);
+                
+                var totalWidth = (cols - 1) * nodeSpacingX;
+                var totalHeight = (rows - 1) * nodeSpacingY;
+                var startX = (canvasWidth - totalWidth) / 2;
+                var startY = (canvasHeight - totalHeight) / 2;
+                
+                var self = this;
+                nodes.forEach(function(node, index) {
+                    var col = index % cols;
+                    var row = Math.floor(index / cols);
+                    
+                    var x = node.x !== undefined && node.x !== null 
+                        ? Math.min(Math.max(node.x, padding), canvasWidth - padding - nodeSize)
+                        : startX + col * nodeSpacingX;
+                    
+                    var y = node.y !== undefined && node.y !== null 
+                        ? Math.min(Math.max(node.y, padding), canvasHeight - padding - nodeSize)
+                        : startY + row * nodeSpacingY;
+                    
+                    node._x = x;
+                    node._y = y;
+                    
+                    var nodeEl = document.createElement('div');
+                    nodeEl.className = 'topology-node';
+                    nodeEl.style.left = x + 'px';
+                    nodeEl.style.top = y + 'px';
+                    nodeEl.dataset.id = node.id;
+                    
+                    var typeClass = self.getTypeClass(node.type);
+                    var statusClass = node.status || 'offline';
+                    var icon = self.getIconForType(node.type);
+                    
+                    nodeEl.innerHTML = 
+                        '<div class="node-circle ' + typeClass + '">' +
+                            '<i class="' + icon + '"></i>' +
+                            '<div class="node-status-dot ' + statusClass + '"></div>' +
+                        '</div>' +
+                        '<div class="node-label">' + (node.name || node.id) + '</div>';
+                    
+                    nodeEl.addEventListener('click', function() {
+                        self.selectNode(node);
+                    });
+                    
+                    container.appendChild(nodeEl);
+                });
+                
+                edges.forEach(function(edge) {
+                    var sourceNode = nodes.find(function(n) { return n.id === edge.source; });
+                    var targetNode = nodes.find(function(n) { return n.id === edge.target; });
+                    
+                    if (sourceNode && targetNode) {
+                        var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', (sourceNode._x || 100) + 28);
+                        line.setAttribute('y1', (sourceNode._y || 100) + 28);
+                        line.setAttribute('x2', (targetNode._x || 100) + 28);
+                        line.setAttribute('y2', (targetNode._y || 100) + 28);
+                        line.setAttribute('stroke', edge.animated ? '#667eea' : '#ddd');
+                        line.setAttribute('stroke-width', '2');
+                        if (edge.animated) {
+                            line.setAttribute('stroke-dasharray', '5,5');
+                        }
+                        svg.appendChild(line);
+                    }
+                });
+            },
+            
+            getTypeClass: function(type) {
+                switch(type) {
+                    case 'MCP': return 'mcp';
+                    case 'ROUTE': return 'route';
+                    case 'END': return 'end';
+                    case 'LLM': return 'llm';
+                    default: return '';
+                }
+            },
+            
+            getIconForType: function(type) {
+                switch(type) {
+                    case 'MCP': return 'ri-cpu-line';
+                    case 'ROUTE': return 'ri-route-line';
+                    case 'END': return 'ri-terminal-box-line';
+                    case 'LLM': return 'ri-brain-line';
+                    default: return 'ri-robot-line';
+                }
+            },
+            
+            updateStats: function() {
+                var nodes = this.topologyData.nodes || [];
+                var edges = this.topologyData.edges || [];
+                
+                document.getElementById('totalNodes').textContent = nodes.length;
+                document.getElementById('totalEdges').textContent = edges.length;
+                
+                var onlineCount = nodes.filter(function(n) { 
+                    return n.status === 'online' || n.status === 'running'; 
+                }).length;
+                document.getElementById('onlineNodes').textContent = onlineCount;
+            },
+            
+            selectNode: function(node) {
+                this.selectedNode = node;
+                
+                document.querySelectorAll('.topology-node').forEach(function(el) {
+                    el.classList.remove('selected');
+                });
+                document.querySelector('.topology-node[data-id="' + node.id + '"]').classList.add('selected');
+                
+                var card = document.getElementById('nodeInfoCard');
+                card.classList.add('visible');
+                
+                var typeClass = this.getTypeClass(node.type);
+                document.getElementById('nodeInfoIcon').className = 'node-info-icon ' + typeClass;
+                document.getElementById('nodeInfoIcon').innerHTML = '<i class="' + this.getIconForType(node.type) + '"></i>';
+                
+                document.getElementById('nodeInfoName').textContent = node.name || node.id;
+                document.getElementById('nodeInfoId').textContent = node.id;
+                document.getElementById('nodeInfoType').textContent = node.type || 'AGENT';
+                document.getElementById('nodeInfoSceneGroup').textContent = node.clusterId || '-';
+                document.getElementById('nodeInfoIp').textContent = (node.data && node.data.ipAddress) || '-';
+                document.getElementById('nodeInfoLoad').textContent = (node.data && node.data.load) 
+                    ? node.data.load.toFixed(1) + '%' : '-';
+                
+                var statusEl = document.getElementById('nodeInfoStatus');
+                statusEl.textContent = node.status || 'offline';
+                statusEl.className = 'node-info-value ' + (node.status || 'offline');
+            },
+            
+            showEmpty: function() {
+                var container = document.getElementById('nodesContainer');
+                container.innerHTML = 
+                    '<div class="empty-topology">' +
+                        '<i class="ri-node-tree"></i>' +
+                        '<h3>暂无拓扑数据</h3>' +
+                        '<p>请先创建场景组并添加 Agent</p>' +
+                        '<a href="scene-group-list.html" class="nx-btn nx-btn--primary">' +
+                            '<i class="ri-add-line"></i> 创建场景组' +
+                        '</a>' +
+                    '</div>';
+            },
+            
+            goToDetail: function() {
+                if (this.selectedNode) {
+                    window.location.href = '/console/pages/agent-detail.html?id=' + this.selectedNode.id;
+                }
+            },
+            
+            sendHeartbeat: function() {
+                if (!this.selectedNode) return;
+                
+                var self = this;
+                ApiClient.post('/api/agent/' + this.selectedNode.id + '/heartbeat').then(function(result) {
+                    if (result.status === 'success') {
+                        self.loadTopology();
+                    }
+                });
+            },
+            
+            refresh: function() {
+                this.loadTopology();
+            }
+        };
+        
+        window.onPageInit = function() {
+            TopologyView.init();
+        };
+    })();
+    </script>
+</body>
+</html>

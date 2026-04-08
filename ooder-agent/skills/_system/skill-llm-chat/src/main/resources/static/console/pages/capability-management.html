@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能力中心 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/capability-management.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <div class="cap-page">
+                <header class="nx-page__header" style="border-bottom: none;">
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                            <i class="ri-menu-line"></i>
+                        </button>
+                        <h2 class="nx-text-lg nx-font-semibold">能力中心</h2>
+                    </div>
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                            <i class="ri-sun-line"></i>
+                        </button>
+                        <div class="nx-relative">
+                            <div class="nx-page__user-menu" id="user-menu">
+                                <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                                <span class="nx-page__user-name" id="user-name">加载中...</span>
+                                <i class="ri-arrow-down-s-line"></i>
+                            </div>
+                            <div class="nx-page__dropdown-menu" id="user-dropdown">
+                                <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                    <i class="ri-user-line"></i> 个人中心
+                                </div>
+                                <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                    <i class="ri-puzzle-line"></i> 我的能力
+                                </div>
+                                <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                    <i class="ri-logout-box-line"></i> 退出登录
+                                </div>
+                            </div>
+                        </div>
+                        <button class="nx-btn nx-btn--primary" onclick="showRegisterModal()">
+                            <i class="ri-add-line"></i> 注册能力
+                        </button>
+                    </div>
+                </header>
+                
+                <div class="cap-status-bar">
+                    <div class="cap-status-item">
+                        <i class="ri-database-2-line" style="color: var(--nx-primary);"></i>
+                        <span class="cap-status-label">已安装能力</span>
+                        <span class="cap-status-value" id="installedCount">0</span>
+                    </div>
+                    <div class="cap-status-item">
+                        <i class="ri-cloud-line" style="color: var(--nx-success);"></i>
+                        <span class="cap-status-label">可发现能力</span>
+                        <span class="cap-status-value" id="discoverableCount">0</span>
+                    </div>
+                    <div class="cap-status-item">
+                        <i class="ri-radar-line" style="color: var(--nx-warning);"></i>
+                        <span class="cap-status-label">发现状态</span>
+                        <span class="cap-status-value" id="discoveryStatus">就绪</span>
+                    </div>
+                    <div class="cap-status-item">
+                        <i class="ri-time-line" style="color: var(--nx-text-secondary);"></i>
+                        <span class="cap-status-label">最后发现</span>
+                        <span class="cap-status-value" id="lastDiscovery">-</span>
+                    </div>
+                </div>
+                
+                <div class="cap-main">
+                    <aside class="cap-sidebar">
+                        <div class="cap-sidebar-header">
+                            <div class="cap-sidebar-title">
+                                <i class="ri-compass-discover-line"></i>
+                                发现途径
+                            </div>
+                        </div>
+                        <div class="cap-discovery-methods" id="discoveryMethods">
+                        </div>
+                    </aside>
+                    
+                    <div class="cap-content">
+                        <div class="cap-content-header">
+                            <div class="cap-content-title">
+                                <i class="ri-flashlight-line" id="currentMethodIcon"></i>
+                                <span id="currentMethodName">全部能力</span>
+                            </div>
+                            <div class="cap-content-actions">
+                                <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="refreshCurrentView()">
+                                    <i class="ri-refresh-line"></i> 刷新
+                                </button>
+                                <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="startDiscovery()" id="startDiscoveryBtn">
+                                    <i class="ri-search-line"></i> 开始发现
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="cap-filter-bar">
+                            <div class="cap-filter-group">
+                                <span class="cap-filter-label">类型:</span>
+                                <div class="cap-filter-chips" id="typeFilters">
+                                    <span class="cap-filter-chip active" data-type="all">全部</span>
+                                </div>
+                            </div>
+                            <div class="cap-filter-group">
+                                <span class="cap-filter-label">状态:</span>
+                                <div class="cap-filter-chips" id="statusFilters">
+                                    <span class="cap-filter-chip active" data-status="all">全部</span>
+                                    <span class="cap-filter-chip" data-status="installed">已安装</span>
+                                    <span class="cap-filter-chip" data-status="available">可安装</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="cap-results">
+                            <div class="cap-grid" id="capabilityGrid">
+                            </div>
+                            <div class="cap-empty" id="emptyState" style="display: none;">
+                                <i class="ri-inbox-line"></i>
+                                <div class="cap-empty-title">暂无能力</div>
+                                <div class="cap-empty-desc">选择左侧发现途径开始发现能力</div>
+                            </div>
+                        </div>
+                        
+                        <div class="cap-logs-panel" id="logsPanel">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="cap-overlay" id="overlay" onclick="closeDetailPanel()"></div>
+    
+    <div class="cap-detail-panel" id="detailPanel">
+        <div class="cap-detail-header">
+            <span class="cap-detail-title" id="detailTitle">能力详情</span>
+            <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeDetailPanel()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="cap-detail-body" id="detailBody">
+        </div>
+    </div>
+    
+    <div class="discovery-config-modal" id="configModal">
+        <div class="modal-header">
+            <span class="modal-title" id="configModalTitle">发现配置</span>
+            <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeConfigModal()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="configModalBody">
+        </div>
+        <div class="modal-footer">
+            <button class="nx-btn nx-btn--secondary" onclick="closeConfigModal()">取消</button>
+            <button class="nx-btn nx-btn--primary" onclick="executeDiscovery()">开始发现</button>
+        </div>
+    </div>
+    
+    <div class="discovery-config-modal" id="registerModal">
+        <div class="modal-header">
+            <span class="modal-title">注册能力</span>
+            <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeRegisterModal()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">能力ID *</label>
+                <input type="text" class="form-input" id="regCapabilityId" placeholder="如: report-submit">
+                <div class="form-hint">能力的唯一标识符</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">能力名称 *</label>
+                <input type="text" class="form-input" id="regCapabilityName" placeholder="如: 日志提交">
+            </div>
+            <div class="form-group">
+                <label class="form-label">能力类型</label>
+                <select class="form-input" id="regType">
+                    <option value="ATOMIC">原子能力 - 单一功能，不可分解</option>
+                    <option value="COMPOSITE">组合能力 - 组合多个原子能力</option>
+                    <option value="SCENE">场景能力 - 自驱型SuperAgent能力</option>
+                    <option value="DRIVER">驱动能力 - 意图/时间/事件驱动</option>
+                    <option value="COLLABORATIVE">协作能力 - 跨场景协作</option>
+                    <option value="SERVICE">服务能力 - 业务服务、API服务</option>
+                    <option value="AI">AI能力 - LLM、机器学习</option>
+                    <option value="TOOL">工具能力 - 工具类功能</option>
+                    <option value="CONNECTOR">连接器能力 - 连接协议类</option>
+                    <option value="DATA">数据能力 - 数据存储、处理</option>
+                    <option value="MANAGEMENT">管理能力 - 配置管理、监控管理</option>
+                    <option value="COMMUNICATION">通信能力 - 消息、通知</option>
+                    <option value="SECURITY">安全能力 - 认证、加密</option>
+                    <option value="MONITORING">监控能力 - 日志、指标</option>
+                    <option value="SKILL">技能能力 - 可安装的技能包</option>
+                    <option value="CUSTOM">自定义能力 - 用户自定义</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">描述</label>
+                <textarea class="form-input" id="regCapabilityDesc" rows="3" placeholder="能力功能描述"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="nx-btn nx-btn--secondary" onclick="closeRegisterModal()">取消</button>
+            <button class="nx-btn nx-btn--primary" onclick="registerCapability()">注册</button>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/llm-assistant.js"></script>
+    <script src="/console/js/pages/capability-management.js"></script>
+</body>
+</html>

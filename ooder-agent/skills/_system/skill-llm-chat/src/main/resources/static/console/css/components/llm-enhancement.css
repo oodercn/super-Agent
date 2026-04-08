@@ -1,0 +1,889 @@
+/**
+ * LLM增强组件样式
+ * 包含：状态指示器、上下文层级展示、配置继承链
+ */
+
+/* ==================== LLM状态指示器 ==================== */
+.llm-status-indicator {
+    display: flex;
+    gap: 16px;
+    padding: 12px 16px;
+    background: var(--nx-bg-elevated);
+    border: 1px solid var(--nx-border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.llm-status-indicator.compact {
+    padding: 8px 12px;
+    gap: 12px;
+}
+
+.llm-status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.llm-status-item i {
+    font-size: 16px;
+    color: var(--nx-primary);
+}
+
+.llm-status-item .label {
+    color: var(--nx-text-secondary);
+}
+
+.llm-status-item .value {
+    font-weight: 500;
+    color: var(--nx-text-primary);
+}
+
+.llm-status-item.success .value {
+    color: #059669;
+}
+
+.llm-status-item.warning .value {
+    color: #d97706;
+}
+
+.llm-status-item.error .value {
+    color: #dc2626;
+}
+
+/* ==================== 上下文层级展�?==================== */
+.context-level-viewer {
+    background: var(--nx-bg-elevated);
+    border: 1px solid var(--nx-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.context-level {
+    border-bottom: 1px solid var(--nx-border);
+}
+
+.context-level:last-child {
+    border-bottom: none;
+}
+
+.context-level[data-active="false"] {
+    opacity: 0.5;
+}
+
+.level-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--nx-bg-input);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.level-header:hover {
+    background: var(--nx-bg-hover);
+}
+
+.level-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.level-badge.l0 {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.level-badge.l1 {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.level-badge.l2 {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.level-badge.l3 {
+    background: #fce7f3;
+    color: #db2777;
+}
+
+.level-name {
+    flex: 1;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.level-status {
+    color: #059669;
+}
+
+.level-status.inactive {
+    color: var(--nx-text-secondary);
+}
+
+.level-content {
+    padding: 12px 16px 12px 54px;
+    font-size: 13px;
+    display: none;
+}
+
+.context-level.expanded .level-content {
+    display: block;
+}
+
+.level-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    color: var(--nx-text-secondary);
+}
+
+.level-item i {
+    font-size: 14px;
+    width: 16px;
+    text-align: center;
+}
+
+.level-item .item-value {
+    color: var(--nx-text-primary);
+    font-weight: 500;
+}
+
+.level-item.clickable {
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 4px;
+    padding: 6px 8px;
+    margin: 0 -8px;
+}
+
+.level-item.clickable:hover {
+    background: var(--nx-primary-light);
+    color: var(--nx-primary);
+}
+
+.level-item.clickable:hover .item-value {
+    color: var(--nx-primary);
+}
+
+.level-item.clickable:active {
+    background: var(--nx-bg-hover);
+}
+
+/* ==================== 配置继承�?==================== */
+.config-chain {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.chain-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--nx-bg-input);
+    border: 1px solid var(--nx-border);
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.chain-item:hover {
+    border-color: var(--nx-primary);
+}
+
+.chain-item.active {
+    border-color: var(--nx-primary);
+    background: var(--nx-primary-light);
+}
+
+.chain-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.chain-icon.system {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.chain-icon.skill {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.chain-icon.scene {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.chain-icon.capability {
+    background: #fce7f3;
+    color: #db2777;
+}
+
+.chain-info {
+    flex: 1;
+}
+
+.chain-name {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.chain-source {
+    font-size: 12px;
+    color: var(--nx-text-secondary);
+    margin-top: 2px;
+}
+
+.chain-arrow {
+    color: var(--nx-text-secondary);
+    font-size: 16px;
+}
+
+.chain-arrow:last-child {
+    display: none;
+}
+
+.chain-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    color: var(--nx-text-secondary);
+    gap: 8px;
+}
+
+.chain-empty i {
+    font-size: 24px;
+    opacity: 0.5;
+}
+
+.chain-item {
+    cursor: pointer;
+}
+
+/* ==================== LLM助手面板 ==================== */
+.llm-assistant-panel {
+    background: var(--nx-bg-elevated);
+    border: 1px solid var(--nx-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.llm-assistant-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--nx-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--nx-bg-input);
+}
+
+.llm-assistant-title {
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.llm-assistant-title i {
+    color: var(--nx-primary);
+}
+
+.llm-assistant-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.llm-assistant-status .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #059669;
+}
+
+.llm-assistant-status .status-dot.inactive {
+    background: var(--nx-text-secondary);
+}
+
+.llm-assistant-body {
+    padding: 16px;
+}
+
+.llm-assistant-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.llm-assistant-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+}
+
+.llm-assistant-row .label {
+    color: var(--nx-text-secondary);
+}
+
+.llm-assistant-row .value {
+    font-weight: 500;
+}
+
+.llm-assistant-tools {
+    margin-top: 12px;
+}
+
+.llm-assistant-tools-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--nx-text-secondary);
+    margin-bottom: 8px;
+}
+
+.llm-tool-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.llm-tool-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--nx-bg-input);
+    border: 1px solid var(--nx-border);
+    border-radius: 16px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.llm-tool-chip:hover {
+    border-color: var(--nx-primary);
+    background: var(--nx-primary-light);
+}
+
+.llm-tool-chip i {
+    font-size: 12px;
+}
+
+/* ==================== 工具定义展示 ==================== */
+.tool-definitions-panel {
+    background: var(--nx-bg-elevated);
+    border: 1px solid var(--nx-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.tool-definitions-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--nx-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tool-definitions-title {
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tool-definitions-body {
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+}
+
+.tool-definition-card {
+    background: var(--nx-bg-input);
+    border: 1px solid var(--nx-border);
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tool-definition-card:hover {
+    border-color: var(--nx-primary);
+}
+
+.tool-definition-card.active {
+    border-color: var(--nx-primary);
+    background: var(--nx-primary-light);
+}
+
+.tool-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.tool-card-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--nx-primary-light);
+    color: var(--nx-primary);
+    font-size: 14px;
+}
+
+.tool-card-name {
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.tool-card-desc {
+    font-size: 11px;
+    color: var(--nx-text-secondary);
+    line-height: 1.4;
+}
+
+/* ==================== 知识库绑定展�?==================== */
+.kb-bindings-panel {
+    background: var(--nx-bg-elevated);
+    border: 1px solid var(--nx-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.kb-bindings-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--nx-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.kb-bindings-title {
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.kb-bindings-body {
+    padding: 12px;
+}
+
+.kb-binding-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--nx-bg-input);
+    border: 1px solid var(--nx-border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.kb-binding-item:last-child {
+    margin-bottom: 0;
+}
+
+.kb-binding-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.kb-binding-icon.general {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.kb-binding-icon.skill {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.kb-binding-icon.scene {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.kb-binding-info {
+    flex: 1;
+}
+
+.kb-binding-name {
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.kb-binding-purpose {
+    font-size: 11px;
+    color: var(--nx-text-secondary);
+}
+
+.kb-binding-priority {
+    font-size: 11px;
+    color: var(--nx-text-secondary);
+    padding: 2px 8px;
+    background: var(--nx-bg-hover);
+    border-radius: 4px;
+}
+
+/* ==================== 响应式适配 ==================== */
+@media (max-width: 768px) {
+    .llm-status-indicator {
+        flex-wrap: wrap;
+    }
+    
+    .llm-status-item {
+        flex: 1 1 45%;
+    }
+    
+    .tool-definitions-body {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==================== 上下文切换器 ==================== */
+.context-switcher {
+    background: var(--nx-bg-elevated);
+    border: 1px solid var(--nx-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.context-switcher-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--nx-border);
+    background: var(--nx-bg-input);
+}
+
+.context-switcher-title {
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.context-switcher-title i {
+    color: var(--nx-primary);
+}
+
+.context-switcher-body {
+    padding: 16px;
+}
+
+.context-switcher-section {
+    margin-bottom: 16px;
+}
+
+.context-switcher-section:last-child {
+    margin-bottom: 0;
+}
+
+.context-switcher-section label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--nx-text-secondary);
+    margin-bottom: 8px;
+}
+
+.context-switcher-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.context-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--nx-bg-input);
+    border: 1px solid var(--nx-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 13px;
+}
+
+.context-option:hover {
+    border-color: var(--nx-primary);
+    background: var(--nx-primary-light);
+}
+
+.context-option.active {
+    border-color: var(--nx-primary);
+    background: var(--nx-primary-light);
+    color: var(--nx-primary);
+}
+
+.context-option i {
+    font-size: 16px;
+}
+
+/* ==================== 提示语编辑器 ==================== */
+.prompt-editor {
+    background: var(--nx-bg-elevated);
+    border: 1px solid var(--nx-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.prompt-editor-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--nx-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--nx-bg-input);
+}
+
+.prompt-editor-title {
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.prompt-editor-title i {
+    color: var(--nx-primary);
+}
+
+.prompt-editor-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.prompt-editor-body {
+    padding: 16px;
+}
+
+.prompt-textarea {
+    width: 100%;
+    min-height: 300px;
+    padding: 12px;
+    border: 1px solid var(--nx-border);
+    border-radius: 8px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    resize: vertical;
+    background: var(--nx-bg-input);
+    color: var(--nx-text-primary);
+}
+
+.prompt-textarea:focus {
+    outline: none;
+    border-color: var(--nx-primary);
+}
+
+.prompt-editor-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--nx-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ==================== 通知提示 ==================== */
+.llm-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    background: var(--nx-bg-elevated);
+    border: 1px solid var(--nx-border);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 14px;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 10000;
+}
+
+.llm-notification--show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.llm-notification--success {
+    border-left: 4px solid #059669;
+}
+
+.llm-notification--success i {
+    color: #059669;
+}
+
+.llm-notification--error {
+    border-left: 4px solid #dc2626;
+}
+
+.llm-notification--error i {
+    color: #dc2626;
+}
+
+.llm-notification--info {
+    border-left: 4px solid #2563eb;
+}
+
+.llm-notification--info i {
+    color: #2563eb;
+}
+
+/* ==================== 工具详情弹窗 ==================== */
+.tool-detail-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.tool-detail-content {
+    background: var(--nx-bg-elevated);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.tool-detail-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--nx-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tool-detail-title {
+    font-weight: 600;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tool-detail-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tool-detail-close:hover {
+    background: var(--nx-bg-hover);
+}
+
+.tool-detail-body {
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.tool-detail-section {
+    margin-bottom: 16px;
+}
+
+.tool-detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.tool-detail-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--nx-text-secondary);
+    margin-bottom: 8px;
+}
+
+.tool-param-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tool-param-item {
+    padding: 12px;
+    background: var(--nx-bg-input);
+    border: 1px solid var(--nx-border);
+    border-radius: 8px;
+}
+
+.tool-param-name {
+    font-weight: 500;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tool-param-name .required {
+    color: #dc2626;
+    font-size: 11px;
+}
+
+.tool-param-type {
+    font-size: 11px;
+    color: var(--nx-text-secondary);
+    padding: 2px 6px;
+    background: var(--nx-bg-hover);
+    border-radius: 4px;
+    margin-left: auto;
+}
+
+.tool-param-desc {
+    font-size: 12px;
+    color: var(--nx-text-secondary);
+    margin-top: 6px;
+}

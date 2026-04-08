@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent告警配置 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/nx-page.css">
+    <link rel="stylesheet" href="/console/css/pages/agent-pages.css">
+    <style>
+        .alert-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .alert-stats { display: flex; gap: 24px; }
+        .alert-stat { text-align: center; }
+        .alert-stat-value { font-size: 24px; font-weight: 700; }
+        .alert-stat-label { font-size: 12px; color: var(--nx-text-tertiary, #999); }
+        
+        .alert-list { background: var(--nx-bg-primary, #fff); border-radius: 12px; border: 1px solid var(--nx-border-color, #e0e0e0); }
+        .alert-item { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--nx-border-color, #e0e0e0); }
+        .alert-item:last-child { border-bottom: none; }
+        .alert-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 16px; }
+        .alert-icon.cpu { background: rgba(102, 126, 234, 0.1); color: #667eea; }
+        .alert-icon.memory { background: rgba(76, 175, 80, 0.1); color: #4caf50; }
+        .alert-icon.load { background: rgba(255, 152, 0, 0.1); color: #ff9800; }
+        .alert-icon.offline { background: rgba(244, 67, 54, 0.1); color: #f44336; }
+        .alert-content { flex: 1; }
+        .alert-name { font-weight: 500; margin-bottom: 4px; }
+        .alert-desc { font-size: 13px; color: var(--nx-text-secondary, #666); }
+        .alert-meta { font-size: 12px; color: var(--nx-text-tertiary, #999); margin-top: 4px; }
+        .alert-actions { display: flex; gap: 8px; }
+        .severity-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+        .severity-badge.info { background: rgba(6, 182, 212, 0.1); color: #06b6d4; }
+        .severity-badge.warning { background: rgba(255, 152, 0, 0.1); color: #ff9800; }
+        .severity-badge.critical { background: rgba(244, 67, 54, 0.1); color: #f44336; }
+        .toggle-switch { position: relative; width: 44px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .3s; border-radius: 24px; }
+        .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        .toggle-switch input:checked + .toggle-slider { background-color: #667eea; }
+        .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.open { display: flex; }
+        .modal-content { background: var(--nx-bg-primary, #fff); border-radius: 12px; padding: 24px; width: 480px; max-width: 90%; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-size: 18px; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--nx-text-secondary, #666); }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; margin-bottom: 6px; font-weight: 500; }
+        .form-input, .form-select { width: 100%; padding: 10px 12px; border: 1px solid var(--nx-border-color, #e0e0e0); border-radius: 8px; font-size: 14px; background: var(--nx-bg-primary, #fff); color: var(--nx-text-primary, #333); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--nx-border-color, #e0e0e0); }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold"><i class="ri-robot-line"></i> Apex OS</h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <h2 class="nx-text-xl nx-font-semibold"><i class="ri-alarm-warning-line"></i> Agent告警配置</h2>
+                <button class="btn btn-primary" onclick="AgentAlert.showCreateModal()"><i class="ri-add-line"></i> 新建告警</button>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="alert-header">
+                    <div class="alert-stats">
+                        <div class="alert-stat">
+                            <div class="alert-stat-value" id="totalAlerts">-</div>
+                            <div class="alert-stat-label">告警规则</div>
+                        </div>
+                        <div class="alert-stat">
+                            <div class="alert-stat-value" id="enabledAlerts">-</div>
+                            <div class="alert-stat-label">已启用</div>
+                        </div>
+                        <div class="alert-stat">
+                            <div class="alert-stat-value" id="triggeredAlerts">-</div>
+                            <div class="alert-stat-label">今日触发</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert-list" id="alertList">
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="alertModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="modalTitle">新建告警规则</span>
+                <button class="modal-close" onclick="AgentAlert.closeModal()"><i class="ri-close-line"></i></button>
+            </div>
+            <form id="alertForm">
+                <input type="hidden" id="alertId">
+                <div class="form-group">
+                    <label class="form-label">告警名称</label>
+                    <input type="text" class="form-input" id="alertName" placeholder="如：CPU使用率过高" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">告警类型</label>
+                        <select class="form-select" id="alertType" required>
+                            <option value="cpu_usage">CPU使用率</option>
+                            <option value="memory_usage">内存使用率</option>
+                            <option value="load_percentage">负载百分比</option>
+                            <option value="response_time">响应时间</option>
+                            <option value="error_rate">错误率</option>
+                            <option value="offline">离线检测</option>
+                            <option value="heartbeat_timeout">心跳超时</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">严重程度</label>
+                        <select class="form-select" id="severity" required>
+                            <option value="1">信息</option>
+                            <option value="2">警告</option>
+                            <option value="3">严重</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">阈值</label>
+                        <input type="number" class="form-input" id="threshold" placeholder="如：80" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">持续时间(秒)</label>
+                        <input type="number" class="form-input" id="duration" placeholder="如：60" value="60">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">目标Agent</label>
+                    <select class="form-select" id="targetAgent">
+                        <option value="">全部Agent</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">通知渠道</label>
+                    <select class="form-select" id="notifyChannel">
+                        <option value="email">邮件</option>
+                        <option value="webhook">Webhook</option>
+                        <option value="sms">短信</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="AgentAlert.closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+    (function() {
+        'use strict';
+        
+        var AgentAlert = window.AgentAlert = {
+            alerts: [],
+            editingId: null,
+            
+            init: function() {
+                this.loadAlerts();
+                this.loadAgents();
+            },
+            
+            loadAlerts: function() {
+                var self = this;
+                ApiClient.get('/api/agent/alerts').then(function(result) {
+                    if (result.status === 'success' && result.data) {
+                        self.alerts = result.data;
+                        self.render();
+                        self.updateStats();
+                    }
+                });
+            },
+            
+            loadAgents: function() {
+                ApiClient.get('/api/agent/list').then(function(result) {
+                    if (result.status === 'success' && result.data) {
+                        var select = document.getElementById('targetAgent');
+                        result.data.forEach(function(agent) {
+                            var opt = document.createElement('option');
+                            opt.value = agent.agentId;
+                            opt.textContent = agent.agentName || agent.agentId;
+                            select.appendChild(opt);
+                        });
+                    }
+                });
+            },
+            
+            render: function() {
+                var container = document.getElementById('alertList');
+                var html = '';
+                
+                var typeIcons = {
+                    'cpu_usage': 'ri-cpu-line',
+                    'memory_usage': 'ri-database-2-line',
+                    'load_percentage': 'ri-line-chart-line',
+                    'response_time': 'ri-timer-line',
+                    'error_rate': 'ri-error-warning-line',
+                    'offline': 'ri-wifi-off-line',
+                    'heartbeat_timeout': 'ri-heart-pulse-line'
+                };
+                
+                var severityLabels = { 1: '信息', 2: '警告', 3: '严重' };
+                
+                this.alerts.forEach(function(alert) {
+                    var iconClass = alert.alertType.split('_')[0] || 'cpu';
+                    html += '<div class="alert-item">' +
+                        '<div class="alert-icon ' + iconClass + '"><i class="' + (typeIcons[alert.alertType] || 'ri-alarm-warning-line') + '"></i></div>' +
+                        '<div class="alert-content">' +
+                            '<div class="alert-name">' + alert.name + '</div>' +
+                            '<div class="alert-desc">当 ' + alert.alertType + ' 超过 ' + alert.threshold + ' 持续 ' + alert.durationSeconds + ' 秒时触发</div>' +
+                            '<div class="alert-meta">创建于 ' + new Date(alert.createdAt).toLocaleString() + '</div>' +
+                        '</div>' +
+                        '<span class="severity-badge ' + (alert.severity === 3 ? 'critical' : (alert.severity === 2 ? 'warning' : 'info')) + '">' + severityLabels[alert.severity] + '</span>' +
+                        '<label class="toggle-switch" style="margin: 0 16px;">' +
+                            '<input type="checkbox" ' + (alert.enabled ? 'checked' : '') + ' onchange="AgentAlert.toggleAlert(' + alert.id + ', this.checked)">' +
+                            '<span class="toggle-slider"></span>' +
+                        '</label>' +
+                        '<div class="alert-actions">' +
+                            '<button class="btn btn-secondary" onclick="AgentAlert.editAlert(' + alert.id + ')"><i class="ri-edit-line"></i></button>' +
+                            '<button class="btn btn-secondary" onclick="AgentAlert.deleteAlert(' + alert.id + ')"><i class="ri-delete-bin-line"></i></button>' +
+                        '</div>' +
+                    '</div>';
+                });
+                
+                container.innerHTML = html || '<div style="padding: 40px; text-align: center; color: var(--nx-text-tertiary, #999);">暂无告警规则，点击"新建告警"创建</div>';
+            },
+            
+            updateStats: function() {
+                document.getElementById('totalAlerts').textContent = this.alerts.length;
+                document.getElementById('enabledAlerts').textContent = this.alerts.filter(function(a) { return a.enabled; }).length;
+                document.getElementById('triggeredAlerts').textContent = '0';
+            },
+            
+            showCreateModal: function() {
+                this.editingId = null;
+                document.getElementById('modalTitle').textContent = '新建告警规则';
+                document.getElementById('alertForm').reset();
+                document.getElementById('alertModal').classList.add('open');
+            },
+            
+            closeModal: function() {
+                document.getElementById('alertModal').classList.remove('open');
+            },
+            
+            editAlert: function(id) {
+                var alert = this.alerts.find(function(a) { return a.id === id; });
+                if (!alert) return;
+                
+                this.editingId = id;
+                document.getElementById('modalTitle').textContent = '编辑告警规则';
+                document.getElementById('alertName').value = alert.name;
+                document.getElementById('alertType').value = alert.alertType;
+                document.getElementById('severity').value = alert.severity;
+                document.getElementById('threshold').value = alert.threshold;
+                document.getElementById('duration').value = alert.durationSeconds;
+                document.getElementById('targetAgent').value = alert.agentId || '';
+                document.getElementById('alertModal').classList.add('open');
+            },
+            
+            deleteAlert: function(id) {
+                if (!confirm('确定要删除此告警规则吗？')) return;
+                
+                ApiClient.delete('/api/agent/alerts/' + id).then(function(result) {
+                    if (result.status === 'success') {
+                        AgentAlert.loadAlerts();
+                    }
+                });
+            },
+            
+            toggleAlert: function(id, enabled) {
+                ApiClient.post('/api/agent/alerts/' + id + (enabled ? '/enable' : '/disable')).then(function(result) {
+                    if (result.status === 'success') {
+                        AgentAlert.loadAlerts();
+                    }
+                });
+            }
+        };
+        
+        document.getElementById('alertForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            var data = {
+                name: document.getElementById('alertName').value,
+                alertType: document.getElementById('alertType').value,
+                severity: parseInt(document.getElementById('severity').value),
+                threshold: parseFloat(document.getElementById('threshold').value),
+                durationSeconds: parseInt(document.getElementById('duration').value),
+                agentId: document.getElementById('targetAgent').value || null
+            };
+            
+            var url = '/api/agent/alerts';
+            var method = 'post';
+            
+            if (AgentAlert.editingId) {
+                url = '/api/agent/alerts/' + AgentAlert.editingId;
+                method = 'put';
+            }
+            
+            ApiClient[method](url, data).then(function(result) {
+                if (result.status === 'success') {
+                    AgentAlert.closeModal();
+                    AgentAlert.loadAlerts();
+                }
+            });
+        });
+        
+        window.onPageInit = function() {
+            AgentAlert.init();
+        };
+    })();
+    </script>
+</body>
+</html>

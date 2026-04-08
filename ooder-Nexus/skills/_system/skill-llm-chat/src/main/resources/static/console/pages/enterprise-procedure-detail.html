@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业规范流程详情</title>
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/pages/enterprise-procedure-detail.css">
+    <link rel="stylesheet" href="../css/components/completeness-dashboard.css">
+    <link rel="stylesheet" href="../css/components/rule-editor.css">
+    <link rel="stylesheet" href="../css/components/flow-chart.css">
+    <link rel="stylesheet" href="../css/components/role-view.css">
+    <link rel="stylesheet" href="../css/remixicon/remixicon.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-header">
+            <div class="header-left">
+                <a href="enterprise-procedure-list.html" class="back-link">
+                    <i class="ri-arrow-left-line"></i> 返回列表
+                </a>
+                <h1 id="pageTitle">企业规范流程详情</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="editProcedure()">
+                    <i class="ri-edit-line"></i> 编辑
+                </button>
+                <button class="btn btn-primary" onclick="createFusedTemplate()">
+                    <i class="ri-git-merge-line"></i> 创建融合模板
+                </button>
+            </div>
+        </div>
+
+        <div class="detail-content">
+            <div class="main-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ri-information-line"></i> 基本信息</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>流程ID</label>
+                                <span id="infoProcedureId">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>流程名称</label>
+                                <span id="infoName">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>分类</label>
+                                <span id="infoCategory">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>来源</label>
+                                <span id="infoSource">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>状态</label>
+                                <span id="infoStatus">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>创建者</label>
+                                <span id="infoAuthor">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>创建时间</label>
+                                <span id="infoCreateTime">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>更新时间</label>
+                                <span id="infoUpdateTime">-</span>
+                            </div>
+                            <div class="info-item full-width">
+                                <label>描述</label>
+                                <span id="infoDescription">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ri-team-line"></i> 角色定义</h2>
+                        <button class="btn btn-sm btn-secondary" onclick="addRole()">
+                            <i class="ri-add-line"></i> 添加角色
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="rolesContainer" class="roles-grid">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ri-flow-chart"></i> 流程步骤</h2>
+                        <div class="view-toggle">
+                            <button class="toggle-btn active" onclick="switchStepsView('list')" id="stepsListViewBtn">
+                                <i class="ri-list-unordered"></i> 列表视图
+                            </button>
+                            <button class="toggle-btn" onclick="switchStepsView('flow')" id="stepsFlowViewBtn">
+                                <i class="ri-flow-chart"></i> 流程图视图
+                            </button>
+                        </div>
+                        <button class="btn btn-sm btn-secondary" onclick="addStep()">
+                            <i class="ri-add-line"></i> 添加步骤
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="stepsListView" class="steps-view">
+                            <div id="stepsContainer" class="steps-list">
+                            </div>
+                        </div>
+                        <div id="stepsFlowView" class="steps-view" style="display:none;">
+                            <div class="flow-chart-container" id="procedureFlowChart"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ri-git-branch-line"></i> 约束规则</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="rulesContainer" class="rules-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="side-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ri-pie-chart-line"></i> 完善度评估</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="completeness-dashboard">
+                            <div class="completeness-gauge">
+                                <div class="gauge-bg"></div>
+                                <div class="gauge-needle" id="completenessNeedle"></div>
+                                <div class="gauge-center"></div>
+                                <div class="gauge-value">
+                                    <span id="completenessScore">0</span><span>%</span>
+                                </div>
+                            </div>
+                            <div class="gauge-labels">
+                                <span class="gauge-label">0%</span>
+                                <span class="gauge-label">50%</span>
+                                <span class="gauge-label">100%</span>
+                            </div>
+                            <div class="completeness-dimensions" id="completenessDimensions"></div>
+                            <div class="completeness-issues" id="completenessIssues"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ri-database-2-line"></i> 知识库关联</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="knowledgeBases" class="knowledge-list">
+                        </div>
+                        <button class="btn btn-sm btn-secondary btn-block" onclick="bindKnowledge()">
+                            <i class="ri-add-line"></i> 绑定知识库
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ri-git-merge-line"></i> 融合模板</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="fusedTemplates" class="fusion-list">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="roleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>角色配置</h2>
+                <span class="close" onclick="closeModal('roleModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="roleForm">
+                    <input type="hidden" id="roleIndex">
+                    <div class="form-group">
+                        <label>角色ID</label>
+                        <input type="text" id="roleId" required>
+                    </div>
+                    <div class="form-group">
+                        <label>角色名称</label>
+                        <input type="text" id="roleName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>描述</label>
+                        <textarea id="roleDescription"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>最小人数</label>
+                            <input type="number" id="roleMinCount" value="1" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>最大人数</label>
+                            <input type="number" id="roleMaxCount" value="1" min="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="roleRequired"> 必需角色
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('roleModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveRole()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="stepModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>步骤配置</h2>
+                <span class="close" onclick="closeModal('stepModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="stepForm">
+                    <input type="hidden" id="stepIndex">
+                    <div class="form-group">
+                        <label>步骤ID</label>
+                        <input type="text" id="stepId" required>
+                    </div>
+                    <div class="form-group">
+                        <label>步骤名称</label>
+                        <input type="text" id="stepName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>描述</label>
+                        <textarea id="stepDescription"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>步骤类型</label>
+                        <select id="stepType">
+                            <option value="MANUAL">人工执行</option>
+                            <option value="AUTOMATIC">自动执行</option>
+                            <option value="APPROVAL">审批节点</option>
+                            <option value="PARALLEL">并行网关</option>
+                            <option value="EXCLUSIVE">排他网关</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>执行顺序</label>
+                        <input type="number" id="stepOrder" value="1" min="1">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('stepModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveStep()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="fusionModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>创建融合模板</h2>
+                <span class="close" onclick="closeModal('fusionModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="fusion-wizard">
+                    <div class="wizard-step active" data-step="1">
+                        <h3>选择技能</h3>
+                        <div class="skill-search">
+                            <input type="text" id="skillSearchInput" placeholder="搜索技能...">
+                        </div>
+                        <div id="skillList" class="skill-list">
+                        </div>
+                    </div>
+                    <div class="wizard-step" data-step="2">
+                        <h3>配置融合策略</h3>
+                        <div class="strategy-config">
+                            <div class="form-group">
+                                <label>角色定义优先级</label>
+                                <select id="rolePriority">
+                                    <option value="ENTERPRISE_FIRST">企业规范优先</option>
+                                    <option value="SKILL_FIRST">技能定义优先</option>
+                                    <option value="MERGE">合并</option>
+                                    <option value="USER_DECIDE">用户决定</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>激活步骤优先级</label>
+                                <select id="activationStepPriority">
+                                    <option value="ENTERPRISE_FIRST">企业规范优先</option>
+                                    <option value="SKILL_FIRST" selected>技能定义优先</option>
+                                    <option value="MERGE">合并</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>菜单配置优先级</label>
+                                <select id="menuPriority">
+                                    <option value="ENTERPRISE_FIRST">企业规范优先</option>
+                                    <option value="SKILL_FIRST" selected>技能定义优先</option>
+                                    <option value="MERGE">合并</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="autoResolveConflict"> 自动解决冲突
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wizard-step" data-step="3">
+                        <h3>预览融合结果</h3>
+                        <div id="fusionPreview" class="fusion-preview">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="fusionPrevBtn" style="display:none;" onclick="prevFusionStep()">上一步</button>
+                <button class="btn btn-primary" id="fusionNextBtn" onclick="nextFusionStep()">下一步</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/common.js"></script>
+    <script src="../js/components/flow-chart.js"></script>
+    <script src="../js/components/rule-editor.js"></script>
+    <script src="../js/components/completeness-dashboard.js"></script>
+    <script src="../js/components/role-view.js"></script>
+    <script src="../js/pages/enterprise-procedure-detail.js"></script>
+</body>
+</html>

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能配置详情 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/skill-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-settings-3-line" aria-hidden="true"></i> 技能配置详情</h1>
+                        <p>查看技能的配置信息</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container config-page">
+                    <div id="loading-state" class="loading-state">
+                        <i class="ri-loader-4-line"></i>
+                        <p>加载配置中...</p>
+                    </div>
+                    
+                    <div id="config-content" style="display: none;">
+                        <div class="page-header">
+                            <div class="header-content">
+                                <div class="header-title">
+                                    <i class="ri-settings-3-line"></i>
+                                    <div>
+                                        <h1 id="skill-name">技能配置</h1>
+                                        <div class="header-subtitle" id="skill-id">-</div>
+                                    </div>
+                                </div>
+                                <div class="action-buttons">
+                                    <a href="installed-scene-capabilities.html" class="btn btn-secondary">
+                                        <i class="ri-arrow-left-line"></i> 返回列表
+                                    </a>
+                                    <a id="capability-detail-link" href="#" class="btn btn-primary">
+                                        <i class="ri-puzzle-line"></i> 查看能力详情
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="config-tabs">
+                            <button class="config-tab active" data-tab="overview">
+                                <i class="ri-dashboard-line"></i> 概览
+                            </button>
+                            <button class="config-tab" data-tab="spec">
+                                <i class="ri-file-list-3-line"></i> 规格定义
+                            </button>
+                            <button class="config-tab" data-tab="config">
+                                <i class="ri-code-brackets-line"></i> 完整配置
+                            </button>
+                            <button class="config-tab" data-tab="inheritance">
+                                <i class="ri-git-branch-line"></i> 继承链
+                            </button>
+                        </div>
+                        
+                        <div id="tab-overview" class="tab-content">
+                            <div class="config-section">
+                                <div class="config-section-header">
+                                    <h3 class="config-section-title">
+                                        <i class="ri-information-line"></i> 基本信息
+                                    </h3>
+                                </div>
+                                <div class="config-section-body">
+                                    <div class="info-grid" id="basic-info">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="config-section">
+                                <div class="config-section-header">
+                                    <h3 class="config-section-title">
+                                        <i class="ri-settings-4-line"></i> 配置概要
+                                    </h3>
+                                </div>
+                                <div class="config-section-body">
+                                    <div class="config-json" id="config-summary">-</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="tab-spec" class="tab-content" style="display: none;">
+                            <div class="config-section">
+                                <div class="config-section-header">
+                                    <h3 class="config-section-title">
+                                        <i class="ri-input-method-line"></i> 输入参数
+                                    </h3>
+                                </div>
+                                <div class="config-section-body">
+                                    <div id="input-params">
+                                        <div class="empty-state">
+                                            <i class="ri-input-method-line"></i>
+                                            <p>暂无输入参数定义</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="config-section">
+                                <div class="config-section-header">
+                                    <h3 class="config-section-title">
+                                        <i class="ri-output-method-line"></i> 输出定义
+                                    </h3>
+                                </div>
+                                <div class="config-section-body">
+                                    <div id="output-params">
+                                        <div class="empty-state">
+                                            <i class="ri-output-method-line"></i>
+                                            <p>暂无输出定义</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="tab-config" class="tab-content" style="display: none;">
+                            <div class="config-section">
+                                <div class="config-section-header">
+                                    <h3 class="config-section-title">
+                                        <i class="ri-code-brackets-line"></i> 完整配置 JSON
+                                    </h3>
+                                    <button class="btn btn-secondary" onclick="copyConfig()">
+                                        <i class="ri-file-copy-line"></i> 复制
+                                    </button>
+                                </div>
+                                <div class="config-section-body">
+                                    <div class="config-json" id="full-config">-</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="tab-inheritance" class="tab-content" style="display: none;">
+                            <div class="config-section">
+                                <div class="config-section-header">
+                                    <h3 class="config-section-title">
+                                        <i class="ri-git-branch-line"></i> 配置继承链
+                                    </h3>
+                                </div>
+                                <div class="config-section-body">
+                                    <div class="inheritance-chain" id="inheritance-chain">
+                                        <div class="empty-state">
+                                            <i class="ri-git-branch-line"></i>
+                                            <p>暂无继承链信息</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script>
+        (function() {
+            'use strict';
+            
+            let skillId = null;
+            let fullConfig = null;
+            
+            function getSkillIdFromUrl() {
+                const params = new URLSearchParams(window.location.search);
+                return params.get('id');
+            }
+            
+            async function loadConfig() {
+                skillId = getSkillIdFromUrl();
+                if (!skillId) {
+                    showError('缺少技能ID参数');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/v1/config/skills/' + encodeURIComponent(skillId) + '?resolveInheritance=true');
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status);
+                    }
+                    fullConfig = await response.json();
+                    renderConfig();
+                    loadInheritanceChain();
+                } catch (e) {
+                    console.error('Failed to load config:', e);
+                    showError('加载配置失败: ' + e.message);
+                }
+            }
+            
+            function renderConfig() {
+                document.getElementById('loading-state').style.display = 'none';
+                document.getElementById('config-content').style.display = 'block';
+                
+                const spec = fullConfig.spec || fullConfig;
+                const name = spec.name || fullConfig.name || skillId;
+                
+                document.getElementById('skill-name').textContent = name;
+                document.getElementById('skill-id').textContent = skillId;
+                document.getElementById('capability-detail-link').href = 'capability-detail.html?id=' + encodeURIComponent(skillId);
+                
+                renderBasicInfo(spec);
+                renderConfigSummary();
+                renderSpec(spec);
+                renderFullConfig();
+            }
+            
+            function renderBasicInfo(spec) {
+                const info = [
+                    { label: '技能ID', value: skillId },
+                    { label: '名称', value: spec.name || '-' },
+                    { label: '版本', value: spec.version || '-' },
+                    { label: '类型', value: spec.type || spec.skillForm || '-' },
+                    { label: '分类', value: spec.category || '-' },
+                    { label: '状态', value: spec.status || 'REGISTERED' }
+                ];
+                
+                const html = info.map(item => {
+                    return '<div class="info-item">' +
+                        '<span class="info-item-label">' + item.label + '</span>' +
+                        '<span class="info-item-value">' + item.value + '</span>' +
+                    '</div>';
+                }).join('');
+                
+                document.getElementById('basic-info').innerHTML = html;
+            }
+            
+            function renderConfigSummary() {
+                const summary = {};
+                const spec = fullConfig.spec || fullConfig;
+                
+                if (spec.description) summary.description = spec.description;
+                if (spec.category) summary.category = spec.category;
+                if (spec.version) summary.version = spec.version;
+                if (spec.inputs && spec.inputs.length > 0) summary.inputCount = spec.inputs.length;
+                if (spec.outputs && spec.outputs.length > 0) summary.outputCount = spec.outputs.length;
+                if (spec.dependencies && spec.dependencies.length > 0) summary.dependencies = spec.dependencies;
+                
+                document.getElementById('config-summary').textContent = JSON.stringify(summary, null, 2);
+            }
+            
+            function renderSpec(spec) {
+                if (spec.inputs && spec.inputs.length > 0) {
+                    let tableHtml = '<table class="spec-table"><thead><tr>' +
+                        '<th>参数名</th><th>类型</th><th>必填</th><th>默认值</th><th>描述</th>' +
+                        '</tr></thead><tbody>';
+                    
+                    spec.inputs.forEach(function(input) {
+                        tableHtml += '<tr>' +
+                            '<td><code>' + (input.name || '-') + '</code></td>' +
+                            '<td>' + (input.type || '-') + '</td>' +
+                            '<td>' + (input.required ? '<span class="badge badge-warning">必填</span>' : '<span class="badge badge-info">可选</span>') + '</td>' +
+                            '<td>' + (input.default !== undefined ? String(input.default) : '-') + '</td>' +
+                            '<td>' + (input.description || '-') + '</td>' +
+                        '</tr>';
+                    });
+                    
+                    tableHtml += '</tbody></table>';
+                    document.getElementById('input-params').innerHTML = tableHtml;
+                }
+                
+                if (spec.outputs && spec.outputs.length > 0) {
+                    let outputHtml = '<table class="spec-table"><thead><tr>' +
+                        '<th>字段名</th><th>类型</th><th>描述</th>' +
+                        '</tr></thead><tbody>';
+                    
+                    spec.outputs.forEach(function(output) {
+                        outputHtml += '<tr>' +
+                            '<td><code>' + (output.name || '-') + '</code></td>' +
+                            '<td>' + (output.type || '-') + '</td>' +
+                            '<td>' + (output.description || '-') + '</td>' +
+                        '</tr>';
+                    });
+                    
+                    outputHtml += '</tbody></table>';
+                    document.getElementById('output-params').innerHTML = outputHtml;
+                }
+            }
+            
+            function renderFullConfig() {
+                document.getElementById('full-config').textContent = JSON.stringify(fullConfig, null, 2);
+            }
+            
+            async function loadInheritanceChain() {
+                try {
+                    const response = await fetch('/api/v1/config/skills/' + encodeURIComponent(skillId) + '/inheritance');
+                    if (!response.ok) {
+                        document.getElementById('inheritance-chain').innerHTML = 
+                            '<div class="empty-state"><i class="ri-git-branch-line"></i><p>暂无继承链信息</p></div>';
+                        return;
+                    }
+                    
+                    const chain = await response.json();
+                    renderInheritanceChain(chain);
+                } catch (e) {
+                    console.error('Failed to load inheritance chain:', e);
+                }
+            }
+            
+            function renderInheritanceChain(chain) {
+                if (!chain || !chain.nodes || chain.nodes.length === 0) {
+                    document.getElementById('inheritance-chain').innerHTML = 
+                        '<div class="empty-state"><i class="ri-git-branch-line"></i><p>暂无继承链信息</p></div>';
+                    return;
+                }
+                
+                let html = '';
+                chain.nodes.forEach(function(node, index) {
+                    const isCurrent = node.id === skillId;
+                    const typeIcon = node.type === 'system' ? 'ri-server-line' : 
+                                    node.type === 'skill' ? 'ri-puzzle-line' : 'ri-flashlight-line';
+                    
+                    html += '<div class="inheritance-item' + (isCurrent ? ' current' : '') + '">' +
+                        '<div class="inheritance-item-icon"><i class="' + typeIcon + '"></i></div>' +
+                        '<div class="inheritance-item-info">' +
+                            '<div class="inheritance-item-type">' + (node.type || 'unknown') + '</div>' +
+                            '<div class="inheritance-item-id">' + node.id + '</div>' +
+                        '</div>' +
+                    '</div>';
+                    
+                    if (index < chain.nodes.length - 1) {
+                        html += '<div class="inheritance-arrow"><i class="ri-arrow-down-line"></i></div>';
+                    }
+                });
+                
+                document.getElementById('inheritance-chain').innerHTML = html;
+            }
+            
+            function showError(message) {
+                document.getElementById('loading-state').innerHTML = 
+                    '<div class="empty-state">' +
+                        '<i class="ri-error-warning-line" style="font-size: 48px; color: var(--nx-danger);"></i>' +
+                        '<h3>' + message + '</h3>' +
+                        '<p><a href="installed-scene-capabilities.html">返回已安装场景能力</a></p>' +
+                    '</div>';
+            }
+            
+            function switchTab(tabName) {
+                document.querySelectorAll('.config-tab').forEach(function(tab) {
+                    tab.classList.remove('active');
+                });
+                document.querySelector('[data-tab="' + tabName + '"]').classList.add('active');
+                
+                document.querySelectorAll('.tab-content').forEach(function(content) {
+                    content.style.display = 'none';
+                });
+                document.getElementById('tab-' + tabName).style.display = 'block';
+            }
+            
+            window.copyConfig = function() {
+                const configText = JSON.stringify(fullConfig, null, 2);
+                navigator.clipboard.writeText(configText).then(function() {
+                    alert('配置已复制到剪贴板');
+                });
+            };
+            
+            document.querySelectorAll('.config-tab').forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    switchTab(this.dataset.tab);
+                });
+            });
+            
+            document.addEventListener('DOMContentLoaded', loadConfig);
+        })();
+    </script>
+</body>
+</html>

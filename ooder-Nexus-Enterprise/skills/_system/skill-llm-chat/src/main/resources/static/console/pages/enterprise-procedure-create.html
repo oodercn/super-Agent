@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建企业规范流程 - OODER Console</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .create-page {
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .create-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .create-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .create-title h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .create-title .back-link {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--nx-text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .create-title .back-link:hover {
+            color: var(--nx-primary);
+        }
+        
+        .create-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .form-section {
+            background: var(--nx-bg-card);
+            border: 1px solid var(--nx-border);
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .form-section__header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--nx-border);
+        }
+        
+        .form-section__header h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .form-section__header i {
+            color: var(--nx-primary);
+            font-size: 20px;
+        }
+        
+        .form-section__body {
+            padding: 20px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--nx-text-primary);
+        }
+        
+        .form-group label .required {
+            color: var(--nx-danger);
+            margin-left: 4px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--nx-border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--nx-bg-input);
+            color: var(--nx-text-primary);
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .roles-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        
+        .role-card {
+            background: var(--nx-bg-elevated);
+            border: 1px solid var(--nx-border);
+            border-radius: 8px;
+            padding: 16px;
+            position: relative;
+        }
+        
+        .role-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .role-card__name {
+            font-weight: 600;
+            font-size: 15px;
+        }
+        
+        .role-card__actions {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .role-card__actions button {
+            padding: 4px 8px;
+            background: transparent;
+            border: none;
+            color: var(--nx-text-secondary);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .role-card__actions button:hover {
+            background: var(--nx-bg-hover);
+            color: var(--nx-text-primary);
+        }
+        
+        .role-card__info {
+            font-size: 13px;
+            color: var(--nx-text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .role-card__badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            background: var(--nx-primary-light);
+            color: var(--nx-primary);
+        }
+        
+        .add-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 120px;
+            border: 2px dashed var(--nx-border);
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--nx-text-secondary);
+            transition: all 0.2s;
+        }
+        
+        .add-card:hover {
+            border-color: var(--nx-primary);
+            color: var(--nx-primary);
+            background: var(--nx-primary-light);
+        }
+        
+        .add-card i {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .steps-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--nx-bg-elevated);
+            border: 1px solid var(--nx-border);
+            border-radius: 8px;
+        }
+        
+        .step-item__order {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--nx-primary);
+            color: white;
+            border-radius: 50%;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .step-item__content {
+            flex: 1;
+        }
+        
+        .step-item__name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .step-item__desc {
+            font-size: 13px;
+            color: var(--nx-text-secondary);
+        }
+        
+        .step-item__type {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            background: var(--nx-bg-hover);
+            color: var(--nx-text-secondary);
+        }
+        
+        .step-item__actions {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .step-item__actions button {
+            padding: 6px 10px;
+            background: transparent;
+            border: 1px solid var(--nx-border);
+            color: var(--nx-text-secondary);
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .step-item__actions button:hover {
+            background: var(--nx-bg-hover);
+            color: var(--nx-text-primary);
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: var(--nx-bg-card);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow: hidden;
+            transform: translateY(-20px);
+            transition: transform 0.3s;
+        }
+        
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--nx-border);
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+        
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(90vh - 140px);
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 20px;
+            border-top: 1px solid var(--nx-border);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--nx-text-secondary);
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+        }
+        
+        .empty-state__title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div style="padding: 16px; margin-bottom: 16px;">
+                <h1 style="display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: bold; margin: 0;">
+                    <i class="ri-robot-2-line"></i> OODER Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 style="font-size: 18px; font-weight: 600; margin: 0;">创建企业规范流程</h2>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="create-page">
+                <div class="create-header">
+                    <div class="create-title">
+                        <a href="enterprise-procedure-list.html" class="back-link">
+                            <i class="ri-arrow-left-line"></i> 返回列表
+                        </a>
+                        <h1>手动创建企业规范流程</h1>
+                    </div>
+                    <div class="create-actions">
+                        <button class="nx-btn nx-btn--ghost" onclick="saveAsDraft()">
+                            <i class="ri-save-line"></i> 保存草稿
+                        </button>
+                        <button class="nx-btn nx-btn--primary" onclick="submitCreate()">
+                            <i class="ri-check-line"></i> 提交创建
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="form-section__header">
+                        <i class="ri-information-line"></i>
+                        <h2>基本信息</h2>
+                    </div>
+                    <div class="form-section__body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>流程名称<span class="required">*</span></label>
+                                <input type="text" id="procedureName" placeholder="请输入流程名称">
+                            </div>
+                            <div class="form-group">
+                                <label>分类<span class="required">*</span></label>
+                                <select id="procedureCategory">
+                                    <option value="">请选择分类</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>来源</label>
+                                <select id="procedureSource">
+                                    <option value="MANUAL">手动创建</option>
+                                    <option value="KNOWLEDGE_BASE">知识库梳理</option>
+                                    <option value="INDUSTRY_BEST_PRACTICE">行业最佳实践</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>状态</label>
+                                <select id="procedureStatus">
+                                    <option value="DRAFT">草稿</option>
+                                    <option value="ACTIVE">激活</option>
+                                    <option value="DEPRECATED">废弃</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>描述</label>
+                            <textarea id="procedureDescription" placeholder="请输入流程描述"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="form-section__header">
+                        <i class="ri-team-line"></i>
+                        <h2>角色定义</h2>
+                    </div>
+                    <div class="form-section__body">
+                        <div class="roles-container" id="rolesContainer">
+                            <div class="add-card" onclick="openRoleModal()">
+                                <i class="ri-add-line"></i>
+                                <span>添加角色</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="form-section__header">
+                        <i class="ri-flow-chart"></i>
+                        <h2>流程步骤</h2>
+                    </div>
+                    <div class="form-section__body">
+                        <div class="steps-container" id="stepsContainer">
+                            <div class="empty-state" id="stepsEmptyState">
+                                <i class="ri-flow-chart"></i>
+                                <div class="empty-state__title">暂无流程步骤</div>
+                                <button class="nx-btn nx-btn--primary" onclick="openStepModal()">
+                                    <i class="ri-add-line"></i> 添加步骤
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal-overlay" id="roleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-user-line"></i> 角色配置</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeRoleModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="roleEditIndex" value="-1">
+                <div class="form-group">
+                    <label>角色ID<span class="required">*</span></label>
+                    <input type="text" id="roleId" placeholder="如：approver, executor">
+                </div>
+                <div class="form-group">
+                    <label>角色名称<span class="required">*</span></label>
+                    <input type="text" id="roleName" placeholder="如：审批人、执行人">
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea id="roleDescription" placeholder="角色职责描述"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>最小人数</label>
+                        <input type="number" id="roleMinCount" value="1" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>最大人数</label>
+                        <input type="number" id="roleMaxCount" value="1" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="roleRequired"> 必需角色
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeRoleModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="saveRole()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="stepModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-flow-chart"></i> 步骤配置</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeStepModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="stepEditIndex" value="-1">
+                <div class="form-group">
+                    <label>步骤ID<span class="required">*</span></label>
+                    <input type="text" id="stepId" placeholder="如：step1, approval_step">
+                </div>
+                <div class="form-group">
+                    <label>步骤名称<span class="required">*</span></label>
+                    <input type="text" id="stepName" placeholder="如：提交申请、审批">
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea id="stepDescription" placeholder="步骤详细描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>步骤类型</label>
+                    <select id="stepType">
+                        <option value="MANUAL">人工执行</option>
+                        <option value="AUTOMATIC">自动执行</option>
+                        <option value="APPROVAL">审批节点</option>
+                        <option value="PARALLEL">并行网关</option>
+                        <option value="EXCLUSIVE">排他网关</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeStepModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="saveStep()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script>
+        let roles = [];
+        let steps = [];
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            await NexusMenu.init();
+            loadCategories();
+        });
+        
+        async function loadCategories() {
+            try {
+                const response = await ApiClient.get('/api/v1/enterprise-procedures/categories');
+                if (response && Array.isArray(response)) {
+                    const select = document.getElementById('procedureCategory');
+                    response.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat.code || cat;
+                        option.textContent = cat.name || cat;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (e) {
+                console.log('Categories not available');
+            }
+        }
+        
+        function openRoleModal(index = -1) {
+            document.getElementById('roleEditIndex').value = index;
+            if (index >= 0 && roles[index]) {
+                const role = roles[index];
+                document.getElementById('roleId').value = role.roleId || '';
+                document.getElementById('roleName').value = role.name || '';
+                document.getElementById('roleDescription').value = role.description || '';
+                document.getElementById('roleMinCount').value = role.minCount || 1;
+                document.getElementById('roleMaxCount').value = role.maxCount || 1;
+                document.getElementById('roleRequired').checked = role.required || false;
+            } else {
+                document.getElementById('roleId').value = '';
+                document.getElementById('roleName').value = '';
+                document.getElementById('roleDescription').value = '';
+                document.getElementById('roleMinCount').value = 1;
+                document.getElementById('roleMaxCount').value = 1;
+                document.getElementById('roleRequired').checked = false;
+            }
+            document.getElementById('roleModal').classList.add('active');
+        }
+        
+        function closeRoleModal() {
+            document.getElementById('roleModal').classList.remove('active');
+        }
+        
+        function saveRole() {
+            const index = parseInt(document.getElementById('roleEditIndex').value);
+            const role = {
+                roleId: document.getElementById('roleId').value.trim(),
+                name: document.getElementById('roleName').value.trim(),
+                description: document.getElementById('roleDescription').value.trim(),
+                minCount: parseInt(document.getElementById('roleMinCount').value) || 1,
+                maxCount: parseInt(document.getElementById('roleMaxCount').value) || 1,
+                required: document.getElementById('roleRequired').checked
+            };
+            
+            if (!role.roleId || !role.name) {
+                NX.error('请填写角色ID和名称');
+                return;
+            }
+            
+            if (index >= 0) {
+                roles[index] = role;
+            } else {
+                roles.push(role);
+            }
+            
+            renderRoles();
+            closeRoleModal();
+        }
+        
+        function deleteRole(index) {
+            if (confirm('确定要删除该角色吗？')) {
+                roles.splice(index, 1);
+                renderRoles();
+            }
+        }
+        
+        function renderRoles() {
+            const container = document.getElementById('rolesContainer');
+            let html = '';
+            
+            roles.forEach((role, index) => {
+                html += `
+                    <div class="role-card">
+                        <div class="role-card__header">
+                            <span class="role-card__name">${escapeHtml(role.name)}</span>
+                            <div class="role-card__actions">
+                                <button onclick="openRoleModal(${index})" title="编辑">
+                                    <i class="ri-edit-line"></i>
+                                </button>
+                                <button onclick="deleteRole(${index})" title="删除">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="role-card__info">
+                            ID: ${escapeHtml(role.roleId)} | 人数: ${role.minCount}-${role.maxCount}
+                        </div>
+                        ${role.required ? '<span class="role-card__badge">必需</span>' : ''}
+                    </div>
+                `;
+            });
+            
+            html += `
+                <div class="add-card" onclick="openRoleModal()">
+                    <i class="ri-add-line"></i>
+                    <span>添加角色</span>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function openStepModal(index = -1) {
+            document.getElementById('stepEditIndex').value = index;
+            if (index >= 0 && steps[index]) {
+                const step = steps[index];
+                document.getElementById('stepId').value = step.stepId || '';
+                document.getElementById('stepName').value = step.name || '';
+                document.getElementById('stepDescription').value = step.description || '';
+                document.getElementById('stepType').value = step.type || 'MANUAL';
+            } else {
+                document.getElementById('stepId').value = '';
+                document.getElementById('stepName').value = '';
+                document.getElementById('stepDescription').value = '';
+                document.getElementById('stepType').value = 'MANUAL';
+            }
+            document.getElementById('stepModal').classList.add('active');
+        }
+        
+        function closeStepModal() {
+            document.getElementById('stepModal').classList.remove('active');
+        }
+        
+        function saveStep() {
+            const index = parseInt(document.getElementById('stepEditIndex').value);
+            const step = {
+                stepId: document.getElementById('stepId').value.trim(),
+                name: document.getElementById('stepName').value.trim(),
+                description: document.getElementById('stepDescription').value.trim(),
+                type: document.getElementById('stepType').value,
+                order: index >= 0 ? steps[index].order : steps.length + 1
+            };
+            
+            if (!step.stepId || !step.name) {
+                NX.error('请填写步骤ID和名称');
+                return;
+            }
+            
+            if (index >= 0) {
+                steps[index] = step;
+            } else {
+                steps.push(step);
+            }
+            
+            renderSteps();
+            closeStepModal();
+        }
+        
+        function deleteStep(index) {
+            if (confirm('确定要删除该步骤吗？')) {
+                steps.splice(index, 1);
+                steps.forEach((s, i) => s.order = i + 1);
+                renderSteps();
+            }
+        }
+        
+        function moveStep(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= steps.length) return;
+            
+            const temp = steps[index];
+            steps[index] = steps[newIndex];
+            steps[newIndex] = temp;
+            
+            steps.forEach((s, i) => s.order = i + 1);
+            renderSteps();
+        }
+        
+        function renderSteps() {
+            const container = document.getElementById('stepsContainer');
+            const emptyState = document.getElementById('stepsEmptyState');
+            
+            if (steps.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" id="stepsEmptyState">
+                        <i class="ri-flow-chart"></i>
+                        <div class="empty-state__title">暂无流程步骤</div>
+                        <button class="nx-btn nx-btn--primary" onclick="openStepModal()">
+                            <i class="ri-add-line"></i> 添加步骤
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            const typeLabels = {
+                'MANUAL': '人工执行',
+                'AUTOMATIC': '自动执行',
+                'APPROVAL': '审批节点',
+                'PARALLEL': '并行网关',
+                'EXCLUSIVE': '排他网关'
+            };
+            
+            let html = '';
+            steps.forEach((step, index) => {
+                html += `
+                    <div class="step-item">
+                        <div class="step-item__order">${step.order}</div>
+                        <div class="step-item__content">
+                            <div class="step-item__name">${escapeHtml(step.name)}</div>
+                            <div class="step-item__desc">${escapeHtml(step.description || '无描述')}</div>
+                        </div>
+                        <span class="step-item__type">${typeLabels[step.type] || step.type}</span>
+                        <div class="step-item__actions">
+                            <button onclick="moveStep(${index}, -1)" ${index === 0 ? 'disabled' : ''} title="上移">
+                                <i class="ri-arrow-up-line"></i>
+                            </button>
+                            <button onclick="moveStep(${index}, 1)" ${index === steps.length - 1 ? 'disabled' : ''} title="下移">
+                                <i class="ri-arrow-down-line"></i>
+                            </button>
+                            <button onclick="openStepModal(${index})" title="编辑">
+                                <i class="ri-edit-line"></i>
+                            </button>
+                            <button onclick="deleteStep(${index})" title="删除">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                <div style="text-align: center; margin-top: 16px;">
+                    <button class="nx-btn nx-btn--ghost" onclick="openStepModal()">
+                        <i class="ri-add-line"></i> 添加步骤
+                    </button>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function collectFormData() {
+            return {
+                name: document.getElementById('procedureName').value.trim(),
+                category: document.getElementById('procedureCategory').value,
+                source: document.getElementById('procedureSource').value,
+                status: document.getElementById('procedureStatus').value,
+                description: document.getElementById('procedureDescription').value.trim(),
+                roles: roles,
+                steps: steps
+            };
+        }
+        
+        function validateForm() {
+            const data = collectFormData();
+            
+            if (!data.name) {
+                NX.error('请输入流程名称');
+                return false;
+            }
+            if (!data.category) {
+                NX.error('请选择分类');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        async function saveAsDraft() {
+            if (!validateForm()) return;
+            
+            const data = collectFormData();
+            data.status = 'DRAFT';
+            
+            try {
+                const response = await ApiClient.post('/api/v1/enterprise-procedures', data);
+                if (response.status === 'success' || response.procedureId) {
+                    NX.success('草稿保存成功');
+                    setTimeout(() => {
+                        window.location.href = 'enterprise-procedure-list.html';
+                    }, 1000);
+                } else {
+                    NX.error(response.message || '保存失败');
+                }
+            } catch (e) {
+                NX.error('保存失败: ' + e.message);
+            }
+        }
+        
+        async function submitCreate() {
+            if (!validateForm()) return;
+            
+            const data = collectFormData();
+            
+            try {
+                const response = await ApiClient.post('/api/v1/enterprise-procedures', data);
+                if (response.status === 'success' || response.procedureId) {
+                    NX.success('创建成功');
+                    setTimeout(() => {
+                        window.location.href = 'enterprise-procedure-list.html';
+                    }, 1000);
+                } else {
+                    NX.error(response.message || '创建失败');
+                }
+            } catch (e) {
+                NX.error('创建失败: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

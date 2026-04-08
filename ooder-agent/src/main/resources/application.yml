@@ -1,0 +1,235 @@
+server:
+  port: 8099
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  tomcat:
+    threads:
+      virtual: true
+
+spring:
+  application:
+    name: ooder-agent
+  profiles:
+    active: micro
+  main:
+    allow-circular-references: true
+  mvc:
+    throw-exception-if-no-handler-found: false
+  threads:
+    virtual:
+      enabled: true
+  web:
+    resources:
+      add-mappings: true
+      static-locations: classpath:/static/
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.community.dialect.SQLiteDialect
+        globally_quoted_identifiers: true
+        format_sql: false
+
+reactor:
+  netty:
+    resolver:
+      transport: jdk
+
+app:
+  storage:
+    path: ./data
+
+org-web:
+  storage-path: org
+  auto-init: true
+
+os:
+  datasource:
+    url: jdbc:sqlite:./data/os.db
+    driver-class-name: org.sqlite.JDBC
+
+agent:
+  session:
+    timeout: 86400
+  message:
+    expire: 86400
+    max-queue: 1000
+  heartbeat:
+    interval: 30000
+    timeout: 60000
+    offline-threshold: 3
+    check-interval: 30000
+
+ooder:
+  scene:
+    auto-init: true
+    default-group-id: sg-default
+    sdk:
+      enabled: true
+      skills:
+        path: ../skills
+        auto-sync: true
+        directories:
+          downloads: ./.ooder/downloads
+          installed: ./.ooder/installed
+          activated: ./.ooder/activated
+          dev: ./.ooder/dev
+          cache: ./.ooder/cache
+  discovery:
+    local:
+      enabled: true
+      skills-path: ./skills
+      search-paths: ./skills,./.ooder/downloads,./.ooder/installed,./.ooder/dev
+    use-se-sdk: true
+    use-index-first: true
+    jds:
+      config:
+        name: ooder-agent
+  skills:
+    directories:
+      downloads: ./.ooder/downloads
+      installed: ./.ooder/installed
+      activated: ./.ooder/activated
+      dev: ./.ooder/dev
+      cache: ./.ooder/cache
+    gitee:
+      token: ${GITEE_TOKEN:}
+      owner: ooderCN
+      repo: skills
+      branch: master
+    github:
+      token: ${GITHUB_TOKEN:}
+      owner: ooderCN
+      repo: skills
+      branch: main
+    root-path: ./skills
+  skill:
+    hotplug:
+      enabled: true
+      auto-load: true
+      plugin-directory: ./plugins
+    index-dir: ../skill-index
+  mock:
+    enabled: false
+  llm:
+    provider: qianwen
+    model: qwen-plus
+    qianwen:
+      api-key: ${QIANWEN_API_KEY:}
+      model: qwen-plus
+
+qianwen:
+  api-key: ${QIANWEN_API_KEY:}
+  base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  model: qwen-plus
+
+deepseek:
+  api-key: ${DEEPSEEK_API_KEY:}
+  base-url: https://api.deepseek.com
+
+baidu:
+  api-key: ${BAIDU_API_KEY:}
+  base-url: https://qianfan.baidubce.com/v2
+  secret-key: ${BAIDU_SECRET_KEY:}
+
+scene:
+  engine:
+    discovery:
+      enabled: true
+      gitee:
+        enabled: true
+        token: ${GITEE_TOKEN:}
+        default-owner: ooderCN
+        default-repo: skills
+        default-branch: master
+        skills-path: ""
+        cache-ttl-ms: 3600000
+      github:
+        enabled: false
+        token: ${GITHUB_TOKEN:}
+        default-owner: ooderCN
+        default-repo: skills
+        default-branch: main
+      cache:
+        enabled: true
+        ttl-ms: 3600000
+        dir: ./.ooder/cache/discovery
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    net.ooder: DEBUG
+    net.ooder.skill.hotplug: INFO
+
+auth:
+  qrcode:
+    enabled: true
+    qrcode-expire-time: 300
+    check-interval: 2000
+    platforms:
+      dingding:
+        enabled: false
+        name: 钉钉
+        icon: ri-message-3-line
+        app-id: ${DINGDING_APP_ID:}
+        app-secret: ${DINGDING_APP_SECRET:}
+        callback-url: ${DINGDING_CALLBACK_URL:}
+        auth-url: https://login.dingtalk.com/oauth2/auth
+        qrcode-url: https://login.dingtalk.com/oauth2/auth
+        description: 使用钉钉扫码登录
+      weixin:
+        enabled: false
+        name: 微信
+        icon: ri-wechat-line
+        app-id: ${WEIXIN_APP_ID:}
+        app-secret: ${WEIXIN_APP_SECRET:}
+        callback-url: ${WEIXIN_CALLBACK_URL:}
+        auth-url: https://open.weixin.qq.com/connect/qrconnect
+        qrcode-url: https://open.weixin.qq.com/connect/qrconnect
+        description: 使用微信扫码登录
+      feishu:
+        enabled: false
+        name: 飞书
+        icon: ri-message-2-line
+        app-id: ${FEISHU_APP_ID:}
+        app-secret: ${FEISHU_APP_SECRET:}
+        callback-url: ${FEISHU_CALLBACK_URL:}
+        auth-url: https://passport.feishu.cn/suite/passport/page/auth
+        qrcode-url: https://passport.feishu.cn/suite/passport/page/auth
+        description: 使用飞书扫码登录
+
+capability:
+  publish:
+    github:
+      enabled: false
+      token: ${GITHUB_TOKEN:}
+      default-repo: ooderCN/skills
+      default-branch: main
+    gitee:
+      enabled: true
+      token: ${GITEE_TOKEN:}
+      default-repo: ooderCN/skills
+      default-branch: master
+    center:
+      enabled: false
+      url: https://skill.ooder.net
+      token: ${SKILL_CENTER_TOKEN:}

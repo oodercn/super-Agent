@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent 详情 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/nx-page.css">
+    <link rel="stylesheet" href="/console/css/pages/agent-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <a href="agent-list.html" class="nx-btn nx-btn--ghost nx-btn--icon">
+                        <i class="ri-arrow-left-line"></i>
+                    </a>
+                    <div class="nx-page__title">
+                        <h1 id="pageTitle">Agent 详情</h1>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div id="loading-state" class="nx-text-center nx-py-12">
+                        <i class="ri-loader-4-line ri-spin" style="font-size: 32px;"></i>
+                        <p class="nx-mt-4">加载中...</p>
+                    </div>
+                    
+                    <div id="content-area" style="display: none;">
+                        <div class="detail-header">
+                            <div class="agent-avatar" id="agent-avatar">
+                                <i class="ri-robot-line"></i>
+                            </div>
+                            <div class="agent-meta">
+                                <h1 id="agent-name">-</h1>
+                                <div class="badges">
+                                    <span class="nx-badge nx-badge--secondary" id="agent-id">-</span>
+                                    <span class="nx-badge" id="agent-type">-</span>
+                                    <span class="nx-badge" id="agent-status">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-grid">
+                            <div class="info-card">
+                                <h3><i class="ri-information-line"></i> 基本信息</h3>
+                                <div class="info-row">
+                                    <span class="info-label">Agent ID</span>
+                                    <span class="info-value" id="info-id">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">名称</span>
+                                    <span class="info-value" id="info-name">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">类型</span>
+                                    <span class="info-value" id="info-type">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">状态</span>
+                                    <span class="info-value" id="info-status">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">版本</span>
+                                    <span class="info-value" id="info-version">-</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-card">
+                                <h3><i class="ri-global-line"></i> 网络信息</h3>
+                                <div class="info-row">
+                                    <span class="info-label">IP 地址</span>
+                                    <span class="info-value" id="info-ip">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">端口</span>
+                                    <span class="info-value" id="info-port">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">协议</span>
+                                    <span class="info-value" id="info-protocol">-</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-card">
+                                <h3><i class="ri-time-line"></i> 时间信息</h3>
+                                <div class="info-row">
+                                    <span class="info-label">注册时间</span>
+                                    <span class="info-value" id="info-register-time">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">最后心跳</span>
+                                    <span class="info-value" id="info-heartbeat">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">运行时长</span>
+                                    <span class="info-value" id="info-uptime">-</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-card">
+                                <h3><i class="ri-cpu-line"></i> 资源信息</h3>
+                                <div class="info-row">
+                                    <span class="info-label">CPU 使用率</span>
+                                    <span class="info-value" id="info-cpu">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">内存使用</span>
+                                    <span class="info-value" id="info-memory">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">活跃任务</span>
+                                    <span class="info-value" id="info-tasks">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-card nx-mt-6">
+                            <div class="nx-card__header">
+                                <h3><i class="ri-link"></i> 关联的场景组</h3>
+                            </div>
+                            <div class="nx-card__body" id="scene-groups-list">
+                                <div class="empty-state">暂无关联的场景组</div>
+                            </div>
+                        </div>
+                        
+                        <div class="nx-card nx-mt-4">
+                            <div class="nx-card__header">
+                                <h3><i class="ri-flashlight-line"></i> 能力绑定</h3>
+                            </div>
+                            <div class="nx-card__body" id="bindings-list">
+                                <div class="empty-state">暂无能力绑定</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        (function() {
+            'use strict';
+            
+            let agentId = null;
+            let agentData = null;
+            
+            function getAgentIdFromUrl() {
+                const params = new URLSearchParams(window.location.search);
+                return params.get('id');
+            }
+            
+            async function loadAgentDetail() {
+                agentId = getAgentIdFromUrl();
+                if (!agentId) {
+                    showError('缺少 Agent ID 参数');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/agent/' + agentId);
+                    const result = await response.json();
+                    
+                    if (result.status === 'success' && result.data) {
+                        agentData = result.data;
+                        renderAgentDetail();
+                        loadBindings();
+                    } else {
+                        showError(result.message || 'Agent 不存在');
+                    }
+                } catch (e) {
+                    showError('加载失败: ' + e.message);
+                }
+            }
+            
+            function renderAgentDetail() {
+                document.getElementById('loading-state').style.display = 'none';
+                document.getElementById('content-area').style.display = 'block';
+                
+                const name = agentData.agentName || agentData.name || agentId;
+                const type = agentData.agentType || agentData.type || 'UNKNOWN';
+                const status = agentData.status || 'offline';
+                
+                document.getElementById('pageTitle').textContent = name + ' - Agent 详情';
+                document.getElementById('agent-name').textContent = name;
+                document.getElementById('agent-id').textContent = agentId;
+                document.getElementById('agent-type').textContent = type;
+                document.getElementById('agent-type').className = 'nx-badge nx-badge--info';
+                
+                const statusClass = status.toLowerCase() === 'online' || status.toLowerCase() === 'running' 
+                    ? 'nx-badge--success' : status.toLowerCase() === 'busy' 
+                    ? 'nx-badge--warning' : 'nx-badge--secondary';
+                document.getElementById('agent-status').textContent = status;
+                document.getElementById('agent-status').className = 'nx-badge ' + statusClass;
+                
+                document.getElementById('info-id').textContent = agentId;
+                document.getElementById('info-name').textContent = name;
+                document.getElementById('info-type').textContent = type;
+                document.getElementById('info-status').textContent = status;
+                document.getElementById('info-version').textContent = agentData.version || '-';
+                document.getElementById('info-ip').textContent = agentData.ipAddress || '-';
+                document.getElementById('info-port').textContent = agentData.port || '-';
+                document.getElementById('info-protocol').textContent = agentData.protocol || 'HTTP';
+                
+                if (agentData.registerTime) {
+                    document.getElementById('info-register-time').textContent = formatTime(agentData.registerTime);
+                }
+                if (agentData.lastHeartbeat) {
+                    document.getElementById('info-heartbeat').textContent = formatTime(agentData.lastHeartbeat);
+                }
+                if (agentData.uptime) {
+                    document.getElementById('info-uptime').textContent = agentData.uptime;
+                }
+                
+                document.getElementById('info-cpu').textContent = agentData.cpuUsage ? agentData.cpuUsage + '%' : '-';
+                document.getElementById('info-memory').textContent = agentData.memoryUsage || '-';
+                document.getElementById('info-tasks').textContent = agentData.activeTasks || '0';
+            }
+            
+            async function loadBindings() {
+                try {
+                    const response = await fetch('/api/v1/capabilities/bindings');
+                    const result = await response.json();
+                    
+                    if (result.status === 'success' && result.data) {
+                        const bindings = result.data.filter(b => b.providerId === agentId || b.agentId === agentId);
+                        renderBindings(bindings);
+                        
+                        const sceneGroups = [...new Set(bindings.map(b => b.sceneGroupId).filter(Boolean))];
+                        renderSceneGroups(sceneGroups);
+                    }
+                } catch (e) {
+                    console.error('Failed to load bindings:', e);
+                }
+            }
+            
+            function renderBindings(bindings) {
+                const container = document.getElementById('bindings-list');
+                
+                if (!bindings || bindings.length === 0) {
+                    container.innerHTML = '<div class="empty-state">暂无能力绑定</div>';
+                    return;
+                }
+                
+                container.innerHTML = bindings.map(b => {
+                    const capLink = b.capId ? '<a href="capability-detail.html?id=' + b.capId + '" class="binding-link">' + (b.capName || b.capId) + '</a>' : (b.capName || '-');
+                    const sceneLink = b.sceneGroupId ? '<a href="scene-group-detail.html?id=' + b.sceneGroupId + '" class="scene-link"><i class="ri-group-line"></i> ' + b.sceneGroupId + '</a>' : '-';
+                    
+                    return '<div class="binding-item">' +
+                        '<div>' +
+                            '<div class="nx-font-medium">' + capLink + '</div>' +
+                            '<div class="nx-text-sm nx-text-secondary">' + sceneLink + '</div>' +
+                        '</div>' +
+                        '<span class="nx-badge ' + (b.status === 'ACTIVE' ? 'nx-badge--success' : 'nx-badge--secondary') + '">' + (b.status || 'UNKNOWN') + '</span>' +
+                    '</div>';
+                }).join('');
+            }
+            
+            function renderSceneGroups(sceneGroups) {
+                const container = document.getElementById('scene-groups-list');
+                
+                if (!sceneGroups || sceneGroups.length === 0) {
+                    container.innerHTML = '<div class="empty-state">暂无关联的场景组</div>';
+                    return;
+                }
+                
+                container.innerHTML = sceneGroups.map(sgId => {
+                    return '<div class="binding-item">' +
+                        '<a href="scene-group-detail.html?id=' + sgId + '" class="scene-link">' +
+                            '<i class="ri-group-line"></i> ' + sgId +
+                        '</a>' +
+                    '</div>';
+                }).join('');
+            }
+            
+            function formatTime(timestamp) {
+                if (!timestamp) return '-';
+                return new Date(timestamp).toLocaleString('zh-CN');
+            }
+            
+            function showError(message) {
+                document.getElementById('loading-state').innerHTML = 
+                    '<div class="empty-state">' +
+                        '<i class="ri-error-warning-line" style="font-size: 48px; color: var(--nx-danger);"></i>' +
+                        '<h3>' + message + '</h3>' +
+                        '<p><a href="agent-list.html">返回 Agent 列表</a></p>' +
+                    '</div>';
+            }
+            
+            document.addEventListener('DOMContentLoaded', loadAgentDetail);
+        })();
+    </script>
+</body>
+</html>

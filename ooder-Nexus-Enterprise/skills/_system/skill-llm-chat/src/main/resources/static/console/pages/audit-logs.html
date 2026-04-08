@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>审计日志 - Skill Scene</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/audit-logs.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-apps-line"></i> Skill Scene
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-file-list-3-line" aria-hidden="true"></i> 审计日志</h1>
+                        <p>查看系统操作审计记录</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                <i class="ri-puzzle-line"></i> 我的能力
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                    <button class="nx-btn nx-btn--secondary" onclick="exportLogs()">
+                        <i class="ri-download-line"></i> 导出
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="stats-row">
+                        <div class="stat-item">
+                            <div class="value" id="totalEvents">0</div>
+                            <div class="label">总事件数</div>
+                        </div>
+                        <div class="stat-item success">
+                            <div class="value" id="successCount">0</div>
+                            <div class="label">成功</div>
+                        </div>
+                        <div class="stat-item failure">
+                            <div class="value" id="failureCount">0</div>
+                            <div class="label">失败</div>
+                        </div>
+                        <div class="stat-item denied">
+                            <div class="value" id="deniedCount">0</div>
+                            <div class="label">拒绝</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="value" id="todayCount">0</div>
+                            <div class="label">今日事件</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="value" id="weekCount">0</div>
+                            <div class="label">本周事件</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="value" id="monthCount">0</div>
+                            <div class="label">本月事件</div>
+                        </div>
+                    </div>
+
+                    <div class="filter-bar">
+                        <select id="eventTypeFilter" onchange="loadLogs()">
+                            <option value="">所有事件类型</option>
+                        </select>
+                        <select id="resultFilter" onchange="loadLogs()">
+                            <option value="">所有结果</option>
+                            <option value="SUCCESS">成功</option>
+                            <option value="FAILURE">失败</option>
+                            <option value="DENIED">拒绝</option>
+                        </select>
+                        <input type="text" id="userFilter" placeholder="用户ID" onkeyup="loadLogs()">
+                        <input type="text" id="resourceFilter" placeholder="资源ID" onkeyup="loadLogs()">
+                        <input type="datetime-local" id="startTime" onchange="loadLogs()">
+                        <input type="datetime-local" id="endTime" onchange="loadLogs()">
+                    </div>
+
+                    <div class="audit-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>事件类型</th>
+                                    <th>用户</th>
+                                    <th>资源</th>
+                                    <th>操作</th>
+                                    <th>结果</th>
+                                    <th>详情</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="detailModal" class="nx-modal">
+        <div class="nx-modal__content" style="width: 500px;">
+            <div class="nx-modal__header">
+                <h3>日志详情</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="hideDetailModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body" id="detailContent"></div>
+            <div class="nx-modal__footer">
+                <button type="button" class="nx-btn nx-btn--secondary" onclick="hideDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script src="/console/js/utils/dict-cache.js"></script>
+    <script src="/console/js/pages/audit-logs.js"></script>
+</body>
+</html>

@@ -1,0 +1,495 @@
+/**
+ * LLM监控页面样式
+ * Apex OS 风格
+ */
+
+.monitor-page {
+    padding: 20px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: var(--nx-bg-elevated);
+    border: 1px solid var(--nx-border);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.stat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.stat-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-card-icon i {
+    font-size: 24px;
+}
+
+.stat-card-icon.calls {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.stat-card-icon.tokens {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.stat-card-icon.cost {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.stat-card-icon.latency {
+    background: #fce7f3;
+    color: #db2777;
+}
+
+.stat-card-value {
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.stat-card-label {
+    font-size: 12px;
+    color: var(--nx-text-secondary);
+    margin-top: 4px;
+}
+
+.stat-card-trend {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stat-card-trend.up {
+    color: #059669;
+}
+
+.stat-card-trend.down {
+    color: #dc2626;
+}
+
+.stat-card-trend.neutral {
+    color: #6b7280;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.chart-card {
+    background: var(--nx-bg-elevated);
+    border: 1px solid var(--nx-border);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.chart-title {
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chart-title i {
+    color: var(--nx-primary);
+}
+
+.chart-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.chart-container {
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--nx-text-secondary);
+    font-size: 14px;
+}
+
+.model-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.model-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--nx-bg-input);
+    border-radius: 8px;
+    border: 1px solid var(--nx-border);
+}
+
+.model-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.model-name {
+    font-weight: 500;
+}
+
+.model-provider {
+    font-size: 12px;
+    color: var(--nx-text-secondary);
+}
+
+.model-stats {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+}
+
+.model-stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.model-stat i {
+    font-size: 14px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+}
+
+.pagination button {
+    padding: 8px 16px;
+    border: 1px solid var(--nx-border);
+    border-radius: 6px;
+    background: var(--nx-bg-input);
+    cursor: pointer;
+}
+
+.pagination button.active {
+    background: var(--nx-primary);
+    color: white;
+    border-color: var(--nx-primary);
+}
+
+.toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 10000;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast.success {
+    background: #059669;
+    color: white;
+}
+
+.toast.error {
+    background: #dc2626;
+    color: white;
+}
+
+.modal {
+    display: none;
+}
+
+.modal.open {
+    display: flex;
+}
+
+.log-detail-row {
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--nx-border);
+}
+
+.log-detail-label {
+    width: 120px;
+    color: var(--nx-text-secondary);
+    font-size: 14px;
+}
+
+.log-detail-value {
+    flex: 1;
+    font-size: 14px;
+}
+
+.provider-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.provider-badge.deepseek {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.provider-badge.baidu {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.provider-badge.openai {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.status-badge.success {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.status-badge.error {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.logs-card {
+    background: var(--nx-bg-elevated);
+    border: 1px solid var(--nx-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.logs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--nx-border);
+}
+
+.logs-title {
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logs-title i {
+    color: var(--nx-primary);
+}
+
+.logs-filters {
+    display: flex;
+    gap: 8px;
+}
+
+.logs-filter {
+    padding: 8px 12px;
+    border: 1px solid var(--nx-border);
+    border-radius: 6px;
+    background: var(--nx-bg-input);
+    font-size: 13px;
+}
+
+.logs-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.logs-table th,
+.logs-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--nx-border);
+}
+
+.logs-table th {
+    background: var(--nx-bg-input);
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--nx-text-secondary);
+}
+
+.logs-table td {
+    font-size: 14px;
+}
+
+.chart-body {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 900px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.simple-chart {
+    width: 100%;
+    height: 100%;
+}
+
+.chart-bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    height: 200px;
+    padding: 10px 0;
+    gap: 4px;
+}
+
+.chart-bar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    max-width: 30px;
+}
+
+.chart-bar {
+    width: 100%;
+    background: linear-gradient(180deg, var(--nx-primary) 0%, #3b82f6 100%);
+    border-radius: 4px 4px 0 0;
+    min-height: 4px;
+    position: relative;
+    transition: height 0.3s ease;
+    cursor: pointer;
+}
+
+.chart-bar:hover {
+    background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.chart-bar-value {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--nx-text-secondary);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.chart-bar:hover .chart-bar-value {
+    opacity: 1;
+}
+
+.chart-bar-label {
+    font-size: 10px;
+    color: var(--nx-text-secondary);
+    margin-top: 8px;
+    white-space: nowrap;
+}
+
+.provider-chart {
+    width: 100%;
+}
+
+.provider-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.provider-bar-item {
+    padding: 12px;
+    background: var(--nx-bg-input);
+    border-radius: 8px;
+    border: 1px solid var(--nx-border);
+}
+
+.provider-bar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.provider-name {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.provider-percent {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--nx-primary);
+}
+
+.provider-bar-track {
+    height: 8px;
+    background: var(--nx-bg-elevated);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.provider-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.provider-bar-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--nx-text-secondary);
+}

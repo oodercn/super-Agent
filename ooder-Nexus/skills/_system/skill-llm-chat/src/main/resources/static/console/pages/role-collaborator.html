@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>协作者工作台 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-user-follow-line" aria-hidden="true"></i> 协作者工作台</h1>
+                        <p>闭环四：接收任务 → 执行任务 → 提交结果</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                <i class="ri-puzzle-line"></i> 我的能力
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-3 nx-mb-4">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon"><i class="ri-task-line"></i></div>
+                            <div class="nx-stat-card__content">
+                                <h4>待办任务</h4>
+                                <p class="nx-stat-card__value" id="todo-count">0</p>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon" style="background: var(--nx-success-light); color: var(--nx-success);"><i class="ri-checkbox-circle-line"></i></div>
+                            <div class="nx-stat-card__content">
+                                <h4>已完成</h4>
+                                <p class="nx-stat-card__value" id="done-count">0</p>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon" style="background: var(--nx-warning-light); color: var(--nx-warning);"><i class="ri-time-line"></i></div>
+                            <div class="nx-stat-card__content">
+                                <h4>参与场景</h4>
+                                <p class="nx-stat-card__value" id="scene-count">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3>闭环四流程</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-flex nx-gap-4 nx-flex-wrap">
+                                <div class="nx-flex-1 nx-min-w-[200px] nx-p-6 nx-bg-elevated nx-rounded-xl nx-border nx-border-[var(--nx-border)]">
+                                    <div class="nx-flex nx-items-center nx-gap-4 nx-mb-4">
+                                        <div class="nx-w-11 nx-h-11 nx-bg-primary nx-rounded-lg nx-flex nx-items-center nx-justify-center nx-text-white nx-font-bold">1</div>
+                                        <h4 class="nx-font-semibold">接收任务</h4>
+                                    </div>
+                                    <p class="nx-text-sm nx-text-secondary nx-mb-4">查看主导者分配的任务，了解任务详情</p>
+                                    <a href="/console/pages/my-todos.html" class="nx-btn nx-btn--primary nx-btn--sm">
+                                        <i class="ri-inbox-line"></i> 查看待办
+                                    </a>
+                                </div>
+                                <div class="nx-flex-1 nx-min-w-[200px] nx-p-6 nx-bg-elevated nx-rounded-xl nx-border nx-border-[var(--nx-border)]">
+                                    <div class="nx-flex nx-items-center nx-gap-4 nx-mb-4">
+                                        <div class="nx-w-11 nx-h-11 nx-bg-primary nx-rounded-lg nx-flex nx-items-center nx-justify-center nx-text-white nx-font-bold">2</div>
+                                        <h4 class="nx-font-semibold">执行任务</h4>
+                                    </div>
+                                    <p class="nx-text-sm nx-text-secondary nx-mb-4">执行分配的任务，记录执行过程</p>
+                                    <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="showTasks()">
+                                        <i class="ri-play-line"></i> 执行
+                                    </button>
+                                </div>
+                                <div class="nx-flex-1 nx-min-w-[200px] nx-p-6 nx-bg-elevated nx-rounded-xl nx-border nx-border-[var(--nx-border)]">
+                                    <div class="nx-flex nx-items-center nx-gap-4 nx-mb-4">
+                                        <div class="nx-w-11 nx-h-11 nx-bg-primary nx-rounded-lg nx-flex nx-items-center nx-justify-center nx-text-white nx-font-bold">3</div>
+                                        <h4 class="nx-font-semibold">提交结果</h4>
+                                    </div>
+                                    <p class="nx-text-sm nx-text-secondary nx-mb-4">提交任务执行结果，等待审批</p>
+                                    <a href="/console/pages/my-history.html" class="nx-btn nx-btn--secondary nx-btn--sm">
+                                        <i class="ri-history-line"></i> 历史
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-4">
+                        <div class="nx-card__header">
+                            <h3 id="todo-section-title">我的待办</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div id="todo-list">
+                                <div class="nx-flex nx-items-center nx-justify-center nx-p-8">
+                                    <i class="ri-loader-4-line ri-spin" style="font-size: 24px;"></i>
+                                    <span class="nx-ml-2">加载中...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-4">
+                        <div class="nx-card__header">
+                            <h3 id="scene-section-title">参与的场景</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div id="scene-list">
+                                <div class="nx-flex nx-items-center nx-justify-center nx-p-8">
+                                    <i class="ri-loader-4-line ri-spin" style="font-size: 24px;"></i>
+                                    <span class="nx-ml-2">加载中...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script>
+        let currentUser = null;
+        
+        async function checkLogin() {
+            try {
+                const response = await fetch('/api/v1/auth/session');
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    currentUser = result.data;
+                    if (currentUser.roleType !== 'collaborator') {
+                        window.location.href = '/console/pages/login.html';
+                        return;
+                    }
+                    document.getElementById('user-name').textContent = currentUser.name;
+                    await loadStats();
+                    await loadTodos();
+                    await loadScenes();
+                } else {
+                    window.location.href = '/console/pages/login.html';
+                }
+            } catch (e) {
+                console.error('Session check failed:', e);
+                window.location.href = '/console/pages/login.html';
+            }
+        }
+        
+        async function loadStats() {
+            try {
+                const [todoRes, historyRes, sceneRes] = await Promise.all([
+                    fetch('/api/v1/my/todos'),
+                    fetch('/api/v1/my/history/scenes'),
+                    fetch('/api/v1/scene-groups/my/participated')
+                ]);
+                
+                const todoResult = await todoRes.json();
+                const historyResult = await historyRes.json();
+                const sceneResult = await sceneRes.json();
+                
+                if (todoResult.status === 'success' && todoResult.data) {
+                    const todos = Array.isArray(todoResult.data) ? todoResult.data : [];
+                    document.getElementById('todo-count').textContent = todos.filter(t => t.status === 'pending').length;
+                }
+                
+                if (historyResult.status === 'success' && historyResult.data) {
+                    const history = Array.isArray(historyResult.data) ? historyResult.data : [];
+                    document.getElementById('done-count').textContent = history.filter(h => h.status === 'completed').length;
+                }
+                
+                if (sceneResult.status === 'success' && sceneResult.data) {
+                    const scenes = Array.isArray(sceneResult.data) ? sceneResult.data : [];
+                    document.getElementById('scene-count').textContent = scenes.length;
+                }
+            } catch (e) {
+                console.error('Failed to load stats:', e);
+            }
+        }
+        
+        async function loadTodos() {
+            const container = document.getElementById('todo-list');
+            
+            try {
+                const response = await fetch('/api/v1/my/todos');
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    const todos = Array.isArray(result.data) ? result.data : [];
+                    const pending = todos.filter(t => t.status === 'pending');
+                    
+                    if (pending.length === 0) {
+                        container.innerHTML = '<p class="nx-text-secondary nx-text-center nx-p-4">暂无待办任务</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = pending.map(todo => `
+                        <div class="nx-flex nx-items-center nx-justify-between nx-p-4 nx-border-b nx-border-[var(--nx-border)]">
+                            <div>
+                                <h4 class="nx-font-medium">${todo.title || todo.name}</h4>
+                                <p class="nx-text-sm nx-text-secondary">${todo.description || '暂无描述'}</p>
+                            </div>
+                            <div class="nx-flex nx-items-center nx-gap-2">
+                                <span class="nx-badge nx-badge--warning">${todo.priority || 'normal'}</span>
+                                <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="acceptTask('${todo.id}')">接受</button>
+                                <button class="nx-btn nx-btn--secondary nx-btn--sm" onclick="rejectTask('${todo.id}')">拒绝</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error('Failed to load todos:', e);
+                container.innerHTML = '<p class="nx-text-secondary nx-text-center nx-p-4">加载失败</p>';
+            }
+        }
+        
+        async function loadScenes() {
+            const container = document.getElementById('scene-list');
+            
+            try {
+                const response = await fetch('/api/v1/scene-groups/my/participated');
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    const scenes = Array.isArray(result.data) ? result.data : [];
+                    
+                    if (scenes.length === 0) {
+                        container.innerHTML = '<p class="nx-text-secondary nx-text-center nx-p-4">暂无参与的场景</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = scenes.map(scene => `
+                        <div class="nx-flex nx-items-center nx-justify-between nx-p-4 nx-border-b nx-border-[var(--nx-border)]">
+                            <div>
+                                <h4 class="nx-font-medium">${scene.name}</h4>
+                                <p class="nx-text-sm nx-text-secondary">${scene.description || '暂无描述'}</p>
+                            </div>
+                            <div class="nx-flex nx-items-center nx-gap-2">
+                                <span class="nx-badge ${scene.status === 'active' ? 'nx-badge--success' : 'nx-badge--secondary'}">${scene.status || 'pending'}</span>
+                                <a href="/console/pages/scene-group-detail.html?id=${scene.id}" class="nx-btn nx-btn--secondary nx-btn--sm">详情</a>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error('Failed to load scenes:', e);
+                container.innerHTML = '<p class="nx-text-secondary nx-text-center nx-p-4">加载失败</p>';
+            }
+        }
+        
+        async function acceptTask(taskId) {
+            try {
+                const response = await fetch(`/api/v1/my/todos/${taskId}/accept`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert('任务已接受');
+                    loadStats();
+                    loadTodos();
+                } else {
+                    alert('接受失败: ' + (result.message || '未知错误'));
+                }
+            } catch (e) {
+                alert('接受失败: ' + e.message);
+            }
+        }
+        
+        async function rejectTask(taskId) {
+            if (!confirm('确定要拒绝这个任务吗？')) return;
+            
+            try {
+                const response = await fetch(`/api/v1/my/todos/${taskId}/reject`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert('任务已拒绝');
+                    loadStats();
+                    loadTodos();
+                } else {
+                    alert('拒绝失败: ' + (result.message || '未知错误'));
+                }
+            } catch (e) {
+                alert('拒绝失败: ' + e.message);
+            }
+        }
+        
+        function showTasks() {
+            window.location.href = '/console/pages/my-todos.html';
+        }
+        
+        function handleLogout() {
+            fetch('/api/v1/auth/logout', { method: 'POST' }).catch(() => {});
+            localStorage.clear();
+            window.location.href = '/console/pages/login.html';
+        }
+        
+        document.addEventListener('DOMContentLoaded', checkLogin);
+    </script>
+</body>
+</html>

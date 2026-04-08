@@ -1,0 +1,62 @@
+{
+  "profile": "large",
+  "description": "大型部署 - 核心功能 + LLM + 知识库",
+  "coreApis": true,
+  "optionalSkills": [
+    "skill-llm-openai",
+    "skill-knowledge-base",
+    "skill-audit"
+  ],
+  "estimatedMemory": "512MB",
+  "startupTime": "15s",
+  "modules": {
+    "skill-common": {
+      "enabled": true,
+      "required": true
+    },
+    "skill-capability": {
+      "enabled": true,
+      "required": true
+    },
+    "skill-llm-base": {
+      "enabled": true,
+      "required": false
+    },
+    "skill-llm-openai": {
+      "enabled": true,
+      "required": false,
+      "config": {
+        "model": "gpt-3.5-turbo"
+      }
+    },
+    "skill-knowledge-base": {
+      "enabled": true,
+      "required": false
+    },
+    "skill-rag": {
+      "enabled": true,
+      "required": false
+    },
+    "skill-audit": {
+      "enabled": true,
+      "required": false
+    }
+  },
+  "features": {
+    "auth": true,
+    "org": true,
+    "config": true,
+    "capability": true,
+    "llm": true,
+    "knowledge": true,
+    "audit": true
+  },
+  "ports": {
+    "http": 8084,
+    "management": 8085
+  },
+  "jvm": {
+    "xms": "512m",
+    "xmx": "1g"
+  }
+}

@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/profile-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <div class="profile-page">
+                <header class="nx-page__header" style="border-bottom: none;">
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                            <i class="ri-menu-line"></i>
+                        </button>
+                        <div>
+                            <h2 class="page-title">
+                                <i class="ri-user-line"></i>
+                                个人中心
+                            </h2>
+                            <p class="page-subtitle">查看和管理您的个人信息</p>
+                        </div>
+                    </div>
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                            <i class="ri-sun-line"></i>
+                        </button>
+                        <div class="nx-relative">
+                            <div class="nx-page__user-menu" id="user-menu">
+                                <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                                <span class="nx-page__user-name" id="user-name">加载中...</span>
+                                <i class="ri-arrow-down-s-line"></i>
+                            </div>
+                            <div class="nx-page__dropdown-menu" id="user-dropdown">
+                                <div class="nx-page__dropdown-item nx-page__dropdown-item--active">
+                                    <i class="ri-user-line"></i> 个人中心
+                                </div>
+                                <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                    <i class="ri-puzzle-line"></i> 我的能力
+                                </div>
+                                <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                    <i class="ri-logout-box-line"></i> 退出登录
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                
+                <div class="profile-grid">
+                    <div class="profile-sidebar">
+                        <div class="profile-card">
+                            <div class="avatar-section">
+                                <div class="avatar-wrapper">
+                                    <div class="avatar-large" id="profileAvatar">U</div>
+                                    <button class="avatar-edit-btn" title="更换头像">
+                                        <i class="ri-camera-line"></i>
+                                    </button>
+                                </div>
+                                <div class="user-name-large" id="profileName">加载中...</div>
+                                <div class="user-role-badge" id="profileRole">
+                                    <i class="ri-shield-user-line"></i>
+                                    <span>用户</span>
+                                </div>
+                            </div>
+                            <div class="quick-stats">
+                                <div class="quick-stat">
+                                    <div class="quick-stat-value" id="statScenes">0</div>
+                                    <div class="quick-stat-label">参与场景</div>
+                                </div>
+                                <div class="quick-stat">
+                                    <div class="quick-stat-value" id="statCapabilities">0</div>
+                                    <div class="quick-stat-label">已用能力</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-card" style="margin-top: 16px;">
+                            <div class="profile-card-header">
+                                <i class="ri-information-line"></i>
+                                账户信息
+                            </div>
+                            <div class="profile-card-body">
+                                <div class="info-row">
+                                    <span class="info-label">用户ID</span>
+                                    <span class="info-value" id="infoUserId" style="font-family: monospace; font-size: 12px;">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">注册时间</span>
+                                    <span class="info-value" id="infoCreateTime">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">最后更新</span>
+                                    <span class="info-value" id="infoUpdateTime">-</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">账户状态</span>
+                                    <span class="info-value" id="infoStatus">
+                                        <span class="status-badge" style="background: #d1fae5; color: #059669; padding: 2px 8px; border-radius: 12px; font-size: 12px;">
+                                            <i class="ri-checkbox-circle-line"></i> 正常
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-main">
+                        <div class="profile-card">
+                            <div class="profile-card-header">
+                                <i class="ri-user-settings-line"></i>
+                                基本信息
+                            </div>
+                            <div class="profile-card-body">
+                                <form id="profileForm">
+                                    <div class="form-section">
+                                        <div class="form-section-title">
+                                            <i class="ri-user-3-line"></i>
+                                            个人资料
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="form-label">姓名</label>
+                                                <input type="text" class="form-input" id="formName" placeholder="请输入姓名">
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">职位</label>
+                                                <input type="text" class="form-input" id="formTitle" placeholder="请输入职位">
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="form-label">邮箱</label>
+                                                <input type="email" class="form-input" id="formEmail" placeholder="请输入邮箱">
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">电话</label>
+                                                <input type="tel" class="form-input" id="formPhone" placeholder="请输入电话">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-section">
+                                        <div class="form-section-title">
+                                            <i class="ri-building-line"></i>
+                                            组织信息
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="form-label">部门</label>
+                                                <input type="text" class="form-input" id="formDepartment" disabled>
+                                                <div class="form-hint">部门信息由管理员分配</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">角色</label>
+                                                <input type="text" class="form-input" id="formRole" disabled>
+                                                <div class="form-hint">角色由系统分配</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-actions">
+                                        <button type="button" class="nx-btn nx-btn--secondary" onclick="resetForm()">
+                                            <i class="ri-refresh-line"></i> 重置
+                                        </button>
+                                        <button type="submit" class="nx-btn nx-btn--primary">
+                                            <i class="ri-save-line"></i> 保存修改
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-card" style="margin-top: 16px;">
+                            <div class="profile-card-header">
+                                <i class="ri-shield-keyhole-line"></i>
+                                安全设置
+                            </div>
+                            <div class="profile-card-body">
+                                <div class="security-section">
+                                    <div class="security-item">
+                                        <div class="security-info">
+                                            <div class="security-icon password">
+                                                <i class="ri-lock-password-line"></i>
+                                            </div>
+                                            <div>
+                                                <div class="security-title">登录密码</div>
+                                                <div class="security-desc">定期修改密码可以提高账户安全性</div>
+                                            </div>
+                                        </div>
+                                        <button class="nx-btn nx-btn--secondary" onclick="showPasswordModal()">
+                                            <i class="ri-edit-line"></i> 修改
+                                        </button>
+                                    </div>
+                                    <div class="security-item">
+                                        <div class="security-info">
+                                            <div class="security-icon session">
+                                                <i class="ri-device-line"></i>
+                                            </div>
+                                            <div>
+                                                <div class="security-title">登录设备</div>
+                                                <div class="security-desc">管理已登录的设备</div>
+                                            </div>
+                                        </div>
+                                        <button class="nx-btn nx-btn--secondary" onclick="showDevicesModal()">
+                                            <i class="ri-list-check"></i> 查看
+                                        </button>
+                                    </div>
+                                    <div class="security-item">
+                                        <div class="security-info">
+                                            <div class="security-icon apikey">
+                                                <i class="ri-key-2-line"></i>
+                                            </div>
+                                            <div>
+                                                <div class="security-title">API密钥</div>
+                                                <div class="security-desc">管理API访问密钥</div>
+                                            </div>
+                                        </div>
+                                        <a href="key-management.html" class="nx-btn nx-btn--secondary">
+                                            <i class="ri-settings-4-line"></i> 管理
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        let currentUser = null;
+        let originalData = {};
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserProfile();
+            loadUserStats();
+        });
+        
+        function loadUserProfile() {
+            fetch('/api/v1/org/users/current')
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success' && result.data) {
+                        currentUser = result.data;
+                        originalData = {
+                            name: currentUser.name || '',
+                            title: currentUser.title || '',
+                            email: currentUser.email || '',
+                            phone: currentUser.phone || ''
+                        };
+                        renderProfile(currentUser);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load user profile:', error);
+                    showToast('加载用户信息失败', 'error');
+                });
+        }
+        
+        function loadUserStats() {
+            fetch('/api/v1/org/users/current/stats')
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success' && result.data) {
+                        document.getElementById('statScenes').textContent = result.data.scenesCount || 0;
+                        document.getElementById('statCapabilities').textContent = result.data.capabilitiesCount || 0;
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load user stats:', error);
+                });
+        }
+        
+        function renderProfile(user) {
+            document.getElementById('profileAvatar').textContent = (user.name || 'U').charAt(0).toUpperCase();
+            document.getElementById('profileName').textContent = user.name || '未知用户';
+            
+            const roleMap = {
+                'admin': { name: '管理员', icon: 'ri-admin-line' },
+                'manager': { name: '管理者', icon: 'ri-user-settings-line' },
+                'leader': { name: '主导者', icon: 'ri-user-star-line' },
+                'collaborator': { name: '协作者', icon: 'ri-team-line' },
+                'installer': { name: '安装者', icon: 'ri-install-line' },
+                'employee': { name: '员工', icon: 'ri-user-line' }
+            };
+            const roleInfo = roleMap[user.role] || { name: user.role || '用户', icon: 'ri-shield-user-line' };
+            document.getElementById('profileRole').innerHTML = '<i class="' + roleInfo.icon + '"></i><span>' + roleInfo.name + '</span>';
+            
+            document.getElementById('infoUserId').textContent = user.userId || '-';
+            document.getElementById('infoCreateTime').textContent = formatTime(user.createTime);
+            document.getElementById('infoUpdateTime').textContent = formatTime(user.updateTime);
+            
+            document.getElementById('formName').value = user.name || '';
+            document.getElementById('formTitle').value = user.title || '';
+            document.getElementById('formEmail').value = user.email || '';
+            document.getElementById('formPhone').value = user.phone || '';
+            document.getElementById('formDepartment').value = user.departmentId || '-';
+            document.getElementById('formRole').value = roleInfo.name;
+        }
+        
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveProfile();
+        });
+        
+        function saveProfile() {
+            if (!currentUser) return;
+            
+            const updatedData = {
+                name: document.getElementById('formName').value,
+                title: document.getElementById('formTitle').value,
+                email: document.getElementById('formEmail').value,
+                phone: document.getElementById('formPhone').value
+            };
+            
+            fetch('/api/v1/org/users/' + currentUser.userId, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedData)
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success') {
+                        currentUser = result.data;
+                        originalData = {
+                            name: currentUser.name || '',
+                            title: currentUser.title || '',
+                            email: currentUser.email || '',
+                            phone: currentUser.phone || ''
+                        };
+                        renderProfile(currentUser);
+                        showToast('保存成功', 'success');
+                    } else {
+                        showToast(result.message || '保存失败', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to save profile:', error);
+                    showToast('保存失败', 'error');
+                });
+        }
+        
+        function resetForm() {
+            if (!currentUser) return;
+            document.getElementById('formName').value = originalData.name;
+            document.getElementById('formTitle').value = originalData.title;
+            document.getElementById('formEmail').value = originalData.email;
+            document.getElementById('formPhone').value = originalData.phone;
+        }
+        
+        function showPasswordModal() {
+            var modalHtml = `
+                <div class="modal-overlay" id="passwordModal" style="display: flex; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                    <div class="modal" style="background: var(--nx-bg-elevated); border-radius: 12px; max-width: 400px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+                        <div class="modal-header" style="padding: 16px 20px; border-bottom: 1px solid var(--nx-border-color); display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; font-size: 16px;"><i class="ri-lock-password-line"></i> 修改密码</h3>
+                            <button class="modal-close" onclick="closePasswordModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--nx-text-secondary);">
+                                <i class="ri-close-line"></i>
+                            </button>
+                        </div>
+                        <div class="modal-body" style="padding: 20px;">
+                            <div class="nx-form-group nx-mb-3">
+                                <label class="nx-form-label">当前密码</label>
+                                <input type="password" class="nx-input" id="currentPassword" placeholder="请输入当前密码">
+                            </div>
+                            <div class="nx-form-group nx-mb-3">
+                                <label class="nx-form-label">新密码</label>
+                                <input type="password" class="nx-input" id="newPassword" placeholder="请输入新密码">
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-form-label">确认新密码</label>
+                                <input type="password" class="nx-input" id="confirmPassword" placeholder="请再次输入新密码">
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="padding: 16px 20px; border-top: 1px solid var(--nx-border-color); display: flex; justify-content: flex-end; gap: 8px;">
+                            <button class="nx-btn nx-btn--secondary" onclick="closePasswordModal()">取消</button>
+                            <button class="nx-btn nx-btn--primary" onclick="submitPasswordChange()">确认修改</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            var existingModal = document.getElementById('passwordModal');
+            if (existingModal) existingModal.remove();
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+        
+        function closePasswordModal() {
+            var modal = document.getElementById('passwordModal');
+            if (modal) modal.remove();
+        }
+        
+        function submitPasswordChange() {
+            var currentPassword = document.getElementById('currentPassword').value;
+            var newPassword = document.getElementById('newPassword').value;
+            var confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showToast('请填写所有密码字段', 'error');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showToast('两次输入的新密码不一致', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                showToast('新密码长度至少6位', 'error');
+                return;
+            }
+            
+            fetch('/api/v1/users/password', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    currentPassword: currentPassword,
+                    newPassword: newPassword
+                })
+            })
+                .then(function(response) { return response.json(); })
+                .then(function(result) {
+                    if (result.status === 'success') {
+                        closePasswordModal();
+                        showToast('密码修改成功', 'success');
+                    } else {
+                        showToast(result.message || '密码修改失败', 'error');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Failed to change password:', error);
+                    showToast('密码修改失败', 'error');
+                });
+        }
+        
+        function showDevicesModal() {
+            fetch('/api/v1/users/devices')
+                .then(function(response) { return response.json(); })
+                .then(function(result) {
+                    var devices = [];
+                    if (result.status === 'success' && result.data) {
+                        devices = result.data;
+                    }
+                    renderDevicesModal(devices);
+                })
+                .catch(function(error) {
+                    console.error('Failed to load devices:', error);
+                    renderDevicesModal([]);
+                });
+        }
+        
+        function renderDevicesModal(devices) {
+            var devicesHtml = devices.length > 0 ? devices.map(function(device) {
+                return `
+                    <div class="device-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border: 1px solid var(--nx-border-color); border-radius: 8px; margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="ri-${device.deviceType === 'mobile' ? 'smartphone' : 'computer'}-line" style="font-size: 24px; color: var(--nx-color-primary);"></i>
+                            <div>
+                                <div style="font-weight: 500;">${device.deviceName || '未知设备'}</div>
+                                <div style="font-size: 12px; color: var(--nx-text-secondary);">
+                                    ${device.ip || '-'} · ${device.lastLoginTime ? formatTime(device.lastLoginTime) : '-'}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            ${device.isCurrent ? '<span class="nx-badge nx-badge--success">当前设备</span>' : ''}
+                            <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="removeDevice('${device.deviceId}')" ${device.isCurrent ? 'disabled' : ''}>
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('') : '<p style="text-align: center; color: var(--nx-text-secondary); padding: 20px;">暂无登录设备记录</p>';
+            
+            var modalHtml = `
+                <div class="modal-overlay" id="devicesModal" style="display: flex; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                    <div class="modal" style="background: var(--nx-bg-elevated); border-radius: 12px; max-width: 500px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+                        <div class="modal-header" style="padding: 16px 20px; border-bottom: 1px solid var(--nx-border-color); display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; font-size: 16px;"><i class="ri-device-line"></i> 登录设备管理</h3>
+                            <button class="modal-close" onclick="closeDevicesModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--nx-text-secondary);">
+                                <i class="ri-close-line"></i>
+                            </button>
+                        </div>
+                        <div class="modal-body" style="padding: 20px; max-height: 400px; overflow-y: auto;">
+                            ${devicesHtml}
+                        </div>
+                        <div class="modal-footer" style="padding: 16px 20px; border-top: 1px solid var(--nx-border-color); display: flex; justify-content: space-between;">
+                            <button class="nx-btn nx-btn--danger" onclick="removeAllDevices()">移除其他所有设备</button>
+                            <button class="nx-btn nx-btn--secondary" onclick="closeDevicesModal()">关闭</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            var existingModal = document.getElementById('devicesModal');
+            if (existingModal) existingModal.remove();
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+        
+        function closeDevicesModal() {
+            var modal = document.getElementById('devicesModal');
+            if (modal) modal.remove();
+        }
+        
+        function removeDevice(deviceId) {
+            if (!confirm('确定要移除此设备吗？')) return;
+            
+            fetch('/api/v1/users/devices/' + deviceId, {
+                method: 'DELETE'
+            })
+                .then(function(response) { return response.json(); })
+                .then(function(result) {
+                    if (result.status === 'success') {
+                        showToast('设备已移除', 'success');
+                        showDevicesModal();
+                    } else {
+                        showToast(result.message || '移除失败', 'error');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Failed to remove device:', error);
+                    showToast('移除失败', 'error');
+                });
+        }
+        
+        function removeAllDevices() {
+            if (!confirm('确定要移除其他所有登录设备吗？')) return;
+            
+            fetch('/api/v1/users/devices/others', {
+                method: 'DELETE'
+            })
+                .then(function(response) { return response.json(); })
+                .then(function(result) {
+                    if (result.status === 'success') {
+                        showToast('已移除其他所有设备', 'success');
+                        showDevicesModal();
+                    } else {
+                        showToast(result.message || '移除失败', 'error');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Failed to remove devices:', error);
+                    showToast('移除失败', 'error');
+                });
+        }
+        
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

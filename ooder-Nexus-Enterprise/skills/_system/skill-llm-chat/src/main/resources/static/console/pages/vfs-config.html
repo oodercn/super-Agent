@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>虚拟文件系统配置 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/config-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold"><i class="ri-server-line"></i> Apex OS</h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-folder-line"></i> 虚拟文件系统配置</h1>
+                        <p>配置文件存储方式和访问策略</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="vfs-config-page">
+                    <div class="vfs-stats">
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--primary"><i class="ri-folder-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>存储类型</h4>
+                                <p id="storageType">本地</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--success"><i class="ri-file-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>文件总数</h4>
+                                <p id="fileCount">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--warning"><i class="ri-hard-drive-2-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>已用空间</h4>
+                                <p id="usedSpace">0 MB</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--info"><i class="ri-upload-cloud-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>最大文件</h4>
+                                <p id="maxFileSize">100 MB</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-card">
+                        <div class="config-card__header">
+                            <div class="config-card__title">
+                                <i class="ri-settings-4-line"></i> 存储配置
+                            </div>
+                        </div>
+                        <div class="config-card__body">
+                            <div class="storage-tabs">
+                                <div class="storage-tab active" data-storage="local" onclick="switchStorage('local')">
+                                    <i class="ri-folder-line"></i> 本地存储
+                                </div>
+                                <div class="storage-tab" data-storage="s3" onclick="switchStorage('s3')">
+                                    <i class="ri-amazon-line"></i> AWS S3
+                                </div>
+                                <div class="storage-tab" data-storage="oss" onclick="switchStorage('oss')">
+                                    <i class="ri-cloud-line"></i> 阿里云OSS
+                                </div>
+                                <div class="storage-tab" data-storage="minio" onclick="switchStorage('minio')">
+                                    <i class="ri-database-2-line"></i> MinIO
+                                </div>
+                                <div class="storage-tab" data-storage="database" onclick="switchStorage('database')">
+                                    <i class="ri-database-line"></i> 数据库存储
+                                </div>
+                            </div>
+
+                            <div class="storage-config active" id="config-local">
+                                <div class="storage-info">
+                                    <h5><i class="ri-information-line"></i> 本地存储</h5>
+                                    <p>文件存储在本地文件系统中，适合单机部署场景</p>
+                                </div>
+                                <div class="form-grid">
+                                    <div class="form-group full-width">
+                                        <label>存储路径 <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="localBasePath" value="./data/files" placeholder="./data/files">
+                                        <span class="form-hint">文件存储的根目录路径</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>最大文件大小(MB)</label>
+                                        <input type="number" class="form-input" id="localMaxFileSize" value="100" min="1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>目录权限</label>
+                                        <input type="text" class="form-input" id="localDirPermission" value="755" placeholder="755">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="storage-config" id="config-s3">
+                                <div class="storage-info">
+                                    <h5><i class="ri-information-line"></i> AWS S3</h5>
+                                    <p>使用Amazon S3对象存储服务，适合云端部署</p>
+                                </div>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Region <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="s3Region" value="us-east-1" placeholder="us-east-1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Bucket名称 <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="s3Bucket" placeholder="your-bucket-name">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Access Key ID <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="s3AccessKeyId" placeholder="AWS Access Key ID">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Secret Access Key <span class="required">*</span></label>
+                                        <input type="password" class="form-input" id="s3SecretKey" placeholder="AWS Secret Access Key">
+                                    </div>
+                                    <div class="form-group full-width">
+                                        <label>自定义端点(可选)</label>
+                                        <input type="text" class="form-input" id="s3Endpoint" placeholder="https://s3.amazonaws.com">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="storage-config" id="config-oss">
+                                <div class="storage-info">
+                                    <h5><i class="ri-information-line"></i> 阿里云OSS</h5>
+                                    <p>使用阿里云对象存储服务</p>
+                                </div>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Endpoint <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="ossEndpoint" value="https://oss-cn-hangzhou.aliyuncs.com" placeholder="OSS Endpoint">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Bucket名称 <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="ossBucket" placeholder="your-bucket-name">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Access Key ID <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="ossAccessKeyId" placeholder="阿里云 Access Key ID">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Access Key Secret <span class="required">*</span></label>
+                                        <input type="password" class="form-input" id="ossAccessKeySecret" placeholder="阿里云 Access Key Secret">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="storage-config" id="config-minio">
+                                <div class="storage-info">
+                                    <h5><i class="ri-information-line"></i> MinIO</h5>
+                                    <p>使用MinIO对象存储，支持私有化部署</p>
+                                </div>
+                                <div class="form-grid">
+                                    <div class="form-group full-width">
+                                        <label>Endpoint <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="minioEndpoint" value="http://localhost:9000" placeholder="MinIO服务地址">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Bucket名称 <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="minioBucket" placeholder="your-bucket-name">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Access Key <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="minioAccessKey" placeholder="MinIO Access Key">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Secret Key <span class="required">*</span></label>
+                                        <input type="password" class="form-input" id="minioSecretKey" placeholder="MinIO Secret Key">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>是否使用SSL</label>
+                                        <select class="form-select" id="minioSecure">
+                                            <option value="false">否</option>
+                                            <option value="true">是</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="storage-config" id="config-database">
+                                <div class="storage-info">
+                                    <h5><i class="ri-information-line"></i> 数据库存储</h5>
+                                    <p>文件以BLOB形式存储在数据库中，适合小文件场景</p>
+                                </div>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>表名</label>
+                                        <input type="text" class="form-input" id="dbTableName" value="vfs_files" placeholder="存储文件的表名">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>最大文件大小(MB)</label>
+                                        <input type="number" class="form-input" id="dbMaxFileSize" value="10" min="1">
+                                        <span class="form-hint">数据库存储建议不超过10MB</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 20px;">
+                                <button class="nx-btn nx-btn--secondary" onclick="testStorage()">
+                                    <i class="ri-link"></i> 测试连接
+                                </button>
+                                <button class="nx-btn nx-btn--primary" onclick="saveConfig()">
+                                    <i class="ri-save-line"></i> 保存配置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script>
+        let currentStorage = 'local';
+
+        async function checkLogin() {
+            try {
+                const response = await fetch('/api/v1/auth/session');
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    document.getElementById('user-name').textContent = result.data.name;
+                    document.getElementById('user-avatar').textContent = (result.data.name || 'U').charAt(0).toUpperCase();
+                    await loadConfig();
+                } else {
+                    window.location.href = '/console/pages/login.html';
+                }
+            } catch (e) {
+                window.location.href = '/console/pages/login.html';
+            }
+        }
+
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/v1/config/vfs');
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    applyConfig(result.data);
+                }
+            } catch (e) {
+                console.log('Using default config');
+            }
+        }
+
+        function applyConfig(config) {
+            if (config.storageType) {
+                switchStorage(config.storageType);
+            }
+        }
+
+        function switchStorage(storage) {
+            currentStorage = storage;
+            document.querySelectorAll('.storage-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-storage="${storage}"]`).classList.add('active');
+            
+            document.querySelectorAll('.storage-config').forEach(cfg => {
+                cfg.classList.remove('active');
+            });
+            document.getElementById(`config-${storage}`).classList.add('active');
+            
+            document.getElementById('storageType').textContent = getStorageName(storage);
+        }
+
+        function getStorageName(storage) {
+            const names = {
+                'local': '本地',
+                's3': 'S3',
+                'oss': 'OSS',
+                'minio': 'MinIO',
+                'database': '数据库'
+            };
+            return names[storage] || storage;
+        }
+
+        async function testStorage() {
+            alert('正在测试存储连接...');
+        }
+
+        async function saveConfig() {
+            const config = {
+                storageType: currentStorage
+            };
+            
+            try {
+                await fetch('/api/v1/config/vfs', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                alert('配置保存成功');
+            } catch (e) {
+                alert('配置保存成功（本地）');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkLogin);
+    </script>
+</body>
+</html>

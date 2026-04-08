@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统安装 - Apex OS</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="/console/css/nx-ui.css" rel="stylesheet">
+    <link href="/console/css/installer.css" rel="stylesheet">
+</head>
+<body class="installer-page">
+    <div class="installer-container">
+        <header class="installer-header">
+            <div class="header-logo">
+                <i class="ri-puzzle-fill"></i>
+                <span>Apex OS</span>
+            </div>
+            <div class="header-title">
+                <h1>系统安装向导</h1>
+                <p>欢迎使用 Apex OS，请选择部署规模并完成安装</p>
+            </div>
+        </header>
+
+        <main class="installer-main">
+            <section class="profile-section">
+                <h2><i class="ri-server-line"></i> 选择部署规模</h2>
+                <div class="profile-cards">
+                    <div class="profile-card selected" data-profile="micro" onclick="selectProfile('micro')">
+                        <div class="profile-icon"><i class="ri-user-line"></i></div>
+                        <div class="profile-name">个人版</div>
+                        <div class="profile-desc">适合个人开发者，最小化安装</div>
+                    </div>
+                    <div class="profile-card" data-profile="enterprise" onclick="selectProfile('enterprise')">
+                        <div class="profile-icon"><i class="ri-building-line"></i></div>
+                        <div class="profile-name">企业版</div>
+                        <div class="profile-desc">适合企业团队，完整功能</div>
+                    </div>
+                    <div class="profile-card" data-profile="cloud" onclick="selectProfile('cloud')">
+                        <div class="profile-icon"><i class="ri-cloud-line"></i></div>
+                        <div class="profile-name">云端版</div>
+                        <div class="profile-desc">云端部署，高可用架构</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="steps-section">
+                <h2><i class="ri-list-check-2"></i> 安装步骤</h2>
+                <div id="stepsContainer"></div>
+            </section>
+
+            <section class="skills-section">
+                <h2><i class="ri-puzzle-line"></i> 技能包列表</h2>
+                <div id="skillsContainer"></div>
+            </section>
+
+            <section class="action-section">
+                <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 16px;">
+                    <label class="nx-checkbox" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="autoActivate" onchange="toggleAutoActivate(this.checked)" style="width: 18px; height: 18px;">
+                        <span>安装后自动激活技能</span>
+                    </label>
+                </div>
+                <button class="nx-btn nx-btn--primary nx-btn--lg" onclick="startInstall()">
+                    <i class="ri-play-line"></i> 开始安装
+                </button>
+            </section>
+
+            <section class="log-section">
+                <h2><i class="ri-terminal-line"></i> 安装日志</h2>
+                <div id="install-log" class="log-container"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/console/js/pages/install-scene.js"></script>
+</body>
+</html>

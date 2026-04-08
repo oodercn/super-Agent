@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>链路管理 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/link-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-link" aria-hidden="true"></i> 链路管理</h1>
+                        <p>管理网络连接和通信链路</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container links-page">
+                    <div class="stats-row" id="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-icon primary"><i class="ri-link"></i></div>
+                            <div class="stat-content">
+                                <h4>总链路数</h4>
+                                <div class="stat-value" id="stat-total">-</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon success"><i class="ri-checkbox-circle-line"></i></div>
+                            <div class="stat-content">
+                                <h4>活跃</h4>
+                                <div class="stat-value" id="stat-active">-</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon warning"><i class="ri-alert-line"></i></div>
+                            <div class="stat-content">
+                                <h4>降级</h4>
+                                <div class="stat-value" id="stat-degraded">-</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon danger"><i class="ri-wifi-off-line"></i></div>
+                            <div class="stat-content">
+                                <h4>失败</h4>
+                                <div class="stat-value" id="stat-failed">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-bar">
+                        <div class="search-box">
+                            <i class="ri-search-line"></i>
+                            <input type="text" id="search-input" placeholder="搜索链路 ID、源节点或目标节点...">
+                        </div>
+                        <select class="filter-select" id="type-filter">
+                            <option value="">全部类型</option>
+                            <option value="direct">DIRECT</option>
+                            <option value="relay">RELAY</option>
+                            <option value="tunnel">TUNNEL</option>
+                            <option value="p2p">P2P</option>
+                            <option value="multicast">MULTICAST</option>
+                        </select>
+                        <select class="filter-select" id="status-filter">
+                            <option value="">全部状态</option>
+                            <option value="active">活跃</option>
+                            <option value="inactive">不活跃</option>
+                            <option value="degraded">降级</option>
+                            <option value="failed">失败</option>
+                        </select>
+                    </div>
+                    
+                    <div id="link-container">
+                        <div class="links-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>链路</th>
+                                        <th>类型</th>
+                                        <th>节点</th>
+                                        <th>状态</th>
+                                        <th>延迟</th>
+                                        <th>绑定数</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="link-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>链路详情</h3>
+                <button class="modal-close" onclick="closeDetailModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="detail-content"></div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script>
+        (function() {
+            'use strict';
+            
+            let allLinks = [];
+            let bindingCounts = {};
+            let searchKeyword = '';
+            let typeFilter = '';
+            let statusFilter = '';
+            
+            async function loadLinks() {
+                try {
+                    const response = await fetch('/api/network/topology');
+                    const result = await response.json();
+                    
+                    if (result.status === 'success' && result.data && result.data.links) {
+                        allLinks = result.data.links;
+                        await loadBindingCounts();
+                        updateStats();
+                        renderLinks();
+                    } else {
+                        showEmpty();
+                    }
+                } catch (e) {
+                    console.error('Failed to load links:', e);
+                    showError();
+                }
+            }
+            
+            async function loadBindingCounts() {
+                try {
+                    const response = await fetch('/api/v1/capabilities/bindings');
+                    const result = await response.json();
+                    
+                    if (result.status === 'success' && result.data) {
+                        bindingCounts = {};
+                        result.data.forEach(binding => {
+                            if (binding.linkId) {
+                                bindingCounts[binding.linkId] = (bindingCounts[binding.linkId] || 0) + 1;
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.error('Failed to load binding counts:', e);
+                }
+            }
+            
+            function updateStats() {
+                const stats = {
+                    total: allLinks.length,
+                    active: 0,
+                    degraded: 0,
+                    failed: 0
+                };
+                
+                allLinks.forEach(link => {
+                    const status = (link.status || 'inactive').toLowerCase();
+                    if (status === 'active') stats.active++;
+                    else if (status === 'degraded') stats.degraded++;
+                    else if (status === 'failed') stats.failed++;
+                });
+                
+                document.getElementById('stat-total').textContent = stats.total;
+                document.getElementById('stat-active').textContent = stats.active;
+                document.getElementById('stat-degraded').textContent = stats.degraded;
+                document.getElementById('stat-failed').textContent = stats.failed;
+            }
+            
+            function filterLinks() {
+                return allLinks.filter(link => {
+                    if (typeFilter && (link.linkType || link.type || '').toLowerCase() !== typeFilter) return false;
+                    if (statusFilter && (link.status || 'inactive').toLowerCase() !== statusFilter) return false;
+                    if (searchKeyword) {
+                        const keyword = searchKeyword.toLowerCase();
+                        const id = (link.linkId || link.id || '').toLowerCase();
+                        const source = (link.sourceNode || link.source || '').toLowerCase();
+                        const target = (link.targetNode || link.target || '').toLowerCase();
+                        return id.includes(keyword) || source.includes(keyword) || target.includes(keyword);
+                    }
+                    return true;
+                });
+            }
+            
+            function renderLinks() {
+                const filtered = filterLinks();
+                const container = document.getElementById('link-list');
+                
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <i class="ri-link"></i>
+                                    <h3>暂无链路</h3>
+                                    <p>没有找到匹配的链路</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = filtered.map(link => renderLinkRow(link)).join('');
+            }
+            
+            function renderLinkRow(link) {
+                const linkId = link.linkId || link.id;
+                const type = (link.linkType || link.type || 'p2p').toLowerCase();
+                const status = (link.status || 'inactive').toLowerCase();
+                const source = link.sourceNode || link.source || '-';
+                const target = link.targetNode || link.target || '-';
+                const latency = link.latency || 0;
+                const bandwidth = link.bandwidth || 0;
+                const bindingCount = bindingCounts[linkId] || 0;
+                
+                const statusClass = status === 'active' ? 'active' : 
+                                   status === 'degraded' ? 'degraded' : 
+                                   status === 'failed' ? 'failed' : 'inactive';
+                const statusText = status === 'active' ? '活跃' :
+                                  status === 'degraded' ? '降级' :
+                                  status === 'failed' ? '失败' : '不活跃';
+                
+                const latencyClass = latency < 50 ? 'fast' : latency < 200 ? 'medium' : 'slow';
+                
+                return `
+                    <tr>
+                        <td>
+                            <div class="link-id">
+                                <div class="link-icon"><i class="ri-link"></i></div>
+                                <div class="link-info">
+                                    <h4>${linkId}</h4>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="type-badge ${type}">${type.toUpperCase()}</span></td>
+                        <td>
+                            <div class="node-pair">
+                                <span title="${source}">${source.substring(0, 12)}${source.length > 12 ? '...' : ''}</span>
+                                <i class="ri-arrow-right-line arrow"></i>
+                                <span title="${target}">${target.substring(0, 12)}${target.length > 12 ? '...' : ''}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge ${statusClass}">
+                                <i class="ri-checkbox-blank-circle-fill"></i>
+                                ${statusText}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="latency-badge ${latencyClass}">${latency}ms</span>
+                        </td>
+                        <td>
+                            <span class="binding-count ${bindingCount > 0 ? 'has-bindings' : ''}" onclick="showLinkBindings('${linkId}')">
+                                <i class="ri-link"></i> ${bindingCount}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="action-btn" onclick="showLinkDetail('${linkId}')" title="查看详情">
+                                    <i class="ri-eye-line"></i>
+                                </button>
+                                <button class="action-btn" onclick="reconnectLink('${linkId}')" title="重连">
+                                    <i class="ri-refresh-line"></i>
+                                </button>
+                                <button class="action-btn danger" onclick="disconnectLink('${linkId}')" title="断开">
+                                    <i class="ri-link-unlink"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            async function showLinkDetail(linkId) {
+                const link = allLinks.find(l => (l.linkId || l.id) === linkId);
+                if (!link) return;
+                
+                const bindingCount = bindingCounts[linkId] || 0;
+                const source = link.sourceNode || link.source || '-';
+                const target = link.targetNode || link.target || '-';
+                
+                document.getElementById('detail-content').innerHTML = `
+                    <div class="detail-row">
+                        <div class="detail-label">链路 ID</div>
+                        <div class="detail-value">${linkId}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">类型</div>
+                        <div class="detail-value">${link.linkType || link.type || 'P2P'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">状态</div>
+                        <div class="detail-value">${link.status || 'inactive'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">源节点</div>
+                        <div class="detail-value">${source}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">目标节点</div>
+                        <div class="detail-value">${target}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">延迟</div>
+                        <div class="detail-value">${link.latency || 0} ms</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">带宽</div>
+                        <div class="detail-value">${link.bandwidth || 0} Mbps</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">建立时间</div>
+                        <div class="detail-value">${link.establishedAt ? new Date(link.establishedAt).toLocaleString() : '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">最后活跃</div>
+                        <div class="detail-value">${link.lastActive ? new Date(link.lastActive).toLocaleString() : '-'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">绑定数</div>
+                        <div class="detail-value">${bindingCount}</div>
+                    </div>
+                `;
+                
+                document.getElementById('detail-modal').classList.add('active');
+            }
+            
+            function closeDetailModal() {
+                document.getElementById('detail-modal').classList.remove('active');
+            }
+            
+            async function showLinkBindings(linkId) {
+                try {
+                    const response = await fetch(`/api/v1/capabilities/bindings/by-link/${linkId}`);
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        const bindings = result.data || [];
+                        
+                        let bindingsHtml = '';
+                        if (bindings.length === 0) {
+                            bindingsHtml = '<p style="color: var(--nx-text-secondary); text-align: center; padding: 20px;">暂无绑定</p>';
+                        } else {
+                            bindingsHtml = `
+                                <div class="bindings-list">
+                                    <div class="bindings-list-header">关联的能力绑定 (${bindings.length})</div>
+                                    ${bindings.map(b => `
+                                        <div class="binding-item">
+                                            <div>
+                                                <strong>${b.capId || b.capabilityId}</strong>
+                                                <br><small style="color: var(--nx-text-secondary);">${b.sceneGroupId || '-'}</small>
+                                            </div>
+                                            <span class="status-badge ${b.status === 'ACTIVE' ? 'active' : 'inactive'}">${b.status || '-'}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `;
+                        }
+                        
+                        document.getElementById('detail-content').innerHTML = `
+                            <h4 style="margin: 0 0 16px 0;">链路: ${linkId}</h4>
+                            ${bindingsHtml}
+                        `;
+                        
+                        document.getElementById('detail-modal').classList.add('active');
+                    }
+                } catch (e) {
+                    console.error('Failed to load link bindings:', e);
+                }
+            }
+            
+            async function reconnectLink(linkId) {
+                try {
+                    const response = await fetch(`/api/network/links/${linkId}/reconnect`, { method: 'POST' });
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        alert('重连成功');
+                        loadLinks();
+                    } else {
+                        alert('重连失败: ' + (result.message || '未知错误'));
+                    }
+                } catch (e) {
+                    alert('重连失败: ' + e.message);
+                }
+            }
+            
+            async function disconnectLink(linkId) {
+                if (!confirm('确定要断开链路 ' + linkId + ' 吗？')) return;
+                
+                try {
+                    const response = await fetch(`/api/network/links/${linkId}`, { method: 'DELETE' });
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        loadLinks();
+                    } else {
+                        alert('断开失败: ' + (result.message || '未知错误'));
+                    }
+                } catch (e) {
+                    alert('断开失败: ' + e.message);
+                }
+            }
+            
+            function initFilters() {
+                const searchInput = document.getElementById('search-input');
+                let debounceTimer;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        searchKeyword = this.value.trim();
+                        renderLinks();
+                    }, 300);
+                });
+                
+                document.getElementById('type-filter').addEventListener('change', function() {
+                    typeFilter = this.value;
+                    renderLinks();
+                });
+                
+                document.getElementById('status-filter').addEventListener('change', function() {
+                    statusFilter = this.value;
+                    renderLinks();
+                });
+            }
+            
+            window.showLinkDetail = showLinkDetail;
+            window.showLinkBindings = showLinkBindings;
+            window.reconnectLink = reconnectLink;
+            window.disconnectLink = disconnectLink;
+            window.closeDetailModal = closeDetailModal;
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                initFilters();
+                loadLinks();
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+apiVersion: skill.ooder.net/v1
+kind: Skill
+
+metadata:
+  id: skill-llm-chat
+  name: LLM聊天助手
+  version: 3.0.1
+  description: LLM聊天助手 - 内置知识资料库功能，支持多轮对话和知识检索
+  author: ooder Team
+  license: Apache-2.0
+  type: service-skill
+
+spec:
+  skillForm: PROVIDER
+  type: service-skill
+  
+  ownership: platform
+  
+  capability:
+    category: llm
+    code: LLM_CHAT
+    operations: [chat, stream, function-calling, knowledge-base]
+
+  runtime:
+    language: java
+    javaVersion: "8"
+    framework: spring-boot
+  
+  dependencies:
+    - skillId: skill-common
+      version: ">=1.0.0"
+      required: false
+    - skillId: skill-llm-base
+      version: ">=1.0.0"
+      required: false
+
+  llmConfig:
+    required: true
+    defaultProvider: "deepseek"
+    defaultModel: "deepseek-chat"
+    capabilities:
+      - chat
+      - streaming
+      - function-calling
+    modelSelection:
+      allowUserOverride: true
+      availableProviders:
+        - deepseek
+        - openai
+        - qianwen
+        - volcengine
+        - ollama
+    functionCalling:
+      enabled: true
+      tools:
+        - name: query_skill_capability
+          description: "查询当前技能的能力和使用方法"
+          parameters:
+            type: object
+            properties:
+              capability:
+                type: string
+                description: "能力名称"
+              detail:
+                type: string
+                enum: [brief, detailed, examples]
+                default: "brief"
+        - name: execute_mvel_action
+          description: "通过MVEL表达式执行后台操作"
+          parameters:
+            type: object
+            properties:
+              expression:
+                type: string
+                description: "MVEL表达式"
+              context:
+                type: object
+                description: "执行上下文"
+        - name: generate_ui_form
+          description: "生成UI表单供用户填写"
+          parameters:
+            type: object
+            properties:
+              formType:
+                type: string
+                description: "表单类型"
+              fields:
+                type: array
+                items:
+                  type: object
+                description: "表单字段定义"
+        - name: execute_batch_operation
+          description: "执行批量操作"
+          parameters:
+            type: object
+            properties:
+              operation:
+                type: string
+                description: "操作类型"
+              items:
+                type: array
+                items:
+                  type: object
+                description: "操作项列表"
+        - name: convert_to_javascript
+          description: "转换为JavaScript代码供用户使用"
+          parameters:
+            type: object
+            properties:
+              action:
+                type: string
+                description: "要执行的动作"
+              parameters:
+                type: object
+                description: "动作参数"
+      toolChoice: auto
+    embedding:
+      required: true
+      defaultModel: "text-embedding-3-small"
+      dimension: 1536
+    rateLimits:
+      requestsPerMinute: 60
+      tokensPerMinute: 100000
+
+  capabilities:
+    - id: llm-chat
+      name: LLM聊天
+      description: 支持多轮对话的LLM聊天功能
+      category: ai
+      
+    - id: knowledge-base
+      name: 知识资料库
+      description: 内置知识资料库，支持文档上传和知识检索
+      category: knowledge
+      
+    - id: rag-retrieval
+      name: RAG检索
+      description: 基于知识库的检索增强生成
+      category: ai
+  
+  routes:
+    - path: /api/v1/chat/sessions
+      method: GET
+      controller: net.ooder.skill.chat.controller.ChatController
+      methodName: listSessions
+      produces: application/json
+      
+    - path: /api/v1/chat/sessions
+      method: POST
+      controller: net.ooder.skill.chat.controller.ChatController
+      methodName: createSession
+      produces: application/json
+      
+    - path: /api/v1/chat/sessions/{sessionId}
+      method: GET
+      controller: net.ooder.skill.chat.controller.ChatController
+      methodName: getSession
+      produces: application/json
+      
+    - path: /api/v1/chat/sessions/{sessionId}
+      method: DELETE
+      controller: net.ooder.skill.chat.controller.ChatController
+      methodName: deleteSession
+      produces: application/json
+      
+    - path: /api/v1/chat/sessions/{sessionId}/messages
+      method: GET
+      controller: net.ooder.skill.chat.controller.ChatController
+      methodName: getMessages
+      produces: application/json
+      
+    - path: /api/v1/chat/sessions/{sessionId}/messages
+      method: POST
+      controller: net.ooder.skill.chat.controller.ChatController
+      methodName: sendMessage
+      produces: application/json
+      
+    - path: /api/v1/knowledge/documents
+      method: GET
+      controller: net.ooder.skill.chat.controller.KnowledgeController
+      methodName: listDocuments
+      produces: application/json
+      
+    - path: /api/v1/knowledge/documents
+      method: POST
+      controller: net.ooder.skill.chat.controller.KnowledgeController
+      methodName: uploadDocument
+      produces: application/json
+      
+    - path: /api/v1/knowledge/documents/{docId}
+      method: DELETE
+      controller: net.ooder.skill.chat.controller.KnowledgeController
+      methodName: deleteDocument
+      produces: application/json
+      
+    - path: /api/v1/knowledge/search
+      method: POST
+      controller: net.ooder.skill.chat.controller.KnowledgeController
+      methodName: searchKnowledge
+      produces: application/json
+      
+    - path: /api/v1/chat/sessions/{sessionId}/messages/stream
+      method: POST
+      controller: net.ooder.skill.chat.controller.ChatController
+      methodName: sendMessageStream
+      produces: text/event-stream
+      
+    # Context APIs
+    - path: /api/v1/context/initialize
+      method: POST
+      controller: net.ooder.skill.chat.controller.SkillsContextController
+      methodName: initializeContext
+      produces: application/json
+      
+    - path: /api/v1/context/identity/{userId}
+      method: GET
+      controller: net.ooder.skill.chat.controller.SkillsContextController
+      methodName: getUserIdentity
+      produces: application/json
+      
+    - path: /api/v1/context/module/{skillId}
+      method: GET
+      controller: net.ooder.skill.chat.controller.SkillsContextController
+      methodName: getModuleInfo
+      produces: application/json
+      
+    - path: /api/v1/context/current/{sessionId}
+      method: GET
+      controller: net.ooder.skill.chat.controller.SkillsContextController
+      methodName: getCurrentModuleContext
+      produces: application/json
+      
+    - path: /api/v1/context/register
+      method: POST
+      controller: net.ooder.skill.chat.controller.SkillsContextController
+      methodName: registerSkillContext
+      produces: application/json
+      
+    - path: /api/v1/context/page-state
+      method: POST
+      controller: net.ooder.skill.chat.controller.SkillsContextController
+      methodName: updatePageState
+      produces: application/json
+      
+    - path: /api/v1/context/page-state/{sessionId}/{module}
+      method: GET
+      controller: net.ooder.skill.chat.controller.SkillsContextController
+      methodName: getPageState
+      produces: application/json
+      
+    - path: /api/v1/context/knowledge
+      method: POST
+      controller: net.ooder.skill.chat.controller.SkillsContextController
+      methodName: getKnowledgeContext
+      produces: application/json
+      
+    - path: /api/v1/context/system-prompt
+      method: POST
+      controller: net.ooder.skill.chat.controller.SkillsContextController
+      methodName: buildSystemPrompt
+      produces: application/json
+
+    - path: /api/v1/llm/chat
+      method: POST
+      controller: net.ooder.skill.llm.chat.controller.LlmChatController
+      methodName: chat
+      produces: application/json
+
+    - path: /api/v1/llm/chat/stream
+      method: GET
+      controller: net.ooder.skill.llm.chat.controller.LlmChatController
+      methodName: chatStream
+      produces: text/event-stream
+
+    - path: /api/v1/llm/chat/stream
+      method: POST
+      controller: net.ooder.skill.llm.chat.controller.LlmChatController
+      methodName: chatStreamPost
+      produces: text/event-stream
+
+    - path: /api/v1/llm/chat/providers
+      method: GET
+      controller: net.ooder.skill.llm.chat.controller.LlmChatController
+      methodName: getProviders
+      produces: application/json
+
+    - path: /api/v1/llm/chat/models
+      method: GET
+      controller: net.ooder.skill.llm.chat.controller.LlmChatController
+      methodName: getModels
+      produces: application/json
+
+    - path: /api/v1/llm/chat/models/set
+      method: POST
+      controller: net.ooder.skill.llm.chat.controller.LlmChatController
+      methodName: setModel
+      produces: application/json
+
+    - path: /api/v1/llm/chat/sessions
+      method: GET
+      controller: net.ooder.skill.llm.chat.controller.LlmChatController
+      methodName: getSessions
+      produces: application/json
+
+    - path: /api/v1/llm/chat/sessions/{sessionId}
+      method: DELETE
+      controller: net.ooder.skill.llm.chat.controller.LlmChatController
+      methodName: deleteSession
+      produces: application/json
+
+    - path: /api/v1/llm/chat/sessions/{sessionId}/history
+      method: GET
+      controller: net.ooder.skill.llm.chat.controller.LlmChatController
+      methodName: getSessionHistory
+      produces: application/json
+
+    - path: /api/v1/llm/chat/health
+      method: GET
+      controller: net.ooder.skill.llm.chat.controller.LlmChatController
+      methodName: health
+      produces: application/json
+
+    - path: /api/v1/llm/chat/model/{providerId}/{modelId}
+      method: GET
+      controller: net.ooder.skill.llm.chat.controller.LlmChatController
+      methodName: getModelDetail
+      produces: application/json
+
+  services:
+    - name: llmServiceProvider
+      interface: net.ooder.skill.llm.chat.service.LLMServiceProvider
+      implementation: net.ooder.skill.llm.chat.service.LLMService
+      singleton: true
+
+    - name: chatService
+      interface: net.ooder.skill.chat.service.ChatService
+      implementation: net.ooder.skill.chat.service.impl.ChatServiceImpl
+      singleton: true
+      
+    - name: knowledgeService
+      interface: net.ooder.skill.chat.service.KnowledgeService
+      implementation: net.ooder.skill.chat.service.impl.KnowledgeServiceImpl
+      singleton: true
+  
+  resources:
+    cpu: "200m"
+    memory: "512Mi"

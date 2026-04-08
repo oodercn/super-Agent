@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能力统计 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/capability-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <div class="stats-page">
+                <header class="nx-page__header" style="border-bottom: none;">
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                            <i class="ri-menu-line"></i>
+                        </button>
+                        <div class="page-header">
+                            <h2 class="page-title">
+                                <i class="ri-bar-chart-box-line"></i>
+                                能力统计
+                            </h2>
+                            <p class="page-subtitle">能力调用统计和性能监控</p>
+                        </div>
+                    </div>
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                            <i class="ri-sun-line"></i>
+                        </button>
+                        <div class="nx-relative">
+                            <div class="nx-page__user-menu" id="user-menu">
+                                <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                                <span class="nx-page__user-name" id="user-name">加载中...</span>
+                                <i class="ri-arrow-down-s-line"></i>
+                            </div>
+                            <div class="nx-page__dropdown-menu" id="user-dropdown">
+                                <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                    <i class="ri-user-line"></i> 个人中心
+                                </div>
+                                <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                    <i class="ri-puzzle-line"></i> 我的能力
+                                </div>
+                                <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                    <i class="ri-logout-box-line"></i> 退出登录
+                                </div>
+                            </div>
+                        </div>
+                        <button class="nx-btn nx-btn--secondary" onclick="refreshStats()">
+                            <i class="ri-refresh-line"></i> 刷新
+                        </button>
+                    </div>
+                </header>
+                
+                <div class="time-filter">
+                    <button class="time-btn active" onclick="setTimeRange('today')">今日</button>
+                    <button class="time-btn" onclick="setTimeRange('week')">本周</button>
+                    <button class="time-btn" onclick="setTimeRange('month')">本月</button>
+                    <button class="time-btn" onclick="setTimeRange('year')">今年</button>
+                </div>
+                
+                <div class="stats-overview">
+                    <div class="overview-card">
+                        <div class="overview-header">
+                            <span class="overview-title">总调用次数</span>
+                            <span class="overview-trend up"><i class="ri-arrow-up-line"></i> 12%</span>
+                        </div>
+                        <div class="overview-value" id="totalCalls">12,458</div>
+                        <div class="overview-chart" id="callsChart"></div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="overview-header">
+                            <span class="overview-title">成功率</span>
+                            <span class="overview-trend up"><i class="ri-arrow-up-line"></i> 2.3%</span>
+                        </div>
+                        <div class="overview-value" id="successRate">98.5%</div>
+                        <div class="overview-chart" id="successChart"></div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="overview-header">
+                            <span class="overview-title">平均响应时间</span>
+                            <span class="overview-trend down"><i class="ri-arrow-down-line"></i> 8%</span>
+                        </div>
+                        <div class="overview-value" id="avgResponse">156ms</div>
+                        <div class="overview-chart" id="responseChart"></div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="overview-header">
+                            <span class="overview-title">活跃能力数</span>
+                            <span class="overview-trend up"><i class="ri-arrow-up-line"></i> 3</span>
+                        </div>
+                        <div class="overview-value" id="activeCount">24</div>
+                        <div class="overview-chart" id="activeChart"></div>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="chart-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <i class="ri-bar-chart-line"></i>
+                                能力调用排行
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="bar-chart" id="capabilityRankChart">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <i class="ri-trophy-line"></i>
+                                TOP 5 能力
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="rank-list" id="topCapabilityList">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-grid" style="margin-top: 24px;">
+                    <div class="chart-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <i class="ri-star-line"></i>
+                                业务语义评分分布
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="score-dist-container">
+                                <div class="score-summary">
+                                    <div class="score-summary-item">
+                                        <div class="score-summary-value" id="avgScore">6.8</div>
+                                        <div class="score-summary-label">平均评分</div>
+                                    </div>
+                                    <div class="score-summary-item">
+                                        <div class="score-summary-value score-high" id="highScoreCount">12</div>
+                                        <div class="score-summary-label">高价值能力</div>
+                                    </div>
+                                    <div class="score-summary-item">
+                                        <div class="score-summary-value score-medium" id="mediumScoreCount">8</div>
+                                        <div class="score-summary-label">中等价值</div>
+                                    </div>
+                                    <div class="score-summary-item">
+                                        <div class="score-summary-value score-low" id="lowScoreCount">4</div>
+                                        <div class="score-summary-label">基础能力</div>
+                                    </div>
+                                </div>
+                                <div class="score-chart" id="scoreDistChart">
+                                </div>
+                                <div class="score-legend">
+                                    <div class="score-legend-item">
+                                        <span class="score-legend-color" style="background: #10b981;"></span>
+                                        <span>高价值 (8-10)</span>
+                                    </div>
+                                    <div class="score-legend-item">
+                                        <span class="score-legend-color" style="background: #f59e0b;"></span>
+                                        <span>中等 (3-7)</span>
+                                    </div>
+                                    <div class="score-legend-item">
+                                        <span class="score-legend-color" style="background: #6b7280;"></span>
+                                        <span>基础 (0-2)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <i class="ri-pie-chart-line"></i>
+                                分类统计
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="category-pie-container">
+                                <div class="pie-chart" id="categoryPieChart">
+                                    <div class="pie-chart-center">
+                                        <div class="pie-chart-value">26</div>
+                                        <div class="pie-chart-label">总数</div>
+                                    </div>
+                                </div>
+                                <div class="pie-legend" id="pieLegend">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-grid" style="margin-top: 24px;">
+                    <div class="chart-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <i class="ri-alarm-warning-line"></i>
+                                最近错误
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="error-list" id="errorList">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <i class="ri-stack-line"></i>
+                                类型分布
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="bar-chart" id="typeDistChart">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-panel logs-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="ri-file-list-3-line"></i>
+                            调用日志
+                        </div>
+                    </div>
+                    <table class="log-table">
+                        <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>能力</th>
+                                <th>级别</th>
+                                <th>耗时</th>
+                                <th>消息</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/llm-assistant.js"></script>
+    <script src="/console/js/pages/capability-stats.js"></script>
+</body>
+</html>

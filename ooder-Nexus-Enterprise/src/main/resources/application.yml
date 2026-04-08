@@ -1,84 +1,266 @@
+ooder:
+  discovery:
+    local:
+      enabled: true
+      skills-path: ./skills
+      search-paths: ./skills,./.ooder/downloads,./.ooder/installed,./.ooder/dev
+    use-se-sdk: true
+    use-index-first: false
+  skills:
+    directories:
+      downloads: ./.ooder/downloads
+      installed: ./.ooder/installed
+      activated: ./.ooder/activated
+      dev: ./.ooder/dev
+      workspace: ./skills
+    gitee:
+      token: ${GITEE_TOKEN:}
+      owner: ooderCN
+      repo: skills
+      branch: master
+    github:
+      token: ${GITHUB_TOKEN:}
+      owner: ooderCN
+      repo: skills
+      branch: main
+    root-path: ./skills
+  skill:
+    hotplug:
+      enabled: true
+      plugin-directory: ./plugins
+      auto-load: true
+      isolation-enabled: true
+      plugin-timeout: 60
+      sources:
+        - type: drivers
+          path: ./skills/_drivers
+          enabled: true
+          priority: 8
+        - type: system
+          path: ./skills/_system
+          enabled: true
+          priority: 10
+          includes:
+            - skill-auth
+            - skill-config
+            - skill-discovery
+            - skill-install
+            - skill-menu
+            - skill-llm-chat
+        - type: plugins
+          path: ./plugins
+          enabled: true
+          priority: 20
+  mock:
+    enabled: false
+  llm:
+    provider: qianwen
+    model: qwen-plus
+    timeout: 60000
+    retry:
+      enabled: true
+      max-attempts: 3
+      backoff-ms: 1000
+    streaming:
+      enabled: true
+      chunk-size: 8
+      delay-ms: 30
+    qianwen:
+      api-key: ${QIANWEN_API_KEY:}
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      model: qwen-plus
+      max-tokens: 4096
+      temperature: 0.7
+    deepseek:
+      api-key: ${DEEPSEEK_API_KEY:}
+      base-url: https://api.deepseek.com
+    baidu:
+      api-key: ${BAIDU_API_KEY:}
+      secret-key: ${BAIDU_SECRET_KEY:}
+      base-url: https://qianfan.baidubce.com/v2
+
+qianwen:
+  api-key: ${QIANWEN_API_KEY:}
+  base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  model: qwen-plus
+
+deepseek:
+  api-key: ${DEEPSEEK_API_KEY:}
+  base-url: https://api.deepseek.com
+
+baidu:
+  api-key: ${BAIDU_API_KEY:}
+  base-url: https://qianfan.baidubce.com/v2
+  secret-key: ${BAIDU_SECRET_KEY:}
+
+scene:
+  engine:
+    enabled: true
+    discovery:
+      enabled: true
+      
+      gitee:
+        enabled: true
+        token: ${GITEE_TOKEN:}
+        default-owner: ooderCN
+        default-repo: skills
+        default-branch: master
+        skills-path: ""
+        cache-ttl-ms: 3600000
+      
+      github:
+        enabled: false
+        token: ${GITHUB_TOKEN:}
+        default-owner: ooderCN
+        default-repo: skills
+        default-branch: main
+        cache-ttl-ms: 3600000
+      
+      local:
+        enabled: true
+        skills-path: ./skills
+        search-paths: ./skills,./.ooder/downloads,./.ooder/installed,./.ooder/dev
+      
+      cache:
+        enabled: true
+        ttl-ms: 3600000
+        dir: ./.ooder/cache/discovery
+        max-entries: 100
+    
+    vector-store:
+      type: in-memory
+      dimension: 1536
+      
+      milvus:
+        host: localhost
+        port: 19530
+        database: default
+        collection: knowledge_vectors
+        
+    embedding:
+      model: dashscope
+      
+      dashscope:
+        api-key: ${DASHSCOPE_API_KEY:}
+        model: text-embedding-v2
+        
+      openai:
+        api-key: ${OPENAI_API_KEY:}
+        model: text-embedding-ada-002
+        
+      ollama:
+        base-url: http://localhost:11434
+        model: nomic-embed-text
+
+  knowledge:
+    persistence:
+      enabled: true
+
+se:
+  knowledge:
+    persistence:
+      enabled: true
+      type: json
+      base-path: ./data/knowledge
+      auto-save: true
+      save-interval-ms: 5000
+
 server:
-  port: 8082
+  port: 8086
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  tomcat:
+    threads:
+      virtual: true
 
 spring:
-  main:
-    allow-bean-definition-overriding: true
-  application:
-    name: ooder-mcp-agent
+  mvc:
+    throw-exception-if-no-handler-found: false
+  threads:
+    virtual:
+      enabled: true
+  web:
+    resources:
+      add-mappings: true
+      static-locations: classpath:/static/
   http:
     encoding:
       charset: UTF-8
       enabled: true
       force: true
-  jackson:
-    default-property-inclusion: non_null
-    serialization:
-      write-dates-as-timestamps: false
-  datasource:
-    url: jdbc:h2:file:./data/nexus;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: 
+  
   jpa:
+    show-sql: false
     hibernate:
       ddl-auto: update
-    show-sql: false
     properties:
       hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.H2Dialect
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+        dialect: org.hibernate.community.dialect.SQLiteDialect
+        globally_quoted_identifiers: true
+        format_sql: false
 
-ooder:
-  agent:
-    id: "mcp-agent-001"
-    name: "Independent MCP Agent"
-    type: "mcp"
-    description: "Independent MCP Agent built with Ooder SDK"
-  udp:
-    port: 9876
-    host: 0.0.0.0
-    timeout: 30000
-    retry: 3
-  heartbeat:
-    interval: 30000
-    timeout: 60000
-  skill:
-    base-package: "net.ooder.nexus.skill"
-  org:
-    provider: local
-    cache:
-      enabled: true
-      ttl: 3600
-    sync:
-      enabled: true
-      cron: "0 0 2 * * ?"
+os:
+  datasource:
+    url: jdbc:sqlite:./data/os.db
+    driver-class-name: org.sqlite.JDBC
 
-mock:
-  enabled: false
+logging:
+  level:
+    net.ooder.skill.hotplug: INFO
 
-mcpagent:
-  service:
-    type: "REAL"
-    switch:
-      enabled: true
-      require-auth: false
-
-mqtt:
-  enabled: false
-  port: 1883
-  host: 0.0.0.0
-  websocket:
+auth:
+  qrcode:
     enabled: true
-    port: 8083
-  allow:
-    anonymous: false
-  max:
-    connections: 10000
-  persistence:
-    enabled: true
-    path: ./data/mqtt
+    qrcode-expire-time: 300
+    check-interval: 2000
+    platforms:
+      dingding:
+        enabled: false
+        name: 钉钉
+        icon: ri-message-3-line
+        app-id: ${DINGDING_APP_ID:}
+        app-secret: ${DINGDING_APP_SECRET:}
+        callback-url: ${DINGDING_CALLBACK_URL:}
+        auth-url: https://login.dingtalk.com/oauth2/auth
+        qrcode-url: https://login.dingtalk.com/oauth2/auth
+        description: 使用钉钉扫码登录
+      weixin:
+        enabled: false
+        name: 微信
+        icon: ri-wechat-line
+        app-id: ${WEIXIN_APP_ID:}
+        app-secret: ${WEIXIN_APP_SECRET:}
+        callback-url: ${WEIXIN_CALLBACK_URL:}
+        auth-url: https://open.weixin.qq.com/connect/qrconnect
+        qrcode-url: https://open.weixin.qq.com/connect/qrconnect
+        description: 使用微信扫码登录
+      feishu:
+        enabled: false
+        name: 飞书
+        icon: ri-message-2-line
+        app-id: ${FEISHU_APP_ID:}
+        app-secret: ${FEISHU_APP_SECRET:}
+        callback-url: ${FEISHU_CALLBACK_URL:}
+        auth-url: https://passport.feishu.cn/suite/passport/page/auth
+        qrcode-url: https://passport.feishu.cn/suite/passport/page/auth
+        description: 使用飞书扫码登录
+
+capability:
+  publish:
+    github:
+      enabled: false
+      token: ${GITHUB_TOKEN:}
+      default-repo: ooderCN/skills
+      default-branch: main
+    gitee:
+      enabled: true
+      token: ${GITEE_TOKEN:}
+      default-repo: ooderCN/skills
+      default-branch: master
+    center:
+      enabled: false
+      url: https://skill.ooder.net
+      token: ${SKILL_CENTER_TOKEN:}

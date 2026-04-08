@@ -1,0 +1,51 @@
+apiVersion: skill.ooder.net/v1
+kind: Skill
+
+metadata:
+  id: skill-org-web
+  name: 组织管理驱动
+  version: "1.0.0"
+  description: 组织管理Web适配器，提供用户、部门管理功能
+  author: Ooder Team
+  icon: ri-team-line
+
+spec:
+  skillForm: DRIVER
+  
+  capabilities:
+    - id: user-management
+      name: 用户管理
+      description: 用户增删改查
+      category: org
+      autoBind: true
+    - id: department-management
+      name: 部门管理
+      description: 部门增删改查
+      category: org
+      autoBind: true
+    - id: role-management
+      name: 角色管理
+      description: 角色查询
+      category: org
+      autoBind: true
+      
+  dependencies:
+    - skillId: skill-common
+      version: ">=2.3.1"
+      required: true
+      
+  configSchema:
+    type: object
+    properties:
+      storageType:
+        type: string
+        default: "memory"
+        title: 存储类型
+      autoInit:
+        type: boolean
+        default: true
+        title: 自动初始化默认数据
+        
+  estimatedResources:
+    cpu: "25m"
+    memory: "32Mi"

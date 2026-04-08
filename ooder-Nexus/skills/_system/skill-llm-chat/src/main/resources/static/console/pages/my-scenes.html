@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的场景 - Apex OS</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/my-scenes.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <div class="scene-page">
+                <header class="nx-page__header" style="border-bottom: none;">
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                            <i class="ri-menu-line"></i>
+                        </button>
+                        <div>
+                            <h2 class="page-title">
+                                <i class="ri-artboard-line"></i>
+                                我的场景
+                            </h2>
+                            <p class="page-subtitle">查看和管理场景组</p>
+                        </div>
+                    </div>
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                            <i class="ri-sun-line"></i>
+                        </button>
+                        <div class="nx-relative">
+                            <div class="nx-page__user-menu" id="user-menu">
+                                <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                                <span class="nx-page__user-name" id="user-name">加载中...</span>
+                                <i class="ri-arrow-down-s-line"></i>
+                            </div>
+                            <div class="nx-page__dropdown-menu" id="user-dropdown">
+                                <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                    <i class="ri-user-line"></i> 个人中心
+                                </div>
+                                <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                    <i class="ri-puzzle-line"></i> 我的能力
+                                </div>
+                                <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                    <i class="ri-logout-box-line"></i> 退出登录
+                                </div>
+                            </div>
+                        </div>
+                        <button class="nx-btn nx-btn--primary" onclick="createScene()">
+                            <i class="ri-add-line"></i> 创建场景
+                        </button>
+                    </div>
+                </header>
+                
+                <div class="stats-row">
+                    <div class="stat-card" data-view="all" onclick="filterByView('all')">
+                        <div class="stat-icon created"><i class="ri-artboard-line"></i></div>
+                        <div class="stat-value" id="createdCount">0</div>
+                        <div class="stat-label">我创建的</div>
+                    </div>
+                    <div class="stat-card" data-view="active" onclick="filterByView('active')">
+                        <div class="stat-icon running"><i class="ri-play-circle-line"></i></div>
+                        <div class="stat-value" id="runningCount">0</div>
+                        <div class="stat-label">运行中</div>
+                    </div>
+                    <div class="stat-card" data-view="participated" onclick="filterByView('participated')">
+                        <div class="stat-icon participated"><i class="ri-user-star-line"></i></div>
+                        <div class="stat-value" id="participatedCount">0</div>
+                        <div class="stat-label">我参与的</div>
+                    </div>
+                    <div class="stat-card" data-view="pending" onclick="filterByView('pending')">
+                        <div class="stat-icon pending"><i class="ri-time-line"></i></div>
+                        <div class="stat-value" id="pendingCount">0</div>
+                        <div class="stat-label">待处理</div>
+                    </div>
+                </div>
+                
+                <div class="toolbar">
+                    <div class="toolbar-left">
+                        <div class="search-box">
+                            <i class="ri-search-line"></i>
+                            <input type="text" placeholder="搜索场景名称或ID..." id="searchInput" oninput="searchKeyword=this.value;filterScenes()">
+                        </div>
+                        <div class="filter-group">
+                            <span class="filter-label">状态:</span>
+                            <div class="filter-chips" id="statusFilterChips">
+                                <span class="filter-chip active" data-status="all" onclick="filterByStatus('all')">全部</span>
+                                <span class="filter-chip" data-status="ACTIVE" onclick="filterByStatus('ACTIVE')">运行中</span>
+                                <span class="filter-chip" data-status="SUSPENDED" onclick="filterByStatus('SUSPENDED')">已暂停</span>
+                                <span class="filter-chip" data-status="PENDING" onclick="filterByStatus('PENDING')">待激活</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="toolbar-right">
+                        <button class="nx-btn nx-btn--secondary" onclick="refreshScenes()">
+                            <i class="ri-refresh-line"></i> 刷新
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="scene-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>场景组</th>
+                                <th>归属</th>
+                                <th>状态</th>
+                                <th>模板</th>
+                                <th>成员数</th>
+                                <th>创建时间</th>
+                                <th>更新时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sceneTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="overlay" id="overlay" onclick="closeDetailPanel()"></div>
+    
+    <div class="detail-panel" id="detailPanel">
+        <div class="detail-header">
+            <span class="detail-title" id="detailTitle">场景组详情</span>
+            <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeDetailPanel()">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <div class="detail-body" id="detailBody">
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/my-scenes.js"></script>
+</body>
+</html>

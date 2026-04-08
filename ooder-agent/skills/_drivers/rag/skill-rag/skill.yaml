@@ -1,0 +1,168 @@
+apiVersion: skill.ooder.net/v1
+kind: Skill
+
+metadata:
+  id: skill-rag
+  name: RAG检索增强服务
+  version: 1.0.0
+  description: 提供知识分类、标签提取、实体抽取、RAG Prompt增强等智能检索能力，支持企业文档自动分类与知识库集成
+  author: ooder Team
+  type: system-service
+  license: Apache-2.0
+
+spec:
+  skillForm: PROVIDER
+  type: system-skill
+
+  ownership: platform
+
+  capability:
+    address: 0x33
+    category: KNOWLEDGE
+    code: SYS_RAG
+    operations: [classify, extract, enhance, ingest]
+
+  runtime:
+    language: java
+    javaVersion: "21"
+    framework: spring-boot
+
+  dependencies:
+    - skillId: skill-knowledge-base
+      version: ">=1.0.0"
+      required: true
+    - skillId: skill-dict
+      version: ">=1.0.0"
+      required: true
+    - skillId: skill-agent
+      version: ">=1.0.0"
+      required: false
+
+  providedInterfaces:
+    - id: rag-service
+      version: "1.0"
+      description: "RAG检索增强服务接口"
+    - id: classifier-service
+      version: "1.0"
+      description: "知识分类服务接口"
+
+  capabilities:
+    - id: classify
+      name: 文本分类
+      description: 企业文档自动分类（技术文档/业务流程/知识问答/会议纪要/项目资料/培训材料）
+      category: rag
+    - id: extract
+      name: 标签提取
+      description: 从文本中提取标签和实体
+      category: rag
+    - id: enhance
+      name: RAG增强
+      description: 基于知识库检索结果增强LLM Prompt
+      category: rag
+    - id: ingest
+      name: 数据摄入
+      description: 业务数据自动分类后摄入知识库
+      category: rag
+
+  endpoints:
+    - path: /api/v1/rag/classify
+      method: POST
+      controllerClass: net.ooder.skill.rag.controller.RagController
+      methodName: classify
+      parameterTypes:
+        - java.lang.String
+      description: 文本分类
+      capability: classify
+    - path: /api/v1/rag/classify/batch
+      method: POST
+      controllerClass: net.ooder.skill.rag.controller.RagController
+      methodName: batchClassify
+      parameterTypes:
+        - java.util.List
+      description: 批量文本分类
+      capability: classify
+    - path: /api/v1/rag/extract-tags
+      method: POST
+      controllerClass: net.ooder.skill.rag.controller.RagController
+      methodName: extractTags
+      parameterTypes:
+        - java.lang.String
+      description: 标签提取
+      capability: extract
+    - path: /api/v1/rag/extract-entities
+      method: POST
+      controllerClass: net.ooder.skill.rag.controller.RagController
+      methodName: extractEntities
+      parameterTypes:
+        - java.lang.String
+      description: 实体抽取
+      capability: extract
+    - path: /api/v1/rag/enhance
+      method: POST
+      controllerClass: net.ooder.skill.rag.controller.RagController
+      methodName: enhancePrompt
+      parameterTypes:
+        - java.lang.String
+        - java.lang.String
+        - java.util.List
+      description: RAG Prompt增强
+      capability: enhance
+    - path: /api/v1/rag/ingest
+      method: POST
+      controllerClass: net.ooder.skill.rag.controller.RagController
+      methodName: ingestBusinessData
+      parameterTypes:
+        - net.ooder.skill.rag.RagPipeline$BusinessDataIngestRequest
+      description: 业务数据摄入知识库
+      capability: ingest
+    - path: /api/v1/rag/knowledge-config
+      method: GET
+      controllerClass: net.ooder.skill.rag.controller.RagController
+      methodName: buildKnowledgeConfig
+      parameterTypes:
+        - java.lang.String
+        - java.lang.String
+      description: 构建知识配置（用于LLM对话）
+      capability: enhance
+    - path: /api/v1/rag/search
+      method: GET
+      controllerClass: net.ooder.skill.rag.controller.RagController
+      methodName: searchRelated
+      parameterTypes:
+        - java.lang.String
+        - java.lang.Integer
+      description: 搜索相关知识文档
+      capability: enhance
+
+  config:
+    optional:
+      - name: CLASSIFIER_MODE
+        type: string
+        default: "hybrid"
+        description: 分类模式(keyword/llm/hybrid)
+      - name: RAG_TOP_K
+        type: integer
+        default: 5
+        description: RAG检索Top-K数量
+      - name: RAG_CONTEXT_LIMIT
+        type: integer
+        default: 2000
+        description: RAG上下文最大字符数
+      - name: SYNC_TO_DICT_ENABLED
+        type: boolean
+        default: "true"
+        description: 是否同步实体到字典
+
+  resources:
+    cpu: "100m"
+    memory: "256Mi"
+    storage: "50Mi"
+
+  knowledge:
+    documents:
+      - id: rag-overview
+        name: RAG服务概述
+        path: docs/RAG_OVERVIEW.md
+        type: guide
+        language: zh
+        priority: high

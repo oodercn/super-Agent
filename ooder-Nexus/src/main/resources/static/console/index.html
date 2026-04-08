@@ -3,65 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Nexus Console - 主控节点管理控制台">
-    <meta name="theme-color" content="#000000">
-    <title>Nexus Console - 选择页面类型</title>
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/remixicon/remixicon.css">
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/index.css">
-    <script src="js/theme-manager.js?v=2"></script>
-    <script src="js/index.js?v=2"></script>
+    <title>OODER Skills Console</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        .nx-app {
+            display: flex;
+            min-height: 100vh;
+        }
+        .nx-page__sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: var(--nx-bg-card);
+            border-right: 1px solid var(--nx-border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        .nx-page__content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            background: var(--nx-bg-page);
+        }
+        .nx-page__header {
+            height: 64px;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--nx-bg-card);
+            border-bottom: 1px solid var(--nx-border);
+            flex-shrink: 0;
+        }
+        .nx-page__main {
+            flex: 1;
+            padding: 24px;
+            overflow: auto;
+        }
+        .dashboard-card {
+            background: var(--nx-bg-card);
+            border-radius: var(--nx-radius);
+            border: 1px solid var(--nx-border);
+        }
+        .dashboard-card__body {
+            padding: 20px;
+        }
+        .dashboard-card__header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--nx-border);
+        }
+        .dashboard-card__title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+        .stat-card {
+            background: var(--nx-bg-card);
+            border-radius: var(--nx-radius);
+            border: 1px solid var(--nx-border);
+            padding: 20px;
+        }
+        .quick-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border-radius: var(--nx-radius);
+            background: var(--nx-bg-elevated);
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+        .quick-link:hover {
+            background: var(--nx-bg-hover);
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--nx-border);
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <!-- 主内容区 -->
-        <div class="main-content">
-            <div class="welcome-section">
-                <div class="welcome-header">
-                    <h1><i class="ri-server-line"></i> Nexus 控制台</h1>
-                    <button class="theme-toggle-btn btn btn-secondary">
-                        <i class="ri-sun-line"></i> 浅色模式
+    <div class="nx-app">
+        <aside class="nx-page__sidebar">
+            <div style="padding: 16px; margin-bottom: 16px;">
+                <h1 style="display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: bold; margin: 0;">
+                    <i class="ri-robot-2-line"></i> OODER Console
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <div class="nx-page__content">
+            <header class="nx-page__header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 style="font-size: 18px; font-weight: 600; margin: 0;">工作台</h2>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
                     </button>
                 </div>
-                <p>请选择您要使用的页面类型</p>
-                
-                <!-- 页面类型选择 -->
-                <div class="page-type-selection">
-                    <!-- 家庭页面 -->
-                    <div class="page-type-card" onclick="selectPageType('home')">
-                        <div class="icon"><i class="ri-home-smile-line"></i></div>
-                        <h3>家庭管理中心</h3>
-                        <p>适用于家庭环境的设备管理和监控功能，包括设备控制、安全状态等</p>
-                        <button class="btn btn-primary">选择家庭页面</button>
+            </header>
+            
+            <main class="nx-page__main">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 24px;">
+                    <div class="stat-card">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div style="width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--ns-primary-light);">
+                                <i class="ri-puzzle-line" style="font-size: 24px; color: var(--ns-primary);"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 24px; font-weight: bold;" id="stat-capabilities">--</div>
+                                <div style="font-size: 14px; color: var(--ns-secondary);">已注册能力</div>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <!-- 局域网页面 -->
-                    <div class="page-type-card" onclick="selectPageType('lan')">
-                        <div class="icon"><i class="ri-wifi-line"></i></div>
-                        <h3>局域网管理中心</h3>
-                        <p>适用于小型局域网的网络设备管理和网络设置功能，包括网络监控、带宽管理等</p>
-                        <button class="btn btn-primary">选择局域网页面</button>
+                    <div class="stat-card">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div style="width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--ns-success-light);">
+                                <i class="ri-folder-line" style="font-size: 24px; color: var(--ns-success);"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 24px; font-weight: bold;" id="stat-scenes">--</div>
+                                <div style="font-size: 14px; color: var(--ns-secondary);">场景数量</div>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <!-- 企业网页面 -->
-                    <div class="page-type-card" style="opacity: 0.6; cursor: not-allowed;">
-                        <div class="icon"><i class="ri-building-line"></i></div>
-                        <h3>企业网管理中心</h3>
-                        <p>适用于企业环境的系统管理和服务监控功能，包括命令体系管理、配置中心等</p>
-                        <button class="btn btn-primary" disabled>暂不可用</button>
+                    <div class="stat-card">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div style="width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--ns-warning-light);">
+                                <i class="ri-team-line" style="font-size: 24px; color: var(--ns-warning);"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 24px; font-weight: bold;" id="stat-users">--</div>
+                                <div style="font-size: 14px; color: var(--ns-secondary);">用户数量</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <!-- 最近访问记录 -->
-                <div style="margin-top: 64px;">
-                    <h3>最近访问</h3>
-                    <div id="recent-access" style="margin-top: 16px;"></div>
+                <div class="dashboard-card" style="margin-bottom: 24px;">
+                    <div class="dashboard-card__header">
+                        <h3 class="dashboard-card__title">快捷入口</h3>
+                    </div>
+                    <div class="dashboard-card__body">
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                            <a href="/console/pages/capability-management.html" class="quick-link">
+                                <i class="ri-puzzle-line" style="font-size: 28px; margin-bottom: 8px; color: var(--ns-primary);"></i>
+                                <span style="font-size: 14px;">能力管理</span>
+                            </a>
+                            <a href="/console/pages/scene-management.html" class="quick-link">
+                                <i class="ri-folder-line" style="font-size: 28px; margin-bottom: 8px; color: var(--ns-success);"></i>
+                                <span style="font-size: 14px;">场景管理</span>
+                            </a>
+                            <a href="/console/pages/llm-config.html" class="quick-link">
+                                <i class="ri-robot-2-line" style="font-size: 28px; margin-bottom: 8px; color: var(--ns-warning);"></i>
+                                <span style="font-size: 14px;">LLM配置</span>
+                            </a>
+                            <a href="/console/pages/knowledge-center.html" class="quick-link">
+                                <i class="ri-book-2-line" style="font-size: 28px; margin-bottom: 8px; color: var(--ns-info);"></i>
+                                <span style="font-size: 14px;">知识库</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-            </div>
+                
+                <div class="dashboard-card">
+                    <div class="dashboard-card__header">
+                        <h3 class="dashboard-card__title">系统信息</h3>
+                    </div>
+                    <div class="dashboard-card__body">
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 24px;">
+                            <div class="info-row">
+                                <span style="color: var(--ns-secondary);">版本</span>
+                                <span style="font-weight: 500;">MVP 2.3.1</span>
+                            </div>
+                            <div class="info-row">
+                                <span style="color: var(--ns-secondary);">已安装技能</span>
+                                <span style="font-weight: 500;" id="stat-skills">--</span>
+                            </div>
+                            <div class="info-row">
+                                <span style="color: var(--ns-secondary);">状态</span>
+                                <span class="nx-badge nx-badge--success">运行中</span>
+                            </div>
+                            <div class="info-row">
+                                <span style="color: var(--ns-secondary);">端口</span>
+                                <span style="font-weight: 500;">8084</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
     </div>
     
-
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            await NexusMenu.init();
+            loadStats();
+        });
+        
+        async function loadStats() {
+            try {
+                const caps = await NX.api.get('/api/v1/capabilities');
+                document.getElementById('stat-capabilities').textContent = caps.data ? caps.data.length : 0;
+            } catch(e) {}
+            
+            try {
+                const scenes = await NX.api.post('/api/v1/scenes/list', { pageNum: 1, pageSize: 100 });
+                document.getElementById('stat-scenes').textContent = scenes.data ? scenes.data.total : 0;
+            } catch(e) {}
+            
+            try {
+                const users = await NX.api.get('/api/v1/stats/users');
+                document.getElementById('stat-users').textContent = users.data || 0;
+            } catch(e) {}
+            
+            try {
+                const response = await fetch('/api/v1/scene-menu/config');
+                const result = await response.json();
+                const menuData = result.data || {};
+                const roles = menuData.roles || [];
+                let totalMenus = 0;
+                roles.forEach(function(role) {
+                    if (role.menus) {
+                        totalMenus += role.menus.length;
+                    }
+                });
+                document.getElementById('stat-skills').textContent = totalMenus;
+            } catch(e) {}
+        }
+    </script>
 </body>
 </html>

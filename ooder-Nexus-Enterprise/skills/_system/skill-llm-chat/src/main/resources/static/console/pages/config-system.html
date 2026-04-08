@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统配置管理 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/config-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-settings-4-line"></i> 系统配置管理</h1>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="config-page">
+                    <div class="config-stats">
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--primary"><i class="ri-server-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>配置版本</h4>
+                                <p id="configVersion">v2.3.1</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--success"><i class="ri-checkbox-circle-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>已启用能力</h4>
+                                <p id="enabledCount">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--warning"><i class="ri-close-circle-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>已禁用能力</h4>
+                                <p id="disabledCount">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--info"><i class="ri-apps-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>总计能力</h4>
+                                <p id="totalCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-main">
+                        <div class="config-tabs">
+                            <div class="config-tabs__item config-tabs__item--active" data-tab="overview" onclick="switchTab('overview')">
+                                <i class="ri-dashboard-line"></i> 概览
+                            </div>
+                            <div class="config-tabs__item" data-tab="capabilities" onclick="switchTab('capabilities')">
+                                <i class="ri-puzzle-line"></i> 能力配置
+                            </div>
+                            <div class="config-tabs__item" data-tab="inheritance" onclick="switchTab('inheritance')">
+                                <i class="ri-git-branch-line"></i> 继承链
+                            </div>
+                            <div class="config-tabs__item" data-tab="profiles" onclick="switchTab('profiles')">
+                                <i class="ri-file-settings-line"></i> Profile模板
+                            </div>
+                        </div>
+                        
+                        <div class="config-content">
+                            <div class="tab-panel tab-panel--active" id="panel-overview">
+                                <div class="overview-section">
+                                    <div class="overview-card">
+                                        <h4><i class="ri-information-line"></i> 系统信息</h4>
+                                        <div class="info-row">
+                                            <span class="info-row__label">当前Profile</span>
+                                            <span class="info-row__value" id="currentProfile">micro</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-row__label">创建时间</span>
+                                            <span class="info-row__value" id="createdAt">-</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-row__label">更新时间</span>
+                                            <span class="info-row__value" id="updatedAt">-</span>
+                                        </div>
+                                    </div>
+                                    <div class="overview-card">
+                                        <h4><i class="ri-history-line"></i> 最近变更</h4>
+                                        <div id="recentChanges" style="color: var(--nx-text-secondary); font-size: 13px;">
+                                            <p>暂无变更记录</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-panel" id="panel-capabilities">
+                                <div class="capabilities-toolbar">
+                                    <div class="search-box">
+                                        <i class="ri-search-line"></i>
+                                        <input type="text" id="capabilitySearch" placeholder="搜索能力..." onkeyup="searchCapabilities()">
+                                    </div>
+                                    <div class="filter-group">
+                                        <button class="filter-btn filter-btn--active" data-filter="all" onclick="filterCapabilities('all')">全部</button>
+                                        <button class="filter-btn" data-filter="enabled" onclick="filterCapabilities('enabled')">已启用</button>
+                                        <button class="filter-btn" data-filter="disabled" onclick="filterCapabilities('disabled')">已禁用</button>
+                                    </div>
+                                </div>
+                                <div class="capabilities-grid" id="capabilitiesGrid">
+                                    <div style="text-align: center; padding: 40px; color: var(--nx-text-secondary);">
+                                        <i class="ri-loader-4-line ri-spin" style="font-size: 24px;"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-panel" id="panel-inheritance">
+                                <div class="inheritance-placeholder">
+                                    <i class="ri-git-branch-line"></i>
+                                    <p>选择目标查看配置继承链</p>
+                                    <select class="nx-form-select" style="margin-top: 16px; max-width: 300px;" id="inheritanceTarget">
+                                        <option value="">请选择目标...</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="tab-panel" id="panel-profiles">
+                                <div class="profile-grid">
+                                    <div class="profile-card profile-card--active" onclick="applyProfile('micro')">
+                                        <div class="profile-card__icon" style="color: var(--nx-primary);"><i class="ri-cpu-line"></i></div>
+                                        <div class="profile-card__name">微型</div>
+                                        <div class="profile-card__desc">适合开发测试</div>
+                                        <div class="profile-card__specs">CPU: 2核 | 内存: 4GB</div>
+                                        <button class="nx-btn nx-btn--primary nx-btn--sm">应用</button>
+                                    </div>
+                                    <div class="profile-card" onclick="applyProfile('small')">
+                                        <div class="profile-card__icon" style="color: var(--nx-success);"><i class="ri-server-line"></i></div>
+                                        <div class="profile-card__name">小型</div>
+                                        <div class="profile-card__desc">适合小团队</div>
+                                        <div class="profile-card__specs">CPU: 4核 | 内存: 8GB</div>
+                                        <button class="nx-btn nx-btn--secondary nx-btn--sm">应用</button>
+                                    </div>
+                                    <div class="profile-card" onclick="applyProfile('large')">
+                                        <div class="profile-card__icon" style="color: var(--nx-warning);"><i class="ri-cloud-line"></i></div>
+                                        <div class="profile-card__name">大型</div>
+                                        <div class="profile-card__desc">适合企业生产</div>
+                                        <div class="profile-card__specs">CPU: 8核 | 内存: 16GB</div>
+                                        <button class="nx-btn nx-btn--secondary nx-btn--sm">应用</button>
+                                    </div>
+                                    <div class="profile-card" onclick="applyProfile('enterprise')">
+                                        <div class="profile-card__icon" style="color: var(--nx-danger);"><i class="ri-building-line"></i></div>
+                                        <div class="profile-card__name">企业</div>
+                                        <div class="profile-card__desc">适合大规模部署</div>
+                                        <div class="profile-card__specs">CPU: 16核+ | 内存: 32GB+</div>
+                                        <button class="nx-btn nx-btn--secondary nx-btn--sm">应用</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="nx-modal" id="editCapabilityModal">
+        <div class="nx-modal__backdrop" onclick="closeEditModal()"></div>
+        <div class="nx-modal__dialog">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">编辑能力配置</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeEditModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <input type="hidden" id="editCapAddress">
+                <div class="nx-form-group nx-mb-3">
+                    <label class="nx-form-label">能力名称</label>
+                    <div id="editCapName" class="nx-form-input" style="background: var(--nx-bg-secondary);">-</div>
+                </div>
+                <div class="nx-form-group nx-mb-3">
+                    <label class="nx-form-label">
+                        <input type="checkbox" id="editCapEnabled" class="nx-mr-2">
+                        启用此能力
+                    </label>
+                </div>
+                <div class="nx-form-group nx-mb-3">
+                    <label class="nx-form-label">默认驱动</label>
+                    <input type="text" id="editCapDefault" class="nx-form-input" placeholder="例如: skill-llm-aliyun-bailian">
+                </div>
+                <div class="nx-form-group nx-mb-3">
+                    <label class="nx-form-label">可用驱动列表 (逗号分隔)</label>
+                    <input type="text" id="editCapProviders" class="nx-form-input" placeholder="例如: skill-llm-aliyun-bailian, skill-llm-openai">
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeEditModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="saveCapabilityConfig()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script>
+        let currentCapabilities = {};
+        let currentFilter = 'all';
+        
+        const CAPABILITY_CONFIG = {
+            llm: { name: 'LLM能力', icon: 'ri-robot-line', color: 'var(--nx-primary)', configPage: 'llm-config.html', hasDetail: true },
+            db: { name: '数据库', icon: 'ri-database-2-line', color: 'var(--nx-success)', configPage: 'db-config.html', hasDetail: true },
+            vfs: { name: '虚拟文件系统', icon: 'ri-folder-line', color: 'var(--nx-warning)', configPage: 'vfs-config.html', hasDetail: true },
+            org: { name: '组织管理', icon: 'ri-team-line', color: 'var(--nx-info)', configPage: 'org-config.html', hasDetail: true },
+            know: { name: '知识库', icon: 'ri-book-line', color: 'var(--nx-primary)', configPage: 'knowledge-base.html', hasDetail: true },
+            comm: { name: '通信', icon: 'ri-message-line', color: 'var(--nx-success)', configPage: 'comm-config.html', hasDetail: true },
+            auth: { name: '认证', icon: 'ri-shield-line', color: 'var(--nx-warning)', configPage: 'auth-config.html', hasDetail: true },
+            mon: { name: '监控', icon: 'ri-line-chart-line', color: 'var(--nx-info)', configPage: 'llm-monitor.html', hasDetail: true },
+            payment: { name: '支付', icon: 'ri-bank-card-line', color: 'var(--nx-primary)', configPage: null, hasDetail: false },
+            media: { name: '媒体', icon: 'ri-image-line', color: 'var(--nx-success)', configPage: null, hasDetail: false },
+            search: { name: '搜索', icon: 'ri-search-line', color: 'var(--nx-warning)', configPage: null, hasDetail: false },
+            sched: { name: '调度', icon: 'ri-calendar-line', color: 'var(--nx-info)', configPage: null, hasDetail: false },
+            sec: { name: '安全', icon: 'ri-lock-line', color: 'var(--nx-primary)', configPage: 'security-config.html', hasDetail: true },
+            iot: { name: 'IoT', icon: 'ri-cpu-line', color: 'var(--nx-success)', configPage: null, hasDetail: false },
+            net: { name: '网络', icon: 'ri-global-line', color: 'var(--nx-warning)', configPage: null, hasDetail: false },
+            sys: { name: '系统', icon: 'ri-settings-3-line', color: 'var(--nx-info)', configPage: null, hasDetail: false },
+            util: { name: '工具', icon: 'ri-tools-line', color: 'var(--nx-primary)', configPage: null, hasDetail: false }
+        };
+
+        async function checkLogin() {
+            try {
+                const response = await fetch('/api/v1/auth/session');
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    document.getElementById('user-name').textContent = result.data.name;
+                    document.getElementById('user-avatar').textContent = (result.data.name || 'U').charAt(0).toUpperCase();
+                    await loadCapabilities();
+                } else {
+                    window.location.href = '/console/pages/login.html';
+                }
+            } catch (e) {
+                window.location.href = '/console/pages/login.html';
+            }
+        }
+
+        async function loadCapabilities() {
+            try {
+                const response = await fetch('/api/v1/config/system/capabilities');
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    currentCapabilities = result.data;
+                    updateStats();
+                    renderCapabilities();
+                }
+            } catch (e) {
+                console.error('Failed to load capabilities:', e);
+            }
+        }
+
+        function updateStats() {
+            const entries = Object.entries(currentCapabilities);
+            const enabled = entries.filter(([k, v]) => v.enabled).length;
+            const disabled = entries.filter(([k, v]) => !v.enabled).length;
+            
+            document.getElementById('enabledCount').textContent = enabled;
+            document.getElementById('disabledCount').textContent = disabled;
+            document.getElementById('totalCount').textContent = entries.length;
+            
+            document.getElementById('createdAt').textContent = new Date().toLocaleDateString('zh-CN');
+            document.getElementById('updatedAt').textContent = new Date().toLocaleDateString('zh-CN');
+        }
+
+        function renderCapabilities() {
+            const container = document.getElementById('capabilitiesGrid');
+            const searchQuery = document.getElementById('capabilitySearch').value.toLowerCase();
+            
+            let html = '';
+            
+            for (const [key, cap] of Object.entries(currentCapabilities)) {
+                if (currentFilter === 'enabled' && !cap.enabled) continue;
+                if (currentFilter === 'disabled' && cap.enabled) continue;
+                
+                const config = CAPABILITY_CONFIG[key] || { name: key.toUpperCase(), icon: 'ri-checkbox-line', color: 'var(--nx-text-secondary)', configPage: null, hasDetail: false };
+                
+                if (searchQuery && !config.name.toLowerCase().includes(searchQuery) && !key.toLowerCase().includes(searchQuery)) {
+                    continue;
+                }
+                
+                const detailBtn = config.hasDetail && config.configPage 
+                    ? `<button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="event.stopPropagation(); goToConfigPage('${key}')" title="详细配置"><i class="ri-settings-4-line"></i></button>` 
+                    : '';
+                
+                html += `
+                <div class="capability-item" onclick="editCapability('${key}')">
+                    <div class="capability-item__left">
+                        <div class="capability-item__icon" style="background: ${config.color}20; color: ${config.color};">
+                            <i class="${config.icon}"></i>
+                        </div>
+                        <div class="capability-item__info">
+                            <h5>${config.name}</h5>
+                            <p>${cap.default || '无默认驱动'}</p>
+                        </div>
+                    </div>
+                    <div class="capability-item__right">
+                        <span class="badge ${cap.enabled ? 'badge--success' : 'badge--secondary'}">${cap.enabled ? '已启用' : '已禁用'}</span>
+                        ${detailBtn}
+                        <i class="ri-arrow-right-s-line" style="color: var(--nx-text-secondary);"></i>
+                    </div>
+                </div>
+                `;
+            }
+            
+            container.innerHTML = html || '<div style="text-align: center; padding: 40px; color: var(--nx-text-secondary);">暂无匹配的能力配置</div>';
+        }
+        
+        function goToConfigPage(key) {
+            const config = CAPABILITY_CONFIG[key];
+            if (config && config.configPage) {
+                window.location.href = config.configPage;
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.config-tabs__item').forEach(tab => {
+                tab.classList.remove('config-tabs__item--active');
+            });
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('config-tabs__item--active');
+            
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.remove('tab-panel--active');
+            });
+            document.getElementById(`panel-${tabName}`).classList.add('tab-panel--active');
+        }
+
+        function filterCapabilities(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('filter-btn--active');
+            });
+            document.querySelector(`[data-filter="${filter}"]`).classList.add('filter-btn--active');
+            renderCapabilities();
+        }
+
+        function searchCapabilities() {
+            renderCapabilities();
+        }
+
+        function editCapability(address) {
+            const cap = currentCapabilities[address];
+            if (!cap) return;
+            
+            const config = CAPABILITY_CONFIG[address] || { name: address.toUpperCase() };
+            
+            document.getElementById('editCapAddress').value = address;
+            document.getElementById('editCapName').textContent = config.name;
+            document.getElementById('editCapEnabled').checked = cap.enabled !== false;
+            document.getElementById('editCapDefault').value = cap.default || '';
+            document.getElementById('editCapProviders').value = cap.providers ? cap.providers.join(', ') : '';
+            
+            document.getElementById('editCapabilityModal').classList.add('nx-modal--open');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editCapabilityModal').classList.remove('nx-modal--open');
+        }
+
+        async function saveCapabilityConfig() {
+            const address = document.getElementById('editCapAddress').value;
+            const config = {
+                enabled: document.getElementById('editCapEnabled').checked,
+                default: document.getElementById('editCapDefault').value || undefined,
+                providers: document.getElementById('editCapProviders').value.split(',').map(p => p.trim()).filter(p => p) || undefined
+            };
+            
+            try {
+                const response = await fetch('/api/v1/config/system/capabilities/' + address, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                if (response.ok) {
+                    closeEditModal();
+                    await loadCapabilities();
+                }
+            } catch (e) {
+                console.error('Failed to save:', e);
+            }
+        }
+
+        async function applyProfile(profile) {
+            if (!confirm('确定要应用 ' + profile + ' 配置吗？')) return;
+            
+            try {
+                await fetch('/api/v1/config/system/profile', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ profile: profile })
+                });
+                
+                document.getElementById('currentProfile').textContent = profile;
+                document.querySelectorAll('.profile-card').forEach(card => card.classList.remove('profile-card--active'));
+                event.currentTarget.classList.add('profile-card--active');
+            } catch (e) {
+                console.error('Failed to apply profile:', e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkLogin);
+    </script>
+</body>
+</html>

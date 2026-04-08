@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作日志填写 - Apex OS</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/daily-report-form.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <div class="daily-report-page">
+                <header class="nx-page__header" style="border-bottom: none;">
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                            <i class="ri-menu-line"></i>
+                        </button>
+                        <div>
+                            <h2 class="page-title">
+                                <i class="ri-edit-line"></i>
+                                工作日志填写
+                            </h2>
+                            <p class="page-subtitle" id="dateInfo"></p>
+                        </div>
+                    </div>
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                            <i class="ri-sun-line"></i>
+                        </button>
+                        <button class="nx-btn nx-btn--secondary" onclick="viewHistory()">
+                            <i class="ri-history-line"></i> 历史记录
+                        </button>
+                    </div>
+                </header>
+
+                <div class="ai-assistant-card">
+                    <div class="ai-assistant-header">
+                        <div class="ai-assistant-icon">
+                            <i class="ri-robot-line"></i>
+                        </div>
+                        <div class="ai-assistant-info">
+                            <h3>日志AI助手</h3>
+                            <p>我可以帮助您快速填写日志，点击下方按钮自动生成内容</p>
+                        </div>
+                    </div>
+                    <div class="ai-assistant-actions">
+                        <button class="ai-action-btn" onclick="summarizeEmails()">
+                            <i class="ri-mail-line"></i>
+                            <span>汇总邮件</span>
+                        </button>
+                        <button class="ai-action-btn" onclick="summarizeGitCommits()">
+                            <i class="ri-git-branch-line"></i>
+                            <span>汇总代码提交</span>
+                        </button>
+                        <button class="ai-action-btn" onclick="smartGenerate()">
+                            <i class="ri-magic-line"></i>
+                            <span>智能生成</span>
+                        </button>
+                    </div>
+                </div>
+
+                <form id="reportForm" class="report-form">
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <h3><i class="ri-list-check-2"></i> 今日工作内容</h3>
+                            <span class="form-hint">请详细描述今天完成的工作</span>
+                        </div>
+                        <div class="form-section-body">
+                            <div class="work-items" id="workItems">
+                                <div class="work-item">
+                                    <span class="work-item-number">1</span>
+                                    <textarea class="work-item-input" placeholder="描述您今天完成的工作..." rows="2"></textarea>
+                                    <button type="button" class="work-item-remove" onclick="removeWorkItem(this)">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="add-work-item-btn" onclick="addWorkItem()">
+                                <i class="ri-add-line"></i> 添加工作项
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <h3><i class="ri-calendar-schedule-line"></i> 明日计划</h3>
+                            <span class="form-hint">计划明天要完成的工作</span>
+                        </div>
+                        <div class="form-section-body">
+                            <div class="plan-items" id="planItems">
+                                <div class="plan-item">
+                                    <span class="plan-item-number">1</span>
+                                    <input type="text" class="plan-item-input" placeholder="描述明天的计划...">
+                                    <button type="button" class="plan-item-remove" onclick="removePlanItem(this)">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="add-plan-item-btn" onclick="addPlanItem()">
+                                <i class="ri-add-line"></i> 添加计划项
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <h3><i class="ri-question-line"></i> 问题与建议</h3>
+                            <span class="form-hint">遇到的问题或改进建议（选填）</span>
+                        </div>
+                        <div class="form-section-body">
+                            <textarea id="issuesInput" class="issues-input" placeholder="描述遇到的问题或改进建议..." rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <h3><i class="ri-attachment-2"></i> 附件</h3>
+                            <span class="form-hint">相关文档或截图（选填）</span>
+                        </div>
+                        <div class="form-section-body">
+                            <div class="attachment-area" id="attachmentArea">
+                                <div class="attachment-upload" onclick="document.getElementById('fileInput').click()">
+                                    <i class="ri-upload-cloud-line"></i>
+                                    <span>点击或拖拽文件上传</span>
+                                </div>
+                                <input type="file" id="fileInput" multiple style="display: none;" onchange="handleFileUpload(this)">
+                            </div>
+                            <div class="attachment-list" id="attachmentList"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="nx-btn nx-btn--secondary" onclick="saveDraft()">
+                            <i class="ri-save-line"></i> 保存草稿
+                        </button>
+                        <button type="button" class="nx-btn nx-btn--primary" onclick="submitReport()">
+                            <i class="ri-send-plane-line"></i> 提交日志
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3><i class="ri-history-line"></i> 历史记录</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeHistoryModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="historyList" class="history-list">
+                    <div class="empty-state"><i class="ri-loader-4-line ri-spin"></i><span>加载中...</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="aiLoadingModal">
+        <div class="modal modal-sm">
+            <div class="modal-body" style="text-align: center; padding: 40px;">
+                <div class="ai-loading">
+                    <i class="ri-robot-line ri-spin" style="font-size: 48px; color: var(--nx-primary);"></i>
+                    <p style="margin-top: 16px; color: var(--nx-text-secondary);">AI正在生成内容...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/daily-report-form.js"></script>
+</body>
+</html>

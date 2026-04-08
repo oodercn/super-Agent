@@ -1,0 +1,197 @@
+/**
+ * ooderNexus 按钮组件样式
+ * 统一的按钮样式规范
+ */
+
+/* 基础按钮 */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: var(--ns-radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 主要按钮 */
+.btn-primary {
+    background: var(--nx-primary);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* 次要按钮 */
+.btn-secondary {
+    background: var(--ns-card-bg);
+    color: var(--ns-dark);
+    border: 1px solid var(--ns-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--ns-bg-hover);
+    border-color: var(--nx-primary);
+}
+
+/* 成功按钮 */
+.btn-success {
+    background: var(--ns-success);
+    color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+    background: #16a34a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+/* 危险按钮 */
+.btn-danger {
+    background: var(--ns-danger);
+    color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* 警告按钮 */
+.btn-warning {
+    background: var(--ns-warning);
+    color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+    background: #d97706;
+    transform: translateY(-1px);
+}
+
+/* 幽灵按钮 */
+.btn-ghost {
+    background: transparent;
+    color: var(--ns-dark);
+    border: 1px solid transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+    background: var(--ns-bg-hover);
+    border-color: var(--ns-border);
+}
+
+/* 链接按钮 */
+.btn-link {
+    background: transparent;
+    color: var(--nx-primary);
+    padding: 0;
+}
+
+.btn-link:hover:not(:disabled) {
+    text-decoration: underline;
+}
+
+/* 按钮尺寸 */
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.btn-lg {
+    padding: 14px 28px;
+    font-size: 16px;
+}
+
+.btn-icon {
+    padding: 8px;
+    min-width: 36px;
+    min-height: 36px;
+}
+
+.btn-icon.btn-sm {
+    padding: 6px;
+    min-width: 28px;
+    min-height: 28px;
+}
+
+.btn-icon.btn-lg {
+    padding: 12px;
+    min-width: 48px;
+    min-height: 48px;
+}
+
+/* 按钮组 */
+.btn-group {
+    display: inline-flex;
+    gap: 0;
+}
+
+.btn-group .btn {
+    border-radius: 0;
+}
+
+.btn-group .btn:first-child {
+    border-radius: var(--ns-radius) 0 0 var(--ns-radius);
+}
+
+.btn-group .btn:last-child {
+    border-radius: 0 var(--ns-radius) var(--ns-radius) 0;
+}
+
+.btn-group .btn:not(:last-child) {
+    border-right: 1px solid var(--ns-border);
+}
+
+/* 加载状态 */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: btn-spin 1s linear infinite;
+}
+
+@keyframes btn-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 按钮工具栏 */
+.btn-toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-toolbar-right {
+    justify-content: flex-end;
+}
+
+.btn-toolbar-center {
+    justify-content: center;
+}

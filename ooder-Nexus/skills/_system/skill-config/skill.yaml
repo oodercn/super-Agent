@@ -1,0 +1,127 @@
+apiVersion: skill.ooder.net/v1
+kind: Skill
+
+metadata:
+  id: skill-config
+  name: 配置管理服务
+  version: 1.0.0
+  description: 提供系统配置管理、安全策略配置、版本控制等功能
+  author: ooder Team
+  type: system-service
+  license: Apache-2.0
+
+spec:
+  skillForm: PROVIDER
+  type: system-skill
+  
+  ownership: platform
+  
+  capability:
+    address: 0x2B
+    category: SYS
+    code: SYS_CONFIG
+    operations: [create, read, update, delete, version]
+  
+  runtime:
+    language: java
+    javaVersion: "21"
+    framework: spring-boot
+  
+  supportedSceneTypes:
+    - all
+    
+  dynamicSceneTypes: true
+  
+  autoStart:
+    enabled: true
+    delay: 0s
+    
+  autoJoin:
+    enabled: true
+    matchSceneTypes: true
+    
+  dependencies: []
+  
+  providedInterfaces:
+    - id: config-service
+      version: "1.0"
+      description: "配置管理服务接口"
+    - id: security-config-service
+      version: "1.0"
+      description: "安全配置服务接口"
+  
+  capabilities:
+    - id: config-manage
+      name: 配置管理
+      description: 系统配置的增删改查
+      category: config
+    - id: security-config
+      name: 安全配置
+      description: 安全策略配置管理
+      category: config
+    - id: version-control
+      name: 版本控制
+      description: 配置版本管理和回滚
+      category: config
+  
+  endpoints:
+    - path: /api/v1/security/config
+      method: GET
+      controllerClass: net.ooder.skill.config.controller.SecurityConfigController
+      methodName: getConfig
+      description: 获取安全配置
+      capability: security-config
+    - path: /api/v1/security/config
+      method: PUT
+      controllerClass: net.ooder.skill.config.controller.SecurityConfigController
+      methodName: updateConfig
+      description: 更新安全配置
+      capability: security-config
+    - path: /api/v1/security/policies
+      method: GET
+      controllerClass: net.ooder.skill.config.controller.SecurityConfigController
+      methodName: getPolicies
+      description: 获取安全策略列表
+      capability: security-config
+    - path: /api/v1/security/policies
+      method: POST
+      controllerClass: net.ooder.skill.config.controller.SecurityConfigController
+      methodName: createPolicy
+      description: 创建安全策略
+      capability: security-config
+    - path: /api/v1/security/policies/{policyId}
+      method: GET
+      controllerClass: net.ooder.skill.config.controller.SecurityConfigController
+      methodName: getPolicy
+      description: 获取安全策略详情
+      capability: security-config
+    - path: /api/v1/security/policies/{policyId}
+      method: PUT
+      controllerClass: net.ooder.skill.config.controller.SecurityConfigController
+      methodName: updatePolicy
+      description: 更新安全策略
+      capability: security-config
+    - path: /api/v1/security/policies/{policyId}
+      method: DELETE
+      controllerClass: net.ooder.skill.config.controller.SecurityConfigController
+      methodName: deletePolicy
+      description: 删除安全策略
+      capability: security-config
+    - path: /api/v1/security/stats
+      method: GET
+      controllerClass: net.ooder.skill.config.controller.SecurityConfigController
+      methodName: getStats
+      description: 获取安全统计信息
+      capability: security-config
+  
+  config:
+    optional:
+      - name: CONFIG_PATH
+        type: string
+        default: "./data/config"
+        description: 配置文件存储路径
+  
+  resources:
+    cpu: "50m"
+    memory: "128Mi"
+    storage: "50Mi"

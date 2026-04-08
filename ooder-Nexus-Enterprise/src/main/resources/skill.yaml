@@ -1,0 +1,90 @@
+apiVersion: skill.ooder.net/v1
+kind: Skill
+
+metadata:
+  id: apex-os
+  name: Apex OS Core
+  version: 1.0.0
+  description: Apex OS 核心模块 - Skills化重构的最小可用版本
+  author: ooder Team
+  type: system-core
+  license: Apache-2.0
+
+spec:
+  type: system-core
+  skillForm: PROVIDER
+  
+  ownership: platform
+  
+  capability:
+    address: 0x00
+    category: SYS
+    code: SYS_OS
+    operations: [skill-registry, system-skill-install]
+  
+  runtime:
+    language: java
+    javaVersion: "21"
+    framework: spring-boot
+    mainClass: net.ooder.os.OsApplication
+  
+  supportedSceneTypes:
+    - all
+    
+  dynamicSceneTypes: true
+  
+  autoStart:
+    enabled: true
+    delay: 0s
+    
+  dependencies: []
+  
+  providedInterfaces:
+    - id: skill-registry-service
+      version: "1.0"
+      description: "技能注册服务接口"
+    - id: system-skill-installer
+      version: "1.0"
+      description: "系统级技能安装接口"
+  
+  capabilities:
+    - id: skill-registry
+      name: 技能注册
+      description: 系统级技能自动扫描和注册
+      category: service
+    - id: system-skill-install
+      name: 系统技能安装
+      description: 本地目录技能自动安装
+      category: service
+  
+  llmConfig:
+    required: false
+    defaultProvider: "deepseek"
+    defaultModel: "deepseek-chat"
+    systemPromptFile: "prompts/system-prompt.md"
+    capabilities:
+      - chat
+      - streaming
+      - function-calling
+  
+  profiles:
+    - name: micro
+      description: 微型部署 - 最小Skills集合
+      skills:
+        - skill-llm-deepseek
+    - name: small
+      description: 小型部署
+      skills:
+        - skill-llm-deepseek
+        - skill-platform-bind
+    - name: enterprise
+      description: 企业部署
+      skills:
+        - skill-llm-deepseek
+        - skill-im-dingding
+        - skill-platform-bind
+  
+  resources:
+    cpu: "100m"
+    memory: "256Mi"
+    storage: "50Mi"

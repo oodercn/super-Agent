@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>业务知识库 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/knowledge-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-briefcase-line" aria-hidden="true"></i> 业务知识库</h1>
+                        <p>公司/部门/专用业务知识管理</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="bk-page">
+                <div class="bk-sidebar">
+                    <div class="bk-sidebar-header">
+                        <h3><i class="ri-organization-chart"></i> 组织架构</h3>
+                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="showAddOrgModal()">
+                            <i class="ri-add-line"></i>
+                        </button>
+                    </div>
+                    <div class="bk-tree" id="orgTree">
+                        <div class="org-node" data-type="company" data-id="company-default">
+                            <div class="org-header active" onclick="selectOrg('company-default')">
+                                <div class="org-icon company"><i class="ri-building-2-line"></i></div>
+                                <div class="org-info">
+                                    <div class="org-name">公司级</div>
+                                    <div class="org-desc">全公司共享知识</div>
+                                </div>
+                                <span class="org-toggle" onclick="toggleOrg(event, this)"><i class="ri-arrow-down-s-line"></i></span>
+                            </div>
+                            <div class="org-children" id="company-kbs"></div>
+                        </div>
+                        
+                        <div class="org-node" data-type="department" data-id="department-default">
+                            <div class="org-header" onclick="selectOrg('department-default')">
+                                <div class="org-icon department"><i class="ri-team-line"></i></div>
+                                <div class="org-info">
+                                    <div class="org-name">部门级</div>
+                                    <div class="org-desc">部门专属知识</div>
+                                </div>
+                                <span class="org-toggle" onclick="toggleOrg(event, this)"><i class="ri-arrow-down-s-line"></i></span>
+                            </div>
+                            <div class="org-children" id="department-kbs"></div>
+                        </div>
+                        
+                        <div class="org-node" data-type="special" data-id="special-default">
+                            <div class="org-header" onclick="selectOrg('special-default')">
+                                <div class="org-icon special"><i class="ri-focus-3-line"></i></div>
+                                <div class="org-info">
+                                    <div class="org-name">专用业务</div>
+                                    <div class="org-desc">特定业务领域</div>
+                                </div>
+                                <span class="org-toggle" onclick="toggleOrg(event, this)"><i class="ri-arrow-down-s-line"></i></span>
+                            </div>
+                            <div class="org-children" id="special-kbs"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bk-main">
+                    <div class="bk-content" id="mainContent">
+                        <div class="breadcrumb">
+                            <a href="knowledge-center.html">知识中心</a>
+                            <i class="ri-arrow-right-s-line"></i>
+                            <span id="breadcrumbCurrent">公司级</span>
+                        </div>
+                        
+                        <div class="org-detail-header">
+                            <div class="org-detail-title">
+                                <div class="org-detail-icon company" id="detailIcon"><i class="ri-building-2-line"></i></div>
+                                <div class="org-detail-info">
+                                    <h2 id="detailTitle">公司级知识库</h2>
+                                    <p id="detailDesc">全公司共享的通用业务知识，如公司制度、流程规范、通用术语等</p>
+                                </div>
+                            </div>
+                            <button class="nx-btn nx-btn--primary" onclick="showCreateKbModal()">
+                                <i class="ri-add-line"></i> 新建知识库
+                            </button>
+                        </div>
+                        
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <i class="ri-book-line"></i>
+                                <div>
+                                    <div class="stat-value" id="statKbCount">0</div>
+                                    <div class="stat-label">知识库</div>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <i class="ri-file-text-line"></i>
+                                <div>
+                                    <div class="stat-value" id="statDocCount">0</div>
+                                    <div class="stat-label">文档</div>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <i class="ri-link"></i>
+                                <div>
+                                    <div class="stat-value" id="statBindingCount">0</div>
+                                    <div class="stat-label">场景绑定</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="section-card">
+                            <div class="section-header">
+                                <h3><i class="ri-book-line"></i> 知识库列表</h3>
+                            </div>
+                            <div class="section-body">
+                                <div class="kb-list" id="kbList">
+                                    <div class="empty-state">
+                                        <i class="ri-book-line"></i>
+                                        <div class="empty-title">暂无知识库</div>
+                                        <div class="empty-desc">点击"新建知识库"创建第一个知识库</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="section-card" id="defaultSection">
+                            <div class="section-header">
+                                <h3><i class="ri-flashlight-line"></i> 快速创建</h3>
+                            </div>
+                            <div class="section-body">
+                                <div class="default-kbs" id="defaultKbs">
+                                    <div class="default-kb-item" onclick="quickCreateKb('规章制度')">
+                                        <i class="ri-file-list-3-line"></i>
+                                        <span>规章制度</span>
+                                    </div>
+                                    <div class="default-kb-item" onclick="quickCreateKb('流程规范')">
+                                        <i class="ri-flow-chart"></i>
+                                        <span>流程规范</span>
+                                    </div>
+                                    <div class="default-kb-item" onclick="quickCreateKb('术语词典')">
+                                        <i class="ri-book-2-line"></i>
+                                        <span>术语词典</span>
+                                    </div>
+                                    <div class="default-kb-item" onclick="quickCreateKb('产品知识')">
+                                        <i class="ri-product-hunt-line"></i>
+                                        <span>产品知识</span>
+                                    </div>
+                                    <div class="default-kb-item" onclick="quickCreateKb('培训资料')">
+                                        <i class="ri-presentation-line"></i>
+                                        <span>培训资料</span>
+                                    </div>
+                                    <div class="default-kb-item" onclick="quickCreateKb('FAQ问答')">
+                                        <i class="ri-question-answer-line"></i>
+                                        <span>FAQ问答</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="createKbModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="ri-add-circle-line"></i> 新建知识库</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="closeModal('createKbModal')">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">知识库名称 *</label>
+                    <input type="text" class="form-input" id="newKbName" placeholder="输入知识库名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">描述</label>
+                    <textarea class="form-input form-textarea" id="newKbDesc" placeholder="输入知识库描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">所属层级</label>
+                    <select class="form-input form-select" id="newKbLayer">
+                        <option value="GENERAL">通用知识层</option>
+                        <option value="PROFESSIONAL">专业模块层</option>
+                        <option value="SCENE">场景知识层</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">可见性</label>
+                    <select class="form-input form-select" id="newKbVisibility">
+                        <option value="private">私有</option>
+                        <option value="team">团队</option>
+                        <option value="public">公开</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('createKbModal')">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createKb()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+    (function() {
+        'use strict';
+        
+        var BusinessKnowledge = {
+            knowledgeBases: [],
+            currentOrg: 'company-default',
+            orgConfig: {
+                'company-default': { name: '公司级知识库', desc: '全公司共享的通用业务知识，如公司制度、流程规范、通用术语等', type: 'company', layer: 'GENERAL' },
+                'department-default': { name: '部门级知识库', desc: '部门专属的业务知识，如部门流程、专业术语、业务规范等', type: 'department', layer: 'PROFESSIONAL' },
+                'special-default': { name: '专用业务知识库', desc: '特定业务领域的专业知识，如财务、法务、技术等专业领域', type: 'special', layer: 'PROFESSIONAL' }
+            },
+            
+            init: function() {
+                this.loadKnowledgeBases();
+            },
+            
+            loadKnowledgeBases: function() {
+                var self = this;
+                ApiClient.get('/api/v1/knowledge-bases')
+                    .then(function(result) {
+                        if (result.status === 'success' && result.data) {
+                            self.knowledgeBases = result.data;
+                            self.renderOrgTree();
+                            self.renderCurrentOrg();
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('Failed to load knowledge bases:', error);
+                    });
+            },
+            
+            renderOrgTree: function() {
+                var self = this;
+                var companyKbs = document.getElementById('company-kbs');
+                var departmentKbs = document.getElementById('department-kbs');
+                var specialKbs = document.getElementById('special-kbs');
+                
+                var companyHtml = '';
+                var departmentHtml = '';
+                var specialHtml = '';
+                
+                this.knowledgeBases.forEach(function(kb) {
+                    var layer = kb.layerConfig ? kb.layerConfig.layer : 'GENERAL';
+                    var item = '<div class="kb-item" onclick="selectKb(\'' + kb.kbId + '\')">' +
+                        '<i class="ri-book-line"></i>' +
+                        '<span class="kb-name">' + kb.name + '</span>' +
+                        '<span class="kb-count">' + (kb.documentCount || 0) + '</span>' +
+                    '</div>';
+                    
+                    if (layer === 'GENERAL') companyHtml += item;
+                    else if (layer === 'PROFESSIONAL') departmentHtml += item;
+                    else if (layer === 'SCENE') specialHtml += item;
+                });
+                
+                companyKbs.innerHTML = companyHtml;
+                departmentKbs.innerHTML = departmentHtml;
+                specialKbs.innerHTML = specialHtml;
+            },
+            
+            renderCurrentOrg: function() {
+                var config = this.orgConfig[this.currentOrg];
+                if (!config) return;
+                
+                document.getElementById('breadcrumbCurrent').textContent = config.name;
+                document.getElementById('detailTitle').textContent = config.name;
+                document.getElementById('detailDesc').textContent = config.desc;
+                
+                var icon = document.getElementById('detailIcon');
+                icon.className = 'org-detail-icon ' + config.type;
+                icon.innerHTML = '<i class="ri-' + (config.type === 'company' ? 'building-2' : (config.type === 'department' ? 'team' : 'focus-3')) + '-line"></i>';
+                
+                var layer = config.layer;
+                var filteredKbs = this.knowledgeBases.filter(function(kb) {
+                    var kbLayer = kb.layerConfig ? kb.layerConfig.layer : 'GENERAL';
+                    return kbLayer === layer;
+                });
+                
+                var totalDocs = 0;
+                filteredKbs.forEach(function(kb) { totalDocs += kb.documentCount || 0; });
+                
+                document.getElementById('statKbCount').textContent = filteredKbs.length;
+                document.getElementById('statDocCount').textContent = totalDocs;
+                document.getElementById('statBindingCount').textContent = '-';
+                
+                this.renderKbList(filteredKbs);
+            },
+            
+            renderKbList: function(kbs) {
+                var container = document.getElementById('kbList');
+                
+                if (kbs.length === 0) {
+                    container.innerHTML = '<div class="empty-state">' +
+                        '<i class="ri-book-line"></i>' +
+                        '<div class="empty-title">暂无知识库</div>' +
+                        '<div class="empty-desc">点击"新建知识库"创建第一个知识库</div>' +
+                    '</div>';
+                    return;
+                }
+                
+                container.innerHTML = kbs.map(function(kb) {
+                    return '<div class="kb-list-item" onclick="window.location.href=\'knowledge-base.html?kbId=' + kb.kbId + '\'">' +
+                        '<div class="kb-list-icon"><i class="ri-book-line"></i></div>' +
+                        '<div class="kb-list-info">' +
+                            '<div class="kb-list-title">' + kb.name + '</div>' +
+                            '<div class="kb-list-desc">' + (kb.description || '暂无描述') + '</div>' +
+                            '<div class="kb-list-meta">' +
+                                '<span><i class="ri-file-text-line"></i> ' + (kb.documentCount || 0) + ' 文档</span>' +
+                                '<span><i class="ri-' + (kb.visibility === 'public' ? 'global' : 'lock') + '-line"></i> ' + (kb.visibility || 'private') + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="kb-list-actions">' +
+                            '<button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="event.stopPropagation(); editKb(\'' + kb.kbId + '\')"><i class="ri-edit-line"></i></button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            },
+            
+            selectOrg: function(orgId) {
+                this.currentOrg = orgId;
+                document.querySelectorAll('.org-header').forEach(function(el) { el.classList.remove('active'); });
+                var header = document.querySelector('.org-node[data-id="' + orgId + '"] > .org-header');
+                if (header) header.classList.add('active');
+                this.renderCurrentOrg();
+            },
+            
+            createKb: function() {
+                var self = this;
+                var name = document.getElementById('newKbName').value;
+                var description = document.getElementById('newKbDesc').value;
+                var layer = document.getElementById('newKbLayer').value;
+                var visibility = document.getElementById('newKbVisibility').value;
+                
+                if (!name) {
+                    alert('请输入知识库名称');
+                    return;
+                }
+                
+                var config = this.orgConfig[this.currentOrg];
+                
+                var newKb = {
+                    name: name,
+                    description: description,
+                    visibility: visibility,
+                    embeddingModel: 'text-embedding-ada-002',
+                    chunkSize: 500,
+                    chunkOverlap: 50,
+                    layerConfig: {
+                        layer: layer,
+                        priority: layer === 'GENERAL' ? 0 : (layer === 'PROFESSIONAL' ? 1 : 2),
+                        enabled: true
+                    }
+                };
+                
+                ApiClient.post('/api/v1/knowledge-bases', newKb)
+                    .then(function(result) {
+                        if (result.status === 'success' && result.data) {
+                            self.knowledgeBases.push(result.data);
+                            self.renderOrgTree();
+                            self.renderCurrentOrg();
+                            closeModal('createKbModal');
+                            document.getElementById('newKbName').value = '';
+                            document.getElementById('newKbDesc').value = '';
+                        } else {
+                            alert('创建失败: ' + (result.message || '未知错误'));
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('Create KB error:', error);
+                        alert('创建失败: ' + error.message);
+                    });
+            }
+        };
+        
+        window.toggleOrg = function(event, el) {
+            event.stopPropagation();
+            var node = el.closest('.org-node');
+            var children = node.querySelector('.org-children');
+            if (children) {
+                children.classList.toggle('collapsed');
+                el.classList.toggle('collapsed');
+            }
+        };
+        
+        window.selectOrg = function(orgId) {
+            BusinessKnowledge.selectOrg(orgId);
+        };
+        
+        window.selectKb = function(kbId) {
+            window.location.href = 'knowledge-base.html?kbId=' + kbId;
+        };
+        
+        window.showCreateKbModal = function() {
+            var config = BusinessKnowledge.orgConfig[BusinessKnowledge.currentOrg];
+            if (config) {
+                document.getElementById('newKbLayer').value = config.layer;
+            }
+            document.getElementById('createKbModal').classList.add('open');
+        };
+        
+        window.quickCreateKb = function(name) {
+            document.getElementById('newKbName').value = name;
+            showCreateKbModal();
+        };
+        
+        window.closeModal = function(id) {
+            document.getElementById(id).classList.remove('open');
+        };
+        
+        window.createKb = function() {
+            BusinessKnowledge.createKb();
+        };
+        
+        window.editKb = function(kbId) {
+            window.location.href = 'knowledge-base.html?kbId=' + kbId;
+        };
+        
+        window.showAddOrgModal = function() {
+            var modalHtml = `
+                <div class="modal-overlay" id="addOrgModal" style="display: flex; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                    <div class="modal" style="background: var(--nx-bg-elevated); border-radius: 12px; max-width: 450px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+                        <div class="modal-header" style="padding: 16px 20px; border-bottom: 1px solid var(--nx-border-color); display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; font-size: 16px;"><i class="ri-organization-chart"></i> 添加组织节点</h3>
+                            <button class="modal-close" onclick="closeAddOrgModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--nx-text-secondary);">
+                                <i class="ri-close-line"></i>
+                            </button>
+                        </div>
+                        <div class="modal-body" style="padding: 20px;">
+                            <div class="nx-form-group nx-mb-3">
+                                <label class="nx-form-label">节点名称 <span class="nx-text-error">*</span></label>
+                                <input type="text" class="nx-input" id="newOrgName" placeholder="请输入组织节点名称">
+                            </div>
+                            <div class="nx-form-group nx-mb-3">
+                                <label class="nx-form-label">节点编码</label>
+                                <input type="text" class="nx-input" id="newOrgCode" placeholder="请输入唯一编码（可选）">
+                            </div>
+                            <div class="nx-form-group nx-mb-3">
+                                <label class="nx-form-label">父级节点</label>
+                                <select class="nx-input" id="newOrgParent">
+                                    <option value="">无（顶级节点）</option>
+                                </select>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-form-label">节点描述</label>
+                                <textarea class="nx-input" id="newOrgDesc" rows="3" placeholder="描述此组织节点的用途..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="padding: 16px 20px; border-top: 1px solid var(--nx-border-color); display: flex; justify-content: flex-end; gap: 8px;">
+                            <button class="nx-btn nx-btn--secondary" onclick="closeAddOrgModal()">取消</button>
+                            <button class="nx-btn nx-btn--primary" onclick="submitAddOrg()">添加</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            var existingModal = document.getElementById('addOrgModal');
+            if (existingModal) existingModal.remove();
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            var parentSelect = document.getElementById('newOrgParent');
+            var orgs = BusinessKnowledge.orgs || [];
+            orgs.forEach(function(org) {
+                var option = document.createElement('option');
+                option.value = org.orgId;
+                option.textContent = org.name;
+                parentSelect.appendChild(option);
+            });
+        };
+        
+        window.closeAddOrgModal = function() {
+            var modal = document.getElementById('addOrgModal');
+            if (modal) modal.remove();
+        };
+        
+        window.submitAddOrg = function() {
+            var name = document.getElementById('newOrgName').value.trim();
+            var code = document.getElementById('newOrgCode').value.trim();
+            var parentId = document.getElementById('newOrgParent').value;
+            var description = document.getElementById('newOrgDesc').value.trim();
+            
+            if (!name) {
+                alert('请输入节点名称');
+                return;
+            }
+            
+            fetch('/api/v1/knowledge-organizations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name,
+                    code: code || null,
+                    parentId: parentId || null,
+                    description: description
+                })
+            })
+                .then(function(response) { return response.json(); })
+                .then(function(result) {
+                    if (result.status === 'success') {
+                        closeAddOrgModal();
+                        alert('组织节点添加成功');
+                        BusinessKnowledge.loadOrgs();
+                    } else {
+                        alert('添加失败: ' + (result.message || '未知错误'));
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Failed to add org:', error);
+                    alert('添加失败: ' + error.message);
+                });
+        };
+        
+        document.addEventListener('DOMContentLoaded', BusinessKnowledge.init.bind(BusinessKnowledge));
+    })();
+    </script>
+</body>
+</html>

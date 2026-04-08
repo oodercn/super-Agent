@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM配置管理 - Apex OS</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/llm-config.css">
+    <link rel="stylesheet" href="/console/css/components/llm-enhancement.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold">LLM配置管理</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="LlmConfig.openCreateModal()">
+                        <i class="ri-add-line"></i> 新建配置
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-tabs nx-mb-6">
+                        <div class="nx-tabs__list">
+                            <div class="nx-tabs__tab nx-tabs__tab--active" onclick="window.location.href='llm-config.html'">
+                                <i class="ri-settings-4-line"></i> LLM配置
+                            </div>
+                            <div class="nx-tabs__tab" onclick="window.location.href='llm-knowledge-config.html'">
+                                <i class="ri-book-2-line"></i> 知识库配置
+                            </div>
+                            <div class="nx-tabs__tab" onclick="window.location.href='llm-monitor.html'">
+                                <i class="ri-line-chart-line"></i> LLM监控
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-grid nx-grid-cols-4 nx-mb-6">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--primary">
+                                <i class="ri-settings-4-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">总配置数</div>
+                                <div class="nx-stat-card__value" id="stat-total">0</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--success">
+                                <i class="ri-building-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">企业配置</div>
+                                <div class="nx-stat-card__value" id="stat-enterprise">0</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--warning">
+                                <i class="ri-user-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">个人配置</div>
+                                <div class="nx-stat-card__value" id="stat-personal">0</div>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon nx-stat-card__icon--info">
+                                <i class="ri-robot-line"></i>
+                            </div>
+                            <div class="nx-stat-card__content">
+                                <div class="nx-stat-card__label">Provider数</div>
+                                <div class="nx-stat-card__value" id="stat-providers">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-grid nx-grid-cols-2 nx-mb-6">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">
+                                    <i class="ri-layers-line"></i> 上下文层级
+                                </h3>
+                            </div>
+                            <div class="nx-card__body" id="context-level-container">
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h3 class="nx-card__title">
+                                    <i class="ri-link"></i> 配置继承链
+                                </h3>
+                            </div>
+                            <div class="nx-card__body" id="config-chain-container">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mb-6">
+                        <div class="nx-card__header">
+                            <div class="nx-flex nx-items-center nx-gap-3">
+                                <select class="nx-select" id="filter-level" onchange="LlmConfig.filterConfigs()">
+                                    <option value="">全部级别</option>
+                                    <option value="ENTERPRISE">企业级</option>
+                                    <option value="DEPARTMENT">部门级</option>
+                                    <option value="PERSONAL">个人级</option>
+                                    <option value="SCENE">场景级</option>
+                                </select>
+                                <select class="nx-select" id="filter-provider" onchange="LlmConfig.filterConfigs()">
+                                    <option value="">全部Provider</option>
+                                </select>
+                            </div>
+                            <button class="nx-btn nx-btn--secondary" onclick="LlmConfig.loadConfigs()">
+                                <i class="ri-refresh-line"></i> 刷新
+                            </button>
+                        </div>
+                        <div class="nx-card__body nx-p-0">
+                            <table class="nx-table">
+                                <thead>
+                                    <tr>
+                                        <th>配置名称</th>
+                                        <th>级别</th>
+                                        <th>Provider</th>
+                                        <th>模型</th>
+                                        <th>状态</th>
+                                        <th>更新时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="config-table-body">
+                                    <tr>
+                                        <td colspan="7" class="nx-text-center nx-text-secondary nx-py-8">
+                                            <i class="ri-loader-4-line ri-spin"></i> 加载中...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title"><i class="ri-book-open-line"></i> 文档</h3>
+                        </div>
+                        <div class="nx-card__body nx-p-0">
+                            <div class="doc-tabs" id="doc-tabs">
+                            </div>
+                            <div class="doc-content" id="doc-content">
+                                <div class="doc-loading">
+                                    <i class="ri-loader-4-line ri-spin"></i>
+                                    <p>加载中...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title">可用Provider</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid-cols-4 nx-gap-4" id="provider-grid">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title"><i class="ri-test-tube-line"></i> LLM 测试</h3>
+                            <div class="nx-flex nx-items-center nx-gap-2">
+                                <select class="nx-select nx-select--sm" id="test-provider">
+                                    <option value="">选择Provider</option>
+                                </select>
+                                <select class="nx-select nx-select--sm" id="test-model">
+                                    <option value="">选择模型</option>
+                                </select>
+                                <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="LlmConfig.runTest()">
+                                    <i class="ri-play-line"></i> 测试
+                                </button>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="test-panel">
+                                <div class="test-input-section">
+                                    <label class="nx-label">测试消息</label>
+                                    <textarea class="nx-textarea" id="test-message" rows="3" placeholder="输入测试消息...">你好，请介绍一下你自己</textarea>
+                                </div>
+                                <div class="test-options nx-mt-3">
+                                    <div class="nx-flex nx-gap-4">
+                                        <label class="nx-checkbox">
+                                            <input type="checkbox" id="test-function-calling" checked>
+                                            <span>启用 Function Calling</span>
+                                        </label>
+                                        <label class="nx-checkbox">
+                                            <input type="checkbox" id="test-stream">
+                                            <span>流式输出</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title"><i class="ri-terminal-line"></i> 通讯日志</h3>
+                            <div class="nx-flex nx-items-center nx-gap-2">
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="LlmConfig.clearLogs()">
+                                    <i class="ri-delete-bin-line"></i> 清空
+                                </button>
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="LlmConfig.toggleLogView()">
+                                    <i class="ri-code-line"></i> JSON
+                                </button>
+                            </div>
+                        </div>
+                        <div class="nx-card__body nx-p-0">
+                            <div class="comm-logs" id="comm-logs">
+                                <div class="log-empty">
+                                    <i class="ri-file-list-3-line"></i>
+                                    <p>暂无通讯日志，请先进行 LLM 测试</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card nx-mt-6">
+                        <div class="nx-card__header">
+                            <h3 class="nx-card__title"><i class="ri-code-line"></i> Function Calling</h3>
+                        </div>
+                        <div class="nx-card__body nx-p-0">
+                            <div class="function-list" id="function-list">
+                                <div class="log-empty">
+                                    <i class="ri-function-line"></i>
+                                    <p>加载中...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="nx-modal" id="config-modal">
+        <div class="nx-modal__content" style="max-width: 600px;">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title" id="modal-title">
+                    <i class="ri-settings-3-line"></i>
+                    <span>新建配置</span>
+                </h3>
+                <button class="nx-modal__close" onclick="LlmConfig.closeModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <form id="config-form">
+                    <input type="hidden" id="config-id">
+                    
+                    <div class="nx-form-row">
+                        <div class="nx-form-group">
+                            <label class="nx-label">配置名称 <span class="nx-text-danger">*</span></label>
+                            <input type="text" class="nx-input" id="config-name" placeholder="输入配置名称" required>
+                        </div>
+                        
+                        <div class="nx-form-group">
+                            <label class="nx-label">配置级别 <span class="nx-text-danger">*</span></label>
+                            <select class="nx-select" id="config-level" required onchange="LlmConfig.onLevelChange()">
+                                <option value="">请选择级别</option>
+                                <option value="ENTERPRISE">企业级</option>
+                                <option value="DEPARTMENT">部门级</option>
+                                <option value="PERSONAL">个人级</option>
+                                <option value="SCENE">场景级</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-form-group" id="owner-id-group" style="display: none;">
+                        <label class="nx-label">所有者 <span class="nx-text-danger">*</span></label>
+                        <input type="text" class="nx-input" id="config-owner-id" placeholder="输入所有者ID">
+                    </div>
+                    
+                    <div class="nx-form-divider"><span>Provider配置</span></div>
+                    
+                    <div class="nx-form-row">
+                        <div class="nx-form-group">
+                            <label class="nx-label">Provider <span class="nx-text-danger">*</span></label>
+                            <select class="nx-select" id="config-provider" required onchange="LlmConfig.onProviderChange()">
+                                <option value="">请选择Provider</option>
+                            </select>
+                        </div>
+                        
+                        <div class="nx-form-group">
+                            <label class="nx-label">模型 <span class="nx-text-danger">*</span></label>
+                            <select class="nx-select" id="config-model" required>
+                                <option value="">请先选择Provider</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-form-group">
+                        <label class="nx-label">API Key</label>
+                        <div class="nx-input-group">
+                            <input type="password" class="nx-input" id="config-api-key" placeholder="输入API Key">
+                            <button type="button" class="nx-btn nx-btn--secondary" onclick="LlmConfig.toggleApiKeyVisibility()">
+                                <i class="ri-eye-line" id="api-key-toggle-icon"></i>
+                            </button>
+                        </div>
+                        <div class="nx-form-hint">API Key将被加密存储</div>
+                    </div>
+                    
+                    <div class="nx-form-group">
+                        <label class="nx-label">Base URL</label>
+                        <input type="text" class="nx-input" id="config-base-url" placeholder="自定义API地址（可选）">
+                        <div class="nx-form-hint">留空则使用默认地址</div>
+                    </div>
+                    
+                    <div class="nx-form-divider"><span>高级参数</span></div>
+                    
+                    <div class="nx-form-row">
+                        <div class="nx-form-group">
+                            <label class="nx-label">温度 (Temperature)</label>
+                            <input type="number" class="nx-input" id="config-temperature" value="0.7" min="0" max="2" step="0.1">
+                            <div class="nx-form-hint">控制输出随机性，0-2之间</div>
+                        </div>
+                        
+                        <div class="nx-form-group">
+                            <label class="nx-label">最大Token数</label>
+                            <input type="number" class="nx-input" id="config-max-tokens" value="4096" min="100" max="128000">
+                            <div class="nx-form-hint">单次对话最大输出长度</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="LlmConfig.closeModal()">
+                    <i class="ri-close-line"></i> 取消
+                </button>
+                <button class="nx-btn nx-btn--primary" onclick="LlmConfig.saveConfig()">
+                    <i class="ri-save-line"></i> 保存
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nx-modal" id="delete-modal">
+        <div class="nx-modal__content nx-modal__content--sm">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">
+                    <i class="ri-delete-bin-line"></i>
+                    <span>确认删除</span>
+                </h3>
+            </div>
+            <div class="nx-modal__body">
+                <p>确定要删除配置 "<span id="delete-config-name"></span>" 吗？此操作不可恢复。</p>
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="LlmConfig.closeDeleteModal()">
+                    <i class="ri-close-line"></i> 取消
+                </button>
+                <button class="nx-btn nx-btn--danger" onclick="LlmConfig.confirmDelete()">
+                    <i class="ri-delete-bin-line"></i> 删除
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nx-modal" id="provider-modal">
+        <div class="nx-modal__content" style="max-width: 700px;">
+            <div class="nx-modal__header">
+                <h3 class="nx-modal__title">
+                    <i class="ri-information-line"></i>
+                    <span id="provider-modal-title">Provider详情</span>
+                </h3>
+                <button class="nx-modal__close" onclick="LlmConfig.closeProviderModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body" id="provider-modal-body">
+            </div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--secondary" onclick="LlmConfig.closeProviderModal()">
+                    <i class="ri-close-line"></i> 取消
+                </button>
+                <button class="nx-btn nx-btn--primary" onclick="LlmConfig.confirmProviderSelection()">
+                    <i class="ri-check-line"></i> 确定
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/components/llm-enhancement.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/llm-config.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            LLMEnhancement.renderContextLevelViewer('context-level-container');
+            LLMEnhancement.renderConfigChain('config-chain-container', 'skill', 'skill-scene');
+        });
+    </script>
+</body>
+</html>

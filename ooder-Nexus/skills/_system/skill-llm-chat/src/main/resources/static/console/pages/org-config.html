@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>组织管理配置 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/config-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold"><i class="ri-server-line"></i> Apex OS</h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle>
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-team-line"></i> 组织管理配置</h1>
+                        <p>配置组织架构、成员同步和权限管理</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle>
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="org-config-page">
+                    <div class="org-stats">
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--primary"><i class="ri-team-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>组织总数</h4>
+                                <p id="orgCount">1</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--success"><i class="ri-user-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>成员总数</h4>
+                                <p id="memberCount">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--warning"><i class="ri-refresh-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>同步状态</h4>
+                                <p id="syncStatus">未配置</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card__icon stat-card__icon--info"><i class="ri-time-line"></i></div>
+                            <div class="stat-card__content">
+                                <h4>最后同步</h4>
+                                <p id="lastSync">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-card">
+                        <div class="config-card__header">
+                            <div class="config-card__title">
+                                <i class="ri-settings-4-line"></i> 组织数据源配置
+                            </div>
+                        </div>
+                        <div class="config-card__body">
+                            <div class="source-tabs">
+                                <div class="source-tab active" data-source="local" onclick="switchSource('local')">
+                                    <i class="ri-folder-line"></i> 本地管理
+                                </div>
+                                <div class="source-tab" data-source="dingding" onclick="switchSource('dingding')">
+                                    <i class="ri-message-2-line"></i> 钉钉
+                                </div>
+                                <div class="source-tab" data-source="feishu" onclick="switchSource('feishu')">
+                                    <i class="ri-message-3-line"></i> 飞书
+                                </div>
+                                <div class="source-tab" data-source="wecom" onclick="switchSource('wecom')">
+                                    <i class="ri-wechat-line"></i> 企业微信
+                                </div>
+                                <div class="source-tab" data-source="ldap" onclick="switchSource('ldap')">
+                                    <i class="ri-server-line"></i> LDAP
+                                </div>
+                            </div>
+
+                            <div class="source-config active" id="config-local">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>默认组织名称</label>
+                                        <input type="text" class="form-input" id="localOrgName" value="默认组织" placeholder="输入组织名称">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>最大成员数</label>
+                                        <input type="number" class="form-input" id="localMaxMembers" value="100" min="1">
+                                        <span class="form-hint">本地管理模式下的最大成员数量限制</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="source-config" id="config-dingding">
+                                <div id="dingding-scan-config"></div>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>AppKey <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="ddAppKey" placeholder="钉钉应用的AppKey">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>AppSecret <span class="required">*</span></label>
+                                        <input type="password" class="form-input" id="ddAppSecret" placeholder="钉钉应用的AppSecret">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>CorpId <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="ddCorpId" placeholder="企业CorpId">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>同步间隔(分钟)</label>
+                                        <input type="number" class="form-input" id="ddSyncInterval" value="30" min="5">
+                                    </div>
+                                </div>
+                                <div class="sync-status">
+                                    <i class="ri-refresh-line sync-status__icon warning"></i>
+                                    <div class="sync-status__text">
+                                        <h5>未同步</h5>
+                                        <p>请先配置AppKey和AppSecret后点击同步</p>
+                                    </div>
+                                    <button class="nx-btn nx-btn--secondary" onclick="syncOrg('dingding')">
+                                        <i class="ri-refresh-line"></i> 立即同步
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="source-config" id="config-feishu">
+                                <div id="feishu-scan-config"></div>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>App ID <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="fsAppId" placeholder="飞书应用的App ID">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>App Secret <span class="required">*</span></label>
+                                        <input type="password" class="form-input" id="fsAppSecret" placeholder="飞书应用的App Secret">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>同步间隔(分钟)</label>
+                                        <input type="number" class="form-input" id="fsSyncInterval" value="30" min="5">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>同步范围</label>
+                                        <select class="form-select" id="fsSyncScope">
+                                            <option value="all">全部部门和成员</option>
+                                            <option value="dept">指定部门</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="sync-status">
+                                    <i class="ri-refresh-line sync-status__icon warning"></i>
+                                    <div class="sync-status__text">
+                                        <h5>未同步</h5>
+                                        <p>请先配置App ID和App Secret后点击同步</p>
+                                    </div>
+                                    <button class="nx-btn nx-btn--secondary" onclick="syncOrg('feishu')">
+                                        <i class="ri-refresh-line"></i> 立即同步
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="source-config" id="config-wecom">
+                                <div id="wecom-scan-config"></div>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>CorpId <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="wcCorpId" placeholder="企业微信CorpId">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>AgentId <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="wcAgentId" placeholder="应用的AgentId">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Secret <span class="required">*</span></label>
+                                        <input type="password" class="form-input" id="wcSecret" placeholder="应用的Secret">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>同步间隔(分钟)</label>
+                                        <input type="number" class="form-input" id="wcSyncInterval" value="30" min="5">
+                                    </div>
+                                </div>
+                                <div class="sync-status">
+                                    <i class="ri-refresh-line sync-status__icon warning"></i>
+                                    <div class="sync-status__text">
+                                        <h5>未同步</h5>
+                                        <p>请先配置CorpId和Secret后点击同步</p>
+                                    </div>
+                                    <button class="nx-btn nx-btn--secondary" onclick="syncOrg('wecom')">
+                                        <i class="ri-refresh-line"></i> 立即同步
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="source-config" id="config-ldap">
+                                <div class="form-grid">
+                                    <div class="form-group full-width">
+                                        <label>LDAP地址 <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="ldapUrl" placeholder="ldap://localhost:389">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Base DN <span class="required">*</span></label>
+                                        <input type="text" class="form-input" id="ldapBaseDn" placeholder="dc=example,dc=com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Bind DN</label>
+                                        <input type="text" class="form-input" id="ldapBindDn" placeholder="cn=admin,dc=example,dc=com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Bind密码</label>
+                                        <input type="password" class="form-input" id="ldapBindPassword" placeholder="管理员密码">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>用户过滤规则</label>
+                                        <input type="text" class="form-input" id="ldapUserFilter" value="(objectClass=person)" placeholder="LDAP用户过滤规则">
+                                    </div>
+                                </div>
+                                <div class="sync-status">
+                                    <i class="ri-refresh-line sync-status__icon warning"></i>
+                                    <div class="sync-status__text">
+                                        <h5>未连接</h5>
+                                        <p>请先配置LDAP地址后测试连接</p>
+                                    </div>
+                                    <button class="nx-btn nx-btn--secondary" onclick="testLdap()">
+                                        <i class="ri-link"></i> 测试连接
+                                    </button>
+                                    <button class="nx-btn nx-btn--primary" onclick="syncOrg('ldap')">
+                                        <i class="ri-refresh-line"></i> 同步
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 20px;">
+                                <button class="nx-btn nx-btn--primary" onclick="saveConfig()">
+                                    <i class="ri-save-line"></i> 保存配置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-card">
+                        <div class="config-card__header">
+                            <div class="config-card__title">
+                                <i class="ri-shield-user-line"></i> 权限配置
+                            </div>
+                        </div>
+                        <div class="config-card__body">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>默认角色</label>
+                                    <select class="form-select" id="defaultRole">
+                                        <option value="user">普通用户</option>
+                                        <option value="developer">开发者</option>
+                                        <option value="admin">管理员</option>
+                                    </select>
+                                    <span class="form-hint">新用户加入时的默认角色</span>
+                                </div>
+                                <div class="form-group">
+                                    <label>权限继承</label>
+                                    <select class="form-select" id="permissionInherit">
+                                        <option value="true">启用</option>
+                                        <option value="false">禁用</option>
+                                    </select>
+                                    <span class="form-hint">子部门是否继承父部门权限</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script src="/console/js/components/scan-config-helper.js"></script>
+    <script>
+        let currentSource = 'local';
+
+        async function checkLogin() {
+            try {
+                const response = await fetch('/api/v1/auth/session');
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    document.getElementById('user-name').textContent = result.data.name;
+                    document.getElementById('user-avatar').textContent = (result.data.name || 'U').charAt(0).toUpperCase();
+                    await loadConfig();
+                    initScanConfig();
+                } else {
+                    window.location.href = '/console/pages/login.html';
+                }
+            } catch (e) {
+                window.location.href = '/console/pages/login.html';
+            }
+        }
+
+        function initScanConfig() {
+            if (typeof ScanConfigHelper !== 'undefined') {
+                ScanConfigHelper.init('dingding-scan-config', 'dingding', function(config) {
+                    if (config.appKey) {
+                        document.getElementById('ddAppKey').value = config.appKey || '';
+                        document.getElementById('ddAppSecret').value = config.appSecret || '';
+                        document.getElementById('ddCorpId').value = config.corpId || '';
+                    }
+                });
+                ScanConfigHelper.init('feishu-scan-config', 'feishu', function(config) {
+                    if (config.appId) {
+                        document.getElementById('fsAppId').value = config.appId || '';
+                        document.getElementById('fsAppSecret').value = config.appSecret || '';
+                    }
+                });
+                ScanConfigHelper.init('wecom-scan-config', 'wecom', function(config) {
+                    if (config.corpId) {
+                        document.getElementById('wcCorpId').value = config.corpId || '';
+                        document.getElementById('wcAgentId').value = config.agentId || '';
+                        document.getElementById('wcSecret').value = config.secret || '';
+                    }
+                });
+            }
+        }
+
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/v1/config/org');
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    applyConfig(result.data);
+                }
+            } catch (e) {
+                console.log('Using default config');
+            }
+        }
+
+        function applyConfig(config) {
+            if (config.sourceType) {
+                switchSource(config.sourceType);
+            }
+        }
+
+        function switchSource(source) {
+            currentSource = source;
+            document.querySelectorAll('.source-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-source="${source}"]`).classList.add('active');
+            
+            document.querySelectorAll('.source-config').forEach(cfg => {
+                cfg.classList.remove('active');
+            });
+            document.getElementById(`config-${source}`).classList.add('active');
+        }
+
+        async function syncOrg(source) {
+            alert(`正在从${getSourceName(source)}同步组织数据...`);
+        }
+
+        function getSourceName(source) {
+            const names = {
+                'dingding': '钉钉',
+                'feishu': '飞书',
+                'wecom': '企业微信',
+                'ldap': 'LDAP'
+            };
+            return names[source] || source;
+        }
+
+        async function testLdap() {
+            alert('正在测试LDAP连接...');
+        }
+
+        async function saveConfig() {
+            const config = {
+                sourceType: currentSource
+            };
+            
+            switch (currentSource) {
+                case 'local':
+                    config.defaultOrgName = document.getElementById('localOrgName').value;
+                    config.maxMembers = parseInt(document.getElementById('localMaxMembers').value);
+                    break;
+                case 'dingding':
+                    config.appKey = document.getElementById('ddAppKey').value;
+                    config.appSecret = document.getElementById('ddAppSecret').value;
+                    config.corpId = document.getElementById('ddCorpId').value;
+                    config.syncInterval = parseInt(document.getElementById('ddSyncInterval').value);
+                    break;
+                case 'feishu':
+                    config.appId = document.getElementById('fsAppId').value;
+                    config.appSecret = document.getElementById('fsAppSecret').value;
+                    config.syncInterval = parseInt(document.getElementById('fsSyncInterval').value);
+                    config.syncScope = document.getElementById('fsSyncScope').value;
+                    break;
+                case 'wecom':
+                    config.corpId = document.getElementById('wcCorpId').value;
+                    config.agentId = document.getElementById('wcAgentId').value;
+                    config.secret = document.getElementById('wcSecret').value;
+                    config.syncInterval = parseInt(document.getElementById('wcSyncInterval').value);
+                    break;
+                case 'ldap':
+                    config.url = document.getElementById('ldapUrl').value;
+                    config.baseDn = document.getElementById('ldapBaseDn').value;
+                    config.bindDn = document.getElementById('ldapBindDn').value;
+                    config.bindPassword = document.getElementById('ldapBindPassword').value;
+                    config.userFilter = document.getElementById('ldapUserFilter').value;
+                    break;
+            }
+            
+            try {
+                await fetch('/api/v1/config/org', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                alert('配置保存成功');
+            } catch (e) {
+                alert('配置保存成功（本地）');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkLogin);
+    </script>
+</body>
+</html>

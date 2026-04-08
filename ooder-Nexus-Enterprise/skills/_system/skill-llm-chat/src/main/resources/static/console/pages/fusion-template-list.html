@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>融合模板列表 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/nx-page.css">
+    <link rel="stylesheet" href="/console/css/pages/fusion-template-list.css">
+</head>
+<body class="fusion-template-list">
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-page__title">
+                    <h1><i class="ri-git-merge-line"></i> 融合模板</h1>
+                    <p>管理企业规范与技能的融合模板</p>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                    <button class="nx-btn nx-btn--primary" onclick="openFusionWizard()">
+                        <i class="ri-add-line"></i> <span>创建融合模板</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="nx-page__main">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="搜索模板名称..." onkeyup="filterTemplates()">
+                    <select id="statusFilter" onchange="filterTemplates()">
+                        <option value="">全部状态</option>
+                        <option value="DRAFT">草稿</option>
+                        <option value="ACTIVE">已激活</option>
+                        <option value="ARCHIVED">已归档</option>
+                    </select>
+                    <select id="skillFilter" onchange="filterTemplates()">
+                        <option value="">全部技能</option>
+                    </select>
+                </div>
+
+                <div id="templateGrid" class="template-grid">
+                    <div class="empty-state">
+                        <i class="ri-git-merge-line"></i>
+                        <p>暂无融合模板</p>
+                        <p>点击"创建融合模板"开始</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="fusionWizard" class="fusion-wizard">
+        <div class="wizard-content">
+            <div class="wizard-header">
+                <h3 class="wizard-title">创建融合模板</h3>
+                <button class="wizard-close" onclick="closeFusionWizard()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            
+            <div class="wizard-steps">
+                <div class="wizard-step active" data-step="1">
+                    <span class="step-number">1</span>
+                    <div class="step-label">选择企业规范</div>
+                </div>
+                <div class="wizard-step" data-step="2">
+                    <span class="step-number">2</span>
+                    <div class="step-label">选择技能</div>
+                </div>
+                <div class="wizard-step" data-step="3">
+                    <span class="step-number">3</span>
+                    <div class="step-label">融合配置</div>
+                </div>
+                <div class="wizard-step" data-step="4">
+                    <span class="step-number">4</span>
+                    <div class="step-label">确认创建</div>
+                </div>
+            </div>
+
+            <div id="wizardStepContent">
+            </div>
+
+            <div class="wizard-footer" style="display: flex; justify-content: space-between; margin-top: 20px;">
+                <button class="nx-btn nx-btn--secondary" id="prevBtn" onclick="prevStep()" style="display: none;">
+                    <i class="ri-arrow-left-line"></i> 上一步
+                </button>
+                <button class="nx-btn nx-btn--primary" id="nextBtn" onclick="nextStep()">
+                    下一步 <i class="ri-arrow-right-line"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/fusion-template-list.js"></script>
+</body>
+</html>

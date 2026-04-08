@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="能力依赖关系图 - 可视化展示能力间的依赖关系">
+    <title>能力依赖关系图 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/capability-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <nav>
+                <ul class="nav-menu" id="nav-menu" role="navigation" aria-label="主导航"></ul>
+            </nav>
+        </aside>
+        
+        <main class="nx-page__content" id="main-content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-mind-map" aria-hidden="true"></i> 能力依赖关系图</h1>
+                        <p>可视化展示能力间的依赖关系</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                    <button class="nx-btn nx-btn--secondary" onclick="goBack()">
+                        <i class="ri-arrow-left-line"></i> 返回
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container dep-page">
+                    <div class="dep-toolbar">
+                        <div class="dep-search">
+                            <i class="ri-search-line"></i>
+                            <input type="text" id="search-input" placeholder="搜索能力名称或ID...">
+                        </div>
+                        <div class="dep-filter-group">
+                            <button class="dep-filter-btn active" data-filter="all">全部</button>
+                            <button class="dep-filter-btn" data-filter="deps">依赖</button>
+                            <button class="dep-filter-btn" data-filter="refs">被引用</button>
+                        </div>
+                        <button class="nx-btn nx-btn--secondary" onclick="refreshGraph()">
+                            <i class="ri-refresh-line"></i> 刷新
+                        </button>
+                        <button class="nx-btn nx-btn--secondary" onclick="exportGraph()">
+                            <i class="ri-download-line"></i> 导出
+                        </button>
+                    </div>
+                    
+                    <div class="dep-container">
+                        <div class="dep-graph-panel">
+                            <div class="dep-graph-header">
+                                <div class="dep-graph-title">
+                                    <i class="ri-mind-map"></i>
+                                    <span>依赖关系图</span>
+                                </div>
+                                <div class="dep-graph-actions">
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="zoomIn()" title="放大">
+                                        <i class="ri-zoom-in-line"></i>
+                                    </button>
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="zoomOut()" title="缩小">
+                                        <i class="ri-zoom-out-line"></i>
+                                    </button>
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="resetZoom()" title="重置">
+                                        <i class="ri-restart-line"></i>
+                                    </button>
+                                    <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="toggleFullscreen()" title="全屏">
+                                        <i class="ri-fullscreen-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="dep-graph-body">
+                                <div class="dep-canvas" id="dep-canvas">
+                                    <div class="dep-empty" id="dep-empty">
+                                        <i class="ri-mind-map"></i>
+                                        <p>加载中...</p>
+                                    </div>
+                                </div>
+                                <div class="dep-legend" id="dep-legend" style="display: none;">
+                                    <div class="dep-legend-item">
+                                        <span class="dep-legend-color" style="background: var(--nx-primary);"></span>
+                                        <span>当前能力</span>
+                                    </div>
+                                    <div class="dep-legend-item">
+                                        <span class="dep-legend-color" style="background: var(--nx-success);"></span>
+                                        <span>依赖能力</span>
+                                    </div>
+                                    <div class="dep-legend-item">
+                                        <span class="dep-legend-color" style="background: #8b5cf6;"></span>
+                                        <span>被引用</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="dep-side-panel">
+                            <div class="dep-info-card">
+                                <div class="dep-info-header">
+                                    <i class="ri-bar-chart-line"></i>
+                                    <span>统计概览</span>
+                                </div>
+                                <div class="dep-info-body">
+                                    <div class="dep-stat-grid">
+                                        <div class="dep-stat-item">
+                                            <div class="dep-stat-value" id="stat-total">0</div>
+                                            <div class="dep-stat-label">总节点数</div>
+                                        </div>
+                                        <div class="dep-stat-item">
+                                            <div class="dep-stat-value" id="stat-deps">0</div>
+                                            <div class="dep-stat-label">依赖数</div>
+                                        </div>
+                                        <div class="dep-stat-item">
+                                            <div class="dep-stat-value" id="stat-refs">0</div>
+                                            <div class="dep-stat-label">被引用数</div>
+                                        </div>
+                                        <div class="dep-stat-item">
+                                            <div class="dep-stat-value" id="stat-depth">0</div>
+                                            <div class="dep-stat-label">最大深度</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="dep-info-card">
+                                <div class="dep-info-header">
+                                    <i class="ri-flashlight-line"></i>
+                                    <span>依赖能力</span>
+                                    <span class="nx-badge" id="deps-count">0</span>
+                                </div>
+                                <div class="dep-info-body">
+                                    <div class="dep-list" id="deps-list">
+                                        <div class="dep-empty">
+                                            <i class="ri-flashlight-line"></i>
+                                            <p>无依赖能力</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="dep-info-card">
+                                <div class="dep-info-header">
+                                    <i class="ri-link"></i>
+                                    <span>被引用关系</span>
+                                    <span class="nx-badge" id="refs-count">0</span>
+                                </div>
+                                <div class="dep-info-body">
+                                    <div class="dep-list" id="refs-list">
+                                        <div class="dep-empty">
+                                            <i class="ri-link"></i>
+                                            <p>无被引用关系</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        (function() {
+            'use strict';
+            
+            let capabilityId = null;
+            let capabilityData = null;
+            let dependencies = [];
+            let references = [];
+            let currentFilter = 'all';
+            let zoomLevel = 1;
+            
+            const TYPE_CONFIG = {
+                'SCENE': { icon: 'ri-layout-grid-line', name: '场景能力' },
+                'ATOMIC': { icon: 'ri-flashlight-line', name: '原子能力' },
+                'COMPOSITE': { icon: 'ri-stack-line', name: '组合能力' },
+                'DRIVER': { icon: 'ri-timer-line', name: '驱动能力' },
+                'SERVICE': { icon: 'ri-service-line', name: '服务能力' },
+                'AI': { icon: 'ri-robot-line', name: 'AI能力' },
+                'DATA': { icon: 'ri-database-2-line', name: '数据能力' },
+                'COMMUNICATION': { icon: 'ri-message-3-line', name: '通讯能力' },
+                'SECURITY': { icon: 'ri-shield-line', name: '安全能力' },
+                'TOOL': { icon: 'ri-tools-line', name: '工具能力' }
+            };
+            
+            async function loadData() {
+                const params = new URLSearchParams(window.location.search);
+                capabilityId = params.get('id');
+                
+                if (!capabilityId) {
+                    showError('缺少能力ID参数');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/v1/capabilities/' + capabilityId + '/dependencies');
+                    const result = await response.json();
+                    
+                    if (result.status === 'success' && result.data) {
+                        capabilityData = result.data.capability || {};
+                        dependencies = result.data.dependencies || [];
+                        references = result.data.references || [];
+                        
+                        updateStats();
+                        renderGraph();
+                        renderLists();
+                    } else {
+                        loadFromCapabilityDetail();
+                    }
+                } catch (e) {
+                    console.error('Failed to load dependencies:', e);
+                    loadFromCapabilityDetail();
+                }
+            }
+            
+            async function loadFromCapabilityDetail() {
+                try {
+                    const response = await fetch('/api/v1/capabilities/' + capabilityId);
+                    const result = await response.json();
+                    
+                    if (result.status === 'success' && result.data) {
+                        capabilityData = result.data;
+                        dependencies = result.data.dependencies || [];
+                        references = [];
+                        
+                        updateStats();
+                        renderGraph();
+                        renderLists();
+                    } else {
+                        showError('加载失败');
+                    }
+                } catch (e) {
+                    showError('加载失败: ' + e.message);
+                }
+            }
+            
+            function showError(message) {
+                document.getElementById('dep-empty').innerHTML = `
+                    <i class="ri-error-warning-line" style="color: var(--nx-danger);"></i>
+                    <p>${message}</p>
+                `;
+            }
+            
+            function updateStats() {
+                document.getElementById('stat-total').textContent = dependencies.length + references.length + 1;
+                document.getElementById('stat-deps').textContent = dependencies.length;
+                document.getElementById('stat-refs').textContent = references.length;
+                document.getElementById('deps-count').textContent = dependencies.length;
+                document.getElementById('refs-count').textContent = references.length;
+                
+                const depth = calculateDepth();
+                document.getElementById('stat-depth').textContent = depth;
+            }
+            
+            function calculateDepth() {
+                if (dependencies.length === 0) return 0;
+                return 1;
+            }
+            
+            function renderGraph() {
+                const canvas = document.getElementById('dep-canvas');
+                const legend = document.getElementById('dep-legend');
+                
+                if (dependencies.length === 0 && references.length === 0) {
+                    canvas.innerHTML = `
+                        <div class="dep-empty">
+                            <i class="ri-mind-map"></i>
+                            <p>暂无依赖关系</p>
+                        </div>
+                    `;
+                    legend.style.display = 'none';
+                    return;
+                }
+                
+                legend.style.display = 'block';
+                
+                let html = '';
+                let centerX = 400;
+                let centerY = 250;
+                
+                const showDeps = currentFilter === 'all' || currentFilter === 'deps';
+                const showRefs = currentFilter === 'all' || currentFilter === 'refs';
+                
+                if (showRefs && references.length > 0) {
+                    const refSpacing = Math.min(120, 600 / references.length);
+                    references.forEach((ref, i) => {
+                        const x = 80;
+                        const y = 100 + i * refSpacing;
+                        html += renderNode(ref, 'ref', x, y);
+                    });
+                }
+                
+                const type = capabilityData.type || 'SERVICE';
+                const typeConfig = TYPE_CONFIG[type] || TYPE_CONFIG['SERVICE'];
+                html += renderNode({
+                    capabilityId: capabilityId,
+                    name: capabilityData.name || capabilityId,
+                    type: type
+                }, 'current', centerX, centerY);
+                
+                if (showDeps && dependencies.length > 0) {
+                    const depSpacing = Math.min(100, 500 / dependencies.length);
+                    dependencies.forEach((dep, i) => {
+                        const x = 650;
+                        const y = 100 + i * depSpacing;
+                        const depData = typeof dep === 'string' ? { capabilityId: dep, name: dep } : dep;
+                        html += renderNode(depData, 'dep', x, y);
+                    });
+                }
+                
+                canvas.innerHTML = html;
+                
+                canvas.querySelectorAll('.dep-node').forEach(node => {
+                    node.addEventListener('click', function() {
+                        const id = this.dataset.id;
+                        if (id && id !== capabilityId) {
+                            navigateToCapability(id);
+                        }
+                    });
+                });
+            }
+            
+            function renderNode(data, type, x, y) {
+                const typeConfig = TYPE_CONFIG[data.type] || TYPE_CONFIG['SERVICE'];
+                const typeClass = type === 'current' ? 'dep-node--current' : 
+                                  type === 'dep' ? 'dep-node--dep' : 'dep-node--ref';
+                
+                return `
+                    <div class="dep-node ${typeClass}" data-id="${data.capabilityId}" 
+                         style="left: ${x}px; top: ${y}px; transform: translate(-50%, -50%);">
+                        <div class="dep-node-icon"><i class="${typeConfig.icon}"></i></div>
+                        <div class="dep-node-name">${truncate(data.name || data.capabilityId, 15)}</div>
+                        <div class="dep-node-type">${typeConfig.name}</div>
+                    </div>
+                `;
+            }
+            
+            function renderLists() {
+                renderDepList();
+                renderRefList();
+            }
+            
+            function renderDepList() {
+                const container = document.getElementById('deps-list');
+                
+                if (dependencies.length === 0) {
+                    container.innerHTML = `
+                        <div class="dep-empty">
+                            <i class="ri-flashlight-line"></i>
+                            <p>无依赖能力</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = dependencies.map(dep => {
+                    const data = typeof dep === 'string' ? { capabilityId: dep, name: dep } : dep;
+                    const typeConfig = TYPE_CONFIG[data.type] || TYPE_CONFIG['SERVICE'];
+                    return `
+                        <div class="dep-list-item" onclick="navigateToCapability('${data.capabilityId}')">
+                            <div class="dep-list-icon dep-list-icon--dep">
+                                <i class="${typeConfig.icon}"></i>
+                            </div>
+                            <div class="dep-list-info">
+                                <div class="dep-list-name">${data.name || data.capabilityId}</div>
+                                <div class="dep-list-meta">${data.capabilityId}</div>
+                            </div>
+                            <i class="ri-arrow-right-s-line"></i>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            function renderRefList() {
+                const container = document.getElementById('refs-list');
+                
+                if (references.length === 0) {
+                    container.innerHTML = `
+                        <div class="dep-empty">
+                            <i class="ri-link"></i>
+                            <p>无被引用关系</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = references.map(ref => {
+                    const typeConfig = TYPE_CONFIG[ref.type] || TYPE_CONFIG['SERVICE'];
+                    return `
+                        <div class="dep-list-item" onclick="navigateToCapability('${ref.capabilityId}')">
+                            <div class="dep-list-icon dep-list-icon--ref">
+                                <i class="${typeConfig.icon}"></i>
+                            </div>
+                            <div class="dep-list-info">
+                                <div class="dep-list-name">${ref.name || ref.capabilityId}</div>
+                                <div class="dep-list-meta">${ref.capabilityId}</div>
+                            </div>
+                            <i class="ri-arrow-right-s-line"></i>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            function truncate(text, max) {
+                return text.length > max ? text.substring(0, max) + '...' : text;
+            }
+            
+            function goBack() {
+                window.history.back();
+            }
+            
+            function navigateToCapability(id) {
+                window.location.href = 'capability-detail.html?id=' + id;
+            }
+            
+            function refreshGraph() {
+                loadData();
+            }
+            
+            function exportGraph() {
+                const data = {
+                    capability: capabilityData,
+                    dependencies: dependencies,
+                    references: references
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'capability-' + capabilityId + '-dependencies.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+            
+            function zoomIn() {
+                zoomLevel = Math.min(zoomLevel + 0.1, 2);
+                applyZoom();
+            }
+            
+            function zoomOut() {
+                zoomLevel = Math.max(zoomLevel - 0.1, 0.5);
+                applyZoom();
+            }
+            
+            function resetZoom() {
+                zoomLevel = 1;
+                applyZoom();
+            }
+            
+            function applyZoom() {
+                const canvas = document.getElementById('dep-canvas');
+                canvas.style.transform = `scale(${zoomLevel})`;
+            }
+            
+            function toggleFullscreen() {
+                const panel = document.querySelector('.dep-graph-panel');
+                if (panel.classList.contains('fullscreen')) {
+                    panel.classList.remove('fullscreen');
+                    panel.style.position = '';
+                    panel.style.top = '';
+                    panel.style.left = '';
+                    panel.style.right = '';
+                    panel.style.bottom = '';
+                    panel.style.zIndex = '';
+                } else {
+                    panel.classList.add('fullscreen');
+                    panel.style.position = 'fixed';
+                    panel.style.top = '0';
+                    panel.style.left = '0';
+                    panel.style.right = '0';
+                    panel.style.bottom = '0';
+                    panel.style.zIndex = '1000';
+                }
+            }
+            
+            function initFilters() {
+                document.querySelectorAll('.dep-filter-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.dep-filter-btn').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        currentFilter = this.dataset.filter;
+                        renderGraph();
+                    });
+                });
+                
+                const searchInput = document.getElementById('search-input');
+                let debounceTimer;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        filterByKeyword(this.value.trim().toLowerCase());
+                    }, 300);
+                });
+            }
+            
+            function filterByKeyword(keyword) {
+                document.querySelectorAll('.dep-node').forEach(node => {
+                    const name = node.querySelector('.dep-node-name').textContent.toLowerCase();
+                    const id = node.dataset.id.toLowerCase();
+                    if (!keyword || name.includes(keyword) || id.includes(keyword)) {
+                        node.style.opacity = '1';
+                    } else {
+                        node.style.opacity = '0.3';
+                    }
+                });
+                
+                document.querySelectorAll('.dep-list-item').forEach(item => {
+                    const name = item.querySelector('.dep-list-name').textContent.toLowerCase();
+                    const meta = item.querySelector('.dep-list-meta').textContent.toLowerCase();
+                    if (!keyword || name.includes(keyword) || meta.includes(keyword)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            }
+            
+            window.goBack = goBack;
+            window.navigateToCapability = navigateToCapability;
+            window.refreshGraph = refreshGraph;
+            window.exportGraph = exportGraph;
+            window.zoomIn = zoomIn;
+            window.zoomOut = zoomOut;
+            window.resetZoom = resetZoom;
+            window.toggleFullscreen = toggleFullscreen;
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                initFilters();
+                loadData();
+            });
+        })();
+    </script>
+</body>
+</html>

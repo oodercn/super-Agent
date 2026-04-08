@@ -1,0 +1,207 @@
+.state-visualizer-container {
+    padding: 16px;
+    background: var(--card-bg, #fff);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.state-visualizer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.state-visualizer-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary, #333);
+}
+
+.state-visualizer-title i {
+    color: var(--purple-500, #9c27b0);
+}
+
+.state-visualizer-current {
+    font-size: 14px;
+    color: var(--text-secondary, #666);
+}
+
+.state-visualizer-current strong {
+    color: var(--blue-600, #1976d2);
+}
+
+.state-visualizer-diagram {
+    background: var(--gray-50, #fafafa);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.state-diagram-svg {
+    width: 100%;
+    height: 300px;
+}
+
+.state-circle {
+    fill: var(--gray-300, #e0e0e0);
+    stroke: var(--gray-400, #bdbdbd);
+    stroke-width: 2;
+    transition: all 0.3s ease;
+}
+
+.state-circle.state-running {
+    fill: var(--green-500, #4caf50);
+    stroke: var(--green-600, #388e3c);
+}
+
+.state-circle.state-paused {
+    fill: var(--yellow-500, #ffeb3b);
+    stroke: var(--yellow-600, #fdd835);
+}
+
+.state-circle.state-stopped {
+    fill: var(--gray-400, #bdbdbd);
+    stroke: var(--gray-500, #9e9e9e);
+}
+
+.state-circle.state-error {
+    fill: var(--red-500, #f44336);
+    stroke: var(--red-600, #d32f2f);
+}
+
+.state-circle.state-transitioning {
+    fill: var(--blue-500, #2196f3);
+    stroke: var(--blue-600, #1976d2);
+}
+
+.state-circle.state-idle {
+    fill: var(--gray-200, #eee);
+    stroke: var(--gray-300, #e0e0e0);
+}
+
+.state-node.active .state-circle {
+    stroke-width: 3;
+    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.3));
+}
+
+.state-pulse {
+    fill: none;
+    stroke: var(--blue-400, #42a5f5);
+    stroke-width: 2;
+    opacity: 0;
+    animation: pulse-ring 1.5s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+    0% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.5);
+    }
+}
+
+.state-label {
+    font-size: 3px;
+    fill: var(--text-primary, #333);
+    font-weight: 500;
+}
+
+.state-transition {
+    stroke: var(--gray-300, #e0e0e0);
+    stroke-width: 0.5;
+    stroke-dasharray: 2 1;
+    fill: none;
+}
+
+.state-transition.active {
+    stroke: var(--blue-500, #2196f3);
+    stroke-width: 1;
+    stroke-dasharray: none;
+    animation: transition-flow 0.5s ease;
+}
+
+@keyframes transition-flow {
+    0% { stroke-dashoffset: 10; }
+    100% { stroke-dashoffset: 0; }
+}
+
+.state-visualizer-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.state-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: var(--gray-100, #f5f5f5);
+    font-size: 12px;
+}
+
+.state-legend-item.active {
+    background: var(--blue-100, #e3f2fd);
+    font-weight: 600;
+}
+
+.state-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.state-legend-dot.state-running { background: var(--green-500, #4caf50); }
+.state-legend-dot.state-paused { background: var(--yellow-500, #ffeb3b); }
+.state-legend-dot.state-stopped { background: var(--gray-400, #bdbdbd); }
+.state-legend-dot.state-error { background: var(--red-500, #f44336); }
+.state-legend-dot.state-transitioning { background: var(--blue-500, #2196f3); }
+.state-legend-dot.state-idle { background: var(--gray-200, #eee); }
+
+.state-visualizer-history {
+    border-top: 1px solid var(--border-color, #eee);
+    padding-top: 12px;
+}
+
+.state-history-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary, #666);
+    margin-bottom: 8px;
+}
+
+.state-history-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.state-history-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary, #666);
+}
+
+.state-history-item i {
+    color: var(--blue-500, #2196f3);
+}
+
+.history-from {
+    color: var(--gray-500, #9e9e9e);
+}
+
+.history-to {
+    color: var(--text-primary, #333);
+    font-weight: 500;
+}

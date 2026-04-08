@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识库管理 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/knowledge-base.css">
+    <link rel="stylesheet" href="/console/css/pages/knowledge-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-book-3-line" aria-hidden="true"></i> 知识库管理</h1>
+                        <p>三层知识架构配置与管理</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                    <button class="nx-btn nx-btn--primary" onclick="showCreateKbModal()">
+                        <i class="ri-add-line"></i> <span>新建知识库</span>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="kb-grid">
+                    <div class="kb-list">
+                        <div class="kb-list-header">
+                            <h3><i class="ri-book-3-line"></i> 知识库列表</h3>
+                            <div class="kb-search">
+                                <input type="text" placeholder="搜索知识库..." id="kbSearch" oninput="filterKbList()">
+                            </div>
+                        </div>
+                        <div class="kb-list-body" id="kbList"></div>
+                    </div>
+                    
+                    <div class="kb-main" id="kbMain">
+                    <div class="empty-state" id="emptyState">
+                        <i class="ri-book-3-line"></i>
+                        <div class="empty-state-title">选择知识库</div>
+                        <p>从左侧列表选择知识库，或创建新知识库</p>
+                    </div>
+                    <div id="kbDetail" style="display: none; flex-direction: column; flex: 1; min-height: 0;">
+                        <div class="kb-main-header">
+                            <div class="kb-main-title">
+                                <i class="ri-book-3-line"></i>
+                                <span id="kbName">知识库名称</span>
+                            </div>
+                            <div class="kb-main-actions">
+                                <button class="nx-btn nx-btn--secondary" onclick="rebuildIndex()">
+                                    <i class="ri-refresh-line"></i> 重建索引
+                                </button>
+                                <button class="nx-btn nx-btn--secondary" onclick="showEditKbModal()">
+                                    <i class="ri-edit-line"></i> 编辑
+                                </button>
+                                <button class="nx-btn nx-btn--secondary nx-btn--danger" onclick="deleteKb()">
+                                    <i class="ri-delete-bin-line"></i> 删除
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="kb-tabs">
+                            <div class="kb-tab active" data-tab="overview" onclick="switchTab('overview')">
+                                <i class="ri-dashboard-line"></i> 概览
+                            </div>
+                            <div class="kb-tab" data-tab="documents" onclick="switchTab('documents')">
+                                <i class="ri-file-list-3-line"></i> 文档管理
+                            </div>
+                            <div class="kb-tab" data-tab="layer" onclick="switchTab('layer')">
+                                <i class="ri-stack-line"></i> 分层配置
+                            </div>
+                            <div class="kb-tab" data-tab="settings" onclick="switchTab('settings')">
+                                <i class="ri-settings-4-line"></i> 设置
+                            </div>
+                        </div>
+                        
+                        <div class="kb-content" id="kbContent">
+                            <div id="tab-overview">
+                                <div class="index-status">
+                                    <div class="index-progress">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                            <span>索引状态</span>
+                                            <span id="indexStatusText">已完成</span>
+                                        </div>
+                                        <div class="index-progress-bar">
+                                            <div class="index-progress-fill" id="indexProgressFill" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="index-info">
+                                        <div class="index-percent" id="indexPercent">100%</div>
+                                        <div class="index-status-text" id="indexDocCount">0 文档已索引</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="layer-config">
+                                    <div class="layer-card">
+                                        <div class="layer-card-header">
+                                            <div class="layer-card-title general"><i class="ri-global-line"></i> 通用知识层</div>
+                                            <label class="layer-switch">
+                                                <input type="checkbox" id="layerGeneral" checked>
+                                                <span class="layer-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="layer-card-body">
+                                            <div class="layer-stat"><span>优先级</span><span>0</span></div>
+                                            <div class="layer-stat"><span>文档数</span><span id="generalDocCount">0</span></div>
+                                            <div class="layer-stat"><span>状态</span><span id="generalStatus">已启用</span></div>
+                                        </div>
+                                    </div>
+                                    <div class="layer-card">
+                                        <div class="layer-card-header">
+                                            <div class="layer-card-title professional"><i class="ri-briefcase-line"></i> 专业模块层</div>
+                                            <label class="layer-switch">
+                                                <input type="checkbox" id="layerProfessional" checked>
+                                                <span class="layer-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="layer-card-body">
+                                            <div class="layer-stat"><span>优先级</span><span>1</span></div>
+                                            <div class="layer-stat"><span>文档数</span><span id="professionalDocCount">0</span></div>
+                                            <div class="layer-stat"><span>状态</span><span id="professionalStatus">已启用</span></div>
+                                        </div>
+                                    </div>
+                                    <div class="layer-card">
+                                        <div class="layer-card-header">
+                                            <div class="layer-card-title scene"><i class="ri-flashlight-line"></i> 场景知识层</div>
+                                            <label class="layer-switch">
+                                                <input type="checkbox" id="layerScene" checked>
+                                                <span class="layer-slider"></span>
+                                            </label>
+                                        </div>
+                                        <div class="layer-card-body">
+                                            <div class="layer-stat"><span>优先级</span><span>2</span></div>
+                                            <div class="layer-stat"><span>文档数</span><span id="sceneDocCount">0</span></div>
+                                            <div class="layer-stat"><span>状态</span><span id="sceneStatus">已启用</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="tab-documents" style="display: none;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="text" class="config-input" placeholder="搜索文档..." style="width: 240px;">
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button class="nx-btn nx-btn--secondary" onclick="showAddTextModal()">
+                                            <i class="ri-text"></i> 添加文本
+                                        </button>
+                                        <button class="nx-btn nx-btn--secondary" onclick="showUploadModal()">
+                                            <i class="ri-upload-line"></i> 上传文件
+                                        </button>
+                                        <button class="nx-btn nx-btn--secondary" onclick="showUrlImportModal()">
+                                            <i class="ri-link"></i> URL导入
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="doc-list" id="docList"></div>
+                            </div>
+                            
+                            <div id="tab-layer" style="display: none;">
+                                <div class="config-section">
+                                    <div class="config-section-title"><i class="ri-stack-line"></i> 检索策略配置</div>
+                                    <div class="config-grid">
+                                        <div class="config-item">
+                                            <div class="config-label">默认返回数量 (Top K)</div>
+                                            <input type="number" class="config-input" id="defaultTopK" value="5" min="1" max="20">
+                                        </div>
+                                        <div class="config-item">
+                                            <div class="config-label">相似度阈值</div>
+                                            <input type="number" class="config-input" id="defaultThreshold" value="0.7" min="0" max="1" step="0.1">
+                                        </div>
+                                        <div class="config-item">
+                                            <div class="config-label">跨层检索</div>
+                                            <select class="config-select" id="crossLayerEnabled">
+                                                <option value="true">启用</option>
+                                                <option value="false">禁用</option>
+                                            </select>
+                                        </div>
+                                        <div class="config-item">
+                                            <div class="config-label">检索模式</div>
+                                            <select class="config-select" id="searchMode">
+                                                <option value="single">单层检索</option>
+                                                <option value="expand">向下扩展</option>
+                                                <option value="parallel">并行检索</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="config-section">
+                                    <div class="config-section-title"><i class="ri-shield-keyhole-line"></i> 权限控制</div>
+                                    <div class="config-grid">
+                                        <div class="config-item">
+                                            <div class="config-label">可见性</div>
+                                            <select class="config-select" id="visibility">
+                                                <option value="private">私有</option>
+                                                <option value="team">团队</option>
+                                                <option value="public">公开</option>
+                                            </select>
+                                        </div>
+                                        <div class="config-item">
+                                            <div class="config-label">访问权限</div>
+                                            <select class="config-select" id="accessPermission">
+                                                <option value="read">只读</option>
+                                                <option value="write">读写</option>
+                                                <option value="admin">管理</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="tab-settings" style="display: none;">
+                                <div class="config-section">
+                                    <div class="config-section-title"><i class="ri-cpu-line"></i> 嵌入模型配置</div>
+                                    <div class="config-grid">
+                                        <div class="config-item">
+                                            <div class="config-label">嵌入模型</div>
+                                            <select class="config-select" id="embeddingModel">
+                                                <option value="text-embedding-ada-002">text-embedding-ada-002</option>
+                                                <option value="text-embedding-3-small">text-embedding-3-small</option>
+                                                <option value="text-embedding-3-large">text-embedding-3-large</option>
+                                            </select>
+                                        </div>
+                                        <div class="config-item">
+                                            <div class="config-label">向量维度</div>
+                                            <input type="number" class="config-input" id="vectorDimension" value="1536" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="config-section">
+                                    <div class="config-section-title"><i class="ri-scissors-cut-line"></i> 文档分块配置</div>
+                                    <div class="config-grid">
+                                        <div class="config-item">
+                                            <div class="config-label">分块大小</div>
+                                            <input type="number" class="config-input" id="chunkSize" value="500" min="100" max="2000">
+                                        </div>
+                                        <div class="config-item">
+                                            <div class="config-label">分块重叠</div>
+                                            <input type="number" class="config-input" id="chunkOverlap" value="50" min="0" max="500">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top: 24px;">
+                                    <button class="nx-btn nx-btn--primary" onclick="saveSettings()">
+                                        <i class="ri-save-line"></i> 保存设置
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="createKbModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">新建知识库</div>
+                <button class="modal-close" onclick="closeModal('createKbModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">知识库名称 *</label>
+                    <input type="text" class="form-input" id="newKbName" placeholder="输入知识库名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">描述</label>
+                    <textarea class="form-textarea" id="newKbDesc" placeholder="输入知识库描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">知识层</label>
+                    <select class="form-input" id="newKbLayer">
+                        <option value="GENERAL">通用知识层</option>
+                        <option value="PROFESSIONAL">专业模块层</option>
+                        <option value="SCENE">场景知识层</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">可见性</label>
+                    <select class="form-input" id="newKbVisibility">
+                        <option value="private">私有</option>
+                        <option value="team">团队</option>
+                        <option value="public">公开</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">标签</label>
+                    <div class="tag-input" id="tagInput">
+                        <input type="text" placeholder="输入标签后按回车" onkeydown="handleTagInput(event)">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('createKbModal')">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="createKb()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="editKbModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">编辑知识库</div>
+                <button class="modal-close" onclick="closeModal('editKbModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">知识库名称 *</label>
+                    <input type="text" class="form-input" id="editKbName" placeholder="输入知识库名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">描述</label>
+                    <textarea class="form-textarea" id="editKbDesc" placeholder="输入知识库描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">知识层</label>
+                    <select class="form-input" id="editKbLayer">
+                        <option value="GENERAL">通用知识层</option>
+                        <option value="PROFESSIONAL">专业模块层</option>
+                        <option value="SCENE">场景知识层</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">可见性</label>
+                    <select class="form-input" id="editKbVisibility">
+                        <option value="private">私有</option>
+                        <option value="team">团队</option>
+                        <option value="public">公开</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">标签</label>
+                    <div class="tag-input" id="editTagInput">
+                        <input type="text" placeholder="输入标签后按回车" onkeydown="handleEditTagInput(event)">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('editKbModal')">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="updateKb()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="addTextModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div class="modal-title">添加文本内容</div>
+                <button class="modal-close" onclick="closeModal('addTextModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">文档标题 *</label>
+                    <input type="text" class="form-input" id="textDocTitle" placeholder="输入文档标题">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">文档内容 *</label>
+                    <textarea class="form-textarea" id="textDocContent" placeholder="输入文档内容" style="min-height: 200px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">标签</label>
+                    <div class="tag-input" id="docTagInput">
+                        <input type="text" placeholder="输入标签后按回车" onkeydown="handleDocTagInput(event)">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('addTextModal')">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="addTextDocument()">添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">上传文件</div>
+                <button class="modal-close" onclick="closeModal('uploadModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">选择文件</label>
+                    <input type="file" class="form-input" id="uploadFileInput" accept=".txt,.pdf,.doc,.docx,.md,.html" style="padding: 8px;">
+                    <div style="font-size: 12px; color: var(--nx-text-secondary); margin-top: 4px;">支持: TXT, PDF, DOC, DOCX, MD, HTML</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">文档标题（可选）</label>
+                    <input type="text" class="form-input" id="uploadDocTitle" placeholder="默认使用文件名">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">标签</label>
+                    <div class="tag-input" id="uploadTagInput">
+                        <input type="text" placeholder="输入标签后按回车" onkeydown="handleUploadTagInput(event)">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('uploadModal')">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="uploadFile()">上传</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="urlImportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">URL导入</div>
+                <button class="modal-close" onclick="closeModal('urlImportModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">URL地址 *</label>
+                    <input type="url" class="form-input" id="urlInput" placeholder="https://example.com/article">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">文档标题（可选）</label>
+                    <input type="text" class="form-input" id="urlDocTitle" placeholder="默认使用页面标题">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">标签</label>
+                    <div class="tag-input" id="urlTagInput">
+                        <input type="text" placeholder="输入标签后按回车" onkeydown="handleUrlTagInput(event)">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('urlImportModal')">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="importFromUrl()">导入</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="viewDocModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <div class="modal-title" id="viewDocTitle">文档详情</div>
+                <button class="modal-close" onclick="closeModal('viewDocModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="viewDocMeta" style="margin-bottom: 16px; padding: 12px; background: var(--nx-bg-secondary); border-radius: 8px; font-size: 14px;"></div>
+                <div style="margin-bottom: 8px; font-weight: 600;">内容预览</div>
+                <div id="viewDocContent" style="padding: 16px; background: var(--nx-bg-secondary); border-radius: 8px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; font-size: 14px; line-height: 1.6;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('viewDocModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/knowledge-base.js"></script>
+</body>
+</html>

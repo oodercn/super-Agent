@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>招聘概览 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/nx-page.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1>招聘概览</h1>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-4 nx-gap-6 nx-mb-6">
+                        <div class="nx-card">
+                            <div class="nx-card__body">
+                                <div class="nx-flex nx-items-center nx-gap-3">
+                                    <div class="nx-text-3xl" style="color: var(--nx-color-primary);">
+                                        <i class="ri-file-list-3-line"></i>
+                                    </div>
+                                    <div>
+                                        <div class="nx-text-2xl nx-font-bold" id="totalPositions">0</div>
+                                        <div class="nx-text-sm nx-text-secondary">招聘职位</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body">
+                                <div class="nx-flex nx-items-center nx-gap-3">
+                                    <div class="nx-text-3xl" style="color: var(--nx-color-success);">
+                                        <i class="ri-user-add-line"></i>
+                                    </div>
+                                    <div>
+                                        <div class="nx-text-2xl nx-font-bold" id="totalCandidates">0</div>
+                                        <div class="nx-text-sm nx-text-secondary">候选人总数</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body">
+                                <div class="nx-flex nx-items-center nx-gap-3">
+                                    <div class="nx-text-3xl" style="color: var(--nx-color-warning);">
+                                        <i class="ri-calendar-check-line"></i>
+                                    </div>
+                                    <div>
+                                        <div class="nx-text-2xl nx-font-bold" id="todayInterviews">0</div>
+                                        <div class="nx-text-sm nx-text-secondary">今日面试</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__body">
+                                <div class="nx-flex nx-items-center nx-gap-3">
+                                    <div class="nx-text-3xl" style="color: var(--nx-color-info);">
+                                        <i class="ri-checkbox-circle-line"></i>
+                                    </div>
+                                    <div>
+                                        <div class="nx-text-2xl nx-font-bold" id="hiredCount">0</div>
+                                        <div class="nx-text-sm nx-text-secondary">已录用</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-grid nx-grid-cols-2 nx-gap-6 nx-mb-6">
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h4><i class="ri-briefcase-line"></i> 进行中的招聘职位</h4>
+                            </div>
+                            <div class="nx-card__body" id="activePositions">
+                                <p class="nx-text-secondary nx-text-center nx-py-8">暂无进行中的招聘职位</p>
+                            </div>
+                        </div>
+                        <div class="nx-card">
+                            <div class="nx-card__header">
+                                <h4><i class="ri-time-line"></i> 最近候选人动态</h4>
+                            </div>
+                            <div class="nx-card__body" id="recentActivities">
+                                <p class="nx-text-secondary nx-text-center nx-py-8">暂无最近动态</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h4><i class="ri-flow-chart"></i> 招聘漏斗</h4>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-flex nx-justify-around nx-items-end nx-py-8" id="recruitmentFunnel">
+                                <div class="nx-text-center">
+                                    <div class="nx-text-2xl nx-font-bold">0</div>
+                                    <div class="nx-text-sm nx-text-secondary">简历投递</div>
+                                </div>
+                                <div class="nx-text-center">
+                                    <div class="nx-text-2xl nx-font-bold">0</div>
+                                    <div class="nx-text-sm nx-text-secondary">简历筛选</div>
+                                </div>
+                                <div class="nx-text-center">
+                                    <div class="nx-text-2xl nx-font-bold">0</div>
+                                    <div class="nx-text-sm nx-text-secondary">面试中</div>
+                                </div>
+                                <div class="nx-text-center">
+                                    <div class="nx-text-2xl nx-font-bold">0</div>
+                                    <div class="nx-text-sm nx-text-secondary">Offer发放</div>
+                                </div>
+                                <div class="nx-text-center">
+                                    <div class="nx-text-2xl nx-font-bold">0</div>
+                                    <div class="nx-text-sm nx-text-secondary">已入职</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+        });
+        
+        function loadDashboardData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sceneGroupId = urlParams.get('sceneGroupId');
+            console.log('Loading dashboard for scene group:', sceneGroupId);
+        }
+    </script>
+</body>
+</html>

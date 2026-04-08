@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM监控 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/llm-monitor.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <div class="monitor-page">
+                <header class="nx-page__header" style="border-bottom: none;">
+                    <div class="nx-flex nx-items-center nx-gap-3">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                            <i class="ri-menu-line"></i>
+                        </button>
+                        <div class="nx-page__title">
+                            <h1><i class="ri-line-chart-line" aria-hidden="true"></i> LLM 监控</h1>
+                            <p>LLM调用统计、Token消耗、成本分析</p>
+                        </div>
+                    </div>
+                    <div class="nx-page__actions">
+                        <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                            <i class="ri-sun-line"></i>
+                        </button>
+                        <div class="nx-relative">
+                            <div class="nx-page__user-menu" id="user-menu">
+                                <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                                <span class="nx-page__user-name" id="user-name">加载中...</span>
+                                <i class="ri-arrow-down-s-line"></i>
+                            </div>
+                            <div class="nx-page__dropdown-menu" id="user-dropdown">
+                                <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                    <i class="ri-user-line"></i> 个人中心
+                                </div>
+                                <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                    <i class="ri-logout-box-line"></i> 退出登录
+                                </div>
+                            </div>
+                        </div>
+                        <button class="nx-btn nx-btn--secondary" onclick="refreshData()">
+                            <i class="ri-refresh-line"></i> <span>刷新</span>
+                        </button>
+                    </div>
+                </header>
+                
+                <div class="nx-tabs nx-mb-6">
+                    <div class="nx-tabs__list">
+                        <div class="nx-tabs__tab" onclick="window.location.href='llm-config.html'">
+                            <i class="ri-settings-4-line"></i> LLM配置
+                        </div>
+                        <div class="nx-tabs__tab" onclick="window.location.href='llm-knowledge-config.html'">
+                            <i class="ri-book-2-line"></i> 知识库配置
+                        </div>
+                        <div class="nx-tabs__tab nx-tabs__tab--active" onclick="window.location.href='llm-monitor.html'">
+                            <i class="ri-line-chart-line"></i> LLM监控
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-grid" id="statsGrid"></div>
+                
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title"><i class="ri-line-chart-line"></i> 调用趋势</div>
+                            <select class="logs-filter" onchange="loadChartData()">
+                                <option value="24h">最近24小时</option>
+                                <option value="7d">最近7天</option>
+                                <option value="30d">最近30天</option>
+                            </select>
+                        </div>
+                        <div class="chart-body" id="callsChart">
+                            <div style="text-align: center;">
+                                <i class="ri-line-chart-line" style="font-size: 48px; opacity: 0.3;"></i>
+                                <p>调用趋势图表</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title"><i class="ri-pie-chart-line"></i> 提供者分布</div>
+                        </div>
+                        <div class="chart-body" id="providerChart">
+                            <div style="text-align: center;">
+                                <i class="ri-pie-chart-line" style="font-size: 48px; opacity: 0.3;"></i>
+                                <p>提供者使用分布</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="logs-card">
+                    <div class="logs-header">
+                        <div class="logs-title"><i class="ri-file-list-3-line"></i> 调用日志</div>
+                        <div class="logs-filters">
+                            <select class="logs-filter" id="providerFilter" onchange="filterLogs()">
+                                <option value="">全部提供者</option>
+                                <option value="deepseek">DeepSeek</option>
+                                <option value="baidu">百度文心</option>
+                                <option value="openai">OpenAI</option>
+                            </select>
+                            <select class="logs-filter" id="statusFilter" onchange="filterLogs()">
+                                <option value="">全部状态</option>
+                                <option value="success">成功</option>
+                                <option value="error">失败</option>
+                            </select>
+                            <input type="text" class="logs-filter" id="searchInput" placeholder="搜索..." oninput="filterLogs()" style="width: 160px;">
+                        </div>
+                    </div>
+                    <table class="logs-table">
+                        <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>提供者</th>
+                                <th>模型</th>
+                                <th>输入Token</th>
+                                <th>输出Token</th>
+                                <th>延迟(ms)</th>
+                                <th>成本($)</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsBody"></tbody>
+                    </table>
+                    <div class="pagination" id="pagination"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="modal" id="logDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">调用详情</div>
+                <button class="modal-close" onclick="closeModal('logDetailModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="logDetailContent"></div>
+            <div class="modal-footer">
+                <button class="nx-btn nx-btn--secondary" onclick="closeModal('logDetailModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/pages/llm-monitor.js"></script>
+</body>
+</html>

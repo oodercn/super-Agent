@@ -1,0 +1,331 @@
+/**
+ * 角色页面公共样式
+ * 所有角色页面（installer, admin, leader, collaborator）共�?
+ * 使用 Nexus CSS 变量，避免硬编码
+ */
+
+/* ========== 检查清单样�?========== */
+.checklist {
+    padding: 0;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: center;
+    padding: var(--nx-space-4) var(--nx-space-5);
+    border-bottom: 1px solid var(--nx-border);
+    gap: var(--nx-space-4);
+    transition: all var(--nx-transition-fast);
+}
+
+.checklist-item:hover {
+    background: var(--nx-primary-light);
+}
+
+.checklist-item:last-child {
+    border-bottom: none;
+}
+
+.checklist-item i {
+    font-size: var(--nx-text-xl);
+    color: var(--nx-text-secondary);
+    transition: all var(--nx-transition-normal);
+}
+
+.checklist-item span {
+    flex: 1;
+    font-size: var(--nx-text-base);
+}
+
+.checklist-item.completed {
+    background: var(--nx-success-light);
+}
+
+.checklist-item.completed i {
+    color: var(--nx-success);
+}
+
+.checklist-item.completed span {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+/* ========== 工作流步骤样�?========== */
+.workflow-steps {
+    display: flex;
+    gap: var(--nx-space-5);
+    flex-wrap: wrap;
+}
+
+.workflow-step {
+    flex: 1;
+    min-width: 220px;
+    display: flex;
+    gap: var(--nx-space-4);
+    padding: var(--nx-space-6);
+    background: var(--nx-bg-elevated);
+    border-radius: var(--nx-radius-xl);
+    border: 1px solid var(--nx-border);
+    transition: all var(--nx-transition-normal);
+}
+
+.workflow-step:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--nx-shadow-lg);
+}
+
+.step-number {
+    width: 44px;
+    height: 44px;
+    background: var(--nx-primary);
+    border-radius: var(--nx-radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: var(--nx-text-xl);
+    color: white;
+    flex-shrink: 0;
+    box-shadow: var(--nx-shadow);
+}
+
+.step-content h4 {
+    margin: 0 0 var(--nx-space-2) 0;
+    font-size: var(--nx-text-lg);
+    font-weight: 600;
+    color: var(--nx-text-primary);
+}
+
+.step-content p {
+    margin: 0;
+    font-size: var(--nx-text-sm);
+    color: var(--nx-text-secondary);
+    line-height: 1.5;
+}
+
+/* ========== 激活步骤样�?========== */
+.activation-steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nx-space-3);
+}
+
+.activation-step {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-4);
+    padding: var(--nx-space-4) var(--nx-space-5);
+    background: var(--nx-bg-elevated);
+    border-radius: var(--nx-radius-lg);
+    border: 1px solid var(--nx-border);
+    transition: all var(--nx-transition-fast);
+}
+
+.activation-step:hover {
+    background: var(--nx-bg-hover);
+    border-color: var(--nx-primary);
+}
+
+.step-icon {
+    width: var(--nx-space-12);
+    height: var(--nx-space-12);
+    background: var(--nx-primary);
+    border-radius: var(--nx-radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: var(--nx-text-2xl);
+    box-shadow: var(--nx-shadow);
+}
+
+.step-info h4 {
+    margin: 0 0 var(--nx-space-1) 0;
+    font-size: var(--nx-text-base);
+    font-weight: 600;
+}
+
+.step-info p {
+    margin: 0;
+    font-size: var(--nx-text-xs);
+    color: var(--nx-text-secondary);
+}
+
+/* ========== 待办项样�?========== */
+.pending-item,
+.todo-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--nx-space-4) var(--nx-space-5);
+    border-bottom: 1px solid var(--nx-border);
+    transition: all var(--nx-transition-fast);
+}
+
+.pending-item:hover,
+.todo-item:hover {
+    background: var(--nx-primary-light);
+}
+
+.pending-item:last-child,
+.todo-item:last-child {
+    border-bottom: none;
+}
+
+.pending-info h4,
+.todo-info h4 {
+    margin: 0 0 var(--nx-space-1) 0;
+    font-size: var(--nx-text-base);
+    font-weight: 500;
+}
+
+.pending-info p,
+.todo-info p {
+    margin: 0;
+    font-size: var(--nx-text-xs);
+    color: var(--nx-text-secondary);
+}
+
+/* ========== 日志容器样式 ========== */
+.log-container {
+    max-height: 240px;
+    overflow-y: auto;
+    background: var(--nx-bg-input);
+    border-radius: var(--nx-radius-lg);
+    padding: var(--nx-space-4);
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: var(--nx-text-xs);
+    line-height: 1.6;
+}
+
+.log-item {
+    margin: var(--nx-space-2) 0;
+    padding: var(--nx-space-1) 0;
+}
+
+.log-item i {
+    margin-right: var(--nx-space-3);
+    font-size: var(--nx-text-base);
+}
+
+.log-success {
+    color: var(--nx-success);
+}
+
+.log-error {
+    color: var(--nx-danger);
+}
+
+.log-warning {
+    color: var(--nx-warning);
+}
+
+.log-info {
+    color: var(--nx-text-secondary);
+}
+
+/* ========== 统计卡片增强样式 ========== */
+.nx-stat-card {
+    background: var(--nx-bg-elevated);
+    border-radius: var(--nx-radius-xl);
+    padding: var(--nx-space-6);
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-5);
+    border: 1px solid var(--nx-border);
+    transition: all var(--nx-transition-normal);
+}
+
+.nx-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--nx-shadow-xl);
+    border-color: var(--nx-primary);
+}
+
+.nx-stat-card__icon {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--nx-radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--nx-text-3xl);
+    background: var(--nx-primary-light);
+    color: var(--nx-primary);
+}
+
+.nx-stat-card__content h4 {
+    margin: 0 0 var(--nx-space-2) 0;
+    font-size: var(--nx-text-sm);
+    color: var(--nx-text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nx-stat-card__value {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--nx-text-primary);
+    line-height: 1;
+}
+
+/* ========== 进度条样�?========== */
+.progress-bar {
+    height: var(--nx-space-2);
+    background: var(--nx-bg-input);
+    border-radius: var(--nx-radius-sm);
+    overflow: hidden;
+}
+
+.progress-bar__fill {
+    height: 100%;
+    background: var(--nx-primary);
+    border-radius: var(--nx-radius-sm);
+    transition: width var(--nx-transition-slow);
+}
+
+/* ========== 按钮增强 ========== */
+.nx-btn--primary {
+    background: var(--nx-primary);
+    border: none;
+    box-shadow: var(--nx-shadow);
+    transition: all var(--nx-transition-fast);
+}
+
+.nx-btn--primary:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--nx-shadow-lg);
+}
+
+.nx-btn--sm {
+    padding: var(--nx-space-2) var(--nx-space-4);
+    font-size: var(--nx-text-xs);
+    border-radius: var(--nx-radius);
+}
+
+/* ========== 响应式调�?========== */
+@media (max-width: 768px) {
+    .workflow-steps {
+        flex-direction: column;
+    }
+    
+    .workflow-step {
+        min-width: 100%;
+    }
+    
+    .nx-stat-card {
+        padding: var(--nx-space-5);
+    }
+    
+    .nx-stat-card__icon {
+        width: var(--nx-space-12);
+        height: var(--nx-space-12);
+        font-size: var(--nx-text-2xl);
+    }
+    
+    .nx-stat-card__value {
+        font-size: var(--nx-text-3xl);
+    }
+}

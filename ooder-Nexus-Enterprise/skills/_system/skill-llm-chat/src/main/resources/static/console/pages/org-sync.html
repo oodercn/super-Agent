@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>组织同步 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/nexus.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <nav class="nx-page__nav" id="sidebar-nav"></nav>
+        </aside>
+
+        <div class="nx-page__body">
+            <header class="nx-page__header">
+                <div class="nx-page__header-left">
+                    <button class="nx-btn nx-btn--icon nx-btn--ghost nx-sidebar-toggle" aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-refresh-line" aria-hidden="true"></i> 组织同步</h1>
+                        <p>从钉钉、飞书、企业微信同步组织架构</p>
+                    </div>
+                </div>
+                <div class="nx-page__header-right">
+                    <div class="nx-page__user-menu">
+                        <div class="nx-page__user-trigger" id="user-menu-trigger">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="nx-grid nx-grid-cols-3 nx-mb-4">
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon" style="background: var(--nx-success-light); color: var(--nx-success);"><i class="ri-building-line"></i></div>
+                            <div class="nx-stat-card__content">
+                                <h4>部门数量</h4>
+                                <p class="nx-stat-card__value" id="dept-count">0</p>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon" style="background: var(--nx-info-light); color: var(--nx-info);"><i class="ri-user-line"></i></div>
+                            <div class="nx-stat-card__content">
+                                <h4>用户总数</h4>
+                                <p class="nx-stat-card__value" id="user-count">0</p>
+                            </div>
+                        </div>
+                        <div class="nx-stat-card">
+                            <div class="nx-stat-card__icon" style="background: var(--nx-warning-light); color: var(--nx-warning);"><i class="ri-time-line"></i></div>
+                            <div class="nx-stat-card__content">
+                                <h4>最后同步</h4>
+                                <p class="nx-stat-card__value" id="last-sync-time">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nx-card nx-mb-4">
+                        <div class="nx-card__header">
+                            <h3><i class="ri-cloud-line"></i> 平台同步</h3>
+                        </div>
+                        <div class="nx-card__body">
+                            <div class="nx-grid nx-grid-cols-3 nx-gap-4">
+                                <div class="nx-platform-card" id="platform-dingtalk">
+                                    <div class="nx-platform-card__header">
+                                        <div class="nx-platform-card__icon" style="background: #0089FF;">
+                                            <i class="ri-message-2-line"></i>
+                                        </div>
+                                        <div class="nx-platform-card__info">
+                                            <h4>钉钉</h4>
+                                            <span class="nx-platform-card__status" id="dingtalk-status">未启用</span>
+                                        </div>
+                                    </div>
+                                    <div class="nx-platform-card__stats">
+                                        <span><i class="ri-user-line"></i> <span id="dingtalk-users">0</span> 用户</span>
+                                        <span><i class="ri-building-line"></i> <span id="dingtalk-depts">0</span> 部门</span>
+                                    </div>
+                                    <div class="nx-platform-card__actions">
+                                        <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="OrgSync.sync('dingtalk')">
+                                            <i class="ri-refresh-line"></i> 同步
+                                        </button>
+                                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="OrgSync.clearCache('dingtalk')">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="nx-platform-card" id="platform-feishu">
+                                    <div class="nx-platform-card__header">
+                                        <div class="nx-platform-card__icon" style="background: #3370FF;">
+                                            <i class="ri-send-plane-line"></i>
+                                        </div>
+                                        <div class="nx-platform-card__info">
+                                            <h4>飞书</h4>
+                                            <span class="nx-platform-card__status" id="feishu-status">未启用</span>
+                                        </div>
+                                    </div>
+                                    <div class="nx-platform-card__stats">
+                                        <span><i class="ri-user-line"></i> <span id="feishu-users">0</span> 用户</span>
+                                        <span><i class="ri-building-line"></i> <span id="feishu-depts">0</span> 部门</span>
+                                    </div>
+                                    <div class="nx-platform-card__actions">
+                                        <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="OrgSync.sync('feishu')">
+                                            <i class="ri-refresh-line"></i> 同步
+                                        </button>
+                                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="OrgSync.clearCache('feishu')">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="nx-platform-card" id="platform-wecom">
+                                    <div class="nx-platform-card__header">
+                                        <div class="nx-platform-card__icon" style="background: #07C160;">
+                                            <i class="ri-wechat-line"></i>
+                                        </div>
+                                        <div class="nx-platform-card__info">
+                                            <h4>企业微信</h4>
+                                            <span class="nx-platform-card__status" id="wecom-status">未启用</span>
+                                        </div>
+                                    </div>
+                                    <div class="nx-platform-card__stats">
+                                        <span><i class="ri-user-line"></i> <span id="wecom-users">0</span> 用户</span>
+                                        <span><i class="ri-building-line"></i> <span id="wecom-depts">0</span> 部门</span>
+                                    </div>
+                                    <div class="nx-platform-card__actions">
+                                        <button class="nx-btn nx-btn--primary nx-btn--sm" onclick="OrgSync.sync('wecom')">
+                                            <i class="ri-refresh-line"></i> 同步
+                                        </button>
+                                        <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="OrgSync.clearCache('wecom')">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nx-card">
+                        <div class="nx-card__header">
+                            <h3><i class="ri-organization-chart"></i> 组织架构</h3>
+                            <div class="nx-card__actions">
+                                <button class="nx-btn nx-btn--ghost nx-btn--sm" onclick="OrgSync.loadOrgTree()">
+                                    <i class="ri-refresh-line"></i> 刷新
+                                </button>
+                            </div>
+                        </div>
+                        <div class="nx-card__body">
+                            <div id="org-tree" class="nx-org-tree">
+                                <p class="nx-text-muted nx-text-center nx-py-4">选择平台同步后显示组织架构</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    .nx-platform-card {
+        border: 1px solid var(--nx-border);
+        border-radius: var(--nx-radius);
+        padding: 1rem;
+        transition: all 0.2s;
+    }
+    .nx-platform-card:hover {
+        border-color: var(--nx-primary);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .nx-platform-card__header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    .nx-platform-card__icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+    }
+    .nx-platform-card__info h4 {
+        margin: 0;
+        font-size: 1rem;
+    }
+    .nx-platform-card__status {
+        font-size: 0.75rem;
+        color: var(--nx-muted);
+    }
+    .nx-platform-card__status.active {
+        color: var(--nx-success);
+    }
+    .nx-platform-card__stats {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.875rem;
+        color: var(--nx-muted);
+        margin-bottom: 0.75rem;
+    }
+    .nx-platform-card__actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .nx-org-tree {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .nx-org-tree-node {
+        padding: 0.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .nx-org-tree-node:hover {
+        background: var(--nx-hover);
+    }
+    .nx-org-tree-node.dept {
+        font-weight: 500;
+    }
+    .nx-org-tree-node.user {
+        color: var(--nx-muted);
+        padding-left: 1.5rem;
+    }
+    .nx-org-tree-children {
+        margin-left: 1rem;
+        border-left: 1px dashed var(--nx-border);
+    }
+    </style>
+
+    <script src="/console/js/nexus.js"></script>
+    <script>
+    const OrgSync = {
+        platforms: ['dingtalk', 'feishu', 'wecom'],
+        
+        init() {
+            this.loadStatus();
+            this.loadSyncStatus();
+        },
+        
+        async loadStatus() {
+            try {
+                const response = await fetch('/api/v1/org-sync/status');
+                const result = await response.json();
+                if (result.code === 200) {
+                    const data = result.data;
+                    for (const [platform, info] of Object.entries(data)) {
+                        this.updatePlatformCard(platform, info);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load platform status:', e);
+            }
+        },
+        
+        async loadSyncStatus() {
+            try {
+                const response = await fetch('/api/v1/org/sync/status');
+                const result = await response.json();
+                if (result.code === 200) {
+                    const data = result.data;
+                    document.getElementById('dept-count').textContent = data.totalDepartments || 0;
+                    document.getElementById('user-count').textContent = data.totalUsers || 0;
+                    document.getElementById('last-sync-time').textContent = data.lastSyncTime 
+                        ? new Date(data.lastSyncTime).toLocaleString() 
+                        : '-';
+                }
+            } catch (e) {
+                console.error('Failed to load sync status:', e);
+            }
+        },
+        
+        updatePlatformCard(platform, info) {
+            const statusEl = document.getElementById(`${platform}-status`);
+            const usersEl = document.getElementById(`${platform}-users`);
+            const deptsEl = document.getElementById(`${platform}-depts`);
+            
+            if (statusEl) {
+                statusEl.textContent = info.enabled ? '已启用' : '未启用';
+                statusEl.className = `nx-platform-card__status ${info.enabled ? 'active' : ''}`;
+            }
+            if (usersEl) usersEl.textContent = info.userCount || 0;
+            if (deptsEl) deptsEl.textContent = info.departmentCount || 0;
+        },
+        
+        async sync(platform) {
+            const btn = event.target.closest('button');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> 同步中...';
+            
+            try {
+                const response = await fetch(`/api/v1/org/sync/${platform}`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    NX.notify.success(`${platform} 同步成功: ${result.data.userCount} 用户, ${result.data.departmentCount} 部门`);
+                    this.loadSyncStatus();
+                    this.loadOrgTree();
+                } else {
+                    NX.notify.error(result.message || '同步失败');
+                }
+            } catch (e) {
+                NX.notify.error('同步失败: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ri-refresh-line"></i> 同步';
+            }
+        },
+        
+        async clearCache(platform) {
+            if (!confirm('确定要清除缓存吗?')) return;
+            
+            try {
+                const response = await fetch(`/api/v1/org-sync/${platform}/cache`, { method: 'DELETE' });
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    NX.notify.success('缓存已清除');
+                    this.loadStatus();
+                } else {
+                    NX.notify.error(result.message || '清除失败');
+                }
+            } catch (e) {
+                NX.notify.error('清除失败: ' + e.message);
+            }
+        },
+        
+        async loadOrgTree() {
+            try {
+                const response = await fetch('/api/v1/org/tree');
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    this.renderOrgTree(result.data);
+                }
+            } catch (e) {
+                console.error('Failed to load org tree:', e);
+            }
+        },
+        
+        renderOrgTree(nodes) {
+            const container = document.getElementById('org-tree');
+            if (!nodes || nodes.length === 0) {
+                container.innerHTML = '<p class="nx-text-muted nx-text-center nx-py-4">暂无组织数据</p>';
+                return;
+            }
+            
+            container.innerHTML = nodes.map(node => this.renderTreeNode(node)).join('');
+        },
+        
+        renderTreeNode(node) {
+            const isDept = node.type === 'department';
+            const icon = isDept ? 'ri-building-line' : 'ri-user-line';
+            const cls = isDept ? 'dept' : 'user';
+            
+            let html = `<div class="nx-org-tree-node ${cls}">
+                <i class="${icon}"></i> ${node.name}
+                ${node.role ? `<span class="nx-badge nx-badge--sm nx-badge--info">${node.role}</span>` : ''}
+            </div>`;
+            
+            if (node.children && node.children.length > 0) {
+                html += `<div class="nx-org-tree-children">
+                    ${node.children.map(child => this.renderTreeNode(child)).join('')}
+                </div>`;
+            }
+            
+            return html;
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        OrgSync.init();
+    });
+    </script>
+</body>
+</html>

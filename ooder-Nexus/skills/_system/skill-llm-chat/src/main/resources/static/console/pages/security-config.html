@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全配置 - Skill Scene</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/security-config.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-apps-line"></i> Skill Scene
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-shield-check-line" aria-hidden="true"></i> 安全配置</h1>
+                        <p>管理系统安全策略和配置</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-capabilities.html'">
+                                <i class="ri-puzzle-line"></i> 我的能力
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                    <button class="nx-btn nx-btn--secondary" onclick="loadConfig()">
+                        <i class="ri-refresh-line"></i> 刷新
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="saveConfig()">
+                        <i class="ri-save-line"></i> 保存配置
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="icon" style="color: var(--ns-success);"><i class="ri-shield-check-line"></i></div>
+                            <div class="value" id="securityScore">85</div>
+                            <div class="label">安全评分</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="icon" style="color: var(--ns-primary);"><i class="ri-key-2-line"></i></div>
+                            <div class="value" id="activeKeys">0</div>
+                            <div class="label">活跃密钥</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="icon" style="color: var(--ns-warning);"><i class="ri-alarm-warning-line"></i></div>
+                            <div class="value" id="threatCount">0</div>
+                            <div class="label">待处理威胁</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="icon" style="color: #a855f7;"><i class="ri-file-list-3-line"></i></div>
+                            <div class="value" id="policyCount">0</div>
+                            <div class="label">安全策略</div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3><i class="ri-settings-3-line"></i> 基础安全设置</h3>
+                        
+                        <div class="config-row">
+                            <div class="config-label">
+                                启用认证
+                                <small>要求用户登录才能访问系统</small>
+                            </div>
+                            <div class="config-value">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="enableAuth" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="config-row">
+                            <div class="config-label">
+                                启用加密
+                                <small>对敏感数据进行加密存储</small>
+                            </div>
+                            <div class="config-value">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="enableEncryption" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="config-row">
+                            <div class="config-label">
+                                启用审计
+                                <small>记录所有安全相关操作</small>
+                            </div>
+                            <div class="config-value">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="enableAudit" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="config-row">
+                            <div class="config-label">
+                                会话超时（分钟）
+                                <small>用户无操作自动登出时间</small>
+                            </div>
+                            <div class="config-value">
+                                <input type="number" class="config-input" id="sessionTimeout" value="30" min="5" max="1440">
+                            </div>
+                        </div>
+                        
+                        <div class="config-row">
+                            <div class="config-label">
+                                最大登录尝试
+                                <small>超过后锁定账户</small>
+                            </div>
+                            <div class="config-value">
+                                <input type="number" class="config-input" id="maxLoginAttempts" value="5" min="1" max="10">
+                            </div>
+                        </div>
+                        
+                        <div class="config-row">
+                            <div class="config-label">
+                                密钥轮换周期（天）
+                                <small>自动提醒更换密钥</small>
+                            </div>
+                            <div class="config-value">
+                                <input type="number" class="config-input" id="keyRotationDays" value="90" min="30" max="365">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3><i class="ri-fire-line"></i> 防火墙设置</h3>
+                        
+                        <div class="config-row">
+                            <div class="config-label">
+                                启用防火墙
+                                <small>拦截可疑请求</small>
+                            </div>
+                            <div class="config-value">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="enableFirewall">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="config-row">
+                            <div class="config-label">
+                                防火墙模式
+                                <small>选择防护级别</small>
+                            </div>
+                            <div class="config-value">
+                                <select class="config-select" id="firewallMode">
+                                    <option value="disabled">禁用</option>
+                                    <option value="learning">学习模式</option>
+                                    <option value="active" selected>主动防护</option>
+                                    <option value="strict">严格模式</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3><i class="ri-file-shield-2-line"></i> 安全策略</h3>
+                        <div style="margin-bottom: 16px;">
+                            <button class="nx-btn nx-btn--primary" onclick="showCreatePolicyModal()">
+                                <i class="ri-add-line"></i> 新建策略
+                            </button>
+                        </div>
+                        <div id="policyList"></div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3><i class="ri-robot-line"></i> Agent安全配置</h3>
+                        
+                        <div class="config-row">
+                            <div class="config-label">
+                                Agent认证
+                                <small>要求Agent进行身份认证</small>
+                            </div>
+                            <div class="config-value">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="enableAgentAuth" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="config-row">
+                            <div class="config-label">
+                                Agent通讯加密
+                                <small>Agent间通讯使用加密通道</small>
+                            </div>
+                            <div class="config-value">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="enableAgentEncryption" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="config-row">
+                            <div class="config-label">
+                                Agent权限隔离
+                                <small>不同Agent间数据隔离</small>
+                            </div>
+                            <div class="config-value">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="enableAgentIsolation" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3><i class="ri-openai-line"></i> LLM安全配置</h3>
+                        
+                        <div class="config-row">
+                            <div class="config-label">
+                                密钥安全存储
+                                <small>LLM API密钥加密存储</small>
+                            </div>
+                            <div class="config-value">
+                                <div class="status-indicator">
+                                    <span class="status-dot active"></span>
+                                    <span>已启用</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="config-row">
+                            <div class="config-label">
+                                调用频率限制
+                                <small>每分钟最大调用次数</small>
+                            </div>
+                            <div class="config-value">
+                                <input type="number" class="config-input" id="llmRateLimit" value="60" min="1" max="1000">
+                            </div>
+                        </div>
+                        
+                        <div class="config-row">
+                            <div class="config-label">
+                                费用预警阈值
+                                <small>日消费超过此金额预警</small>
+                            </div>
+                            <div class="config-value">
+                                <input type="number" class="config-input" id="costAlertThreshold" value="100" min="1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="createPolicyModal" class="nx-modal">
+        <div class="nx-modal__content" style="width: 500px;">
+            <div class="nx-modal__header">
+                <h3>创建安全策略</h3>
+                <button class="nx-btn nx-btn--ghost nx-btn--icon" onclick="hideCreatePolicyModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <form id="policyForm" onsubmit="createPolicy(event)">
+                <div class="nx-modal__body">
+                    <div class="form-group">
+                        <label>策略名称</label>
+                        <input type="text" id="policyName" required placeholder="例如: 场景访问控制">
+                    </div>
+                    <div class="form-group">
+                        <label>策略类型</label>
+                        <select id="policyType" class="config-select" style="width: 100%;">
+                            <option value="ACCESS_CONTROL">访问控制</option>
+                            <option value="DATA_PROTECTION">数据保护</option>
+                            <option value="NETWORK_SECURITY">网络安全</option>
+                            <option value="AUDIT">审计策略</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>策略描述</label>
+                        <textarea id="policyDescription" rows="3" style="width: 100%; padding: 10px; border: 1px solid var(--ns-border); border-radius: 8px; background: var(--ns-card-bg); color: var(--ns-dark);"></textarea>
+                    </div>
+                </div>
+                <div class="nx-modal__footer">
+                    <button type="button" class="nx-btn nx-btn--secondary" onclick="hideCreatePolicyModal()">取消</button>
+                    <button type="submit" class="nx-btn nx-btn--primary">创建</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/api.js"></script>
+    <script src="/console/js/pages/security-config.js"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+apiVersion: skill.ooder.net/v1
+kind: Skill
+
+metadata:
+  id: skill-install
+  name: 能力安装服务
+  version: 1.0.0
+  description: 提供能力安装、卸载和管理功能
+  author: ooder Team
+  type: system-service
+  license: Apache-2.0
+
+spec:
+  skillForm: PROVIDER
+  type: system-skill
+  
+  ownership: platform
+  
+  capability:
+    address: 0x2A
+    category: SYS
+    code: SYS_INSTALL
+    operations: [install, uninstall, activate, deactivate]
+  
+  runtime:
+    language: java
+    javaVersion: "21"
+    framework: spring-boot
+  
+  supportedSceneTypes:
+    - all
+    
+  dynamicSceneTypes: true
+  
+  autoStart:
+    enabled: true
+    delay: 0s
+    
+  autoJoin:
+    enabled: true
+    matchSceneTypes: true
+    
+  dependencies:
+    - skillId: skill-discovery
+      version: ">=1.0.0"
+      required: true
+  
+  providedInterfaces:
+    - id: install-service
+      version: "1.0"
+      description: "能力安装服务接口"
+  
+  capabilities:
+    - id: install
+      name: 能力安装
+      description: 安装能力包
+      category: install
+    - id: uninstall
+      name: 能力卸载
+      description: 卸载能力包
+      category: install
+    - id: activate
+      name: 能力激活
+      description: 激活已安装的能力
+      category: install
+    - id: deactivate
+      name: 能力停用
+      description: 停用已激活的能力
+      category: install
+  
+  endpoints:
+    - path: /api/v1/install/install
+      method: POST
+      controllerClass: net.ooder.skill.install.controller.InstallController
+      methodName: installSkill
+      description: 安装能力
+      capability: install
+    - path: /api/v1/activations/{installId}/start-with-template
+      method: POST
+      controllerClass: net.ooder.skill.install.controller.ActivationController
+      methodName: startWithTemplate
+      description: 使用模板启动激活
+      capability: activate
+    - path: /api/v1/activations/{installId}/auto-activate
+      method: POST
+      controllerClass: net.ooder.skill.install.controller.ActivationController
+      methodName: autoActivate
+      description: 自动激活
+      capability: activate
+    - path: /api/v1/activations/{installId}/process
+      method: GET
+      controllerClass: net.ooder.skill.install.controller.ActivationController
+      methodName: getProcess
+      description: 获取激活进度
+      capability: activate
+    - path: /api/v1/activations/{installId}/stream
+      method: GET
+      controllerClass: net.ooder.skill.install.controller.ActivationController
+      methodName: streamProcess
+      description: SSE流式获取进度
+      capability: activate
+    - path: /api/v1/activations/{installId}/cancel
+      method: POST
+      controllerClass: net.ooder.skill.install.controller.ActivationController
+      methodName: cancelActivation
+      description: 取消激活
+      capability: activate
+  
+  config:
+    optional:
+      - name: USE_SE_SDK
+        type: boolean
+        default: true
+        description: 是否使用SE SDK
+  
+  resources:
+    cpu: "50m"
+    memory: "64Mi"
+    storage: "10Mi"

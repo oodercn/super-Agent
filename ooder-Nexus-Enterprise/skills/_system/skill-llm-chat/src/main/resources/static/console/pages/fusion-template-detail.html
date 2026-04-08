@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>融合模板详情</title>
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/pages/fusion-template-detail.css">
+    <link rel="stylesheet" href="../css/components/flow-chart.css">
+    <link rel="stylesheet" href="../css/components/completeness-dashboard.css">
+    <link rel="stylesheet" href="../css/components/match-score-widget.css">
+    <link rel="stylesheet" href="../css/components/conflict-resolution.css">
+    <link rel="stylesheet" href="../css/components/fusion-compare-view.css">
+    <link rel="stylesheet" href="../css/components/role-view.css">
+    <link rel="stylesheet" href="../css/remixicon/remixicon.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-header">
+            <div class="header-left">
+                <a href="enterprise-procedure-detail.html?id="procedureId" class="back-link" id="backToProcedure">
+                    <i class="ri-arrow-left-line"></i> 返回企业规范流程
+                </a>
+                <h1 id="pageTitle">融合模板详情</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="editTemplate()">
+                    <i class="ri-edit-line"></i> 编辑
+                </button>
+                <button class="btn btn-primary" onclick="createSceneGroup()">
+                    <i class="ri-group-line"></i> 创建场景组
+                </button>
+            </div>
+        </div>
+
+        <div class="detail-content">
+            <div class="main-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ri-information-line"></i> 基本信息</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>模板ID</label>
+                                <span id="infoTemplateId">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>模板名称</label>
+                                <span id="infoName">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>匹配度</label>
+                                <span id="infoMatchScore">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>融合时间</label>
+                                <span id="infoFusionTime">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>企业规范流程</label>
+                                <span id="infoProcedureName">-</span>
+                            </div>
+                            <div class="info-item">
+                                <label>技能</label>
+                                <span id="infoSkillName">-</span>
+                            </div>
+                            <div class="info-item full-width">
+                                <label>描述</label>
+                                <span id="infoDescription">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ri-git-merge-line"></i> 融合对比</h2>
+                        <div class="view-toggle">
+                            <button class="toggle-btn active" onclick="switchCompareView('table')" id="tableViewBtn">
+                                <i class="ri-table-line"></i> 表格视图
+                            </button>
+                            <button class="toggle-btn" onclick="switchCompareView('flow')" id="flowViewBtn">
+                                <i class="ri-flow-chart"></i> 流程图视图
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="tableView" class="compare-view">
+                            <div class="fusion-compare">
+                                <div class="compare-panel enterprise">
+                                    <h3><i class="ri-building-line"></i> 企业规范流程</h3>
+                                    <div id="enterprisePanel"></div>
+                                </div>
+                                <div class="compare-panel result">
+                                    <h3><i class="ri-check-double-line"></i> 融合结果</h3>
+                                    <div id="resultPanel"></div>
+                                </div>
+                                <div class="compare-panel skill">
+                                    <h3><i class="ri-robot-line"></i> 技能场景定义</h3>
+                                    <div id="skillPanel"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="flowView" class="compare-view" style="display:none;">
+                            <div class="flow-chart-container" id="fusionFlowChart"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="conflictsCard" style="display:none;">
+                    <div class="card-header">
+                        <h2><i class="ri-alert-line"></i> 融合冲突</h2>
+                        <div class="conflict-count">
+                            <span id="resolvedCount" class="count-badge success">0 已解决</span>
+                            <span id="unresolvedCount" class="count-badge warning">0 待解决</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="conflict-progress">
+                            <div class="conflict-progress-bar">
+                                <div class="conflict-progress-fill" id="conflictProgressFill" style="width:0%"></div>
+                            </div>
+                            <div class="conflict-progress-text">
+                                <span>解决进度</span>
+                                <span id="conflictProgressText">0%</span>
+                            </div>
+                        </div>
+                        <div class="conflict-filters">
+                            <button class="conflict-filter-btn active" onclick="filterConflicts('all')">全部</button>
+                            <button class="conflict-filter-btn" onclick="filterConflicts('unresolved')">待解决</button>
+                            <button class="conflict-filter-btn" onclick="filterConflicts('resolved')">已解决</button>
+                        </div>
+                        <div id="conflictsList" class="conflict-list"></div>
+                        <div class="batch-resolution" id="batchResolution" style="display:none;">
+                            <div class="batch-resolution-title">
+                                <i class="ri-flashlight-line"></i> 批量解决
+                            </div>
+                            <div class="batch-resolution-options">
+                                <div class="batch-option enterprise" onclick="selectBatchOption('ENTERPRISE')">
+                                    <div class="batch-option-icon"><i class="ri-building-line"></i></div>
+                                    <div class="batch-option-label">全部使用企业规范</div>
+                                </div>
+                                <div class="batch-option skill" onclick="selectBatchOption('SKILL')">
+                                    <div class="batch-option-icon"><i class="ri-robot-line"></i></div>
+                                    <div class="batch-option-label">全部使用技能定义</div>
+                                </div>
+                            </div>
+                            <button class="batch-resolution-btn" onclick="applyBatchResolution()">
+                                <i class="ri-check-line"></i> 应用批量解决
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ri-team-line"></i> 融合后角色</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="rolesContainer" class="roles-grid"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ri-list-check"></i> 激活步骤</h2>
+                        <div class="view-toggle">
+                            <button class="toggle-btn active" onclick="switchStepsView('list')" id="stepsListViewBtn">
+                                <i class="ri-list-unordered"></i> 列表视图
+                            </button>
+                            <button class="toggle-btn" onclick="switchStepsView('flow')" id="stepsFlowViewBtn">
+                                <i class="ri-flow-chart"></i> 流程图视图
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="stepsListView" class="steps-view">
+                            <div id="activationStepsContainer"></div>
+                        </div>
+                        <div id="stepsFlowView" class="steps-view" style="display:none;">
+                            <div class="flow-chart-container" id="activationFlowChart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="side-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ri-pie-chart-line"></i> 匹配度分析</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="match-score-widget">
+                            <div class="match-score-main">
+                                <div class="match-score-circle">
+                                    <svg width="140" height="140" viewBox="0 0 140 140">
+                                        <defs>
+                                            <linearGradient id="gradient-high" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" style="stop-color:#22c55e"/>
+                                                <stop offset="100%" style="stop-color:#16a34a"/>
+                                            </linearGradient>
+                                            <linearGradient id="gradient-medium" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" style="stop-color:#f59e0b"/>
+                                                <stop offset="100%" style="stop-color:#d97706"/>
+                                            </linearGradient>
+                                            <linearGradient id="gradient-low" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" style="stop-color:#ef4444"/>
+                                                <stop offset="100%" style="stop-color:#dc2626"/>
+                                            </linearGradient>
+                                        </defs>
+                                        <circle class="match-score-circle-bg" cx="70" cy="70" r="58"></circle>
+                                        <circle class="match-score-circle-fill" id="matchScoreCircle" cx="70" cy="70" r="58" 
+                                            stroke-dasharray="364.4" stroke-dashoffset="364.4"></circle>
+                                    </svg>
+                                    <div class="match-score-circle-value">
+                                        <div class="match-score-number"><span id="matchScoreValue">0</span><span>%</span></div>
+                                        <div class="match-score-label">综合匹配度</div>
+                                    </div>
+                                </div>
+                                <div class="match-score-level">
+                                    <div class="match-score-level-icon" id="matchLevelIcon">
+                                        <i class="ri-emotion-happy-line"></i>
+                                    </div>
+                                    <div class="match-score-level-text" id="matchLevelText">优秀</div>
+                                    <div class="match-score-level-desc" id="matchLevelDesc">高度匹配，可直接使用</div>
+                                </div>
+                            </div>
+                            <div class="match-dimensions">
+                                <div class="match-dimensions-title">
+                                    <i class="ri-bar-chart-grouped-line"></i> 维度详情
+                                </div>
+                                <div id="matchDimensions" class="match-dimensions-list"></div>
+                            </div>
+                            <div class="match-recommendations" id="matchRecommendations" style="display:none;">
+                                <div class="match-recommendations-title">
+                                    <i class="ri-lightbulb-line"></i> 优化建议
+                                </div>
+                                <div id="recommendationList" class="recommendation-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ri-settings-3-line"></i> 融合策略</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="strategyInfo" class="strategy-info"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ri-history-line"></i> 版本历史</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="versionHistory" class="version-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="conflictModal" class="modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2><i class="ri-alert-line"></i> 解决冲突</h2>
+                <span class="close" onclick="closeModal('conflictModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="conflictDetail" class="conflict-item-detail"></div>
+                <div class="conflict-values" id="conflictValues">
+                    <div class="conflict-value-card enterprise">
+                        <div class="conflict-value-label">
+                            <i class="ri-building-line"></i> 企业规范值
+                        </div>
+                        <div class="conflict-value-content" id="enterpriseValue">-</div>
+                    </div>
+                    <div class="conflict-value-card skill">
+                        <div class="conflict-value-label">
+                            <i class="ri-robot-line"></i> 技能定义值
+                        </div>
+                        <div class="conflict-value-content" id="skillValue">-</div>
+                    </div>
+                </div>
+                <div class="resolution-options">
+                    <div class="resolution-options-title">选择解决方案</div>
+                    <div class="resolution-option recommended" onclick="selectResolution('ENTERPRISE')" id="optionEnterprise">
+                        <div class="resolution-radio"></div>
+                        <div class="resolution-content">
+                            <div class="resolution-title">
+                                使用企业规范值
+                                <span class="recommended-badge">推荐</span>
+                            </div>
+                            <div class="resolution-desc">优先使用企业内部规范定义的值</div>
+                            <div class="resolution-preview" id="enterprisePreview">-</div>
+                        </div>
+                    </div>
+                    <div class="resolution-option" onclick="selectResolution('SKILL')" id="optionSkill">
+                        <div class="resolution-radio"></div>
+                        <div class="resolution-content">
+                            <div class="resolution-title">使用技能定义值</div>
+                            <div class="resolution-desc">使用技能场景中的定义值</div>
+                            <div class="resolution-preview" id="skillPreview">-</div>
+                        </div>
+                    </div>
+                    <div class="resolution-option" onclick="selectResolution('CUSTOM')" id="optionCustom">
+                        <div class="resolution-radio"></div>
+                        <div class="resolution-content">
+                            <div class="resolution-title">自定义值</div>
+                            <div class="resolution-desc">手动输入自定义的值</div>
+                        </div>
+                        <div class="resolution-custom" id="customInputArea" style="display:none;">
+                            <input type="text" id="customValue" class="resolution-custom-input" placeholder="请输入自定义值...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('conflictModal')">取消</button>
+                <button class="btn btn-primary" onclick="applyResolution()">
+                    <i class="ri-check-line"></i> 应用解决方案
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sceneGroupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>创建场景组</h2>
+                <span class="close" onclick="closeModal('sceneGroupModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="sceneGroupForm">
+                    <div class="form-group">
+                        <label>场景组名称</label>
+                        <input type="text" id="sceneGroupName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>描述</label>
+                        <textarea id="sceneGroupDescription"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('sceneGroupModal')">取消</button>
+                <button class="btn btn-primary" onclick="submitSceneGroup()">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/common.js"></script>
+    <script src="../js/components/flow-chart.js"></script>
+    <script src="../js/components/fusion-compare-view.js"></script>
+    <script src="../js/components/conflict-resolver.js"></script>
+    <script src="../js/components/role-view.js"></script>
+    <script src="../js/pages/fusion-template-detail.js"></script>
+</body>
+</html>

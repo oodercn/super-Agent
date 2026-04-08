@@ -1,0 +1,187 @@
+apiVersion: skill.ooder.net/v1
+kind: Skill
+
+metadata:
+  id: skill-discovery
+  name: 能力发现服务
+  version: 1.0.0
+  description: 提供能力发现、安装和管理功能
+  author: ooder Team
+  type: system-service
+  license: Apache-2.0
+
+spec:
+  skillForm: PROVIDER
+  type: system-skill
+  
+  ownership: platform
+  
+  capability:
+    address: 0x29
+    category: SYS
+    code: SYS_DISCOVERY
+    operations: [discover, install, refresh, stats]
+  
+  runtime:
+    language: java
+    javaVersion: "21"
+    framework: spring-boot
+  
+  supportedSceneTypes:
+    - all
+    
+  dynamicSceneTypes: true
+  
+  autoStart:
+    enabled: false
+    delay: 0s
+    
+  autoJoin:
+    enabled: true
+    matchSceneTypes: true
+    
+  dependencies: []
+  
+  providedInterfaces:
+    - id: discovery-service
+      version: "1.0"
+      description: "能力发现服务接口"
+    - id: install-service
+      version: "1.0"
+      description: "能力安装服务接口"
+  
+  capabilities:
+    - id: discover
+      name: 能力发现
+      description: 从本地或远程发现可用能力
+      category: discovery
+    - id: refresh
+      name: 刷新缓存
+      description: 刷新发现缓存
+      category: discovery
+    - id: stats
+      name: 统计信息
+      description: 获取能力统计信息
+      category: discovery
+  
+  endpoints:
+    - path: /api/v1/discovery/local
+      method: POST
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: discoverLocal
+      description: 本地能力发现
+      capability: discover
+    - path: /api/v1/discovery/github
+      method: POST
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: discoverFromGitHub
+      description: GitHub能力发现
+      capability: discover
+    - path: /api/v1/discovery/gitee
+      method: POST
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: discoverFromGitee
+      description: Gitee能力发现
+      capability: discover
+    - path: /api/v1/discovery/methods
+      method: GET
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: getDiscoveryMethods
+      description: 获取发现方法列表
+      capability: discover
+    - path: /api/v1/discovery/categories/stats
+      method: GET
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: getCategoryStats
+      description: 获取分类统计
+      capability: stats
+    - path: /api/v1/discovery/categories/user-facing
+      method: GET
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: getUserFacingCategories
+      description: 获取用户可见的业务分类
+      capability: stats
+    - path: /api/v1/discovery/refresh
+      method: POST
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: refreshDiscovery
+      description: 刷新发现缓存
+      capability: refresh
+    - path: /api/v1/discovery/install
+      method: POST
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: installCapability
+      parameterTypes:
+        - net.ooder.skill.discovery.dto.discovery.InstallSkillRequestDTO
+      description: 安装能力
+      capability: install
+    - path: /api/v1/discovery/categories/all
+      method: GET
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: getAllCategories
+      description: 获取所有分类
+      capability: stats
+    - path: /api/v1/discovery/categories/{categoryId}/subcategories
+      method: GET
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: getSubCategories
+      parameterTypes:
+        - java.lang.String
+      description: 获取子分类
+      capability: stats
+    - path: /api/v1/discovery/capability/{capabilityId}
+      method: GET
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: getCapabilityDetail
+      parameterTypes:
+        - java.lang.String
+      description: 获取能力详情
+      capability: discover
+    - path: /api/v1/discovery/sync
+      method: POST
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: syncFromSkills
+      description: 从Skills同步
+      capability: discover
+    - path: /api/v1/discovery/config
+      method: GET
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: getConfig
+      description: 获取配置
+      capability: discover
+    - path: /api/v1/discovery/config
+      method: PUT
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: updateConfig
+      parameterTypes:
+        - java.util.Map
+      description: 更新配置
+      capability: discover
+    - path: /api/v1/discovery/capabilities
+      method: GET
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: discoverCapabilities
+      description: 发现能力列表
+      capability: discover
+    - path: /api/v1/discovery/capabilities/types
+      method: GET
+      controllerClass: net.ooder.skill.discovery.controller.DiscoveryController
+      methodName: getCapabilityTypes
+      description: 获取能力类型
+      capability: discover
+  
+  config:
+    optional:
+      - name: USE_SE_SDK
+        type: boolean
+        default: true
+        description: 是否使用SE SDK
+      - name: MOCK_ENABLED
+        type: boolean
+        default: false
+        description: 是否启用Mock模式
+  
+  resources:
+    cpu: "50m"
+    memory: "64Mi"
+    storage: "10Mi"

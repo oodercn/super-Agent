@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent实时监控 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/nx-page.css">
+    <link rel="stylesheet" href="/console/css/pages/agent-pages.css">
+    <style>
+        .monitor-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .monitor-card { background: var(--nx-bg-primary, #fff); border-radius: 12px; padding: 20px; border: 1px solid var(--nx-border-color, #e0e0e0); }
+        .monitor-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .monitor-card-title { font-size: 14px; color: var(--nx-text-secondary, #666); }
+        .monitor-card-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .monitor-card-icon.blue { background: rgba(102, 126, 234, 0.1); color: #667eea; }
+        .monitor-card-icon.green { background: rgba(76, 175, 80, 0.1); color: #4caf50; }
+        .monitor-card-icon.orange { background: rgba(255, 152, 0, 0.1); color: #ff9800; }
+        .monitor-card-icon.red { background: rgba(244, 67, 54, 0.1); color: #f44336; }
+        .monitor-card-value { font-size: 28px; font-weight: 700; color: var(--nx-text-primary, #333); }
+        .monitor-card-trend { font-size: 12px; margin-top: 4px; }
+        .monitor-card-trend.up { color: #4caf50; }
+        .monitor-card-trend.down { color: #f44336; }
+        
+        .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+        .chart-container { background: var(--nx-bg-primary, #fff); border-radius: 12px; padding: 20px; border: 1px solid var(--nx-border-color, #e0e0e0); }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .chart-title { font-size: 16px; font-weight: 600; }
+        .chart-placeholder { height: 200px; background: var(--nx-bg-secondary, #f5f5f5); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--nx-text-tertiary, #999); }
+        
+        .agent-list { background: var(--nx-bg-primary, #fff); border-radius: 12px; border: 1px solid var(--nx-border-color, #e0e0e0); }
+        .agent-list-header { padding: 16px 20px; border-bottom: 1px solid var(--nx-border-color, #e0e0e0); display: flex; justify-content: space-between; align-items: center; }
+        .agent-list-title { font-size: 16px; font-weight: 600; }
+        .agent-item { display: flex; align-items: center; padding: 12px 20px; border-bottom: 1px solid var(--nx-border-color, #e0e0e0); cursor: pointer; transition: background 0.2s; }
+        .agent-item:hover { background: var(--nx-bg-secondary, #f5f5f5); }
+        .agent-item:last-child { border-bottom: none; }
+        .agent-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; margin-right: 12px; }
+        .agent-info { flex: 1; }
+        .agent-name { font-weight: 500; margin-bottom: 2px; }
+        .agent-meta { font-size: 12px; color: var(--nx-text-tertiary, #999); }
+        .agent-stats { display: flex; gap: 16px; text-align: right; }
+        .agent-stat { }
+        .agent-stat-value { font-weight: 600; font-size: 14px; }
+        .agent-stat-label { font-size: 11px; color: var(--nx-text-tertiary, #999); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-dot.online { background: #4caf50; }
+        .status-dot.busy { background: #ff9800; }
+        .status-dot.offline { background: #f44336; }
+        
+        .progress-bar { height: 6px; background: var(--nx-bg-tertiary, #eee); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+        .progress-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+        .progress-bar-fill.low { background: #4caf50; }
+        .progress-bar-fill.medium { background: #ff9800; }
+        .progress-bar-fill.high { background: #f44336; }
+    </style>
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold"><i class="ri-robot-line"></i> Apex OS</h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <h2 class="nx-text-xl nx-font-semibold"><i class="ri-line-chart-line"></i> Agent实时监控</h2>
+                <div class="nx-flex nx-gap-2">
+                    <select class="form-select" id="timeRange" style="width: 120px;">
+                        <option value="5m">最近5分钟</option>
+                        <option value="15m">最近15分钟</option>
+                        <option value="1h" selected>最近1小时</option>
+                        <option value="6h">最近6小时</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="AgentMonitor.refresh()"><i class="ri-refresh-line"></i> 刷新</button>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="monitor-grid">
+                    <div class="monitor-card">
+                        <div class="monitor-card-header">
+                            <span class="monitor-card-title">在线Agent</span>
+                            <div class="monitor-card-icon green"><i class="ri-checkbox-blank-circle-line"></i></div>
+                        </div>
+                        <div class="monitor-card-value" id="onlineCount">-</div>
+                        <div class="monitor-card-trend up" id="onlineTrend"><i class="ri-arrow-up-line"></i> 较昨日</div>
+                    </div>
+                    <div class="monitor-card">
+                        <div class="monitor-card-header">
+                            <span class="monitor-card-title">总请求数</span>
+                            <div class="monitor-card-icon blue"><i class="ri-send-plane-line"></i></div>
+                        </div>
+                        <div class="monitor-card-value" id="totalRequests">-</div>
+                        <div class="monitor-card-trend up" id="requestsTrend"><i class="ri-arrow-up-line"></i> 较昨日</div>
+                    </div>
+                    <div class="monitor-card">
+                        <div class="monitor-card-header">
+                            <span class="monitor-card-title">平均响应时间</span>
+                            <div class="monitor-card-icon orange"><i class="ri-timer-line"></i></div>
+                        </div>
+                        <div class="monitor-card-value" id="avgLatency">-</div>
+                        <div class="monitor-card-trend down" id="latencyTrend"><i class="ri-arrow-down-line"></i> 较昨日</div>
+                    </div>
+                    <div class="monitor-card">
+                        <div class="monitor-card-header">
+                            <span class="monitor-card-title">成功率</span>
+                            <div class="monitor-card-icon green"><i class="ri-percent-line"></i></div>
+                        </div>
+                        <div class="monitor-card-value" id="successRate">-</div>
+                        <div class="monitor-card-trend up" id="successTrend"><i class="ri-arrow-up-line"></i> 较昨日</div>
+                    </div>
+                </div>
+                
+                <div class="charts-row">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <span class="chart-title">请求趋势</span>
+                            <div class="nx-flex nx-gap-2">
+                                <span style="font-size: 12px; color: #667eea;"><i class="ri-checkbox-blank-circle-fill"></i> 请求数</span>
+                                <span style="font-size: 12px; color: #4caf50;"><i class="ri-checkbox-blank-circle-fill"></i> 成功数</span>
+                            </div>
+                        </div>
+                        <div class="chart-placeholder" id="requestChart">
+                            <span>图表加载中...</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <span class="chart-title">Agent状态分布</span>
+                        </div>
+                        <div class="chart-placeholder" id="statusChart">
+                            <span>图表加载中...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="agent-list">
+                    <div class="agent-list-header">
+                        <span class="agent-list-title">Agent列表</span>
+                        <input type="text" class="form-input" placeholder="搜索Agent..." style="width: 200px;" id="searchInput">
+                    </div>
+                    <div id="agentListContainer">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script>
+    (function() {
+        'use strict';
+        
+        var AgentMonitor = window.AgentMonitor = {
+            agents: [],
+            stats: null,
+            
+            init: function() {
+                this.loadStats();
+                this.loadAgents();
+                
+                setInterval(function() {
+                    AgentMonitor.loadStats();
+                }, 30000);
+            },
+            
+            loadStats: function() {
+                ApiClient.get('/api/agent/stats').then(function(result) {
+                    if (result.status === 'success' && result.data) {
+                        AgentMonitor.stats = result.data;
+                        AgentMonitor.renderStats();
+                    }
+                });
+            },
+            
+            loadAgents: function() {
+                ApiClient.get('/api/agent/list').then(function(result) {
+                    if (result.status === 'success' && result.data) {
+                        AgentMonitor.agents = result.data;
+                        AgentMonitor.renderAgents();
+                    }
+                });
+            },
+            
+            renderStats: function() {
+                var stats = this.stats;
+                if (!stats) return;
+                
+                document.getElementById('onlineCount').textContent = stats.online || 0;
+                document.getElementById('totalRequests').textContent = this.formatNumber(stats.totalRequests || 0);
+                document.getElementById('avgLatency').textContent = (stats.avgLatency || 0).toFixed(0) + 'ms';
+                document.getElementById('successRate').textContent = (stats.successRate || 100).toFixed(1) + '%';
+            },
+            
+            renderAgents: function() {
+                var container = document.getElementById('agentListContainer');
+                var html = '';
+                
+                this.agents.forEach(function(agent) {
+                    var statusClass = agent.status || 'offline';
+                    var loadPercent = agent.loadPercentage || 0;
+                    var loadClass = loadPercent < 50 ? 'low' : (loadPercent < 80 ? 'medium' : 'high');
+                    
+                    html += '<div class="agent-item" onclick="window.location.href=\'/console/pages/agent-detail.html?id=' + agent.agentId + '\'">' +
+                        '<div class="agent-avatar"><i class="ri-robot-line"></i></div>' +
+                        '<div class="agent-info">' +
+                            '<div class="agent-name"><span class="status-dot ' + statusClass + '"></span>' + (agent.agentName || agent.agentId) + '</div>' +
+                            '<div class="agent-meta">' + (agent.agentType || '-') + ' | ' + (agent.ipAddress || '-') + '</div>' +
+                        '</div>' +
+                        '<div class="agent-stats">' +
+                            '<div class="agent-stat">' +
+                                '<div class="agent-stat-value">' + (agent.totalRequests || 0) + '</div>' +
+                                '<div class="agent-stat-label">请求数</div>' +
+                            '</div>' +
+                            '<div class="agent-stat">' +
+                                '<div class="agent-stat-value">' + (agent.avgResponseTime || 0).toFixed(0) + 'ms</div>' +
+                                '<div class="agent-stat-label">响应时间</div>' +
+                            '</div>' +
+                            '<div class="agent-stat" style="min-width: 80px;">' +
+                                '<div class="agent-stat-value">' + loadPercent.toFixed(0) + '%</div>' +
+                                '<div class="agent-stat-label">负载</div>' +
+                                '<div class="progress-bar"><div class="progress-bar-fill ' + loadClass + '" style="width: ' + loadPercent + '%"></div></div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+                });
+                
+                container.innerHTML = html || '<div style="padding: 40px; text-align: center; color: var(--nx-text-tertiary, #999);">暂无Agent数据</div>';
+            },
+            
+            refresh: function() {
+                this.loadStats();
+                this.loadAgents();
+            },
+            
+            formatNumber: function(num) {
+                if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+                if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+                return num;
+            }
+        };
+        
+        window.onPageInit = function() {
+            AgentMonitor.init();
+        };
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>启动向导 - Apex OS</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .wizard-container {
+            background: var(--nx-bg-card);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+        }
+        
+        .wizard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .wizard-header h1 {
+            font-size: 32px;
+            margin: 0 0 10px;
+            font-weight: 600;
+        }
+        
+        .wizard-header p {
+            font-size: 16px;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .wizard-progress {
+            display: flex;
+            justify-content: center;
+            padding: 30px 40px;
+            background: var(--nx-bg-primary);
+            border-bottom: 1px solid var(--nx-border);
+        }
+        
+        .progress-step {
+            display: flex;
+            align-items: center;
+            margin: 0 20px;
+            opacity: 0.5;
+            transition: all 0.3s;
+        }
+        
+        .progress-step.active {
+            opacity: 1;
+        }
+        
+        .progress-step.completed {
+            opacity: 1;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--nx-bg-card);
+            border: 2px solid var(--nx-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 12px;
+            transition: all 0.3s;
+        }
+        
+        .progress-step.active .step-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+        
+        .progress-step.completed .step-number {
+            background: var(--nx-success);
+            color: white;
+            border-color: transparent;
+        }
+        
+        .step-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .wizard-content {
+            padding: 40px;
+            min-height: 400px;
+        }
+        
+        .wizard-step {
+            display: none;
+        }
+        
+        .wizard-step.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .step-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .step-description {
+            color: var(--nx-text-secondary);
+            margin-bottom: 30px;
+            font-size: 15px;
+        }
+        
+        .config-card {
+            background: var(--nx-bg-primary);
+            border: 1px solid var(--nx-border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        
+        .config-card:hover {
+            border-color: var(--nx-primary);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+        
+        .config-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .config-card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .config-card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .icon-llm {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .icon-dingding {
+            background: linear-gradient(135deg, #0089FF 0%, #0066CC 100%);
+            color: white;
+        }
+        
+        .icon-feishu {
+            background: linear-gradient(135deg, #00D6B9 0%, #00B8A0 100%);
+            color: white;
+        }
+        
+        .icon-weixin {
+            background: linear-gradient(135deg, #07C160 0%, #059645 100%);
+            color: white;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--nx-border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: var(--nx-bg-card);
+            color: var(--nx-text);
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--nx-primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-hint {
+            font-size: 12px;
+            color: var(--nx-text-tertiary);
+            margin-top: 6px;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--nx-bg-primary);
+            color: var(--nx-text);
+            border: 1px solid var(--nx-border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--nx-bg-secondary);
+        }
+        
+        .btn-skip {
+            background: transparent;
+            color: var(--nx-text-secondary);
+        }
+        
+        .btn-skip:hover {
+            color: var(--nx-text);
+        }
+        
+        .test-result {
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .test-result.success {
+            display: block;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--nx-success);
+            color: var(--nx-success);
+        }
+        
+        .test-result.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--nx-danger);
+            color: var(--nx-danger);
+        }
+        
+        .optional-badge {
+            background: var(--nx-warning);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .skip-all-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .skip-all-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="wizard-container">
+        <div class="wizard-header" style="position: relative;">
+            <button class="skip-all-btn" onclick="SetupWizard.skipAll()">
+                <i class="ri-skip-forward-line"></i> 跳过所有
+            </button>
+            <h1><i class="ri-rocket-2-line"></i> 欢迎使用 Apex OS</h1>
+            <p>让我们开始配置您的系统，只需3步即可完成</p>
+        </div>
+        
+        <div class="wizard-progress">
+            <div class="progress-step active" id="step1-indicator">
+                <div class="step-number">1</div>
+                <div class="step-label">LLM配置</div>
+            </div>
+            <div class="progress-step" id="step2-indicator">
+                <div class="step-number">2</div>
+                <div class="step-label">CLI配置</div>
+            </div>
+            <div class="progress-step" id="step3-indicator">
+                <div class="step-number">3</div>
+                <div class="step-label">完成</div>
+            </div>
+        </div>
+        
+        <div class="wizard-content">
+            <!-- Step 1: LLM KEY配置 -->
+            <div class="wizard-step active" id="step1">
+                <div class="step-title">
+                    <i class="ri-key-2-line"></i>
+                    配置LLM密钥
+                    <span class="optional-badge">可选</span>
+                </div>
+                <div class="step-description">
+                    配置大语言模型的API密钥，启用AI功能。如果暂时不需要，可以跳过此步骤。
+                </div>
+                
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <div class="config-card-title">
+                            <div class="config-card-icon icon-llm">
+                                <i class="ri-openai-line"></i>
+                            </div>
+                            LLM提供商配置
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">选择LLM提供商</label>
+                        <select class="form-input" id="llmProvider" onchange="SetupWizard.updateLLMFields()">
+                            <option value="openai">OpenAI</option>
+                            <option value="deepseek">DeepSeek</option>
+                            <option value="zhipu">智谱AI</option>
+                            <option value="moonshot">Moonshot</option>
+                            <option value="custom">自定义</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">API密钥</label>
+                        <input type="password" class="form-input" id="llmApiKey" placeholder="请输入API密钥">
+                        <div class="form-hint">您的API密钥将被安全加密存储</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">API端点（可选）</label>
+                        <input type="text" class="form-input" id="llmApiEndpoint" placeholder="留空使用默认端点">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">模型名称</label>
+                        <input type="text" class="form-input" id="llmModel" placeholder="例如：gpt-4, deepseek-chat">
+                    </div>
+                    
+                    <button class="btn btn-secondary" onclick="SetupWizard.testLLMConnection()">
+                        <i class="ri-link"></i> 测试连接
+                    </button>
+                    
+                    <div class="test-result" id="llmTestResult"></div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn btn-skip" onclick="SetupWizard.skipStep(1)">
+                        <i class="ri-skip-forward-line"></i> 跳过此步
+                    </button>
+                    <button class="btn btn-primary" onclick="SetupWizard.nextStep()">
+                        下一步 <i class="ri-arrow-right-line"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Step 2: CLI配置 -->
+            <div class="wizard-step" id="step2">
+                <div class="step-title">
+                    <i class="ri-customer-service-2-line"></i>
+                    配置CLI通知
+                    <span class="optional-badge">可选</span>
+                </div>
+                <div class="step-description">
+                    配置钉钉、飞书、企业微信等通知渠道，接收系统消息和告警。如果暂时不需要，可以跳过此步骤。
+                </div>
+                
+                <!-- 钉钉配置 -->
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <div class="config-card-title">
+                            <div class="config-card-icon icon-dingding">
+                                <i class="ri-message-2-line"></i>
+                            </div>
+                            钉钉机器人
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Webhook地址</label>
+                        <input type="text" class="form-input" id="dingdingWebhook" 
+                               placeholder="https://oapi.dingtalk.com/robot/send?access_token=...">
+                        <div class="form-hint">在钉钉群设置中添加自定义机器人获取</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">加签密钥（可选）</label>
+                        <input type="password" class="form-input" id="dingdingSecret" placeholder="SEC...开头的密钥">
+                        <div class="form-hint">如果机器人启用了加签验证，需要填写此密钥</div>
+                    </div>
+                    
+                    <button class="btn btn-secondary" onclick="SetupWizard.testDingDingConnection()">
+                        <i class="ri-link"></i> 测试连接
+                    </button>
+                    
+                    <div class="test-result" id="dingdingTestResult"></div>
+                </div>
+                
+                <!-- 飞书配置 -->
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <div class="config-card-title">
+                            <div class="config-card-icon icon-feishu">
+                                <i class="ri-message-3-line"></i>
+                            </div>
+                            飞书机器人
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Webhook地址</label>
+                        <input type="text" class="form-input" id="feishuWebhook" 
+                               placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/...">
+                        <div class="form-hint">在飞书群设置中添加自定义机器人获取</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">签名密钥（可选）</label>
+                        <input type="password" class="form-input" id="feishuSecret" placeholder="启用签名验证时需要">
+                        <div class="form-hint">如果机器人启用了签名验证，需要填写此密钥</div>
+                    </div>
+                    
+                    <button class="btn btn-secondary" onclick="SetupWizard.testFeishuConnection()">
+                        <i class="ri-link"></i> 测试连接
+                    </button>
+                    
+                    <div class="test-result" id="feishuTestResult"></div>
+                </div>
+                
+                <!-- 企业微信配置 -->
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <div class="config-card-title">
+                            <div class="config-card-icon icon-weixin">
+                                <i class="ri-wechat-line"></i>
+                            </div>
+                            企业微信机器人
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Webhook地址</label>
+                        <input type="text" class="form-input" id="weixinWebhook" 
+                               placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=...">
+                        <div class="form-hint">在企业微信群设置中添加机器人获取</div>
+                    </div>
+                    
+                    <button class="btn btn-secondary" onclick="SetupWizard.testWeixinConnection()">
+                        <i class="ri-link"></i> 测试连接
+                    </button>
+                    
+                    <div class="test-result" id="weixinTestResult"></div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="SetupWizard.prevStep()">
+                        <i class="ri-arrow-left-line"></i> 上一步
+                    </button>
+                    <button class="btn btn-skip" onclick="SetupWizard.skipStep(2)">
+                        <i class="ri-skip-forward-line"></i> 跳过此步
+                    </button>
+                    <button class="btn btn-primary" onclick="SetupWizard.nextStep()">
+                        下一步 <i class="ri-arrow-right-line"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Step 3: 完成 -->
+            <div class="wizard-step" id="step3">
+                <div class="step-title">
+                    <i class="ri-checkbox-circle-line"></i>
+                    配置完成
+                </div>
+                <div class="step-description">
+                    恭喜！您已完成系统初始化配置。现在可以开始使用Apex OS了。
+                </div>
+                
+                <div class="config-card" style="text-align: center; padding: 60px 24px;">
+                    <div style="font-size: 80px; color: var(--nx-success); margin-bottom: 20px;">
+                        <i class="ri-checkbox-circle-line"></i>
+                    </div>
+                    <h2 style="margin: 0 0 16px; font-size: 28px;">配置成功！</h2>
+                    <p style="color: var(--nx-text-secondary); margin: 0 0 30px; font-size: 16px;">
+                        您可以随时在系统设置中修改这些配置
+                    </p>
+                    <button class="btn btn-primary" style="font-size: 16px; padding: 14px 32px;" onclick="SetupWizard.finish()">
+                        开始使用 <i class="ri-arrow-right-line"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        var SetupWizard = {
+            currentStep: 1,
+            totalSteps: 3,
+            config: {
+                llm: {},
+                cli: {}
+            },
+            
+            init: function() {
+                this.loadSavedConfig();
+            },
+            
+            loadSavedConfig: function() {
+                var savedConfig = localStorage.getItem('setupConfig');
+                if (savedConfig) {
+                    this.config = JSON.parse(savedConfig);
+                    this.fillFormValues();
+                }
+            },
+            
+            saveConfig: function() {
+                localStorage.setItem('setupConfig', JSON.stringify(this.config));
+            },
+            
+            fillFormValues: function() {
+                if (this.config.llm) {
+                    document.getElementById('llmProvider').value = this.config.llm.provider || 'openai';
+                    document.getElementById('llmApiKey').value = this.config.llm.apiKey || '';
+                    document.getElementById('llmApiEndpoint').value = this.config.llm.endpoint || '';
+                    document.getElementById('llmModel').value = this.config.llm.model || '';
+                }
+                
+                if (this.config.cli) {
+                    document.getElementById('dingdingWebhook').value = this.config.cli.dingdingWebhook || '';
+                    document.getElementById('dingdingSecret').value = this.config.cli.dingdingSecret || '';
+                    document.getElementById('feishuWebhook').value = this.config.cli.feishuWebhook || '';
+                    document.getElementById('feishuSecret').value = this.config.cli.feishuSecret || '';
+                    document.getElementById('weixinWebhook').value = this.config.cli.weixinWebhook || '';
+                }
+            },
+            
+            updateLLMFields: function() {
+                var provider = document.getElementById('llmProvider').value;
+                var modelInput = document.getElementById('llmModel');
+                var endpointInput = document.getElementById('llmApiEndpoint');
+                
+                var defaults = {
+                    openai: { model: 'gpt-4', endpoint: '' },
+                    deepseek: { model: 'deepseek-chat', endpoint: 'https://api.deepseek.com/v1' },
+                    zhipu: { model: 'glm-4', endpoint: 'https://open.bigmodel.cn/api/paas/v4' },
+                    moonshot: { model: 'moonshot-v1-8k', endpoint: 'https://api.moonshot.cn/v1' },
+                    custom: { model: '', endpoint: '' }
+                };
+                
+                if (defaults[provider]) {
+                    modelInput.placeholder = defaults[provider].model || '输入模型名称';
+                    endpointInput.placeholder = defaults[provider].endpoint || '留空使用默认端点';
+                }
+            },
+            
+            testLLMConnection: function() {
+                var provider = document.getElementById('llmProvider').value;
+                var apiKey = document.getElementById('llmApiKey').value;
+                var endpoint = document.getElementById('llmApiEndpoint').value;
+                var model = document.getElementById('llmModel').value;
+                
+                if (!apiKey) {
+                    this.showTestResult('llmTestResult', false, '请输入API密钥');
+                    return;
+                }
+                
+                this.showTestResult('llmTestResult', null, '正在测试连接...');
+                
+                fetch('/api/v1/setup/test-llm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        provider: provider,
+                        apiKey: apiKey,
+                        endpoint: endpoint,
+                        model: model
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        this.showTestResult('llmTestResult', true, '连接成功！API密钥有效');
+                    } else {
+                        this.showTestResult('llmTestResult', false, '连接失败：' + (data.message || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    this.showTestResult('llmTestResult', false, '连接失败：' + error.message);
+                });
+            },
+            
+            testDingDingConnection: function() {
+                var webhook = document.getElementById('dingdingWebhook').value;
+                var secret = document.getElementById('dingdingSecret').value;
+                
+                if (!webhook) {
+                    this.showTestResult('dingdingTestResult', false, '请输入Webhook地址');
+                    return;
+                }
+                
+                this.showTestResult('dingdingTestResult', null, '正在测试连接...');
+                
+                fetch('/api/v1/setup/test-dingding', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        webhook: webhook,
+                        secret: secret
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        this.showTestResult('dingdingTestResult', true, '连接成功！已发送测试消息');
+                    } else {
+                        this.showTestResult('dingdingTestResult', false, '连接失败：' + (data.message || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    this.showTestResult('dingdingTestResult', false, '连接失败：' + error.message);
+                });
+            },
+            
+            testFeishuConnection: function() {
+                var webhook = document.getElementById('feishuWebhook').value;
+                var secret = document.getElementById('feishuSecret').value;
+                
+                if (!webhook) {
+                    this.showTestResult('feishuTestResult', false, '请输入Webhook地址');
+                    return;
+                }
+                
+                this.showTestResult('feishuTestResult', null, '正在测试连接...');
+                
+                fetch('/api/v1/setup/test-feishu', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        webhook: webhook,
+                        secret: secret
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        this.showTestResult('feishuTestResult', true, '连接成功！已发送测试消息');
+                    } else {
+                        this.showTestResult('feishuTestResult', false, '连接失败：' + (data.message || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    this.showTestResult('feishuTestResult', false, '连接失败：' + error.message);
+                });
+            },
+            
+            testWeixinConnection: function() {
+                var webhook = document.getElementById('weixinWebhook').value;
+                
+                if (!webhook) {
+                    this.showTestResult('weixinTestResult', false, '请输入Webhook地址');
+                    return;
+                }
+                
+                this.showTestResult('weixinTestResult', null, '正在测试连接...');
+                
+                fetch('/api/v1/setup/test-weixin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        webhook: webhook
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        this.showTestResult('weixinTestResult', true, '连接成功！已发送测试消息');
+                    } else {
+                        this.showTestResult('weixinTestResult', false, '连接失败：' + (data.message || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    this.showTestResult('weixinTestResult', false, '连接失败：' + error.message);
+                });
+            },
+            
+            showTestResult: function(elementId, success, message) {
+                var element = document.getElementById(elementId);
+                element.className = 'test-result';
+                
+                if (success === null) {
+                    element.innerHTML = '<i class="ri-loader-4-line"></i> ' + message;
+                    element.style.display = 'block';
+                } else if (success) {
+                    element.classList.add('success');
+                    element.innerHTML = '<i class="ri-checkbox-circle-line"></i> ' + message;
+                } else {
+                    element.classList.add('error');
+                    element.innerHTML = '<i class="ri-error-warning-line"></i> ' + message;
+                }
+            },
+            
+            nextStep: function() {
+                this.saveCurrentStepConfig();
+                
+                if (this.currentStep < this.totalSteps) {
+                    this.currentStep++;
+                    this.updateUI();
+                }
+            },
+            
+            prevStep: function() {
+                if (this.currentStep > 1) {
+                    this.currentStep--;
+                    this.updateUI();
+                }
+            },
+            
+            skipStep: function(step) {
+                console.log('Skipping step ' + step);
+                this.nextStep();
+            },
+            
+            skipAll: function() {
+                if (confirm('确定要跳过所有配置吗？您可以稍后在系统设置中完成配置。')) {
+                    this.finish();
+                }
+            },
+            
+            saveCurrentStepConfig: function() {
+                if (this.currentStep === 1) {
+                    this.config.llm = {
+                        provider: document.getElementById('llmProvider').value,
+                        apiKey: document.getElementById('llmApiKey').value,
+                        endpoint: document.getElementById('llmApiEndpoint').value,
+                        model: document.getElementById('llmModel').value
+                    };
+                } else if (this.currentStep === 2) {
+                    this.config.cli = {
+                        dingdingWebhook: document.getElementById('dingdingWebhook').value,
+                        dingdingSecret: document.getElementById('dingdingSecret').value,
+                        feishuWebhook: document.getElementById('feishuWebhook').value,
+                        feishuSecret: document.getElementById('feishuSecret').value,
+                        weixinWebhook: document.getElementById('weixinWebhook').value
+                    };
+                }
+                
+                this.saveConfig();
+            },
+            
+            updateUI: function() {
+                for (var i = 1; i <= this.totalSteps; i++) {
+                    var stepElement = document.getElementById('step' + i);
+                    var indicatorElement = document.getElementById('step' + i + '-indicator');
+                    
+                    if (i === this.currentStep) {
+                        stepElement.classList.add('active');
+                        indicatorElement.classList.add('active');
+                    } else {
+                        stepElement.classList.remove('active');
+                        indicatorElement.classList.remove('active');
+                    }
+                    
+                    if (i < this.currentStep) {
+                        indicatorElement.classList.add('completed');
+                    } else {
+                        indicatorElement.classList.remove('completed');
+                    }
+                }
+            },
+            
+            finish: function() {
+                this.saveCurrentStepConfig();
+                
+                fetch('/api/v1/setup/complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.config)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    localStorage.setItem('setupCompleted', 'true');
+                    window.location.href = '/console/index.html';
+                })
+                .catch(error => {
+                    console.error('Failed to save config:', error);
+                    localStorage.setItem('setupCompleted', 'true');
+                    window.location.href = '/console/index.html';
+                });
+            }
+        };
+        
+        SetupWizard.init();
+    </script>
+</body>
+</html>

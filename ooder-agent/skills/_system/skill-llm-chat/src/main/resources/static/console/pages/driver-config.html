@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>驱动配置管理 - Apex OS</title>
+    <link rel="stylesheet" href="../css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="../css/nexus.css">
+    <link rel="stylesheet" href="../css/pages/driver-config.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-page__sidebar-header">
+                <div class="nx-page__sidebar-brand">
+                    <h1><i class="ri-hexagon-fill"></i> Apex OS</h1>
+                </div>
+            </div>
+            <nav class="nav-menu" id="nav-menu">
+            </nav>
+        </aside>
+
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="nx-page__title">
+                        <h1><i class="ri-settings-3-line" aria-hidden="true"></i> 驱动配置管理</h1>
+                        <p>配置和管理17种能力分类的驱动服务</p>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--secondary" onclick="testAllConnections()">
+                        <i class="ri-link"></i> 测试全部连接
+                    </button>
+                    <button class="nx-btn nx-btn--primary" onclick="saveAllConfigs()">
+                        <i class="ri-save-line"></i> 保存全部配置
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="nx-page__body">
+                <div class="driver-config-container">
+                    <div class="config-tabs">
+                        <div class="tabs-header" id="configTabsHeader"></div>
+                        <div class="tabs-content" id="configTabsContent"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="nx-modal" id="configModal" style="display:none;">
+        <div class="nx-modal__content config-modal">
+            <div class="nx-modal__header">
+                <h3 id="configModalTitle">配置驱动</h3>
+                <button class="nx-modal__close" onclick="closeConfigModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body" id="configModalBody"></div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--ghost" onclick="closeConfigModal()">取消</button>
+                <button class="nx-btn nx-btn--primary" onclick="saveDriverConfig()">保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="nx-modal" id="testResultModal" style="display:none;">
+        <div class="nx-modal__content test-result-modal">
+            <div class="nx-modal__header">
+                <h3>连接测试结果</h3>
+                <button class="nx-modal__close" onclick="closeTestResultModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="nx-modal__body" id="testResultBody"></div>
+            <div class="nx-modal__footer">
+                <button class="nx-btn nx-btn--primary" onclick="closeTestResultModal()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/nexus.js?v=3"></script>
+    <script src="../js/menu.js?v=3"></script>
+    <script src="../js/api-service.js?v=3"></script>
+    <script src="../js/page-init.js?v=3" data-auto-init></script>
+    <script src="../js/utils/api-client.js"></script>
+    <script src="../js/common/category-service.js"></script>
+    <script src="../js/pages/driver-config.js"></script>
+</body>
+</html>

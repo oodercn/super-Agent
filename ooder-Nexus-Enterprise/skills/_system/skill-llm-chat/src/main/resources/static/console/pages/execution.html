@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>执行详情 - Skill Scene</title>
+    
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/pages/execution.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-apps-line"></i> Skill Scene
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <h2 class="nx-text-lg nx-font-semibold" id="pageTitle">执行详情</h2>
+                </div>
+                <div class="nx-flex nx-items-center nx-gap-2">
+                    <button class="nx-btn nx-btn--secondary" onclick="rerunExecution()">
+                        <i class="ri-refresh-line"></i> 重新执行
+                    </button>
+                </div>
+            </header>
+            
+            <div class="nx-page__body">
+                <div class="nx-card nx-mb-6">
+                    <div class="nx-card__header">
+                        <h3><i class="ri-information-line"></i> 基本信息</h3>
+                    </div>
+                    <div class="nx-card__body">
+                        <div class="nx-grid nx-grid-cols-3 nx-gap-6">
+                            <div class="nx-form-group">
+                                <label class="nx-form-label">执行ID</label>
+                                <p id="executionId" class="nx-text-secondary">-</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-form-label">场景名称</label>
+                                <p id="sceneName" class="nx-text-secondary">-</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-form-label">执行状态</label>
+                                <p id="executionStatus">-</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-form-label">开始时间</label>
+                                <p id="startTime" class="nx-text-secondary">-</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-form-label">结束时间</label>
+                                <p id="endTime" class="nx-text-secondary">-</p>
+                            </div>
+                            <div class="nx-form-group">
+                                <label class="nx-form-label">执行时长</label>
+                                <p id="duration" class="nx-text-secondary">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="nx-card nx-mb-6">
+                    <div class="nx-card__header">
+                        <h3><i class="ri-terminal-box-line"></i> 执行日志</h3>
+                    </div>
+                    <div class="nx-card__body">
+                        <div id="executionLogs" class="nx-bg-gray-50 nx-rounded nx-p-4 nx-max-h-96 nx-overflow-y-auto" style="font-family: monospace; font-size: 12px;">
+                            <p class="nx-text-secondary">加载中...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="nx-card">
+                    <div class="nx-card__header">
+                        <h3><i class="ri-pie-chart-line"></i> 执行结果</h3>
+                    </div>
+                    <div class="nx-card__body">
+                        <div id="executionResult">
+                            <p class="nx-text-secondary">加载中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/utils/dict-cache.js"></script>
+    <script src="/console/js/pages/execution.js"></script>
+</body>
+</html>

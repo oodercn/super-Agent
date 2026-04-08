@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill 详情 - Apex OS</title>
+    <link rel="stylesheet" href="/console/css/remixicon/remixicon.css">
+    <link rel="stylesheet" href="/console/css/nexus.css">
+    <link rel="stylesheet" href="/console/css/nx-page.css">
+    <link rel="stylesheet" href="/console/css/pages/skill-pages.css">
+</head>
+<body>
+    <div class="nx-page">
+        <aside class="nx-page__sidebar">
+            <div class="nx-p-4 nx-mb-4">
+                <h1 class="nx-text-lg nx-font-bold">
+                    <i class="ri-server-line"></i> Apex OS
+                </h1>
+            </div>
+            <ul class="nav-menu" id="nav-menu"></ul>
+        </aside>
+        
+        <main class="nx-page__content">
+            <header class="nx-page__header">
+                <div class="nx-flex nx-items-center nx-gap-3">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-sidebar-toggle aria-label="切换侧边栏">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <a href="capability-management.html" class="nx-btn nx-btn--ghost nx-btn--icon">
+                        <i class="ri-arrow-left-line"></i>
+                    </a>
+                    <div class="nx-page__title">
+                        <h1 id="pageTitle">Skill 详情</h1>
+                    </div>
+                </div>
+                <div class="nx-page__actions">
+                    <button class="nx-btn nx-btn--ghost nx-btn--icon" data-nx-theme-toggle aria-label="切换主题">
+                        <i class="ri-sun-line"></i>
+                    </button>
+                    <div class="nx-relative">
+                        <div class="nx-page__user-menu" id="user-menu">
+                            <div class="nx-page__user-avatar" id="user-avatar">U</div>
+                            <span class="nx-page__user-name" id="user-name">加载中...</span>
+                            <i class="ri-arrow-down-s-line"></i>
+                        </div>
+                        <div class="nx-page__dropdown-menu" id="user-dropdown">
+                            <div class="nx-page__dropdown-item" onclick="window.location.href='my-profile.html'">
+                                <i class="ri-user-line"></i> 个人中心
+                            </div>
+                            <div class="nx-page__dropdown-item nx-page__dropdown-item--danger" onclick="NX.userMenu.logout()">
+                                <i class="ri-logout-box-line"></i> 退出登录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="nx-page__main">
+                <div class="nx-container">
+                    <div id="loading-state" class="nx-text-center nx-py-12">
+                        <i class="ri-loader-4-line ri-spin" style="font-size: 32px;"></i>
+                        <p class="nx-mt-4">加载中...</p>
+                    </div>
+                    
+                    <div id="content-area" style="display: none;">
+                        <div class="skill-header-card">
+                            <div class="skill-icon-large" id="skill-icon">
+                                <i class="ri-puzzle-line"></i>
+                            </div>
+                            <div class="skill-header-info">
+                                <h1 id="skill-name">-</h1>
+                                <div class="skill-header-meta">
+                                    <span class="nx-badge nx-badge--secondary" id="skill-id">-</span>
+                                    <span class="nx-badge nx-badge--info" id="skill-version">-</span>
+                                    <span class="status-badge" id="skill-status">-</span>
+                                    <span class="nx-badge" id="skill-form">-</span>
+                                </div>
+                                <div class="skill-description" id="skill-description">暂无描述</div>
+                            </div>
+                            <div class="skill-header-actions">
+                                <button class="nx-btn nx-btn--primary" id="btn-activate" style="display: none;">
+                                    <i class="ri-play-circle-line"></i> 激活
+                                </button>
+                                <button class="nx-btn nx-btn--danger" id="btn-deactivate" style="display: none;">
+                                    <i class="ri-stop-circle-line"></i> 停用
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="tabs-container">
+                            <div class="tabs-nav">
+                                <button class="tab-btn active" data-tab="overview">
+                                    <i class="ri-information-line"></i> 概览
+                                </button>
+                                <button class="tab-btn" data-tab="params">
+                                    <i class="ri-code-line"></i> 参数定义
+                                </button>
+                                <button class="tab-btn" data-tab="config">
+                                    <i class="ri-settings-3-line"></i> 配置
+                                </button>
+                                <button class="tab-btn" data-tab="metadata">
+                                    <i class="ri-database-2-line"></i> 元数据
+                                </button>
+                                <button class="tab-btn" data-tab="bindings">
+                                    <i class="ri-link"></i> 绑定关系
+                                </button>
+                            </div>
+                            
+                            <div id="tab-overview" class="tab-content active">
+                                <div class="info-section">
+                                    <h3><i class="ri-information-line"></i> 基本信息</h3>
+                                    <div class="info-grid-3col">
+                                        <div class="info-item">
+                                            <span class="info-item-label">Skill ID</span>
+                                            <span class="info-item-value info-item-value--mono" id="info-id">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-item-label">名称</span>
+                                            <span class="info-item-value" id="info-name">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-item-label">版本</span>
+                                            <span class="info-item-value" id="info-version">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-item-label">技能形式</span>
+                                            <span class="info-item-value" id="info-skill-form">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-item-label">场景类型</span>
+                                            <span class="info-item-value" id="info-scene-type">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-item-label">状态</span>
+                                            <span class="info-item-value" id="info-status">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-item-label">所属权</span>
+                                            <span class="info-item-value" id="info-ownership">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-item-label">可见性</span>
+                                            <span class="info-item-value" id="info-visibility">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-item-label">分类</span>
+                                            <span class="info-item-value" id="info-category">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-section">
+                                    <h3><i class="ri-time-line"></i> 时间信息</h3>
+                                    <div class="info-grid-2col">
+                                        <div class="info-item">
+                                            <span class="info-item-label">创建时间</span>
+                                            <span class="info-item-value" id="info-create-time">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-item-label">更新时间</span>
+                                            <span class="info-item-value" id="info-update-time">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-section">
+                                    <h3><i class="ri-links-line"></i> 依赖关系</h3>
+                                    <div id="dependencies-list">
+                                        <div class="empty-state">无依赖</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-section">
+                                    <h3><i class="ri-price-tag-3-line"></i> 标签</h3>
+                                    <div id="tags-list">
+                                        <div class="empty-state">无标签</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-section">
+                                    <h3><i class="ri-building-line"></i> 支持的场景类型</h3>
+                                    <div id="scene-types-list">
+                                        <div class="empty-state">无场景类型</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="tab-params" class="tab-content">
+                                <div class="info-section">
+                                    <h3><i class="ri-input-method-line"></i> 输入参数</h3>
+                                    <div id="params-input">
+                                        <div class="empty-state">无输入参数定义</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-section">
+                                    <h3><i class="ri-output-method-line"></i> 返回值</h3>
+                                    <div id="params-output">
+                                        <div class="empty-state">无返回值定义</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="tab-config" class="tab-content">
+                                <div class="info-section">
+                                    <h3><i class="ri-settings-3-line"></i> 配置信息</h3>
+                                    <div id="config-area" class="json-block">暂无配置</div>
+                                </div>
+                                
+                                <div class="info-section">
+                                    <h3><i class="ri-robot-line"></i> LLM 配置</h3>
+                                    <div id="llm-config-area">
+                                        <div class="empty-state">无 LLM 配置</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-section">
+                                    <h3><i class="ri-flashlight-line"></i> 驱动配置</h3>
+                                    <div id="driver-config-area">
+                                        <div class="empty-state">无驱动配置</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="tab-metadata" class="tab-content">
+                                <div class="info-section">
+                                    <h3><i class="ri-database-2-line"></i> 完整元数据</h3>
+                                    <div id="metadata-area" class="json-block">暂无元数据</div>
+                                </div>
+                            </div>
+                            
+                            <div id="tab-bindings" class="tab-content">
+                                <div class="info-section">
+                                    <h3><i class="ri-link"></i> 能力绑定</h3>
+                                    <div id="bindings-list">
+                                        <div class="empty-state">暂无能力绑定</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="info-section">
+                                    <h3><i class="ri-group-line"></i> 关联的场景组</h3>
+                                    <div id="scene-groups-list">
+                                        <div class="empty-state">暂无关联的场景组</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/console/js/nexus.js"></script>
+    <script src="/console/js/api-client.js"></script>
+    <script src="/console/js/menu.js"></script>
+    <script src="/console/js/page-init.js" data-auto-init></script>
+    <script src="/console/js/components/activation-progress.js"></script>
+    <link rel="stylesheet" href="/console/css/components/activation-progress.css">
+    <script src="/console/js/pages/skill-detail.js"></script>
+</body>
+</html>
