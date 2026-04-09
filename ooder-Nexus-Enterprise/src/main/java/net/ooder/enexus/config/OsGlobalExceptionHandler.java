@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.config;
+package net.ooder.enexus.config;
 
 import java.util.HashMap;
 import java.util.Map;

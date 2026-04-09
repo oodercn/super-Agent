@@ -1,12 +1,12 @@
 # 贡献指南
 
-感谢您考虑为 ApexOS 做出贡献! 🎉
+感谢您考虑为 Ooder SuperAgent 做出贡献! 🎉
 
 ## 如何贡献
 
 ### 报告 Bug
 
-如果您发现了 bug,请通过 [Issues](https://gitee.com/ooderCN/apexos/issues) 提交报告。
+如果您发现了 bug,请通过 [Issues](https://gitee.com/ooderCN/super-Agent/issues) 提交报告。
 
 ### 建议新功能
 

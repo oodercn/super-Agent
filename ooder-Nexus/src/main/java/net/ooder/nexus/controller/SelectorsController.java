@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.controller;
+package net.ooder.nexus.controller;
 
 import net.ooder.nexus.dict.DictService;
 import net.ooder.nexus.dict.DictDTO;
@@ -7,25 +7,23 @@ import net.ooder.nexus.dict.SkillFormEnum;
 import net.ooder.nexus.dict.CapabilityCategoryEnum;
 import net.ooder.nexus.dto.selector.SelectorOptionDTO;
 import net.ooder.nexus.model.ResultModel;
+import net.ooder.nexus.util.SkillYamlScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.*;
 import java.util.*;
-import org.yaml.snakeyaml.Yaml;
 
+/**
+ * 选择器控制器，提供能力类型、状态、分类等筛选选项接口
+ */
 @RestController
 @RequestMapping("/api/v1/selectors")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true", allowedHeaders = "*")
 public class SelectorsController {
 
     private static final Logger log = LoggerFactory.getLogger(SelectorsController.class);
-
-    @Value("${ooder.dev.path:./.ooder/dev}")
-    private String devPath;
 
     @Autowired(required = false)
     private DictService dictService;
@@ -35,8 +33,7 @@ public class SelectorsController {
         log.info("[SelectorsController] Get capability types from real data");
         
         List<SelectorOptionDTO> types = new ArrayList<>();
-        
-        List<Map<String, Object>> skills = scanDevDirectory();
+        List<Map<String, Object>> skills = SkillYamlScanner.scanDevDirectory();
         Map<String, Integer> formCount = new HashMap<>();
         
         for (Map<String, Object> skill : skills) {
@@ -66,8 +63,7 @@ public class SelectorsController {
         log.info("[SelectorsController] Get capability statuses from real data");
         
         List<SelectorOptionDTO> statuses = new ArrayList<>();
-        
-        List<Map<String, Object>> skills = scanDevDirectory();
+        List<Map<String, Object>> skills = SkillYamlScanner.scanDevDirectory();
         
         int installedCount = 0;
         int systemCount = 0;
@@ -96,8 +92,7 @@ public class SelectorsController {
         log.info("[SelectorsController] Get capability categories from real data");
         
         List<SelectorOptionDTO> categories = new ArrayList<>();
-        
-        List<Map<String, Object>> skills = scanDevDirectory();
+        List<Map<String, Object>> skills = SkillYamlScanner.scanDevDirectory();
         Map<String, Integer> categoryCount = new HashMap<>();
         
         for (Map<String, Object> skill : skills) {
@@ -146,115 +141,5 @@ public class SelectorsController {
         }
         
         return mapping;
-    }
-    
-    private List<Map<String, Object>> scanDevDirectory() {
-        List<Map<String, Object>> skills = new ArrayList<>();
-        
-        String basePath = System.getProperty("user.dir");
-        File devDir = new File(basePath, ".ooder/dev");
-        
-        if (!devDir.exists() || !devDir.isDirectory()) {
-            log.warn("[scanDevDirectory] Dev directory does not exist: {}", devDir.getAbsolutePath());
-            return skills;
-        }
-        
-        scanForSkillYamlFiles(devDir, skills);
-        
-        log.info("[scanDevDirectory] Found {} skills in dev directory", skills.size());
-        return skills;
-    }
-    
-    private void scanForSkillYamlFiles(File directory, List<Map<String, Object>> skills) {
-        File[] files = directory.listFiles();
-        if (files == null) return;
-        
-        for (File file : files) {
-            if (file.isDirectory()) {
-                File skillYaml = new File(file, "skill.yaml");
-                if (skillYaml.exists()) {
-                    Map<String, Object> skill = parseSkillYaml(skillYaml);
-                    if (skill != null) {
-                        String parentDir = file.getParentFile().getName();
-                        skill.put("directory", parentDir);
-                        skills.add(skill);
-                    }
-                }
-                scanForSkillYamlFiles(file, skills);
-            }
-        }
-    }
-    
-    private Map<String, Object> parseSkillYaml(File skillYamlFile) {
-        try {
-            Yaml yaml = new Yaml();
-            InputStream inputStream = new FileInputStream(skillYamlFile);
-            Map<String, Object> data = yaml.load(inputStream);
-            inputStream.close();
-            
-            Map<String, Object> skill = new HashMap<>();
-            
-            String skillId = null;
-            String name = null;
-            String version = null;
-            String description = null;
-            String category = null;
-            String skillForm = null;
-            
-            Map<String, Object> metadata = (Map<String, Object>) data.get("metadata");
-            if (metadata != null) {
-                skillId = (String) metadata.get("id");
-                name = (String) metadata.get("name");
-                version = (String) metadata.get("version");
-                description = (String) metadata.get("description");
-                category = (String) metadata.get("category");
-            }
-            
-            if (skillId == null) {
-                skillId = (String) data.get("id");
-            }
-            if (skillId == null) {
-                skillId = (String) data.get("skillId");
-            }
-            if (name == null) {
-                name = (String) data.get("name");
-            }
-            if (version == null) {
-                version = (String) data.get("version");
-            }
-            if (description == null) {
-                description = (String) data.get("description");
-            }
-            if (category == null) {
-                category = (String) data.get("category");
-            }
-            
-            Map<String, Object> spec = (Map<String, Object>) data.get("spec");
-            if (spec != null) {
-                skillForm = (String) spec.get("skillForm");
-                if (category == null) {
-                    List<Map<String, Object>> capabilities = 
-                        (List<Map<String, Object>>) spec.get("capabilities");
-                    if (capabilities != null && !capabilities.isEmpty()) {
-                        category = (String) capabilities.get(0).get("category");
-                    }
-                }
-            }
-            if (skillForm == null) {
-                skillForm = (String) data.get("skillForm");
-            }
-            
-            skill.put("skillId", skillId);
-            skill.put("name", name != null ? name : skillId);
-            skill.put("description", description);
-            skill.put("version", version);
-            skill.put("category", category != null ? category.toLowerCase() : "other");
-            skill.put("skillForm", skillForm != null ? skillForm : "PROVIDER");
-            
-            return skill;
-        } catch (Exception e) {
-            log.error("[parseSkillYaml] Failed to parse {}: {}", skillYamlFile.getAbsolutePath(), e.getMessage());
-            return null;
-        }
     }
 }

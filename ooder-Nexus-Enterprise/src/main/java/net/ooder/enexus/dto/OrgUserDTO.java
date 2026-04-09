@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.dto;
+package net.ooder.enexus.dto;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.llm;
+package net.ooder.nexus.llm;
 
 import net.ooder.scene.skill.LlmProvider;
 import org.slf4j.Logger;

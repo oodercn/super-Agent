@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.dto.config;
+package net.ooder.enexus.dto.config;
 
 public class ConfigAddressDTO {
     private String address;

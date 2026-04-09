@@ -1,6 +1,6 @@
 package net.ooder.agent.dict;
 
-import net.ooder.agent.dto.ResultModel;
+import net.ooder.agent.model.ResultModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

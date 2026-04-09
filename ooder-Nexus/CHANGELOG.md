@@ -1,6 +1,6 @@
 # 变更日志
 
-本文档记录 ApexOS 的所有重要变更。
+本文档记录 ooderNexus 的所有重要变更。
 
 ---
 
@@ -53,7 +53,7 @@
 
 <div align="center">
 
-**ApexOS - 企业级 AI Agent 操作系统**
+**ooderNexus - 企业级 AI Agent 操作系统**
 
 Made with ❤️ by ooder Team
 

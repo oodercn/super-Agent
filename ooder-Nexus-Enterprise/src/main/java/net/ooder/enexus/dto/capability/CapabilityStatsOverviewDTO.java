@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.dto.capability;
+package net.ooder.enexus.dto.capability;
 
 public class CapabilityStatsOverviewDTO {
     private Long totalInvocations;

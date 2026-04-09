@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.config;
+package net.ooder.nexus.config;
 
 import net.ooder.scene.llm.config.SceneLlmConfigInfo;
 import net.ooder.scene.llm.config.SceneLlmConfigManager;

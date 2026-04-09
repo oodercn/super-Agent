@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.controller;
+package net.ooder.nexus.controller;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;

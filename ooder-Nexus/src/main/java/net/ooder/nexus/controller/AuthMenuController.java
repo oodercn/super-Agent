@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.controller;
+package net.ooder.nexus.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

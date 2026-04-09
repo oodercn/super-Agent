@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.config;
+package net.ooder.enexus.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -20,6 +20,8 @@ public class WebConfig implements WebMvcConfigurer {
     
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/console/**")
+            .addResourceLocations("classpath:/static/console/");
         registry.addResourceHandler("/static/**")
             .addResourceLocations("classpath:/static/");
     }

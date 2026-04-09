@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.dto.llm;
+package net.ooder.nexus.dto.llm;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.llm;
+package net.ooder.nexus.llm;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

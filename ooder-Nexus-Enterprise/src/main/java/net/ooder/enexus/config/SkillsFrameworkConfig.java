@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.config;
+package net.ooder.enexus.config;
 
 import net.ooder.skills.api.SkillPackageManager;
 import net.ooder.skills.core.impl.SkillPackageManagerImpl;

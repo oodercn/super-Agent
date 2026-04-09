@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.dict;
+package net.ooder.enexus.dict;
 
 import net.ooder.enexus.dto.ResultModel;
 import org.slf4j.Logger;

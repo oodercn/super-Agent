@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.controller;
+package net.ooder.enexus.controller;
 
 import net.ooder.enexus.dict.CapabilityCategoryEnum;
 import net.ooder.enexus.dto.capability.CapabilityStatsOverviewDTO;

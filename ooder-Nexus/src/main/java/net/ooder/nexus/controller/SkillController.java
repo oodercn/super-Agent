@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.controller;
+package net.ooder.nexus.controller;
 
 import java.util.List;
 

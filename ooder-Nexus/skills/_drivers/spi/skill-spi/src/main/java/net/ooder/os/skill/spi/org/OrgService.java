@@ -1,4 +1,4 @@
-package net.ooder.os.skill.spi.org;
+package net.ooder.nexus.skill.spi.org;
 
 import java.util.List;
 

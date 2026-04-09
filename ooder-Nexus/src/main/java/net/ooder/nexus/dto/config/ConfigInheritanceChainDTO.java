@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.dto.config;
+package net.ooder.nexus.dto.config;
 
 public class ConfigInheritanceChainDTO {
     private String level;

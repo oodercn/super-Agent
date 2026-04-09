@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.controller;
+package net.ooder.enexus.controller;
 
 import java.util.List;
 
@@ -15,6 +15,12 @@ import net.ooder.enexus.dto.skill.SkillListDTO;
 import net.ooder.enexus.dto.skill.SkillStatusDTO;
 import net.ooder.enexus.model.ResultModel;
 
+/**
+ * Skill Controller - 已废弃，请迁移到 /api/v2/skills
+ * @deprecated since 2.0.0, forRemoval = true
+ * 迁移截止日期: 2025-10-01
+ */
+@Deprecated(since = "2.0.0", forRemoval = true)
 @RestController
 @RequestMapping("/api/v1/skills")
 public class SkillController {

@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.config;
+package net.ooder.nexus.config;
 
 import net.ooder.scene.websocket.auth.WebSocketAuthService;
 import net.ooder.scene.websocket.auth.WebSocketAuthServiceImpl;

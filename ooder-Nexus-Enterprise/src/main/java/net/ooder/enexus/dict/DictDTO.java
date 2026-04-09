@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.dict;
+package net.ooder.enexus.dict;
 
 import java.util.List;
 

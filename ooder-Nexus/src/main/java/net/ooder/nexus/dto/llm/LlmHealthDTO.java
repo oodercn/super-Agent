@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.dto.llm;
+package net.ooder.nexus.dto.llm;
 
 public class LlmHealthDTO {
     private Boolean healthy;

@@ -75,24 +75,6 @@ public class SkillStaticResourceController {
     }
     
     private MediaType getContentType(String path) {
-        if (path.endsWith(".html")) return MediaType.TEXT_HTML;
-        if (path.endsWith(".css")) return MediaType.parseMediaType("text/css");
-        if (path.endsWith(".js")) return MediaType.parseMediaType("application/javascript");
-        if (path.endsWith(".json")) return MediaType.APPLICATION_JSON;
-        if (path.endsWith(".png")) return MediaType.IMAGE_PNG;
-        if (path.endsWith(".jpg") || path.endsWith(".jpeg")) return MediaType.IMAGE_JPEG;
-        if (path.endsWith(".gif")) return MediaType.IMAGE_GIF;
-        if (path.endsWith(".svg")) return MediaType.parseMediaType("image/svg+xml");
-        if (path.endsWith(".ico")) return MediaType.parseMediaType("image/x-icon");
-        if (path.endsWith(".woff")) return MediaType.parseMediaType("font/woff");
-        if (path.endsWith(".woff2")) return MediaType.parseMediaType("font/woff2");
-        if (path.endsWith(".ttf")) return MediaType.parseMediaType("font/ttf");
-        if (path.endsWith(".eot")) return MediaType.parseMediaType("application/vnd.ms-fontobject");
-        if (path.endsWith(".xml")) return MediaType.APPLICATION_XML;
-        if (path.endsWith(".pdf")) return MediaType.APPLICATION_PDF;
-        if (path.endsWith(".zip")) return MediaType.APPLICATION_OCTET_STREAM;
-        if (path.endsWith(".txt")) return MediaType.TEXT_PLAIN;
-        
-        return MediaType.APPLICATION_OCTET_STREAM;
+        return MediaType.parseMediaType(net.ooder.agent.util.ContentTypeUtils.getContentType(path));
     }
 }

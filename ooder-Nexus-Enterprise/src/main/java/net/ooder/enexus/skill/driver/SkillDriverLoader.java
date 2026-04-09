@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.skill.driver;
+package net.ooder.enexus.skill.driver;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

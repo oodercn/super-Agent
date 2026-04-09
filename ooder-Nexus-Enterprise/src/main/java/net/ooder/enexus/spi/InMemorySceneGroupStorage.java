@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.spi;
+package net.ooder.enexus.spi;
 
 import net.ooder.skill.common.spi.storage.PageResult;
 import net.ooder.skill.common.spi.storage.SceneGroupData;

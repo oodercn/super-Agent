@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.dto.capability;
+package net.ooder.nexus.dto.capability;
 
 import java.util.List;
 

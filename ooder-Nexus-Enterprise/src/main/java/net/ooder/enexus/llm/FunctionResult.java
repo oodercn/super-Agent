@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.llm;
+package net.ooder.enexus.llm;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

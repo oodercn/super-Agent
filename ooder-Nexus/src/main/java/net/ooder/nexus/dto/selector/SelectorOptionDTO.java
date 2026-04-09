@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.dto.selector;
+package net.ooder.nexus.dto.selector;
 
 public class SelectorOptionDTO {
     private String id;

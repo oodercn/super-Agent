@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.dto.menu;
+package net.ooder.nexus.dto.menu;
 
 import java.util.List;
 

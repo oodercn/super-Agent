@@ -178,7 +178,7 @@
         
         startQrcodeCheck: function(qrcodeId) {
             Login.checkTimer = setInterval(function() {
-                fetch('/api/v1/auth/qrcode/check/' + qrcodeId, {
+                fetch('/api/v1/mvp-auth/qrcode/check/' + qrcodeId, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' }
                 })

@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.dict;
+package net.ooder.enexus.dict;
 
 public interface DictEnum {
     String getCode();

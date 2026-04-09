@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * 技能框架配置类，配置技能包管理器和发现器
+ */
 @Configuration
 public class SkillsFrameworkConfig {
 
@@ -55,17 +58,24 @@ public class SkillsFrameworkConfig {
         manager.setDiscoverer(DiscoveryMethod.LOCAL_FS, localDiscoverer);
         log.info("[SkillsFrameworkConfig] Local discoverer configured: {}", skillRootPath);
         
+        if (giteeToken == null || giteeToken.isEmpty()) {
+            log.warn("[SkillsFrameworkConfig] Gitee token is not configured. Creating Gitee discoverer without token for public repository access only.");
+        }
+        
+        GitRepositoryDiscovererAdapter giteeDiscoverer = new GitRepositoryDiscovererAdapter("gitee");
+        giteeDiscoverer.setSource("gitee");
+        giteeDiscoverer.setDefaultOwner(giteeOwner);
+        giteeDiscoverer.setDefaultRepo(giteeRepo);
+        giteeDiscoverer.setDefaultBranch(giteeBranch);
         if (giteeToken != null && !giteeToken.isEmpty()) {
-            GitRepositoryDiscovererAdapter giteeDiscoverer = new GitRepositoryDiscovererAdapter("gitee");
-            giteeDiscoverer.setSource("gitee");
             giteeDiscoverer.setGiteeToken(giteeToken);
-            giteeDiscoverer.setDefaultOwner(giteeOwner);
-            giteeDiscoverer.setDefaultRepo(giteeRepo);
-            giteeDiscoverer.setDefaultBranch(giteeBranch);
-            manager.setGiteeDiscoverer(giteeDiscoverer);
-            log.info("[SkillsFrameworkConfig] Gitee discoverer configured: {}/{}:{}", 
+            log.info("[SkillsFrameworkConfig] Gitee discoverer configured with token: {}/{}:{}", 
+                giteeOwner, giteeRepo, giteeBranch);
+        } else {
+            log.info("[SkillsFrameworkConfig] Gitee discoverer configured without token (public repository access only): {}/{}:{}", 
                 giteeOwner, giteeRepo, giteeBranch);
         }
+        manager.setGiteeDiscoverer(giteeDiscoverer);
         
         if (githubToken != null && !githubToken.isEmpty()) {
             GitRepositoryDiscovererAdapter githubDiscoverer = new GitRepositoryDiscovererAdapter("github");

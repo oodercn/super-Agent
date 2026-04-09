@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.config;
+package net.ooder.nexus.config;
 
 import net.ooder.skill.hotplug.ui.UiRouteRegistry;
 import org.springframework.context.annotation.Bean;

@@ -1,7 +1,7 @@
 package net.ooder.agent.controller;
 
-import net.ooder.agent.dto.LoginRequest;
-import net.ooder.agent.dto.UserSessionDTO;
+import net.ooder.agent.dto.auth.LoginRequest;
+import net.ooder.agent.dto.auth.UserSessionDTO;
 import net.ooder.agent.model.ResultModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

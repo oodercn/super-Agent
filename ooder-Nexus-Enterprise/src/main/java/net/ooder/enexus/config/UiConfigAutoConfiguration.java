@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.config;
+package net.ooder.enexus.config;
 
 import net.ooder.skill.hotplug.ui.UiRouteRegistry;
 import org.springframework.context.annotation.Bean;

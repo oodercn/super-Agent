@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.model;
+package net.ooder.enexus.model;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

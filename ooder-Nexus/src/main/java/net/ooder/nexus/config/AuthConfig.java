@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.config;
+package net.ooder.nexus.config;
 
 import net.ooder.skill.common.api.AuthApi;
 import net.ooder.skill.common.api.OrgApi;

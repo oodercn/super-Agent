@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.llm;
+package net.ooder.enexus.llm;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;

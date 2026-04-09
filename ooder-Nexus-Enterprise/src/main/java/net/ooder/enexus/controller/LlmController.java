@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.controller;
+package net.ooder.enexus.controller;
 
 import net.ooder.enexus.model.ResultModel;
 import net.ooder.enexus.llm.service.LlmProviderManager;
@@ -12,6 +12,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+/**
+ * LLM Controller - 已废弃，请迁移到 /api/v2/messaging/messages
+ * @deprecated since 2.0.0, forRemoval = true
+ * 迁移截止日期: 2025-10-01
+ * @see net.ooder.skill.messaging.controller.UnifiedMessagingController
+ */
+@Deprecated(since = "2.0.0", forRemoval = true)
 @RestController
 @RequestMapping("/api/v1/llm")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")

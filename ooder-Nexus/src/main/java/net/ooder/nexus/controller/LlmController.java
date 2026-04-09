@@ -1,9 +1,8 @@
-﻿package net.ooder.nexus.controller;
+package net.ooder.nexus.controller;
 
 import net.ooder.nexus.model.ResultModel;
 import net.ooder.nexus.llm.service.LlmProviderManager;
 import net.ooder.nexus.dto.llm.*;
-import net.ooder.nexus.dto.llm.LlmProviderType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+/**
+ * LLM 配置管理控制器，提供模型列表、Provider 管理、配置更新等接口
+ */
 @RestController
 @RequestMapping("/api/v1/llm")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")
@@ -28,59 +30,73 @@ public class LlmController {
     @Value("${ooder.llm.model:qwen-plus}")
     private String defaultModel;
 
+    /**
+     * 构建内置 Provider 列表（千问/DeepSeek/百度文心）
+     */
+    private List<LlmProviderDTO> buildBuiltinProviders() {
+        List<LlmProviderDTO> providers = new ArrayList<>();
+
+        LlmProviderDTO qianwen = new LlmProviderDTO();
+        qianwen.setId("qianwen");
+        qianwen.setName("通义千问");
+        qianwen.setEnabled(true);
+        qianwen.setModels(Arrays.asList("qwen-turbo", "qwen-plus", "qwen-max"));
+        providers.add(qianwen);
+
+        LlmProviderDTO deepseek = new LlmProviderDTO();
+        deepseek.setId("deepseek");
+        deepseek.setName("DeepSeek");
+        deepseek.setEnabled(true);
+        deepseek.setModels(Arrays.asList("deepseek-chat", "deepseek-coder"));
+        providers.add(deepseek);
+
+        LlmProviderDTO baidu = new LlmProviderDTO();
+        baidu.setId("baidu");
+        baidu.setName("百度文心");
+        baidu.setEnabled(false);
+        baidu.setModels(Arrays.asList("ernie-4.5-8k-preview", "ernie-speed-8k"));
+        providers.add(baidu);
+
+        return providers;
+    }
+
+    /**
+     * 从内置 Provider 列表构建 LlmModelsDTO
+     */
+    private LlmModelsDTO buildBuiltinModelsDTO() {
+        LlmModelsDTO result = new LlmModelsDTO();
+        List<String> providerIds = new ArrayList<>();
+        Map<String, List<String>> modelsByProvider = new HashMap<>();
+        List<LlmProviderDTO> providerDetails = buildBuiltinProviders();
+
+        for (LlmProviderDTO provider : providerDetails) {
+            providerIds.add(provider.getId());
+            modelsByProvider.put(provider.getId(), provider.getModels());
+        }
+
+        result.setProviders(providerIds);
+        result.setModelsByProvider(modelsByProvider);
+        result.setProviderDetails(providerDetails);
+        result.setCurrentProvider(defaultProvider);
+        result.setCurrentModel(llmProviderManager != null ? llmProviderManager.getDefaultModel() : defaultModel);
+
+        return result;
+    }
+
     @GetMapping("/models")
     public ResultModel<LlmModelsDTO> getModels() {
         log.info("[LlmController] Getting available models");
         
         if (llmProviderManager == null) {
             log.warn("[LlmController] LLM Provider Manager not available, returning default models");
-            return ResultModel.success(getDefaultModels());
+            return ResultModel.success(buildBuiltinModelsDTO());
         }
         
         try {
-            LlmModelsDTO result = new LlmModelsDTO();
-            
-            List<String> providerIds = new ArrayList<>();
-            Map<String, List<String>> modelsByProvider = new HashMap<>();
-            List<LlmProviderDTO> providerDetails = new ArrayList<>();
-            
-            LlmProviderDTO qianwen = new LlmProviderDTO();
-            qianwen.setId("qianwen");
-            qianwen.setName("通义千问");
-            qianwen.setEnabled(true);
-            qianwen.setModels(Arrays.asList("qwen-turbo", "qwen-plus", "qwen-max"));
-            providerDetails.add(qianwen);
-            providerIds.add("qianwen");
-            modelsByProvider.put("qianwen", Arrays.asList("qwen-turbo", "qwen-plus", "qwen-max"));
-            
-            LlmProviderDTO deepseek = new LlmProviderDTO();
-            deepseek.setId("deepseek");
-            deepseek.setName("DeepSeek");
-            deepseek.setEnabled(true);
-            deepseek.setModels(Arrays.asList("deepseek-chat", "deepseek-coder"));
-            providerDetails.add(deepseek);
-            providerIds.add("deepseek");
-            modelsByProvider.put("deepseek", Arrays.asList("deepseek-chat", "deepseek-coder"));
-            
-            LlmProviderDTO baidu = new LlmProviderDTO();
-            baidu.setId("baidu");
-            baidu.setName("百度文心");
-            baidu.setEnabled(false);
-            baidu.setModels(Arrays.asList("ernie-4.5-8k-preview", "ernie-speed-8k"));
-            providerDetails.add(baidu);
-            providerIds.add("baidu");
-            modelsByProvider.put("baidu", Arrays.asList("ernie-4.5-8k-preview", "ernie-speed-8k"));
-            
-            result.setProviders(providerIds);
-            result.setModelsByProvider(modelsByProvider);
-            result.setProviderDetails(providerDetails);
-            result.setCurrentProvider(defaultProvider);
-            result.setCurrentModel(llmProviderManager.getDefaultModel());
-            
-            return ResultModel.success(result);
+            return ResultModel.success(buildBuiltinModelsDTO());
         } catch (Exception e) {
             log.error("[LlmController] Failed to get models: {}", e.getMessage());
-            return ResultModel.success(getDefaultModels());
+            return ResultModel.success(buildBuiltinModelsDTO());
         }
     }
     
@@ -90,164 +106,66 @@ public class LlmController {
         return getModels();
     }
     
-    private LlmModelsDTO getDefaultModels() {
-        LlmModelsDTO result = new LlmModelsDTO();
-        
-        List<String> providerIds = new ArrayList<>();
-        Map<String, List<String>> modelsByProvider = new HashMap<>();
-        List<LlmProviderDTO> providerDetails = new ArrayList<>();
-        
-        LlmProviderDTO qianwen = new LlmProviderDTO();
-        qianwen.setId("qianwen");
-        qianwen.setName("通义千问");
-        qianwen.setEnabled(true);
-        qianwen.setModels(Arrays.asList("qwen-turbo", "qwen-plus", "qwen-max"));
-        providerDetails.add(qianwen);
-        providerIds.add("qianwen");
-        modelsByProvider.put("qianwen", Arrays.asList("qwen-turbo", "qwen-plus", "qwen-max"));
-        
-        LlmProviderDTO deepseek = new LlmProviderDTO();
-        deepseek.setId("deepseek");
-        deepseek.setName("DeepSeek");
-        deepseek.setEnabled(true);
-        deepseek.setModels(Arrays.asList("deepseek-chat", "deepseek-coder"));
-        providerDetails.add(deepseek);
-        providerIds.add("deepseek");
-        modelsByProvider.put("deepseek", Arrays.asList("deepseek-chat", "deepseek-coder"));
-        
-        LlmProviderDTO baidu = new LlmProviderDTO();
-        baidu.setId("baidu");
-        baidu.setName("百度文心");
-        baidu.setEnabled(false);
-        baidu.setModels(Arrays.asList("ernie-4.5-8k-preview", "ernie-speed-8k"));
-        providerDetails.add(baidu);
-        providerIds.add("baidu");
-        modelsByProvider.put("baidu", Arrays.asList("ernie-4.5-8k-preview", "ernie-speed-8k"));
-        
-        result.setProviders(providerIds);
-        result.setModelsByProvider(modelsByProvider);
-        result.setProviderDetails(providerDetails);
-        result.setCurrentProvider(defaultProvider);
-        result.setCurrentModel(defaultModel);
-        
-        return result;
-    }
-    
-    private List<LlmProviderDTO> getProviderDTOList() {
-        List<LlmProviderDTO> providers = new ArrayList<>();
-        
-        LlmProviderDTO qianwen = new LlmProviderDTO();
-        qianwen.setId("qianwen");
-        qianwen.setName("通义千问");
-        qianwen.setEnabled(true);
-        providers.add(qianwen);
-        
-        LlmProviderDTO deepseek = new LlmProviderDTO();
-        deepseek.setId("deepseek");
-        deepseek.setName("DeepSeek");
-        deepseek.setEnabled(true);
-        providers.add(deepseek);
-        
-        LlmProviderDTO baidu = new LlmProviderDTO();
-        baidu.setId("baidu");
-        baidu.setName("百度文心");
-        baidu.setEnabled(false);
-        providers.add(baidu);
-        
-        return providers;
-    }
-    
     @GetMapping("/providers")
     public ResultModel<List<LlmProviderDTO>> getProviders() {
         log.info("[LlmController] Getting available providers");
-        
-        if (llmProviderManager == null) {
-            log.warn("[LlmController] LLM Provider Manager not available, returning default providers");
-            return ResultModel.success(getProviderDTOList());
-        }
-        
-        return ResultModel.success(getProviderDTOList());
+        return ResultModel.success(buildBuiltinProviders());
     }
     
     @GetMapping("/config")
     public ResultModel<LlmConfigDTO> getConfig() {
-        if (llmProviderManager == null) {
-            LlmConfigDTO defaultConfig = new LlmConfigDTO();
-            defaultConfig.setProvider(defaultProvider);
-            defaultConfig.setModel(defaultModel);
-            defaultConfig.setTemperature(0.7);
-            defaultConfig.setMaxTokens(4096);
-            defaultConfig.setStreamEnabled(true);
-            return ResultModel.success(defaultConfig);
-        }
-        
         LlmConfigDTO config = new LlmConfigDTO();
         config.setProvider(defaultProvider);
-        config.setModel(llmProviderManager.getDefaultModel());
+        config.setModel(llmProviderManager != null ? llmProviderManager.getDefaultModel() : defaultModel);
         config.setTemperature(0.7);
         config.setMaxTokens(4096);
         config.setStreamEnabled(true);
-        
         return ResultModel.success(config);
     }
     
     @PutMapping("/config")
     public ResultModel<Void> updateConfig(@RequestBody LlmConfigDTO configDTO) {
         log.info("[LlmController] Updating config: {}", configDTO);
-        
         if (configDTO.getProvider() != null) {
             defaultProvider = configDTO.getProvider();
         }
         if (configDTO.getModel() != null) {
             defaultModel = configDTO.getModel();
         }
-        
         return ResultModel.success(null);
     }
     
     @GetMapping("/providers/{providerId}/models")
     public ResultModel<List<String>> getProviderModels(@PathVariable String providerId) {
-        if (llmProviderManager == null) {
-            List<String> defaultModels = new ArrayList<>();
-            if ("qianwen".equals(providerId)) {
-                defaultModels.add("qwen-turbo");
-                defaultModels.add("qwen-plus");
-                defaultModels.add("qwen-max");
-            } else if ("deepseek".equals(providerId)) {
-                defaultModels.add("deepseek-chat");
-                defaultModels.add("deepseek-coder");
-            } else if ("baidu".equals(providerId)) {
-                defaultModels.add("ernie-4.5-8k-preview");
-                defaultModels.add("ernie-speed-8k");
+        if (llmProviderManager != null) {
+            net.ooder.scene.skill.LlmProvider provider = llmProviderManager.getProvider(providerId);
+            if (provider != null) {
+                return ResultModel.success(provider.getSupportedModels());
             }
-            return ResultModel.success(defaultModels);
         }
-        
-        net.ooder.scene.skill.LlmProvider provider = llmProviderManager.getProvider(providerId);
-        if (provider != null) {
-            return ResultModel.success(provider.getSupportedModels());
-        }
-        
-        return ResultModel.success(new ArrayList<>());
+
+        Map<String, List<String>> builtinModels = new HashMap<>();
+        builtinModels.put("qianwen", Arrays.asList("qwen-turbo", "qwen-plus", "qwen-max"));
+        builtinModels.put("deepseek", Arrays.asList("deepseek-chat", "deepseek-coder"));
+        builtinModels.put("baidu", Arrays.asList("ernie-4.5-8k-preview", "ernie-speed-8k"));
+
+        return ResultModel.success(builtinModels.getOrDefault(providerId, new ArrayList<>()));
     }
     
     @GetMapping("/health")
     public ResultModel<LlmHealthDTO> health() {
         log.info("[LlmController] LLM Health check");
-        
         LlmHealthDTO result = new LlmHealthDTO();
         result.setHealthy(llmProviderManager != null);
         result.setCurrentProvider(defaultProvider);
         result.setCurrentModel(defaultModel);
         result.setProviderManagerAvailable(llmProviderManager != null);
-        
         return ResultModel.success(result);
     }
     
     @GetMapping("/providers/info")
     public ResultModel<List<LlmProviderDTO>> getProvidersInfo() {
         log.info("[LlmController] Getting providers info from LlmProviderType enum");
-        
         List<LlmProviderDTO> providerList = new ArrayList<>();
         
         for (LlmProviderType providerType : LlmProviderType.values()) {
@@ -287,26 +205,9 @@ public class LlmController {
         return ResultModel.success(providerList);
     }
     
-    private LlmModelDTO createModelInfo(String modelId, String displayName, int maxTokens, 
-                                                  double defaultTemperature, boolean supportsFunctionCalling,
-                                                  boolean supportsMultimodal, boolean supportsEmbedding, 
-                                                  double costPer1kTokens) {
-        LlmModelDTO model = new LlmModelDTO();
-        model.setModelId(modelId);
-        model.setDisplayName(displayName);
-        model.setMaxTokens(maxTokens);
-        model.setDefaultTemperature(defaultTemperature);
-        model.setSupportsFunctionCalling(supportsFunctionCalling);
-        model.setSupportsMultimodal(supportsMultimodal);
-        model.setSupportsEmbedding(supportsEmbedding);
-        model.setCostPer1kTokens(costPer1kTokens);
-        return model;
-    }
-    
     @GetMapping("/tools")
     public ResultModel<List<LlmToolDTO>> getTools() {
         log.info("[LlmController] Getting tools");
-        
         List<LlmToolDTO> tools = new ArrayList<>();
         
         LlmToolDTO tool1 = new LlmToolDTO();
@@ -344,7 +245,6 @@ public class LlmController {
     @GetMapping("/tools/{name}")
     public ResultModel<LlmToolDTO> getToolDetail(@PathVariable String name) {
         log.info("[LlmController] Getting tool detail: {}", name);
-        
         LlmToolDTO tool = new LlmToolDTO();
         
         if ("search_knowledge".equals(name)) {
@@ -408,7 +308,6 @@ public class LlmController {
     @GetMapping("/docs")
     public ResultModel<List<LlmDocDTO>> getDocs() {
         log.info("[LlmController] Getting docs");
-        
         List<LlmDocDTO> docs = new ArrayList<>();
         
         LlmDocDTO doc1 = new LlmDocDTO();
@@ -432,7 +331,6 @@ public class LlmController {
     @GetMapping("/prompt-templates")
     public ResultModel<List<LlmPromptTemplateDTO>> getPromptTemplates() {
         log.info("[LlmController] Getting prompt templates");
-        
         List<LlmPromptTemplateDTO> templates = new ArrayList<>();
         
         LlmPromptTemplateDTO template1 = new LlmPromptTemplateDTO();

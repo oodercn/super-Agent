@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.controller;
+package net.ooder.enexus.controller;
 
 import net.ooder.enexus.dto.menu.MenuItemDTO;
 import net.ooder.enexus.dto.role.RoleDTO;

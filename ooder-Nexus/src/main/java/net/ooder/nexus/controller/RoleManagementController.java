@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.controller;
+package net.ooder.nexus.controller;
 
 import net.ooder.nexus.dto.menu.MenuItemDTO;
 import net.ooder.nexus.dto.role.RoleDTO;

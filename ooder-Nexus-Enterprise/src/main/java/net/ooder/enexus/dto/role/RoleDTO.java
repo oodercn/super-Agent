@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.dto.role;
+package net.ooder.enexus.dto.role;
 
 public class RoleDTO {
     private String id;

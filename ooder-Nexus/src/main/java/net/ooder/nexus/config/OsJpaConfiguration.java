@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.config;
+package net.ooder.nexus.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

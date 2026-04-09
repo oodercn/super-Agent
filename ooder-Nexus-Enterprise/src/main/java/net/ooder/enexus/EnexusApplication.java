@@ -21,7 +21,6 @@ import org.springframework.context.annotation.Import;
         "net.ooder.skill.workflow",
         "net.ooder.skill.discovery",
         "net.ooder.skill.menu",
-        "net.ooder.skill.tenant",
         "net.ooder.skill.org"
     }
 )

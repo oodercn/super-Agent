@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.llm;
+package net.ooder.nexus.llm;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;

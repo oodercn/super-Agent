@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.dict;
+package net.ooder.enexus.dict;
 
 public enum CapabilityCategoryEnum implements DictEnum {
     LLM("llm", "大模型", 1),

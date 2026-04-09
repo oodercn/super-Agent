@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.controller;
+package net.ooder.enexus.controller;
 
 import net.ooder.enexus.dict.DictService;
 import net.ooder.enexus.dict.DictDTO;

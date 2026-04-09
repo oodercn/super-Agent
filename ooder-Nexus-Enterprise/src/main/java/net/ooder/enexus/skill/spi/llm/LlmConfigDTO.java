@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.skill.spi.llm;
+package net.ooder.enexus.skill.spi.llm;
 
 public class LlmConfigDTO {
     private String provider;

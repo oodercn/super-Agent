@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.controller;
+package net.ooder.nexus.controller;
 
 import net.ooder.nexus.model.ResultModel;
 import org.slf4j.Logger;

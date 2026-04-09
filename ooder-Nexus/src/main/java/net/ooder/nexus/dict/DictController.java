@@ -1,6 +1,6 @@
-﻿package net.ooder.nexus.dict;
+package net.ooder.nexus.dict;
 
-import net.ooder.nexus.dto.ResultModel;
+import net.ooder.nexus.model.ResultModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

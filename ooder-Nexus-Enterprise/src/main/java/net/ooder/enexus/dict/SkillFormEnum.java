@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.dict;
+package net.ooder.enexus.dict;
 
 public enum SkillFormEnum implements DictEnum {
     SERVICE("SERVICE", "服务能力", 1),

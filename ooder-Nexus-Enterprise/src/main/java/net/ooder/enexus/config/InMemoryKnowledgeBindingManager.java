@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.config;
+package net.ooder.enexus.config;
 
 import net.ooder.scene.skill.knowledge.KnowledgeBinding;
 import net.ooder.scene.skill.knowledge.KnowledgeBindingManager;

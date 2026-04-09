@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.dto.skill;
+package net.ooder.nexus.dto.skill;
 
 public class SkillStatusDTO {
     private Boolean installed;

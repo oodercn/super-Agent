@@ -1,7 +1,7 @@
-﻿package net.ooder.nexus.controller;
+package net.ooder.nexus.controller;
 
-import net.ooder.nexus.dto.LoginRequest;
-import net.ooder.nexus.dto.UserSessionDTO;
+import net.ooder.nexus.dto.auth.LoginRequest;
+import net.ooder.nexus.dto.auth.UserSessionDTO;
 import net.ooder.nexus.model.ResultModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

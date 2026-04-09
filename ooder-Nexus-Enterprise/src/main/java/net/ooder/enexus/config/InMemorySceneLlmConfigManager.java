@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.config;
+package net.ooder.enexus.config;
 
 import net.ooder.scene.llm.config.SceneLlmConfigInfo;
 import net.ooder.scene.llm.config.SceneLlmConfigManager;

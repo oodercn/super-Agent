@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.service;
+package net.ooder.enexus.service;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;

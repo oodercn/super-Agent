@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.config;
+package net.ooder.enexus.config;
 
 import net.ooder.scene.event.SceneEventPublisher;
 import net.ooder.scene.group.SceneGroupManager;

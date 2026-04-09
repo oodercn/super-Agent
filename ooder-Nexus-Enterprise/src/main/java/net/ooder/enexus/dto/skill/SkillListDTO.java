@@ -1,4 +1,4 @@
-﻿package net.ooder.enexus.dto.skill;
+package net.ooder.enexus.dto.skill;
 
 import net.ooder.enexus.skill.registry.SkillRegistry;
 import java.util.List;

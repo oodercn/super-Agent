@@ -1,8 +1,11 @@
-﻿package net.ooder.enexus.config;
+package net.ooder.enexus.config;
 
+import net.ooder.skill.tenant.repository.TenantMemberRepository;
+import net.ooder.skill.tenant.repository.TenantRepository;
+import net.ooder.skill.tenant.service.TenantService;
+import net.ooder.skill.tenant.service.impl.TenantServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +20,6 @@ import javax.sql.DataSource;
 import java.util.Properties;
 
 @Configuration
-@ConditionalOnClass(name = "jakarta.persistence.EntityManager")
 @EnableJpaRepositories(
     basePackages = {
         "net.ooder.enexus.repository",
@@ -78,5 +80,11 @@ public class OsJpaConfiguration {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
         transactionManager.setEntityManagerFactory(osEntityManagerFactory.getObject());
         return transactionManager;
+    }
+
+    @Bean
+    public TenantService tenantService(TenantRepository tenantRepository, TenantMemberRepository memberRepository) {
+        log.info("[OsJpaConfiguration] Creating TenantService bean");
+        return new TenantServiceImpl(tenantRepository, memberRepository);
     }
 }

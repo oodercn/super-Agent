@@ -1,4 +1,4 @@
-﻿package net.ooder.nexus.skill.registry;
+package net.ooder.nexus.skill.registry;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
