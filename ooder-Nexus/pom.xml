@@ -17,7 +17,7 @@
     <packaging>jar</packaging>
 
     <name>ooder-nexus</name>
-    <description>ooderNexus - 个人版Agent 3.0.2版本</description>
+    <description>ooderNexus - 个人版Agent (Small) 3.0.2版本 - 核心引擎+LLM+文件解析+WebSocket+MySQL</description>
 
     <url>https://gitee.com/ooderCN/super-Agent</url>
     <licenses>
@@ -75,6 +75,7 @@
     </pluginRepositories>
 
     <dependencies>
+        <!-- ========== Spring Boot 基础 ========== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -112,6 +113,13 @@
             <artifactId>spring-boot-starter-freemarker</artifactId>
         </dependency>
 
+        <!-- ========== Small: WebSocket 支持 ========== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+        <!-- ========== 核心SDK ========== -->
         <dependency>
             <groupId>net.ooder</groupId>
             <artifactId>agent-sdk-core</artifactId>
@@ -130,6 +138,20 @@
             <version>${ooder.sdk.version}</version>
         </dependency>
 
+        <!-- ========== Small: LLM 集成 ========== -->
+        <dependency>
+            <groupId>net.ooder</groupId>
+            <artifactId>llm-sdk</artifactId>
+            <version>${ooder.sdk.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.ooder</groupId>
+            <artifactId>skill-llm-chat</artifactId>
+            <version>${ooder.sdk.version}</version>
+        </dependency>
+
+        <!-- ========== 技能框架 ========== -->
         <dependency>
             <groupId>net.ooder</groupId>
             <artifactId>skill-discovery</artifactId>
@@ -155,6 +177,26 @@
             <version>${ooder.sdk.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>net.ooder</groupId>
+            <artifactId>skill-menu</artifactId>
+            <version>${ooder.sdk.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.ooder</groupId>
+            <artifactId>skill-auth</artifactId>
+            <version>${ooder.sdk.version}</version>
+        </dependency>
+
+        <!-- ========== Small: MySQL 数据库 ========== -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- ========== 工具库 ========== -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
