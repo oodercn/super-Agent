@@ -2,11 +2,13 @@ package net.ooder.nexus.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -45,6 +47,7 @@ public class OsJpaConfiguration {
     }
 
     @Bean
+    @Primary
     public LocalContainerEntityManagerFactoryBean osEntityManagerFactory(DataSource osDataSource) {
         log.info("[OsJpaConfiguration] Creating OS EntityManagerFactory");
         
@@ -71,8 +74,9 @@ public class OsJpaConfiguration {
     }
 
     @Bean
+    @Primary
     public PlatformTransactionManager osTransactionManager(
-            LocalContainerEntityManagerFactoryBean osEntityManagerFactory) {
+            @Qualifier("osEntityManagerFactory") LocalContainerEntityManagerFactoryBean osEntityManagerFactory) {
         log.info("[OsJpaConfiguration] Creating OS TransactionManager");
         
         JpaTransactionManager transactionManager = new JpaTransactionManager();
