@@ -6,6 +6,7 @@ import net.ooder.skill.hotplug.autoconfigure.HotPlugAutoConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 
 @SpringBootApplication
@@ -21,6 +22,12 @@ import org.springframework.context.annotation.Import;
         "net.ooder.skill.workflow",
         "net.ooder.skill.discovery",
         "net.ooder.skill.menu"
+    },
+    excludeFilters = {
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "net\\.ooder\\.skill\\.common\\.controller\\..*"
+        )
     }
 )
 public class AgentApplication {
